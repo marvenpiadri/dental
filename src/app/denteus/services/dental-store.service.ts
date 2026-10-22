@@ -1,6 +1,6 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
-import { DEMO_CHAIRS, DEMO_DENTISTS, createSeed } from '../data/dental-seed';
+import { ClinicDatabase } from './clinic-database.service';
 import {
   ApiResult,
   Appointment,
@@ -19,7 +19,6 @@ import {
   validateTiming,
 } from '../rules/scheduling-rules';
 
-const STORAGE_KEY = 'denteus-calendar-demo-v1';
 
 /** The fields a drag or an "edit time" action may change. */
 export interface RescheduleChange {
@@ -59,37 +58,77 @@ export class DentalStore {
   readonly chairMap = computed(() => new Map(this.chairs().map((c) => [c.id, c])));
 
   private ready = false;
+  private persistQueue: Promise<void> = Promise.resolve();
+  private readonly database = inject(ClinicDatabase);
+  readonly persistenceError = signal<string | null>(null);
 
   constructor() {
     effect(() => {
       const patients = this.patients();
       const appointments = this.appointments();
       if (!this.ready) return;
-      this.persist(patients, appointments);
+      this.persistQueue = this.persistQueue
+        .then(() => this.database.saveSchedulingSnapshot(patients, appointments))
+        .then(() => this.persistenceError.set(null))
+        .catch(() => this.persistenceError.set('Changes could not be saved to this browser. Check available storage and try again.'));
     });
   }
 
-  /** Loads saved data, or the demo seed on first use. */
-  init(useSeed: boolean): void {
-    this.dentists.set(DEMO_DENTISTS);
-    this.chairs.set(DEMO_CHAIRS);
-    const saved = this.load();
-    if (saved) {
-      this.patients.set(saved.patients);
-      this.appointments.set(saved.appointments);
-    } else if (useSeed) {
-      const seed = createSeed(new Date());
-      this.patients.set(seed.patients);
-      this.appointments.set(seed.appointments);
+  /** Loads persisted clinic data and migrates the previous localStorage snapshot once. */
+  async init(): Promise<void> {
+    const resources = await this.database.loadResources();
+    this.dentists.set(resources.dentists);
+    this.chairs.set(resources.chairs);
+
+    let saved = await this.database.loadSchedulingSnapshot();
+    if (!saved.patients.length && !saved.appointments.length) {
+      const migrated = this.readLegacySnapshot();
+      if (migrated) {
+        await this.database.saveSchedulingSnapshot(migrated.patients, migrated.appointments);
+        saved = migrated;
+        try { localStorage.removeItem('denteus-calendar-demo-v1'); } catch { /* migration remains safe if storage is blocked */ }
+      }
     }
+
+    this.patients.set(saved.patients);
+    this.appointments.set(saved.appointments);
     this.ready = true;
   }
 
-  /** Clears saved demo data and loads a fresh seed relative to now. */
-  resetDemo(): void {
-    const seed = createSeed(new Date());
-    this.patients.set(seed.patients);
-    this.appointments.set(seed.appointments);
+  /** The clinic setup flow calls this when dentists or chairs are created or changed. */
+  async saveResources(dentists: Dentist[], chairs: Chair[]): Promise<void> {
+    await this.database.saveResources(dentists, chairs);
+    this.dentists.set(dentists);
+    this.chairs.set(chairs);
+  }
+
+  private readLegacySnapshot(): { patients: Patient[]; appointments: Appointment[] } | null {
+    try {
+      const raw = localStorage.getItem('denteus-calendar-demo-v1');
+      if (!raw) return null;
+      const data = JSON.parse(raw) as { v?: number; patients?: Patient[]; appointments?: Array<Record<string, unknown>> };
+      if (data.v !== 1 || !Array.isArray(data.patients) || !Array.isArray(data.appointments)) return null;
+      const date = (value: unknown) => new Date(String(value));
+      return {
+        patients: data.patients,
+        appointments: data.appointments.map((appointment) => ({
+          ...appointment,
+          start: date(appointment['start']),
+          end: date(appointment['end']),
+          createdAt: date(appointment['createdAt']),
+          history: Array.isArray(appointment['history'])
+            ? (appointment['history'] as Array<Record<string, unknown>>).map((entry) => ({ ...entry, at: date(entry['at']) }))
+            : [],
+          scheduleHistory: Array.isArray(appointment['scheduleHistory'])
+            ? (appointment['scheduleHistory'] as Array<Record<string, unknown>>).map((entry) => ({
+                ...entry, at: date(entry['at']), fromStart: date(entry['fromStart']), toStart: date(entry['toStart']),
+              }))
+            : [],
+        })) as unknown as Appointment[],
+      };
+    } catch {
+      return null;
+    }
   }
 
   /* ------------------------------- patients ------------------------------- */
@@ -297,36 +336,4 @@ export class DentalStore {
     };
   }
 
-  /* ------------------------------ persistence ------------------------------ */
-
-  private persist(patients: Patient[], appointments: Appointment[]): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: 1, patients, appointments }));
-    } catch {
-      /* storage unavailable or full: the calendar keeps working in memory */
-    }
-  }
-
-  private load(): { patients: Patient[]; appointments: Appointment[] } | null {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const data = JSON.parse(raw) as { v: number; patients: Patient[]; appointments: Appointment[] };
-      if (data.v !== 1 || !Array.isArray(data.patients) || !Array.isArray(data.appointments)) return null;
-      const d = (value: string | Date) => new Date(value);
-      return {
-        patients: data.patients,
-        appointments: data.appointments.map((a) => ({
-          ...a,
-          start: d(a.start),
-          end: d(a.end),
-          createdAt: d(a.createdAt),
-          history: a.history.map((h) => ({ ...h, at: d(h.at) })),
-          scheduleHistory: a.scheduleHistory.map((s) => ({ ...s, at: d(s.at), fromStart: d(s.fromStart), toStart: d(s.toStart) })),
-        })),
-      };
-    } catch {
-      return null;
-    }
-  }
 }
