@@ -105,35 +105,6 @@ export class DentalStore {
     this.chairs.set(chairs);
   }
 
-  private readLegacySnapshot(): { patients: Patient[]; appointments: Appointment[] } | null {
-    try {
-      const raw = localStorage.getItem('denteus-calendar-demo-v1');
-      if (!raw) return null;
-      const data = JSON.parse(raw) as { v?: number; patients?: Patient[]; appointments?: Array<Record<string, unknown>> };
-      if (data.v !== 1 || !Array.isArray(data.patients) || !Array.isArray(data.appointments)) return null;
-      const date = (value: unknown) => new Date(String(value));
-      return {
-        patients: data.patients,
-        appointments: data.appointments.map((appointment) => ({
-          ...appointment,
-          start: date(appointment['start']),
-          end: date(appointment['end']),
-          createdAt: date(appointment['createdAt']),
-          history: Array.isArray(appointment['history'])
-            ? (appointment['history'] as Array<Record<string, unknown>>).map((entry) => ({ ...entry, at: date(entry['at']) }))
-            : [],
-          scheduleHistory: Array.isArray(appointment['scheduleHistory'])
-            ? (appointment['scheduleHistory'] as Array<Record<string, unknown>>).map((entry) => ({
-                ...entry, at: date(entry['at']), fromStart: date(entry['fromStart']), toStart: date(entry['toStart']),
-              }))
-            : [],
-        })) as unknown as Appointment[],
-      };
-    } catch {
-      return null;
-    }
-  }
-
   /* ------------------------------- patients ------------------------------- */
 
   addPatient(input: { fullName: string; phone: string }): Patient {
