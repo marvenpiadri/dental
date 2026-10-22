@@ -74,22 +74,13 @@ export class DentalStore {
     });
   }
 
-  /** Loads persisted clinic data and migrates the previous localStorage snapshot once. */
+  /** Loads clinic records from IndexedDB. A new installation starts empty rather than inventing patients or appointments. */
   async init(): Promise<void> {
     const resources = await this.database.loadResources();
     this.dentists.set(resources.dentists);
     this.chairs.set(resources.chairs);
 
-    let saved = await this.database.loadSchedulingSnapshot();
-    if (!saved.patients.length && !saved.appointments.length) {
-      const migrated = this.readLegacySnapshot();
-      if (migrated) {
-        await this.database.saveSchedulingSnapshot(migrated.patients, migrated.appointments);
-        saved = migrated;
-        try { localStorage.removeItem('denteus-calendar-demo-v1'); } catch { /* migration remains safe if storage is blocked */ }
-      }
-    }
-
+    const saved = await this.database.loadSchedulingSnapshot();
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
