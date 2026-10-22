@@ -1,6 +1,16 @@
 import type { IconName } from '../../calendar/components/cal-icon/cal-icon.component';
 import type { EventTone } from '../../calendar/models/calendar.models';
 
+/** A physical clinic site. Operational records reference this ID instead of assuming one global practice. */
+export interface ClinicLocation {
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  timezone: string;
+  active: boolean;
+}
+
 export interface Patient {
   id: string;
   fullName: string;
@@ -9,6 +19,7 @@ export interface Patient {
 
 export interface Dentist {
   id: string;
+  locationId?: string;
   name: string;
   specialty: string;
   /** Colour of this dentist's appointments in every view. */
@@ -17,6 +28,7 @@ export interface Dentist {
 
 export interface Chair {
   id: string;
+  locationId?: string;
   name: string;
 }
 
@@ -96,6 +108,7 @@ export interface ScheduleChange {
  */
 export interface Appointment {
   id: string;
+  locationId?: string;
   patientId: string;
   dentistId: string;
   chairId: string;
