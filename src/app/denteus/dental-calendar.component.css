@@ -1,13 +1,46 @@
 /* Same theme tokens and shell layout as the generic calendar. */
 @import '../calendar/styles/calendar-shell.css';
 
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Keep the calendar embedded in the page grid, not styled as a rounded card. */
+.shell,
+.shell * {
+  border-radius: 0 !important;
+}
+
+.shell {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.main {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
 .filter {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 8px 12px 12px;
   padding: 8px 8px;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 13.5px;
   color: var(--cal-text-2);
   cursor: pointer;
@@ -29,7 +62,7 @@
 .group {
   display: flex;
   padding: 2px;
-  border-radius: 9px;
+  border-radius: 0;
   background: var(--cal-segment-bg);
 }
 
@@ -37,7 +70,7 @@
   height: 28px;
   padding: 0 12px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   background: transparent;
   font: inherit;
   font-size: 13px;
