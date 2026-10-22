@@ -17,6 +17,14 @@ body {
   overflow: hidden;
 }
 
+/* Denteus uses a strict, edge-aligned grid: no rounded surfaces. */
+.app-shell,
+.app-shell *,
+.app-shell *::before,
+.app-shell *::after {
+  border-radius: 0 !important;
+}
+
 /* applied by the calendar while an event is being dragged */
 body.cal-dragging,
 body.cal-dragging * {
