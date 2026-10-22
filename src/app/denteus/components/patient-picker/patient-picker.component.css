@@ -1,0 +1,190 @@
+:host {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.chosen,
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chosen {
+  padding: 8px 10px;
+  border: 1px solid var(--cal-border);
+  border-radius: 9px;
+  background: var(--cal-surface);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cal-hover-strong);
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--cal-text-2);
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14.5px;
+  font-weight: 550;
+  color: var(--cal-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phone {
+  font-size: 12.5px;
+  color: var(--cal-text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.link {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cal-text-2);
+  cursor: pointer;
+}
+
+.link:hover {
+  background: var(--cal-hover);
+  color: var(--cal-text);
+}
+
+.search {
+  position: relative;
+  color: var(--cal-text-3);
+}
+
+.search cal-icon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cal-border);
+  border-radius: 9px;
+  background: var(--cal-surface);
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--cal-text);
+  outline: 0;
+}
+
+.search .input {
+  padding-left: 36px;
+}
+
+.input:hover {
+  border-color: var(--cal-text-3);
+}
+
+.input:focus {
+  border-color: var(--cal-text);
+  box-shadow: 0 0 0 3px var(--cal-focus-ring);
+}
+
+.results {
+  margin: 6px 0 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 232px;
+  overflow-y: auto;
+  border: 1px solid var(--cal-border);
+  border-radius: 10px;
+  background: var(--cal-surface);
+}
+
+.row {
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--cal-hover);
+  outline: 0;
+}
+
+.row .name {
+  flex: 1;
+}
+
+.row.add {
+  color: var(--cal-text-2);
+}
+
+.none {
+  padding: 8px;
+  font-size: 13.5px;
+  color: var(--cal-text-2);
+}
+
+.create {
+  padding: 10px;
+  border: 1px solid var(--cal-border);
+  border-radius: 10px;
+  background: var(--cal-surface);
+}
+
+.create-fields {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.add-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--cal-accent);
+  color: var(--cal-accent-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.add-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

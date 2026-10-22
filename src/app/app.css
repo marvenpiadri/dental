@@ -1,0 +1,26 @@
+.stage {
+  height: 100dvh;
+  padding: 20px;
+  background:
+    radial-gradient(1100px 560px at 8% -8%, #cfe0ff 0%, transparent 62%),
+    radial-gradient(900px 520px at 100% 0%, #f1d9ff 0%, transparent 58%),
+    #eef1f7;
+  transition: background 0.2s ease;
+}
+
+.stage.dark {
+  background:
+    radial-gradient(1100px 560px at 8% -8%, #1b2a66 0%, transparent 62%),
+    radial-gradient(900px 520px at 100% 0%, #3a1d5e 0%, transparent 58%),
+    #070a18;
+}
+
+.calendar {
+  height: 100%;
+}
+
+@media (max-width: 700px) {
+  .stage {
+    padding: 0;
+  }
+}

@@ -1,0 +1,36 @@
+<div class="year">
+  @for (month of months(); track month.key) {
+    <section class="month" [attr.aria-label]="month.name">
+      <button type="button" class="month-name" (click)="openMonth(month.date)">{{ month.name }}</button>
+      <div class="weekdays">
+        @for (w of weekdays(); track $index) {
+          <span>{{ w }}</span>
+        }
+      </div>
+      @for (week of month.weeks; track $index) {
+        <div class="week">
+          @for (day of week; track $index) {
+            @if (day) {
+              <button
+                type="button"
+                class="day"
+                [class.today]="day.today"
+                [attr.aria-label]="day.count ? day.count + ' events' : null"
+                (click)="openDay(day.date)"
+              >
+                <span class="num">{{ day.label }}</span>
+                <span class="dots">
+                  @for (c of day.dots; track c) {
+                    <i [style.background]="c"></i>
+                  }
+                </span>
+              </button>
+            } @else {
+              <span class="blank"></span>
+            }
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

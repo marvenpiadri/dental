@@ -1,0 +1,88 @@
+<button
+  type="button"
+  class="trigger"
+  [class.open]="open()"
+  [attr.aria-label]="label()"
+  [attr.aria-expanded]="open()"
+  aria-haspopup="dialog"
+  (click)="toggle()"
+>
+  {{ display() }}
+</button>
+
+@if (open()) {
+  <div
+    class="panel"
+    [class.up]="openUp()"
+    [class.right]="align() === 'right'"
+    [class.date-only]="dateOnly()"
+    role="dialog"
+    [attr.aria-label]="label()"
+  >
+    <div class="panel-body">
+      <div class="calendar">
+        <div class="cal-head">
+          <button type="button" class="nav" aria-label="Previous year" (click)="shiftMonth(-12)">
+            <cal-icon name="chevrons-left" [size]="14" />
+          </button>
+          <button type="button" class="nav" aria-label="Previous month" (click)="shiftMonth(-1)">
+            <cal-icon name="chevron-left" [size]="14" />
+          </button>
+          <span class="cal-title">{{ cursorTitle() }}</span>
+          <button type="button" class="nav" aria-label="Next month" (click)="shiftMonth(1)">
+            <cal-icon name="chevron-right" [size]="14" />
+          </button>
+          <button type="button" class="nav" aria-label="Next year" (click)="shiftMonth(12)">
+            <cal-icon name="chevrons-right" [size]="14" />
+          </button>
+        </div>
+
+        <div class="grid">
+          @for (w of weekdays(); track $index) {
+            <span class="wd">{{ w }}</span>
+          }
+          @for (week of weeks(); track week[0].key) {
+            @for (day of week; track day.key) {
+              <button
+                type="button"
+                class="day"
+                [class.outside]="day.outside"
+                [class.today]="day.today"
+                [class.selected]="day.selected"
+                (click)="pickDay(day.date)"
+              >
+                {{ day.label }}
+              </button>
+            }
+          }
+        </div>
+      </div>
+
+      @if (!dateOnly()) {
+        <div class="time">
+          <div class="time-now">{{ timeLabel() }}</div>
+          <div class="cols">
+            <div class="col" role="listbox" aria-label="Hour">
+              @for (h of hours; track h) {
+                <button type="button" class="opt" [class.sel]="value().getHours() === h" (click)="pickHour(h)">
+                  {{ pad(h) }}
+                </button>
+              }
+            </div>
+            <div class="col" role="listbox" aria-label="Minute">
+              @for (m of minutes(); track m) {
+                <button type="button" class="opt" [class.sel]="value().getMinutes() === m" (click)="pickMinute(m)">
+                  {{ pad(m) }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="panel-foot">
+      <button type="button" class="ok" (click)="close()">OK</button>
+    </div>
+  </div>
+}

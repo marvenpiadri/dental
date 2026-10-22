@@ -1,0 +1,129 @@
+<div class="backdrop" (pointerdown)="cancel.emit()"></div>
+
+<div
+  class="dialog"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="ed-title-label"
+  (pointerdown)="onDialogPointerDown($event)"
+>
+  <button type="button" class="close" aria-label="Close" (click)="cancel.emit()">
+    <cal-icon name="x" [size]="17" />
+  </button>
+
+  <label class="label" id="ed-title-label" for="ed-title">Event Title</label>
+  <div class="title-row">
+    <input
+      #titleInput
+      id="ed-title"
+      class="input"
+      type="text"
+      placeholder="Add a title"
+      autocomplete="off"
+      [value]="title()"
+      (input)="title.set($any($event.target).value)"
+      (keydown.enter)="submit()"
+    />
+
+    <div class="cal-picker">
+      <button
+        type="button"
+        class="swatch-btn"
+        [title]="calendar()?.name ?? 'Calendar'"
+        aria-label="Calendar"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <span class="swatch" [style.background]="calendar()?.color"></span>
+        <cal-icon name="chevrons-up-down" [size]="14" />
+      </button>
+      @if (menuOpen()) {
+        <ul class="menu" role="listbox">
+          @for (c of store.categories(); track c.id) {
+            <li>
+              <button
+                type="button"
+                role="option"
+                class="menu-item"
+                [attr.aria-selected]="c.id === calendarId()"
+                (click)="pickCalendar(c.id)"
+              >
+                <span class="swatch" [style.background]="c.color"></span>
+                <span class="menu-name">{{ c.name }}</span>
+                @if (c.id === calendarId()) {
+                  <cal-icon name="check" [size]="14" [stroke]="2.6" />
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+
+  <div class="label-row">
+    <span class="label">Time Range</span>
+    <label class="switch">
+      <input type="checkbox" class="sr-only" [checked]="allDay()" (change)="setAllDay($any($event.target).checked)" />
+      <span class="track"><span class="thumb"></span></span>
+      <span class="switch-text">All day</span>
+    </label>
+  </div>
+  <div class="range">
+    <cal-datetime-field
+      label="Start"
+      [dateOnly]="allDay()"
+      [value]="start()"
+      (valueChange)="onStartChange($event)"
+    />
+    <cal-icon class="arrow" name="arrow-right" [size]="20" [stroke]="1.6" />
+    <cal-datetime-field
+      label="End"
+      align="right"
+      [dateOnly]="allDay()"
+      [value]="end()"
+      (valueChange)="onEndChange($event)"
+    />
+  </div>
+
+  <label class="label" for="ed-location">Location</label>
+  <div class="icon-input">
+    <cal-icon name="map-pin" [size]="16" />
+    <input
+      id="ed-location"
+      class="input plain"
+      type="text"
+      placeholder="Add a place or link"
+      [value]="location()"
+      (input)="location.set($any($event.target).value)"
+    />
+  </div>
+
+  <label class="label" for="ed-notes">Notes</label>
+  <div class="icon-input top">
+    <cal-icon name="align-left" [size]="16" />
+    <textarea
+      id="ed-notes"
+      class="input plain"
+      rows="3"
+      placeholder="Add notes"
+      [value]="notes()"
+      (input)="notes.set($any($event.target).value)"
+    ></textarea>
+  </div>
+
+  <div class="footer">
+    @if (mode() === 'edit') {
+      <button type="button" class="btn danger" (click)="remove.emit(draft().id)">
+        <cal-icon name="trash" [size]="15" />
+        Delete
+      </button>
+    }
+    <span class="spacer"></span>
+    <button type="button" class="btn ghost" (click)="cancel.emit()">Cancel</button>
+    <button type="button" class="btn primary" (click)="submit()">
+      {{ mode() === 'edit' ? 'Save' : 'Create' }}
+    </button>
+  </div>
+</div>

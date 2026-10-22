@@ -1,0 +1,23 @@
+<section aria-label="Waiting room">
+  <p class="section">
+    <cal-icon name="clock" [size]="13" [stroke]="2.3" />
+    Waiting room
+    <span class="count">{{ rows().length }}</span>
+  </p>
+
+  @for (r of rows(); track r.id) {
+    <button type="button" class="row" (click)="select.emit(r.id)">
+      <span class="dot" [style.background]="r.color"></span>
+      <span class="text">
+        <span class="name">{{ r.patient }}</span>
+        <span class="meta">{{ r.time }} · {{ r.dentist }} · {{ r.waited }}</span>
+      </span>
+    </button>
+  } @empty {
+    <p class="empty">Nobody is waiting.</p>
+  }
+
+  @if (inTreatment() > 0) {
+    <p class="treat"><cal-icon name="play" [size]="12" [stroke]="2.4" /> {{ inTreatment() }} in treatment</p>
+  }
+</section>

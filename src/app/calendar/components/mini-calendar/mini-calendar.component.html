@@ -1,0 +1,35 @@
+<div class="head">
+  <button type="button" class="nav" aria-label="Previous month" (click)="prev()">
+    <cal-icon name="chevron-left" [size]="15" />
+  </button>
+  <span class="title">{{ title() }}</span>
+  <button type="button" class="nav" aria-label="Next month" (click)="next()">
+    <cal-icon name="chevron-right" [size]="15" />
+  </button>
+</div>
+
+<div class="grid" role="grid">
+  <div class="row weekdays" role="row">
+    @for (w of weekdays(); track $index) {
+      <span class="wd" role="columnheader">{{ w }}</span>
+    }
+  </div>
+  @for (week of weeks(); track week[0].key) {
+    <div class="row" role="row" [class.focus-week]="week[0].inFocusWeek">
+      @for (day of week; track day.key) {
+        <button
+          type="button"
+          role="gridcell"
+          class="day"
+          [class.outside]="day.outside"
+          [class.today]="day.today"
+          [class.selected]="day.selected"
+          [attr.aria-current]="day.today ? 'date' : null"
+          (click)="select(day.date)"
+        >
+          {{ day.label }}
+        </button>
+      }
+    </div>
+  }
+</div>

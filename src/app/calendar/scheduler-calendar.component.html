@@ -1,0 +1,43 @@
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <aside class="sidebar" aria-label="Calendars">
+    <cal-sidebar />
+  </aside>
+  @if (sidebarOpen()) {
+    <div class="scrim" (click)="sidebarOpen.set(false)"></div>
+  }
+
+  <section class="main">
+    <cal-toolbar
+      (newEvent)="openCreate()"
+      (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"
+      (toggleTheme)="toggleTheme()"
+    />
+
+    @switch (store.view()) {
+      @case ('day') {
+        <cal-time-grid-view mode="day" (eventClick)="openEdit($event)" (createRequest)="openCreate($event)" />
+      }
+      @case ('week') {
+        <cal-time-grid-view mode="week" (eventClick)="openEdit($event)" (createRequest)="openCreate($event)" />
+      }
+      @case ('month') {
+        <cal-month-view (eventClick)="openEdit($event)" (createRequest)="openCreate($event)" />
+      }
+      @case ('year') {
+        <cal-year-view />
+      }
+    }
+  </section>
+
+  <cal-toasts />
+
+  @if (editor(); as state) {
+    <cal-event-editor
+      [draft]="state.draft"
+      [mode]="state.mode"
+      (save)="onSave($event)"
+      (remove)="onRemove($event)"
+      (cancel)="editor.set(null)"
+    />
+  }
+</div>

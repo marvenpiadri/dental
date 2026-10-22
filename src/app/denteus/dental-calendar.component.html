@@ -1,0 +1,75 @@
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <aside class="sidebar" aria-label="Dentists and waiting room">
+    <cal-sidebar brand="Denteus" heading="Dentists">
+      <den-waiting-room [appointments]="waiting()" [inTreatment]="inTreatment()" (select)="openFromWaiting($event)" />
+
+      <label class="filter">
+        <input type="checkbox" [checked]="showCancelled()" (change)="showCancelled.set($any($event.target).checked)" />
+        Show cancelled appointments
+      </label>
+    </cal-sidebar>
+  </aside>
+  @if (sidebarOpen()) {
+    <div class="scrim" (click)="sidebarOpen.set(false)"></div>
+  }
+
+  <section class="main">
+    <cal-toolbar
+      searchPlaceholder="Search patients"
+      newLabel="New appointment"
+      (newEvent)="openCreate()"
+      (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"
+      (toggleTheme)="toggleTheme()"
+    >
+      @if (cal.view() === 'day') {
+        <div class="group" role="group" aria-label="Show columns for">
+          <button type="button" [class.on]="groupBy() === 'chair'" [attr.aria-pressed]="groupBy() === 'chair'" (click)="groupBy.set('chair')">
+            Chairs
+          </button>
+          <button type="button" [class.on]="groupBy() === 'dentist'" [attr.aria-pressed]="groupBy() === 'dentist'" (click)="groupBy.set('dentist')">
+            Dentists
+          </button>
+        </div>
+      }
+    </cal-toolbar>
+
+    @switch (cal.view()) {
+      @case ('day') {
+        <cal-time-grid-view mode="day" (eventClick)="selectedId.set($event.id)" (createRequest)="openCreate($event)" />
+      }
+      @case ('week') {
+        <cal-time-grid-view mode="week" (eventClick)="selectedId.set($event.id)" (createRequest)="openCreate($event)" />
+      }
+      @case ('month') {
+        <cal-month-view (eventClick)="selectedId.set($event.id)" (createRequest)="openCreate($event)" />
+      }
+      @case ('year') {
+        <cal-year-view />
+      }
+    }
+
+    @if (selected(); as appointment) {
+      <den-appointment-panel
+        [appointment]="appointment"
+        (close)="selectedId.set(null)"
+        (edit)="openEdit(appointment)"
+        (transition)="onTransition(appointment.id, $event)"
+        (openPatient)="openPatient.emit($event)"
+        (openEncounter)="openEncounter.emit($event)"
+      />
+    }
+  </section>
+
+  <cal-toasts />
+
+  @if (editor(); as state) {
+    <den-appointment-editor
+      [draft]="state.draft"
+      [mode]="state.mode"
+      [problem]="state.problem"
+      [saving]="state.saving"
+      (save)="onSave($event)"
+      (cancel)="editor.set(null)"
+    />
+  }
+</div>

@@ -1,0 +1,102 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--cal-border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--cal-scroll) transparent;
+}
+
+.year {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+  gap: 22px 26px;
+  padding: 22px 24px 28px;
+}
+
+.month-name {
+  display: block;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--cal-text);
+  cursor: pointer;
+}
+
+.month-name:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.weekdays,
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekdays span {
+  text-align: center;
+  padding: 2px 0 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--cal-text-3);
+}
+
+.day,
+.blank {
+  height: 34px;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  color: var(--cal-text);
+  cursor: pointer;
+}
+
+.day:hover {
+  background: var(--cal-hover-strong);
+}
+
+.num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.day.today .num {
+  background: var(--cal-accent);
+  color: var(--cal-accent-text);
+  font-weight: 600;
+}
+
+.dots {
+  display: flex;
+  gap: 2px;
+  height: 4px;
+}
+
+.dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}

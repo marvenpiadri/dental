@@ -1,0 +1,78 @@
+@if (selected(); as p) {
+  @if (!searching()) {
+    <div class="chosen">
+      <span class="avatar" aria-hidden="true">{{ p.fullName.charAt(0) }}</span>
+      <span class="who">
+        <span class="name">{{ p.fullName }}</span>
+        @if (p.phone) {
+          <span class="phone">{{ p.phone }}</span>
+        }
+      </span>
+      <button type="button" class="link" (click)="startSearch()">Change</button>
+    </div>
+  }
+}
+
+@if (!selected() || searching()) {
+  @if (!creating()) {
+    <div class="search">
+      <cal-icon name="search" [size]="15" />
+      <input
+        id="patient-search"
+        class="input"
+        type="search"
+        placeholder="Search patients by name or phone"
+        autocomplete="off"
+        aria-label="Search patients"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+        (keydown.enter)="onEnter($event)"
+      />
+    </div>
+    <ul class="results" role="listbox" aria-label="Patients">
+      @for (p of matches(); track p.id) {
+        <li>
+          <button type="button" role="option" class="row" [attr.aria-selected]="p.id === patientId()" (click)="pick(p)">
+            <span class="avatar" aria-hidden="true">{{ p.fullName.charAt(0) }}</span>
+            <span class="name">{{ p.fullName }}</span>
+            <span class="phone">{{ p.phone }}</span>
+          </button>
+        </li>
+      } @empty {
+        <li class="none">No patient matches “{{ query() }}”.</li>
+      }
+      <li>
+        <button type="button" class="row add" (click)="startCreate()">
+          <cal-icon name="plus" [size]="15" />
+          <span class="name">New patient{{ query().trim() ? ': ' + query().trim() : '' }}</span>
+        </button>
+      </li>
+    </ul>
+  } @else {
+    <div class="create">
+      <div class="create-fields">
+        <input
+          class="input"
+          type="text"
+          placeholder="Full name"
+          aria-label="New patient full name"
+          [value]="newName()"
+          (input)="newName.set($any($event.target).value)"
+        />
+        <input
+          class="input"
+          type="tel"
+          placeholder="Phone"
+          aria-label="New patient phone"
+          [value]="newPhone()"
+          (input)="newPhone.set($any($event.target).value)"
+          (keydown.enter)="confirmCreate()"
+        />
+      </div>
+      <div class="create-actions">
+        <button type="button" class="link" (click)="creating.set(false)">Back</button>
+        <button type="button" class="add-btn" [disabled]="!newName().trim()" (click)="confirmCreate()">Add patient</button>
+      </div>
+    </div>
+  }
+}

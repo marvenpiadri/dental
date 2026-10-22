@@ -1,0 +1,90 @@
+@import '../../styles/event-color.css';
+
+:host {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  line-height: 1;
+  color: var(--ev-fg);
+  cursor: grab;
+  user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: filter 0.12s ease, box-shadow 0.12s ease;
+  outline: none;
+}
+
+:host(:hover) {
+  filter: brightness(0.97);
+}
+
+:host(:focus-visible) {
+  box-shadow: 0 0 0 2px var(--cal-focus, #3b82f6);
+}
+
+:host(.muted) {
+  opacity: 0.6;
+}
+
+:host(.muted) .title {
+  text-decoration: line-through;
+}
+
+:host(.is-dragging) {
+  opacity: 0.85;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.22);
+  cursor: grabbing;
+}
+
+/* ---- bar: all-day and multi-day -------------------------------------------------- */
+:host(.bar) {
+  background: var(--ev-bg-strong);
+  font-weight: 500;
+}
+
+:host(.bar.cut-start) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+:host(.bar.cut-end) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.icon {
+  opacity: 0.9;
+}
+
+/* ---- line: timed event in a month cell ------------------------------------------- */
+:host(.line) {
+  background: var(--ev-bg);
+  padding-left: 4px;
+  font-weight: 500;
+}
+
+.rule {
+  flex: none;
+  width: 3px;
+  height: calc(100% - 6px);
+  border-radius: 3px;
+  background: var(--ev-bar);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.78;
+  font-weight: 500;
+}

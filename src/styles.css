@@ -1,0 +1,25 @@
+@import '@fontsource-variable/inter';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* applied by the calendar while an event is being dragged */
+body.cal-dragging,
+body.cal-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}

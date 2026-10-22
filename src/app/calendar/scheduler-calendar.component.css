@@ -1,0 +1,2 @@
+/* Theme tokens and the shell layout live in a shared file so other shells (Denteus) reuse them. */
+@import './styles/calendar-shell.css';

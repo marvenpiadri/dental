@@ -1,0 +1,11 @@
+/*
+ * Shared colour recipe for every event surface (chips, blocks).
+ * The host sets --c (the calendar's base colour); the theme variables on the
+ * scheduler root decide how much of it is mixed into the background / text.
+ */
+:host {
+  --ev-bg: color-mix(in srgb, var(--c, #64748b) var(--cal-ev-bg-pct, 16%), var(--cal-ev-bg-base, #fff));
+  --ev-bg-strong: color-mix(in srgb, var(--c, #64748b) var(--cal-ev-bg-strong-pct, 24%), var(--cal-ev-bg-base, #fff));
+  --ev-fg: color-mix(in srgb, var(--c, #64748b) var(--cal-ev-fg-pct, 82%), var(--cal-ev-fg-base, #000));
+  --ev-bar: var(--c, #64748b);
+}

@@ -1,0 +1,8 @@
+<main class="stage" [class.dark]="dark()">
+  <den-calendar
+    class="calendar"
+    (themeChange)="onTheme($event)"
+    (openPatient)="onOpenPatient($event)"
+    (openEncounter)="onOpenEncounter($event)"
+  />
+</main>

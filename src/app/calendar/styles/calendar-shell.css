@@ -1,0 +1,136 @@
+/* ------------------------------------------------------------------------------------
+   Design tokens. Everything inside the calendar reads these variables, so re-theming
+   (or matching your app's brand) only means overriding them on `cal-scheduler`.
+   ------------------------------------------------------------------------------------ */
+:host {
+  --cal-font: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --cal-bg: #ffffff;
+  --cal-bg-sidebar: #fafafb;
+  --cal-surface: #ffffff;
+  --cal-border: #e5e7eb;
+  --cal-border-soft: #eceef2;
+  --cal-text: #101318;
+  --cal-text-2: #5b6270;
+  --cal-text-3: #9aa1ae;
+  --cal-hover: #f2f3f6;
+  --cal-hover-strong: #e8eaee;
+  --cal-accent: #16181d;
+  --cal-accent-text: #ffffff;
+  --cal-segment-bg: #eff0f3;
+  --cal-segment-active: #ffffff;
+  --cal-danger: #dc2626;
+  --cal-focus: #3b82f6;
+  --cal-focus-ring: rgba(59, 130, 246, 0.22);
+  --cal-drop: rgba(59, 130, 246, 0.09);
+  --cal-now-faint: rgba(16, 19, 24, 0.22);
+  --cal-scroll: #d5d8de;
+  --cal-backdrop: rgba(16, 19, 30, 0.38);
+  --cal-shadow-pop: 0 18px 50px rgba(16, 24, 40, 0.22), 0 2px 10px rgba(16, 24, 40, 0.08);
+
+  /* how event colours are derived from each calendar's base colour */
+  --cal-ev-bg-base: #ffffff;
+  --cal-ev-bg-pct: 16%;
+  --cal-ev-bg-strong-pct: 24%;
+  --cal-ev-fg-base: #000000;
+  --cal-ev-fg-pct: 80%;
+
+  display: block;
+  height: 100%;
+  min-height: 420px;
+  font-family: var(--cal-font);
+  font-size: 14px;
+  color: var(--cal-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+:host([data-theme='dark']) {
+  --cal-bg: #0d1226;
+  --cal-bg-sidebar: #0d1226;
+  --cal-surface: #131a33;
+  --cal-border: #232c4a;
+  --cal-border-soft: #1b2340;
+  --cal-text: #eaeefb;
+  --cal-text-2: #a1abc8;
+  --cal-text-3: #6c7797;
+  --cal-hover: #171f3b;
+  --cal-hover-strong: #212b4d;
+  --cal-accent: #f1f3fb;
+  --cal-accent-text: #0d1226;
+  --cal-segment-bg: #171f3b;
+  --cal-segment-active: #28335a;
+  --cal-danger: #f87171;
+  --cal-focus: #60a5fa;
+  --cal-focus-ring: rgba(96, 165, 250, 0.28);
+  --cal-drop: rgba(96, 165, 250, 0.12);
+  --cal-now-faint: rgba(241, 243, 251, 0.25);
+  --cal-scroll: #2a3558;
+  --cal-backdrop: rgba(3, 6, 18, 0.6);
+  --cal-shadow-pop: 0 18px 50px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.3);
+
+  --cal-ev-bg-base: #0d1226;
+  --cal-ev-bg-pct: 26%;
+  --cal-ev-bg-strong-pct: 34%;
+  --cal-ev-fg-base: #ffffff;
+  --cal-ev-fg-pct: 62%;
+
+  color-scheme: dark;
+}
+
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--cal-border);
+  border-radius: 16px;
+  background: var(--cal-bg);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 14px 44px rgba(16, 24, 40, 0.1);
+}
+
+.sidebar {
+  min-height: 0;
+  border-right: 1px solid var(--cal-border);
+  background: var(--cal-bg-sidebar);
+}
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.scrim {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: absolute;
+    z-index: 40;
+    inset: 0 auto 0 0;
+    width: 272px;
+    transform: translateX(-102%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--cal-shadow-pop);
+  }
+
+  .sidebar-open .sidebar {
+    transform: none;
+  }
+
+  .scrim {
+    position: absolute;
+    z-index: 30;
+    inset: 0;
+    display: block;
+    background: var(--cal-backdrop);
+  }
+}

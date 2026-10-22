@@ -1,0 +1,192 @@
+:host {
+  display: block;
+  flex: none;
+}
+
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 52px;
+  padding: 0 16px 0 12px;
+}
+
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cal-text-2);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: var(--cal-hover);
+  color: var(--cal-text);
+}
+
+.menu {
+  display: none;
+}
+
+/* ---- segmented control ----------------------------------------------------------- */
+.segmented {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--cal-segment-bg);
+}
+
+.seg {
+  min-width: 68px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cal-text-2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seg:hover:not(.active) {
+  color: var(--cal-text);
+}
+
+.seg.active {
+  background: var(--cal-segment-active);
+  color: var(--cal-text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12), 0 0 0 0.5px rgba(16, 24, 40, 0.06);
+}
+
+/* ---- search ---------------------------------------------------------------------- */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 220px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--cal-border);
+  border-radius: 9px;
+  background: var(--cal-surface);
+  color: var(--cal-text-3);
+}
+
+.search:focus-within {
+  border-color: var(--cal-text-3);
+  box-shadow: 0 0 0 3px var(--cal-focus-ring);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--cal-text);
+}
+
+.search input::placeholder {
+  color: var(--cal-text-2);
+}
+
+/* ---- heading row ----------------------------------------------------------------- */
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 6px 16px;
+  height: 56px;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  border: 1px solid var(--cal-border);
+  border-radius: 8px;
+  background: var(--cal-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cal-text);
+  cursor: pointer;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.04);
+}
+
+.nav-btn.square {
+  width: 34px;
+}
+
+.nav-btn.today {
+  padding: 0 16px;
+}
+
+.nav-btn:hover {
+  background: var(--cal-hover);
+}
+
+@media (max-width: 860px) {
+  .menu {
+    display: grid;
+  }
+
+  .search {
+    width: 150px;
+  }
+
+  .segmented {
+    position: static;
+    transform: none;
+  }
+
+  .seg {
+    min-width: 0;
+    padding: 6px 11px;
+  }
+}
+
+@media (max-width: 620px) {
+  .search {
+    display: none;
+  }
+
+  .title {
+    font-size: 21px;
+  }
+}

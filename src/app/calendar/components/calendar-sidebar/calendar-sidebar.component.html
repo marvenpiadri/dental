@@ -1,0 +1,31 @@
+<div class="brand">
+  <span class="logo"><cal-icon name="calendar" [size]="15" [stroke]="2.1" /></span>
+  <span class="brand-name">{{ brand() }}</span>
+</div>
+
+<div class="scroll">
+  <nav class="calendars" aria-label="Calendars">
+    @if (heading()) {
+      <p class="section">{{ heading() }}</p>
+    }
+    @for (cat of store.categories(); track cat.id) {
+      <label class="cat">
+        <input
+          class="sr-only"
+          type="checkbox"
+          [checked]="cat.visible"
+          (change)="store.toggleCategory(cat.id)"
+        />
+        <span class="box" [class.on]="cat.visible" [style.--c]="cat.color">
+          <cal-icon name="check" [size]="12" [stroke]="3.2" />
+        </span>
+        <span class="name">{{ cat.name }}</span>
+      </label>
+    }
+  </nav>
+
+  <!-- host apps can project extra blocks here (waiting room, filters...) -->
+  <ng-content />
+</div>
+
+<cal-mini-calendar class="mini" />

@@ -1,0 +1,60 @@
+<div class="month">
+  <div class="weekdays">
+    @for (w of weekdays(); track $index) {
+      <span class="wd">{{ w }}</span>
+    }
+  </div>
+
+  <div class="grid" #gridEl>
+    <div class="rows" #rowsEl>
+      @for (row of rows(); track row.key) {
+        <div class="week">
+          @for (cell of row.cells; track cell.key) {
+            <div
+              class="cell"
+              [class.outside]="cell.outside"
+              [class.drop]="hoverKey() === cell.key"
+              (click)="createAt(cell.date)"
+            >
+              <button type="button" class="num" [class.today]="cell.today" (click)="openDay(cell.date, $event)">
+                {{ cell.label }}
+              </button>
+            </div>
+          }
+
+          @for (chip of row.chips; track chip.key) {
+            <cal-event-chip
+              class="chip"
+              [variant]="chip.kind"
+              [title]="chip.event.title"
+              [color]="chip.color"
+              [time]="chip.time"
+              [tone]="chip.event.tone ?? 'normal'"
+              [continuesBefore]="chip.cutStart"
+              [continuesAfter]="chip.cutEnd"
+              [dragging]="isDragging(chip.event.id)"
+              [style.left]="chip.left"
+              [style.width]="chip.width"
+              [style.top.px]="chip.top"
+              (pointerdown)="onChipPointerDown($event, chip)"
+              (keydown.enter)="eventClick.emit(chip.event)"
+            />
+          }
+
+          @for (more of row.mores; track more.key) {
+            <button
+              type="button"
+              class="more"
+              [style.left]="more.left"
+              [style.width]="more.width"
+              [style.top.px]="more.top"
+              (click)="openDay(more.date, $event)"
+            >
+              +{{ more.count }} more
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

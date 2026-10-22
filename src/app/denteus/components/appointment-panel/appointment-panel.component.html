@@ -1,0 +1,96 @@
+<header class="top">
+  <span class="pill" [class.alert]="appointment().status === 'arrived'">
+    <cal-icon [name]="meta[appointment().status].icon" [size]="14" [stroke]="2.3" />
+    {{ meta[appointment().status].label }}
+  </span>
+  <button type="button" class="icon-btn" aria-label="Close details" (click)="close.emit()">
+    <cal-icon name="x" [size]="17" />
+  </button>
+</header>
+
+<div class="body">
+  <h2 class="patient">{{ patient()?.fullName ?? 'Unknown patient' }}</h2>
+  @if (patient()?.phone; as phone) {
+    <a class="phone" [href]="'tel:' + phone">
+      <cal-icon name="phone" [size]="14" />
+      {{ phone }}
+    </a>
+  }
+  <p class="status-hint">{{ meta[appointment().status].description }}</p>
+
+  <dl class="facts">
+    <div>
+      <dt>When</dt>
+      <dd>
+        {{ dateLabel() }}
+        <span class="sub">{{ timeLabel() }} · {{ minutes() }} min</span>
+      </dd>
+    </div>
+    <div>
+      <dt>Dentist</dt>
+      <dd>
+        <span class="dot" [style.background]="dentist()?.color"></span>
+        {{ dentist()?.name }}
+        <span class="sub">{{ dentist()?.specialty }}</span>
+      </dd>
+    </div>
+    <div>
+      <dt>Chair</dt>
+      <dd>{{ chair()?.name }}</dd>
+    </div>
+    <div>
+      <dt>Type</dt>
+      <dd>{{ typeLabel() }}</dd>
+    </div>
+    @if (appointment().reason; as reason) {
+      <div>
+        <dt>Reason</dt>
+        <dd>{{ reason }}</dd>
+      </div>
+    }
+    @if (appointment().note; as note) {
+      <div>
+        <dt>Internal note</dt>
+        <dd>{{ note }}</dd>
+      </div>
+    }
+  </dl>
+
+  @if (actions().length) {
+    <div class="actions">
+      @for (a of actions(); track a.to) {
+        <button type="button" class="act" [class.primary]="a.kind === 'primary'" [class.danger]="a.kind === 'danger'" (click)="transition.emit(a.to)">
+          <cal-icon [name]="meta[a.to].icon" [size]="15" [stroke]="2.2" />
+          {{ a.label }}
+        </button>
+      }
+    </div>
+  }
+
+  <div class="links">
+    <button type="button" class="link-btn" (click)="edit.emit()">
+      <cal-icon name="calendar" [size]="15" />
+      {{ movable() ? 'Edit or reschedule' : 'Edit notes' }}
+    </button>
+    <button type="button" class="link-btn" (click)="openPatient.emit(appointment().patientId)">
+      <cal-icon name="user" [size]="15" />
+      Open patient file
+    </button>
+    @if (encounterAvailable()) {
+      <button type="button" class="link-btn" (click)="openEncounter.emit(appointment().id)">
+        <cal-icon name="file-text" [size]="15" />
+        {{ appointment().encounterId ? 'Open clinical encounter' : 'Start clinical encounter' }}
+      </button>
+    }
+  </div>
+
+  <h3 class="history-title"><cal-icon name="history" [size]="14" /> History</h3>
+  <ol class="history">
+    @for (h of history(); track $index) {
+      <li>
+        <span class="what">{{ h.text }}</span>
+        <span class="when">{{ stamp(h.at) }} · {{ h.by }}</span>
+      </li>
+    }
+  </ol>
+</div>

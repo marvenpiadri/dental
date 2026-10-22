@@ -1,0 +1,135 @@
+<div
+  class="scroller"
+  #scroller
+  [style.--cols]="slots().length"
+  [style.--hour-h]="hourHeight + 'px'"
+  [style.--col-min]="lanesMode() ? '168px' : null"
+  [class.single]="mode() === 'day' && !lanesMode()"
+>
+  <!-- header + all-day row stay pinned while the hours scroll -->
+  <div class="sticky" #sticky>
+    <div class="row head">
+      <div class="gutter"></div>
+      <div class="head-cols">
+        @for (col of columns(); track col.key) {
+          @if (lanesMode()) {
+            <div class="head-lane">
+              <span class="lane-name">{{ col.label }}</span>
+              @if (col.sublabel) {
+                <span class="lane-sub">{{ col.sublabel }}</span>
+              }
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="head-day"
+              [class.today]="col.today"
+              [disabled]="mode() === 'day'"
+              (click)="openDay(col.day)"
+            >
+              <span class="dow">{{ col.dow }}</span>
+              <span class="dom">{{ col.date }}</span>
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    @if (store.showAllDay()) {
+      <div class="row allday-row">
+        <div class="gutter"><span class="allday-label">All day</span></div>
+        <div class="allday-cols" #allday [style.height.px]="allDayHeight()">
+          @for (col of columns(); track col.key) {
+            <div class="allday-cell" (click)="createAllDay(col.day)"></div>
+          }
+          @for (item of allDayItems(); track item.key) {
+            <cal-event-chip
+              class="allday-chip"
+              variant="bar"
+              [title]="item.event.title"
+              [color]="item.color"
+              [continuesBefore]="item.cutStart"
+              [continuesAfter]="item.cutEnd"
+              [dragging]="isDragging(item.event.id)"
+              [style.left]="item.left"
+              [style.width]="item.width"
+              [style.top.px]="item.top"
+              (pointerdown)="onAllDayPointerDown($event, item)"
+              (keydown.enter)="eventClick.emit(item.event)"
+            />
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="content" [style.height.px]="hourHeight * 24">
+    <div class="gutter hours">
+      @for (hour of hours; track hour.h) {
+        @if (!hourLabelHidden(hour.top)) {
+          <span class="hour-label" [style.top.px]="hour.top">{{ hour.label }}</span>
+        }
+      }
+      @if (todayIndex() >= 0) {
+        <span class="now-pill" [style.top.px]="nowTop()">{{ nowLabel() }}</span>
+      }
+    </div>
+
+    <div class="cols" #cols (pointerdown)="onColsPointerDown($event)">
+      @for (col of columns(); track col.key; let i = $index) {
+        <div class="day-col" [class.today]="col.today">
+          @for (item of col.items; track item.key) {
+            <cal-event-block
+              class="slot-event"
+              [title]="item.event.title"
+              [time]="item.time"
+              [subtitle]="item.subtitle"
+              [badge]="item.badge"
+              [tone]="item.tone"
+              [color]="item.color"
+              [compact]="item.compact"
+              [locked]="item.event.locked === true"
+              [continuesBefore]="item.cutStart"
+              [continuesAfter]="item.cutEnd"
+              [dragging]="isDragging(item.event.id)"
+              [style.top.px]="item.top"
+              [style.height.px]="item.height"
+              [style.left]="item.left"
+              [style.width]="item.width"
+              (pointerdown)="onItemPointerDown($event, item, 'move')"
+              (keydown.enter)="eventClick.emit(item.event)"
+            >
+              @if (item.showTopHandle) {
+                <span class="handle top" (pointerdown)="onItemPointerDown($event, item, 'resize-start')"></span>
+              }
+              @if (item.showBottomHandle) {
+                <span class="handle bottom" (pointerdown)="onItemPointerDown($event, item, 'resize-end')"></span>
+              }
+            </cal-event-block>
+          }
+
+          @if (ghost(); as g) {
+            @if (g.dayIndex === i) {
+              <div
+                class="ghost"
+                [style.top.px]="g.startMin * (hourHeight / 60)"
+                [style.height.px]="(g.endMin - g.startMin) * (hourHeight / 60) - 2"
+              >
+                <span>{{ ghostLabel() }}</span>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @if (todayIndex() >= 0) {
+        <div class="now" [style.top.px]="nowTop()">
+          <div class="now-all"></div>
+          <div class="now-today" [style.left.%]="nowBox().left" [style.width.%]="nowBox().width">
+            <i class="dot"></i>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

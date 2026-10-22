@@ -1,0 +1,10 @@
+@if (variant() === 'line') {
+  <i class="rule"></i>
+}
+@if (variant() === 'bar') {
+  <cal-icon class="icon" name="calendar" [size]="12" [stroke]="2.2" />
+}
+<span class="title">{{ title() }}</span>
+@if (variant() === 'line' && time()) {
+  <span class="time">{{ time() }}</span>
+}

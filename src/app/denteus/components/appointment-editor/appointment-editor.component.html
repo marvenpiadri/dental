@@ -1,0 +1,130 @@
+<div class="backdrop" (pointerdown)="cancel.emit()"></div>
+
+<div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="ap-heading">
+  <button type="button" class="close" aria-label="Close" (click)="cancel.emit()">
+    <cal-icon name="x" [size]="17" />
+  </button>
+
+  <h2 class="heading" id="ap-heading">{{ mode() === 'edit' ? 'Edit appointment' : 'New appointment' }}</h2>
+
+  @if (problem(); as p) {
+    <div class="alert" role="alert">
+      <cal-icon name="alert" [size]="18" [stroke]="2.2" />
+      <div>
+        <strong>{{ p.title }}</strong>
+        @if (p.details.length) {
+          <ul>
+            @for (line of p.details; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+
+  <span class="label">Patient</span>
+  @if (scheduleLocked()) {
+    <p class="readonly">{{ store.patientMap().get(patientId() ?? '')?.fullName }}</p>
+  } @else {
+    <den-patient-picker [patients]="store.patients()" [(patientId)]="patientId" (createPatient)="onCreatePatient($event)" />
+  }
+
+  <div class="label-row">
+    <span class="label">Date and time</span>
+    <span class="hint">Ends at {{ endLabel() }}</span>
+  </div>
+  <div class="grid2">
+    @if (scheduleLocked()) {
+      <p class="readonly">{{ startLabel() }}</p>
+      <p class="readonly">{{ duration() }} min</p>
+    } @else {
+      <cal-datetime-field label="Start" [value]="start()" (valueChange)="start.set($event)" />
+      <select class="input" aria-label="Duration" [value]="duration()" (change)="onDuration(+$any($event.target).value)">
+        @for (m of durations(); track m) {
+          <option [value]="m" [selected]="m === duration()">{{ m }} min</option>
+        }
+      </select>
+    }
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label class="label" for="ap-dentist">Dentist</label>
+      <select id="ap-dentist" class="input" [disabled]="scheduleLocked()" (change)="dentistId.set($any($event.target).value)">
+        @for (d of store.dentists(); track d.id) {
+          <option [value]="d.id" [selected]="d.id === dentistId()">{{ d.name }} · {{ d.specialty }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label class="label" for="ap-chair">Treatment chair</label>
+      <select id="ap-chair" class="input" [disabled]="scheduleLocked()" (change)="chairId.set($any($event.target).value)">
+        @for (c of store.chairs(); track c.id) {
+          <option [value]="c.id" [selected]="c.id === chairId()">{{ c.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <label class="label" for="ap-type">Appointment type</label>
+      <select id="ap-type" class="input" [disabled]="scheduleLocked()" (change)="onType($any($event.target).value)">
+        @for (t of types; track t.id) {
+          <option [value]="t.id" [selected]="t.id === type()">{{ t.label }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label class="label" for="ap-status">Status</label>
+      @if (mode() === 'create') {
+        <select id="ap-status" class="input" (change)="status.set($any($event.target).value)">
+          @for (s of createStatuses; track s) {
+            <option [value]="s" [selected]="s === status()">{{ statusMeta[s].label }}</option>
+          }
+        </select>
+      } @else {
+        <p class="readonly status-read">
+          <cal-icon [name]="statusMeta[status()].icon" [size]="15" [stroke]="2.2" />
+          {{ statusMeta[status()].label }}
+        </p>
+      }
+    </div>
+  </div>
+
+  <label class="label" for="ap-reason">Reason for visit</label>
+  <input
+    id="ap-reason"
+    class="input spaced"
+    type="text"
+    placeholder="Optional"
+    [value]="reason()"
+    (input)="reason.set($any($event.target).value)"
+  />
+
+  <label class="label" for="ap-note">Internal note</label>
+  <textarea
+    id="ap-note"
+    class="input spaced"
+    rows="2"
+    placeholder="Visible to staff only"
+    [value]="note()"
+    (input)="note.set($any($event.target).value)"
+  ></textarea>
+
+  @if (warnings().length && !problem()) {
+    <div class="warn" role="status">
+      <cal-icon name="alert" [size]="16" [stroke]="2.2" />
+      <span>{{ warnings().join(' ') }}</span>
+    </div>
+  }
+
+  <div class="footer">
+    <span class="spacer"></span>
+    <button type="button" class="btn ghost" (click)="cancel.emit()">Cancel</button>
+    <button type="button" class="btn primary" [disabled]="!canSave()" (click)="submit()">
+      {{ saving() ? 'Saving…' : mode() === 'edit' ? 'Save changes' : 'Book appointment' }}
+    </button>
+  </div>
+</div>

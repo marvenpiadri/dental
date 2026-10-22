@@ -1,0 +1,68 @@
+:host {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(520px, calc(100% - 32px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 10px 11px 14px;
+  border: 1px solid var(--cal-border);
+  border-left: 4px solid var(--cal-text-3);
+  border-radius: 10px;
+  background: var(--cal-surface);
+  color: var(--cal-text);
+  font-size: 13.5px;
+  line-height: 1.4;
+  box-shadow: var(--cal-shadow-pop);
+  pointer-events: auto;
+  animation: rise 0.18s ease-out;
+}
+
+.toast.error {
+  border-left-color: var(--cal-danger);
+}
+
+.toast.error cal-icon:first-child {
+  color: var(--cal-danger);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.dismiss {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cal-text-2);
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  background: var(--cal-hover);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

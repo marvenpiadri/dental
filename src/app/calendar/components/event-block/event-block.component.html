@@ -1,0 +1,21 @@
+<span class="head">
+  <span class="title">{{ title() }}</span>
+  @if (compact() && badge(); as b) {
+    <cal-icon class="badge-icon" [name]="b.icon" [size]="13" [stroke]="2.3" [attr.title]="b.label" />
+  }
+</span>
+@if (compact()) {
+  <span class="time inline">{{ time() }}</span>
+} @else {
+  <span class="time">{{ time() }}</span>
+  @if (subtitle()) {
+    <span class="sub">{{ subtitle() }}</span>
+  }
+  @if (badge(); as b) {
+    <span class="status">
+      <cal-icon [name]="b.icon" [size]="12" [stroke]="2.4" />
+      {{ b.label }}
+    </span>
+  }
+}
+<ng-content />

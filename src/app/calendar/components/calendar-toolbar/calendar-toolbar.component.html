@@ -1,0 +1,61 @@
+<div class="bar">
+  <div class="left">
+    <button type="button" class="icon-btn menu" aria-label="Toggle sidebar" (click)="toggleSidebar.emit()">
+      <cal-icon name="menu" [size]="18" />
+    </button>
+    <button type="button" class="icon-btn" [attr.aria-label]="newLabel()" [title]="newLabel() + ' (N)'" (click)="newEvent.emit()">
+      <cal-icon name="plus" [size]="18" />
+    </button>
+  </div>
+
+  <div class="segmented" role="tablist" aria-label="Calendar view">
+    @for (v of views; track v.id) {
+      <button
+        type="button"
+        role="tab"
+        class="seg"
+        [class.active]="store.view() === v.id"
+        [attr.aria-selected]="store.view() === v.id"
+        (click)="store.setView(v.id)"
+      >
+        {{ v.label }}
+      </button>
+    }
+  </div>
+
+  <div class="right">
+    <!-- host apps can project extra controls here (group by, filters...) -->
+    <ng-content />
+    <label class="search">
+      <cal-icon name="search" [size]="15" />
+      <input
+        type="search"
+        [placeholder]="searchPlaceholder()"
+        [attr.aria-label]="searchPlaceholder()"
+        [value]="store.search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+    <button
+      type="button"
+      class="icon-btn"
+      [attr.aria-label]="store.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+      (click)="toggleTheme.emit()"
+    >
+      <cal-icon [name]="store.theme() === 'dark' ? 'sun' : 'moon'" [size]="17" />
+    </button>
+  </div>
+</div>
+
+<div class="heading">
+  <h1 class="title">{{ store.title() }}</h1>
+  <div class="nav">
+    <button type="button" class="nav-btn square" aria-label="Previous" (click)="store.prev()">
+      <cal-icon name="chevron-left" [size]="16" />
+    </button>
+    <button type="button" class="nav-btn today" (click)="store.goToday()">Today</button>
+    <button type="button" class="nav-btn square" aria-label="Next" (click)="store.next()">
+      <cal-icon name="chevron-right" [size]="16" />
+    </button>
+  </div>
+</div>

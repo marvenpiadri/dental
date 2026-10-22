@@ -1,0 +1,9 @@
+@for (t of store.toasts(); track t.id) {
+  <div class="toast" [class.error]="t.kind === 'error'">
+    <cal-icon [name]="t.kind === 'error' ? 'alert' : 'clock'" [size]="16" [stroke]="2.2" />
+    <span class="text">{{ t.text }}</span>
+    <button type="button" class="dismiss" aria-label="Dismiss" (click)="store.dismissToast(t.id)">
+      <cal-icon name="x" [size]="14" />
+    </button>
+  </div>
+}
