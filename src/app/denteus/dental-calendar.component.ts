@@ -37,10 +37,8 @@ const THEME_KEY = 'denteus-calendar-theme';
 /**
  * The Denteus appointment calendar: the generic calendar views, wired to patients, dentists and chairs.
  *
- * <den-calendar (openPatient)="..." (openEncounter)="..." />
- *
- * Data comes from DentalStore. In the real application that store is backed by the Denteus API;
- * the calendar itself only ever asks it to create, reschedule or change the status of an appointment.
+ * Data comes from the application-scoped DentalStore. The calendar draws appointments and delegates
+ * changes to the store; clinical records remain a separate workflow.
  */
 @Component({
   selector: 'den-calendar',
@@ -55,7 +53,7 @@ const THEME_KEY = 'denteus-calendar-theme';
     AppointmentPanelComponent,
     WaitingRoomComponent,
   ],
-  providers: [CalendarStore, DentalStore],
+  providers: [CalendarStore],
   templateUrl: './dental-calendar.component.html',
   styleUrl: './dental-calendar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,8 +67,6 @@ export class DentalCalendarComponent implements OnInit {
   protected readonly dental = inject(DentalStore);
 
   readonly defaultView = input<CalendarViewType>('day');
-
-  /** The host app opens the patient's file / the clinical encounter; the calendar never edits clinical records. */
   readonly openPatient = output<string>();
   readonly openEncounter = output<string>();
   readonly themeChange = output<CalendarTheme>();
@@ -85,8 +81,7 @@ export class DentalCalendarComponent implements OnInit {
 
   protected readonly waiting = computed(() => {
     const today = this.cal.today();
-    return this.dental
-      .appointments()
+    return this.dental.appointments()
       .filter((a) => a.status === 'arrived' && isSameDay(a.start, today))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   });
@@ -97,7 +92,6 @@ export class DentalCalendarComponent implements OnInit {
   });
 
   constructor() {
-    // appointments -> calendar events (the calendar only draws; the store owns the data)
     effect(() => {
       const ctx = {
         patients: this.dental.patientMap(),
@@ -106,15 +100,11 @@ export class DentalCalendarComponent implements OnInit {
         groupBy: this.groupBy(),
       };
       const showCancelled = this.showCancelled();
-      this.cal.events.set(
-        this.dental
-          .appointments()
-          .filter((a) => showCancelled || a.status !== 'cancelled')
-          .map((a) => toCalendarEvent(a, ctx)),
-      );
+      this.cal.events.set(this.dental.appointments()
+        .filter((a) => showCancelled || a.status !== 'cancelled')
+        .map((a) => toCalendarEvent(a, ctx)));
     });
 
-    // day-view columns: every chair, or the dentists that are switched on in the sidebar
     effect(() => {
       if (this.groupBy() === 'chair') {
         this.cal.lanes.set({ dimension: 'chair', lanes: this.dental.chairs().map((c) => ({ id: c.id, label: c.name })) });
@@ -143,7 +133,6 @@ export class DentalCalendarComponent implements OnInit {
     this.cal.view.set(this.defaultView());
     this.cal.showAllDay.set(false);
 
-    // drags and resizes are confirmed by the store; a refusal rolls the card back
     this.cal.gateway.set({
       update: async (event: CalendarEvent): Promise<CommitResult> => {
         const result = await this.dental.reschedule(event.id, {
@@ -167,14 +156,11 @@ export class DentalCalendarComponent implements OnInit {
     this.themeChange.emit(this.cal.theme());
   }
 
-  /* --------------------------------- creating --------------------------------- */
-
   protected openCreate(draft?: EventDraft): void {
     const store = this.dental;
     const visible = this.cal.categories().filter((c) => c.visible).map((c) => c.id);
     const start = draft?.start ?? this.defaultStart();
     const minutes = draft ? Math.max(15, Math.round((draft.end.getTime() - start.getTime()) / 60_000)) : 30;
-
     this.editor.set({
       mode: 'create',
       problem: null,
@@ -186,7 +172,7 @@ export class DentalCalendarComponent implements OnInit {
         type: 'consultation',
         status: 'scheduled',
         start,
-        durationMin: minutes === 60 ? 30 : minutes, // a plain click suggests 60; appointments default to 30
+        durationMin: minutes === 60 ? 30 : minutes,
         reason: '',
         note: '',
       },
@@ -222,19 +208,16 @@ export class DentalCalendarComponent implements OnInit {
     });
   }
 
-  /** Sends the form to the store. On a refusal the form stays open with its data and the reason. */
   protected async onSave(draft: AppointmentDraft): Promise<void> {
     const state = this.editor();
     if (!state) return;
     this.editor.set({ ...state, saving: true, problem: null });
-
     let result: ApiResult<Appointment>;
     try {
       result = draft.id ? await this.dental.updateAppointment(draft.id, draft) : await this.dental.createAppointment(draft);
     } catch {
       result = { ok: false, code: 'invalid', message: 'Could not reach the server.', details: ['Your changes were not saved. Try again.'] };
     }
-
     if (!result.ok) {
       this.editor.set({
         ...state,
@@ -246,22 +229,16 @@ export class DentalCalendarComponent implements OnInit {
       });
       return;
     }
-
     this.editor.set(null);
     this.selectedId.set(result.value.id);
-    // show the booking even if it is on another day, and make sure its dentist is not hidden
     if (!isSameDay(result.value.start, this.cal.focusDate()) && this.cal.view() === 'day') this.cal.goToDate(result.value.start);
     if (!this.cal.categories().find((c) => c.id === result.value.dentistId)?.visible) this.cal.toggleCategory(result.value.dentistId);
   }
-
-  /* --------------------------------- statuses --------------------------------- */
 
   protected async onTransition(id: string, to: AppointmentStatus): Promise<void> {
     const result = await this.dental.transition(id, to);
     if (!result.ok) this.cal.notify(result.message);
   }
-
-  /* ------------------------------ view controls ------------------------------ */
 
   protected toggleTheme(): void {
     const next: CalendarTheme = this.cal.theme() === 'dark' ? 'light' : 'dark';
@@ -284,14 +261,12 @@ export class DentalCalendarComponent implements OnInit {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const target = ev.target as HTMLElement | null;
     if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
-
     if (ev.key === 'Escape') {
-      if (this.editor()) return; // the editor handles its own Escape
+      if (this.editor()) return;
       this.selectedId.set(null);
       return;
     }
     if (this.editor()) return;
-
     const views: Record<string, CalendarViewType> = { d: 'day', w: 'week', m: 'month', y: 'year' };
     const key = ev.key.toLowerCase();
     if (views[key]) this.cal.setView(views[key]);
@@ -302,5 +277,4 @@ export class DentalCalendarComponent implements OnInit {
     else return;
     ev.preventDefault();
   }
-
 }
