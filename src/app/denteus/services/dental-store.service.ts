@@ -105,6 +105,13 @@ export class DentalStore {
     this.chairs.set(chairs);
   }
 
+  /** Wait for queued IndexedDB writes to finish. */
+  async flushPersistence(): Promise<void> {
+    await this.persistQueue;
+    const error = this.persistenceError();
+    if (error) throw new Error(error);
+  }
+
   /* ------------------------------- patients ------------------------------- */
 
   addPatient(input: { fullName: string; phone: string }): Patient {
