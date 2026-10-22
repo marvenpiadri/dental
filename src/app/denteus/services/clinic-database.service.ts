@@ -71,12 +71,11 @@ export class ClinicDatabase {
     const transaction = db.transaction(['patients', 'appointments'], 'readonly');
     const patientsRequest = transaction.objectStore('patients').getAll();
     const appointmentsRequest = transaction.objectStore('appointments').getAll();
+    const transactionComplete = transactionDone(transaction);
 
-    const [patients, appointments] = await Promise.all([
-      requestResult<Patient[]>(patientsRequest),
-      requestResult<StoredRecord[]>(appointmentsRequest),
-      transactionDone(transaction),
-    ]).then(([p, a]) => [p, a] as const);
+    const patients = await requestResult<Patient[]>(patientsRequest);
+    const appointments = await requestResult<StoredRecord[]>(appointmentsRequest);
+    await transactionComplete;
 
     return {
       patients,
@@ -142,11 +141,10 @@ export class ClinicDatabase {
   async loadResources(): Promise<{ dentists: Dentist[]; chairs: Chair[] }> {
     const db = await this.open();
     const transaction = db.transaction(['dentists', 'chairs'], 'readonly');
-    const [dentists, chairs] = await Promise.all([
-      requestResult<Dentist[]>(transaction.objectStore('dentists').getAll()),
-      requestResult<Chair[]>(transaction.objectStore('chairs').getAll()),
-      transactionDone(transaction),
-    ]).then(([d, c]) => [d, c] as const);
+    const transactionComplete = transactionDone(transaction);
+    const dentists = await requestResult<Dentist[]>(transaction.objectStore('dentists').getAll());
+    const chairs = await requestResult<Chair[]>(transaction.objectStore('chairs').getAll());
+    await transactionComplete;
     return { dentists, chairs };
   }
 
