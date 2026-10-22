@@ -1,0 +1,53 @@
+<section class="patients-page" aria-labelledby="patients-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">CLINIC / RECORDS</p>
+      <h1 id="patients-title">Patients</h1>
+      <p class="subheading">Patient directory and contact details.</p>
+    </div>
+    <span class="record-count">{{ store.patients().length }} records</span>
+  </header>
+
+  <div class="patient-layout">
+    <section class="directory panel" aria-label="Patient directory">
+      <label class="search-field">
+        <span class="sr-only">Search patients</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <input type="search" [value]="query()" (input)="query.set($any($event.target).value)" placeholder="Search name or phone" />
+      </label>
+      @if (patients().length) {
+        <div class="patient-table" role="table" aria-label="Patients">
+          <div class="table-head" role="row"><span role="columnheader">Patient</span><span role="columnheader">Phone</span><span role="columnheader">Record</span></div>
+          @for (patient of patients(); track patient.id) {
+            <div class="patient-row" role="row">
+              <span class="patient-name" role="cell"><span class="avatar" aria-hidden="true">{{ patient.fullName.slice(0, 1).toLocaleUpperCase() }}</span><span>{{ patient.fullName }}</span></span>
+              <span class="phone" role="cell">{{ patient.phone || '—' }}</span>
+              <span class="record-id" role="cell">#{{ patient.id.slice(0, 8) }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon" aria-hidden="true">+</div>
+          <h2>{{ query() ? 'No matching patients' : 'Your patient directory is empty' }}</h2>
+          <p>{{ query() ? 'Try another name or phone number.' : 'Add a patient to begin building the clinic’s local test records.' }}</p>
+        </div>
+      }
+    </section>
+
+    <aside class="create-panel panel">
+      <h2>New patient</h2>
+      <p class="form-intro">Create a local patient record for workflow testing.</p>
+      <form (submit)="$event.preventDefault(); addPatient()">
+        <label for="patient-name">Full name <span aria-hidden="true">*</span></label>
+        <input id="patient-name" name="fullName" autocomplete="name" required [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" placeholder="e.g. Amine El Idrissi" />
+        <label for="patient-phone">Phone number</label>
+        <input id="patient-phone" name="phone" autocomplete="tel" [ngModel]="phone()" (ngModelChange)="phone.set($event)" placeholder="+212 …" />
+        @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+        @if (saved()) { <p class="message success" role="status">Patient saved in this browser.</p> }
+        <button class="primary-action" type="submit">Create patient <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="local-note">Local test data only. Records stay in this browser profile and do not sync to other devices.</p>
+    </aside>
+  </div>
+</section>
