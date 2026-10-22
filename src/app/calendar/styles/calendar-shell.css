@@ -37,7 +37,11 @@
 
   display: block;
   height: 100%;
-  min-height: 420px;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
   font-family: var(--cal-font);
   font-size: 14px;
   color: var(--cal-text);
