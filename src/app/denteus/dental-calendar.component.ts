@@ -68,8 +68,6 @@ export class DentalCalendarComponent implements OnInit {
   protected readonly cal = inject(CalendarStore);
   protected readonly dental = inject(DentalStore);
 
-  /** Load the built-in demo clinic on first use. Turn off when real data is supplied. */
-  readonly seed = input(true);
   readonly defaultView = input<CalendarViewType>('day');
 
   /** The host app opens the patient's file / the clinical encounter; the calendar never edits clinical records. */
@@ -131,11 +129,19 @@ export class DentalCalendarComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.dental.init(this.seed());
+    void this.initialize();
+  }
+
+  private async initialize(): Promise<void> {
+    try {
+      await this.dental.init();
+      this.cal.categories.set(this.dental.dentists().map((d) => ({ id: d.id, name: d.name, color: d.color, visible: true })));
+    } catch {
+      this.cal.notify('The clinic database could not be opened. Appointment changes may not be saved.');
+    }
 
     this.cal.view.set(this.defaultView());
     this.cal.showAllDay.set(false);
-    this.cal.categories.set(this.dental.dentists().map((d) => ({ id: d.id, name: d.name, color: d.color, visible: true })));
 
     // drags and resizes are confirmed by the store; a refusal rolls the card back
     this.cal.gateway.set({
