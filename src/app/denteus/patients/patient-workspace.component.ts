@@ -5,7 +5,6 @@ import { DentalStore } from '../services/dental-store.service';
 @Component({
   selector: 'den-patient-workspace',
   imports: [FormsModule],
-  providers: [DentalStore],
   templateUrl: './patient-workspace.component.html',
   styleUrl: './patient-workspace.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
