@@ -1,26 +1,176 @@
-.stage {
+:host {
+  display: block;
+  width: 100%;
   height: 100dvh;
-  padding: 20px;
-  background:
-    radial-gradient(1100px 560px at 8% -8%, #cfe0ff 0%, transparent 62%),
-    radial-gradient(900px 520px at 100% 0%, #f1d9ff 0%, transparent 58%),
-    #eef1f7;
-  transition: background 0.2s ease;
+  overflow: hidden;
+  color: #202124;
+  background: #fff;
 }
 
-.stage.dark {
-  background:
-    radial-gradient(1100px 560px at 8% -8%, #1b2a66 0%, transparent 62%),
-    radial-gradient(900px 520px at 100% 0%, #3a1d5e 0%, transparent 58%),
-    #070a18;
+.app-shell {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  background: #fff;
+  color: #202124;
+}
+
+.module-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 100%;
+  border-right: 1px solid #dedede;
+  background: #f7f7f7;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  color: #111;
+  text-decoration: none;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -1.5px;
+}
+
+.brand-mark span {
+  color: #777;
+}
+
+.rail-divider {
+  width: 28px;
+  height: 1px;
+  flex: 0 0 1px;
+  background: #d6d6d6;
+}
+
+.rail-item {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #686868;
+  cursor: pointer;
+}
+
+.rail-item svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rail-item:hover {
+  background: #eaeaea;
+  color: #111;
+}
+
+.rail-item.active {
+  color: #111;
+  background: #e7e7e7;
+}
+
+.rail-item.active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: #111;
+}
+
+.workspace {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
 }
 
 .calendar {
+  display: block;
+  width: 100%;
   height: 100%;
+  min-width: 0;
+}
+
+.app-shell.dark {
+  background: #111;
+  color: #f3f3f3;
+}
+
+.dark .module-rail {
+  border-right-color: #303030;
+  background: #171717;
+}
+
+.dark .brand-mark {
+  color: #f5f5f5;
+}
+
+.dark .brand-mark span {
+  color: #888;
+}
+
+.dark .rail-divider {
+  background: #363636;
+}
+
+.dark .rail-item {
+  color: #a0a0a0;
+}
+
+.dark .rail-item:hover,
+.dark .rail-item.active {
+  color: #fff;
+  background: #292929;
+}
+
+.dark .rail-item.active::before {
+  background: #fff;
+}
+
+.dark .workspace {
+  background: #111;
 }
 
 @media (max-width: 700px) {
-  .stage {
-    padding: 0;
+  .app-shell {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .brand-mark {
+    width: 48px;
+  }
+
+  .module-rail {
+    gap: 8px;
+  }
+
+  .rail-item {
+    width: 36px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .rail-item.active::before {
+    left: -6px;
   }
 }
