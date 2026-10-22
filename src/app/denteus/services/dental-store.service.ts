@@ -7,6 +7,7 @@ import {
   AppointmentDraft,
   AppointmentStatus,
   Chair,
+  ClinicLocation,
   Dentist,
   Patient,
   STATUS_META,
@@ -41,10 +42,11 @@ const fail = (code: 'conflict' | 'invalid' | 'forbidden' | 'not-found', message:
  * IMPORTANT: this is the browser-side stand-in for the Denteus API. Every method that changes data
  * is async and returns an ApiResult so it can be replaced one-to-one by an HTTP call; the rules it
  * applies (conflicts, status transitions, history) must live on the server, which also has to
- * protect against two people booking the same slot at once. Persistence here is localStorage, for demos.
+ * protect against two people booking the same slot at once. The current local-first adapter persists in IndexedDB.
  */
 @Injectable()
 export class DentalStore {
+  readonly locations = signal<ClinicLocation[]>([]);
   readonly patients = signal<Patient[]>([]);
   readonly dentists = signal<Dentist[]>([]);
   readonly chairs = signal<Chair[]>([]);
@@ -76,7 +78,11 @@ export class DentalStore {
 
   /** Loads clinic records from IndexedDB. A new installation starts empty rather than inventing patients or appointments. */
   async init(): Promise<void> {
-    const resources = await this.database.loadResources();
+    const [locations, resources] = await Promise.all([
+      this.database.loadLocations(),
+      this.database.loadResources(),
+    ]);
+    this.locations.set(locations);
     this.dentists.set(resources.dentists);
     this.chairs.set(resources.chairs);
 
@@ -84,6 +90,12 @@ export class DentalStore {
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
+  }
+
+  /** The clinic setup flow calls this when a site is created or changed. */
+  async saveLocations(locations: ClinicLocation[]): Promise<void> {
+    await this.database.saveLocations(locations);
+    this.locations.set(locations);
   }
 
   /** The clinic setup flow calls this when dentists or chairs are created or changed. */
