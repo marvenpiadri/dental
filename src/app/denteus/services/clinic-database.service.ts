@@ -28,7 +28,7 @@ export class ClinicDatabase {
       const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
       request.onupgradeneeded = () => {
         const db = request.result;
-        if (db.objectStoreNames.contains('locations')) db.deleteObjectStore('locations');
+        if (!db.objectStoreNames.contains('locations')) db.createObjectStore('locations', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('dentists')) db.createObjectStore('dentists', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('chairs')) db.createObjectStore('chairs', { keyPath: 'id' });
 
@@ -64,6 +64,24 @@ export class ClinicDatabase {
       request.onblocked = () => reject(new Error('The clinic database upgrade is blocked by another open tab.'));
     });
     return this.databasePromise;
+  }
+
+  async loadLocations(): Promise<{ id: string; name: string; code: string; address?: string; timezone: string; active: boolean }[]> {
+    const db = await this.open();
+    const transaction = db.transaction('locations', 'readonly');
+    const done = transactionDone(transaction);
+    const result = await requestResult<{ id: string; name: string; code: string; address?: string; timezone: string; active: boolean }[]>(transaction.objectStore('locations').getAll());
+    await done;
+    return result;
+  }
+
+  async saveLocations(locations: { id: string; name: string; code: string; address?: string; timezone: string; active: boolean }[]): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('locations', 'readwrite');
+    const store = transaction.objectStore('locations');
+    store.clear();
+    locations.forEach((location) => store.put(location));
+    await transactionDone(transaction);
   }
 
   async loadSchedulingSnapshot(): Promise<PersistedSnapshot> {
