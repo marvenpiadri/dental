@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Appointment, Chair, ClinicLocation, Dentist, Patient } from '../models/dental.models';
+import { Appointment, Chair, Dentist, Patient } from '../models/dental.models';
 
 const DATABASE_NAME = 'dental-clinic';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 interface StoredRecord {
   id: string;
@@ -28,7 +28,7 @@ export class ClinicDatabase {
       const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
       request.onupgradeneeded = () => {
         const db = request.result;
-        if (!db.objectStoreNames.contains('locations')) db.createObjectStore('locations', { keyPath: 'id' });
+        if (db.objectStoreNames.contains('locations')) db.deleteObjectStore('locations');
         if (!db.objectStoreNames.contains('dentists')) db.createObjectStore('dentists', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('chairs')) db.createObjectStore('chairs', { keyPath: 'id' });
 
@@ -64,24 +64,6 @@ export class ClinicDatabase {
       request.onblocked = () => reject(new Error('The clinic database upgrade is blocked by another open tab.'));
     });
     return this.databasePromise;
-  }
-
-  async loadLocations(): Promise<ClinicLocation[]> {
-    const db = await this.open();
-    const transaction = db.transaction('locations', 'readonly');
-    const transactionComplete = transactionDone(transaction);
-    const locations = await requestResult<ClinicLocation[]>(transaction.objectStore('locations').getAll());
-    await transactionComplete;
-    return locations;
-  }
-
-  async saveLocations(locations: ClinicLocation[]): Promise<void> {
-    const db = await this.open();
-    const transaction = db.transaction('locations', 'readwrite');
-    const store = transaction.objectStore('locations');
-    store.clear();
-    locations.forEach((location) => store.put(location));
-    await transactionDone(transaction);
   }
 
   async loadSchedulingSnapshot(): Promise<PersistedSnapshot> {
