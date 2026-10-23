@@ -23,7 +23,7 @@ src/app/calendar/        the generic calendar (views, drag/resize, store). Stric
 src/app/denteus/         the clinic: DentalCalendar wrapper, Today, patients/, store, scheduling rules
 ```
 
-Routes: `/today`, `/calendar`, `/patients`, `/patients/new`, `/patients/:id`, `/patients/:id/edit`. All lazy.
+Routes: `/today`, `/setup` (dentists and chairs; saves on every change, refuses to remove ones that have appointments), `/calendar`, `/patients`, `/patients/new`, `/patients/:id`, `/patients/:id/edit`. All lazy.
 
 ## Every appointment happens in the calendar
 
@@ -61,4 +61,4 @@ Copy rules (`en.ts` header): sentence case, buttons start with a verb, empty sta
 
 `DentalStore` is still the browser-side stand-in for the API (IndexedDB). Patient fields beyond name and phone are optional; the old records keep working. Patient rules (validation, accent-insensitive search, age) are pure functions in `patients/patient-rules.ts`, tested in `patient-rules.spec.ts`.
 
-Not built yet, and the biggest gaps for a real clinic: **clinic setup** (creating dentists, chairs and opening hours: today a fresh install has no chairs to book), sign-in and roles, the clinical record (odontogram, treatment plans), billing, reminders (WhatsApp/SMS), and the real API.
+Not built yet, and the biggest gaps for a real clinic: **opening hours and multiple sites** in clinic setup (dentists and chairs are done), sign-in and roles, the clinical record (odontogram, treatment plans), billing, reminders (WhatsApp/SMS), and the real API.

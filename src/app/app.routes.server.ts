@@ -13,5 +13,6 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'patients/new', renderMode: RenderMode.Server },
   { path: 'patients/:id', renderMode: RenderMode.Server },
   { path: 'patients/:id/edit', renderMode: RenderMode.Server },
+  { path: 'setup', renderMode: RenderMode.Server },
   { path: '**', renderMode: RenderMode.Server, status: 404 },
 ];
