@@ -24,7 +24,8 @@ const KEY: Record<ToothCondition, Key> = {
 })
 export class ToothChartComponent {
   readonly teeth = input<Record<string, ToothCondition>>({});
-  readonly change = output<{ tooth: string; condition: ToothCondition | null }>();
+  readonly planTooth = output<string>();
+  readonly mark = output<{ tooth: string; condition: ToothCondition | null }>();
 
   protected readonly t = inject(I18n).t;
   protected readonly upper = UPPER;
@@ -45,8 +46,13 @@ export class ToothChartComponent {
     this.selected.update((current) => (current === tooth ? null : tooth));
   }
 
+  protected plan(): void {
+    const tooth = this.selected();
+    if (tooth) this.planTooth.emit(tooth);
+  }
+
   protected set(condition: ToothCondition | null): void {
     const tooth = this.selected();
-    if (tooth) this.change.emit({ tooth, condition });
+    if (tooth) this.mark.emit({ tooth, condition });
   }
 }

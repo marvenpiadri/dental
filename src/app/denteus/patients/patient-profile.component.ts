@@ -6,12 +6,13 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { ToothChartComponent } from './tooth-chart.component';
+import { TreatmentPlanComponent } from './treatment-plan.component';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ToothChartComponent],
+  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +31,8 @@ export class PatientProfileComponent {
   protected readonly initials = initials;
 
   protected readonly tab = signal<Tab>('upcoming');
+  /** Tooth chosen in the chart for the next plan item. */
+  protected readonly planTooth = signal<string | null>(null);
   // Only read once the store has loaded, which only happens in the browser.
   private readonly now = new Date();
 

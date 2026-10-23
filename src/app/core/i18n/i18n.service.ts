@@ -64,6 +64,11 @@ export class I18n {
   }
 
   /** 24-hour clock, the same in every language a clinic here would use. */
+  /** shortcut: the clinic's currency is fixed to MAD, move it to clinic setup for clinics elsewhere. */
+  money(amount: number): string {
+    return new Intl.NumberFormat(this.lang(), { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(amount);
+  }
+
   time(value: Date): string {
     return new Intl.DateTimeFormat(this.lang(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(value);
   }

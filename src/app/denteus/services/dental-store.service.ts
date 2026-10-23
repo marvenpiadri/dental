@@ -13,6 +13,7 @@ import {
   Patient,
   PatientInput,
   ToothCondition,
+  TreatmentItem,
   STATUS_META,
 } from '../models/dental.models';
 import {
@@ -158,7 +159,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, teeth: current.teeth }; // the form doesn't edit the chart, so keep it
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, teeth: current.teeth, plan: current.plan }; // the form doesn't edit the chart or plan, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -170,6 +171,11 @@ export class DentalStore {
       const { [tooth]: _old, ...rest } = p.teeth ?? {};
       return { ...p, teeth: condition ? { ...rest, [tooth]: condition } : rest };
     }));
+  }
+
+  /** Edits a patient's treatment plan: `change` receives the current list and returns the new one. */
+  changePlan(patientId: string, change: (plan: TreatmentItem[]) => TreatmentItem[]): void {
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, plan: change(p.plan ?? []) } : p)));
   }
 
   /* ----------------------------- appointments ----------------------------- */

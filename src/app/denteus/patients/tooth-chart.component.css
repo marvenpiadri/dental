@@ -26,3 +26,4 @@
 .hint:empty { display: none; }
 .summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0; list-style: none; color: var(--app-muted); }
 .summary strong { color: var(--app-text); }
+.pill.plan { border-style: dashed; }

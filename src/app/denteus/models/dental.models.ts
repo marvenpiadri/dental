@@ -27,13 +27,30 @@ export interface Patient {
   createdAt?: string;
   /** Tooth chart: FDI tooth number (11-48) to its recorded condition. Teeth not listed are healthy. */
   teeth?: Record<string, ToothCondition>;
+  /** Treatment plan: what was proposed and what has been done, with prices. */
+  plan?: TreatmentItem[];
+}
+
+export const PROCEDURES = ['filling', 'cleaning', 'extraction', 'root-canal', 'crown', 'implant', 'xray', 'other'] as const;
+export type ProcedureId = (typeof PROCEDURES)[number];
+
+export interface TreatmentItem {
+  id: string;
+  /** FDI tooth number, absent for work that isn't about one tooth (a cleaning). */
+  tooth?: string;
+  procedure: ProcedureId;
+  /** In the clinic's currency, whole units. */
+  price: number;
+  status: 'planned' | 'done';
+  /** ISO timestamp the item was marked done. */
+  doneAt?: string;
 }
 
 export const TOOTH_CONDITIONS = ['caries', 'filled', 'root-canal', 'crown', 'implant', 'missing'] as const;
 export type ToothCondition = (typeof TOOTH_CONDITIONS)[number];
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan'>;
 
 export interface Dentist {
   id: string;

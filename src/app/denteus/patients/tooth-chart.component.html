@@ -26,6 +26,7 @@
       @for (c of conditions; track c) {
         <button type="button" class="pill" [class.on]="selectedCondition() === c" [attr.aria-pressed]="selectedCondition() === c" (click)="set(c)">{{ t(key[c]) }}</button>
       }
+      <button type="button" class="pill plan" (click)="plan()"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> {{ t('tooth.plan') }}</button>
       @if (selectedCondition()) {
         <button type="button" class="pill" (click)="set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i> {{ t('tooth.clear') }}</button>
       }
