@@ -17,7 +17,6 @@ export class CalendarToolbarComponent {
   readonly newLabel = input('New event');
   readonly newEvent = output<void>();
   readonly toggleSidebar = output<void>();
-  readonly toggleTheme = output<void>();
 
   protected readonly views: { id: CalendarViewType; label: string }[] = [
     { id: 'day', label: 'Day' },

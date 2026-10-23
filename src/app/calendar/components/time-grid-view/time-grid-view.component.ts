@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   afterNextRender,
+  afterRenderEffect,
   computed,
   inject,
   input,
@@ -280,6 +281,12 @@ export class TimeGridViewComponent {
 
   constructor() {
     afterNextRender(() => this.scrollToInitialPosition());
+    afterRenderEffect(() => {
+      const minute = this.store.revealMinute();
+      if (minute === null) return;
+      // a little above the visit so it isn't glued to the top edge
+      this.scroller().nativeElement.scrollTop = Math.max(0, minute - 45) * this.pxPerMin;
+    });
     inject(DestroyRef).onDestroy(() => this.endDrag());
   }
 
@@ -515,7 +522,8 @@ export class TimeGridViewComponent {
     const visibleMin = Math.max((el.clientHeight - stickyHeight) / this.pxPerMin, 60);
     let startMin = 7 * 60;
     const nowMin = minutesOfDay(this.store.now());
-    if (this.todayIndex() >= 0 && nowMin > startMin + visibleMin - 60) {
+    // shortcut: clinic hours are fixed at 07:00-20:00 here; read them from the clinic settings once those exist.
+    if (this.todayIndex() >= 0 && nowMin > startMin + visibleMin - 60 && nowMin <= 20 * 60) {
       startMin = Math.max(0, nowMin - visibleMin * 0.6);
     }
     startMin = Math.max(0, Math.min(startMin, 1440 - visibleMin));

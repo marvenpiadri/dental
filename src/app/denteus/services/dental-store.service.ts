@@ -1,4 +1,5 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicDatabase } from './clinic-database.service';
 import {
@@ -10,6 +11,7 @@ import {
   ClinicLocation,
   Dentist,
   Patient,
+  PatientInput,
   STATUS_META,
 } from '../models/dental.models';
 import {
@@ -27,6 +29,16 @@ export interface RescheduleChange {
   end: Date;
   dentistId?: string;
   chairId?: string;
+}
+
+/** Trims every text field and drops the empty optional ones, so "" never gets stored as a value. */
+function tidy(input: PatientInput): PatientInput {
+  const out: PatientInput = { fullName: input.fullName.trim(), phone: input.phone.trim() };
+  for (const key of ['email', 'birthDate', 'sex', 'city', 'alert', 'notes'] as const) {
+    const value = input[key]?.trim();
+    if (value) (out as Record<string, string>)[key] = value;
+  }
+  return out;
 }
 
 const fail = (code: 'conflict' | 'invalid' | 'forbidden' | 'not-found', message: string, details: string[] = [message]): ApiResult<never> => ({
@@ -59,9 +71,16 @@ export class DentalStore {
   readonly dentistMap = computed(() => new Map(this.dentists().map((d) => [d.id, d])));
   readonly chairMap = computed(() => new Map(this.chairs().map((c) => [c.id, c])));
 
+  /** True once the clinic records have been read from the browser database. Pages show a skeleton until then. */
+  readonly loaded = signal(false);
+  /** True when the browser database could not be opened (private mode, blocked storage). Pages explain it instead of staying empty. */
+  readonly loadFailed = signal(false);
+
   private ready = false;
+  private initialization: Promise<void> | null = null;
   private persistQueue: Promise<void> = Promise.resolve();
   private readonly database = inject(ClinicDatabase);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly persistenceError = signal<string | null>(null);
 
   constructor() {
@@ -76,8 +95,21 @@ export class DentalStore {
     });
   }
 
-  /** Loads clinic records from IndexedDB. A new installation starts empty rather than inventing patients or appointments. */
-  async init(): Promise<void> {
+  /**
+   * Loads clinic records from IndexedDB. A new installation starts empty rather than inventing patients or appointments.
+   * Runs once however many pages ask (a second load would overwrite unsaved state), and never on the server,
+   * which has no IndexedDB: the server renders the empty frame and the browser fills it.
+   */
+  init(): Promise<void> {
+    if (!this.isBrowser) return Promise.resolve();
+    return (this.initialization ??= this.load().catch((error) => {
+      this.initialization = null; // let the next page retry
+      this.loadFailed.set(true);
+      throw error;
+    }));
+  }
+
+  private async load(): Promise<void> {
     const [locations, resources] = await Promise.all([
       this.database.loadLocations(),
       this.database.loadResources(),
@@ -90,6 +122,7 @@ export class DentalStore {
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
+    this.loaded.set(true);
   }
 
   /** The clinic setup flow calls this when a site is created or changed. */
@@ -114,9 +147,18 @@ export class DentalStore {
 
   /* ------------------------------- patients ------------------------------- */
 
-  addPatient(input: { fullName: string; phone: string }): Patient {
-    const patient: Patient = { id: newId(), fullName: input.fullName.trim(), phone: input.phone.trim() };
+  /** Callers validate first (patient-rules.ts); this only tidies the text and stamps the record. */
+  addPatient(input: PatientInput): Patient {
+    const patient: Patient = { ...tidy(input), id: newId(), createdAt: new Date().toISOString() };
     this.patients.update((list) => [...list, patient]);
+    return patient;
+  }
+
+  updatePatient(id: string, input: PatientInput): Patient | null {
+    const current = this.patientMap().get(id);
+    if (!current) return null;
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt };
+    this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
 

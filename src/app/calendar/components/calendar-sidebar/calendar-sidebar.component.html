@@ -1,7 +1,9 @@
-<div class="brand">
-  <span class="logo"><cal-icon name="calendar" [size]="15" [stroke]="2.1" /></span>
-  <span class="brand-name">{{ brand() }}</span>
-</div>
+@if (brand()) {
+  <div class="brand">
+    <span class="logo"><cal-icon name="calendar" [size]="15" [stroke]="2.1" /></span>
+    <span class="brand-name">{{ brand() }}</span>
+  </div>
+}
 
 <div class="scroll">
   <nav class="calendars" aria-label="Calendars">

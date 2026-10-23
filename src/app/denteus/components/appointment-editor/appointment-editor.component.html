@@ -29,6 +29,12 @@
   } @else {
     <den-patient-picker [patients]="store.patients()" [(patientId)]="patientId" (createPatient)="onCreatePatient($event)" />
   }
+  @if (patientAlert(); as medicalAlert) {
+    <div class="warn medical" role="note">
+      <cal-icon name="alert" [size]="15" />
+      <div><strong>Medical alert.</strong> {{ medicalAlert }}</div>
+    </div>
+  }
 
   <div class="label-row">
     <span class="label">Date and time</span>

@@ -1,0 +1,100 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <a class="btn btn--icon" [routerLink]="backLink()" [attr.aria-label]="t('common.cancel')"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>
+    <h1 class="ds-title">{{ t(editing() ? 'form.edit.title' : 'form.new.title') }}</h1>
+  </div>
+  <div class="ds-actions">
+    <a class="btn" [routerLink]="backLink()">{{ t('common.cancel') }}</a>
+    <button class="btn btn--primary" type="submit" form="patient-form" [disabled]="saving() || missing()">
+      <i class="fa-solid fa-check" aria-hidden="true"></i>{{ saving() ? t('form.saving') : t(editing() ? 'form.save.edit' : 'form.save.new') }}
+    </button>
+  </div>
+</header>
+
+<div class="ds-body canvas">
+  @if (missing()) {
+    <div class="card empty narrow">
+      <span class="icon-tile"><i class="fa-solid fa-user-slash" aria-hidden="true"></i></span>
+      <h2>{{ t('profile.notFound.title') }}</h2>
+      <p>{{ t('profile.notFound.body') }}</p>
+      <a class="btn" routerLink="/patients">{{ t('profile.notFound.cta') }}</a>
+    </div>
+  } @else {
+    <form id="patient-form" class="stack narrow" novalidate (submit)="$event.preventDefault(); submit()">
+      @if (submitted() && hasProblems()) {
+        <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t('form.error.summary') }}</p>
+      }
+      @if (saveFailed()) {
+        <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t('form.error.save') }}</p>
+      }
+
+      <section class="card">
+        <header class="card-head"><h2 class="card-title"><i class="fa-regular fa-id-card" aria-hidden="true"></i>{{ t('form.section.personal') }}</h2></header>
+        <div class="card-body fields">
+          <label class="field wide">
+            <span class="label">{{ t('form.fullName') }}</span>
+            <input class="input" name="fullName" autocomplete="name" required [placeholder]="t('form.fullName.placeholder')"
+              [value]="values().fullName" (input)="set('fullName', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('fullName') ? 'true' : null" [attr.aria-describedby]="errorKey('fullName') ? 'err-fullName' : null" />
+            @if (errorKey('fullName'); as key) { <p class="error-text" id="err-fullName">{{ t(key) }}</p> }
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.birthDate') }}</span>
+            <input class="input" type="date" name="birthDate" autocomplete="bday"
+              [value]="values().birthDate" (input)="set('birthDate', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('birthDate') ? 'true' : null" [attr.aria-describedby]="errorKey('birthDate') ? 'err-birthDate' : null" />
+            @if (errorKey('birthDate'); as key) { <p class="error-text" id="err-birthDate">{{ t(key) }}</p> }
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.sex') }}</span>
+            <select class="input" name="sex" [value]="values().sex" (change)="set('sex', $any($event.target).value)">
+              <option value="">{{ t('form.sex.unspecified') }}</option>
+              <option value="female">{{ t('form.sex.female') }}</option>
+              <option value="male">{{ t('form.sex.male') }}</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-phone" aria-hidden="true"></i>{{ t('form.section.contact') }}</h2></header>
+        <div class="card-body fields">
+          <label class="field">
+            <span class="label">{{ t('form.phone') }}</span>
+            <input class="input" type="tel" name="phone" autocomplete="tel" inputmode="tel" [placeholder]="t('form.phone.placeholder')"
+              [value]="values().phone" (input)="set('phone', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('phone') ? 'true' : null" [attr.aria-describedby]="errorKey('phone') ? 'err-phone' : null" />
+            @if (errorKey('phone'); as key) { <p class="error-text" id="err-phone">{{ t(key) }}</p> }
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.email') }}</span>
+            <input class="input" type="email" name="email" autocomplete="email" [placeholder]="t('form.email.placeholder')"
+              [value]="values().email" (input)="set('email', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('email') ? 'true' : null" [attr.aria-describedby]="errorKey('email') ? 'err-email' : null" />
+            @if (errorKey('email'); as key) { <p class="error-text" id="err-email">{{ t(key) }}</p> }
+          </label>
+          <label class="field wide">
+            <span class="label">{{ t('form.city') }}</span>
+            <input class="input" name="city" autocomplete="address-level2" [value]="values().city" (input)="set('city', $any($event.target).value)" />
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ t('form.section.medical') }}</h2></header>
+        <div class="card-body fields">
+          <label class="field wide">
+            <span class="label">{{ t('form.alert') }}</span>
+            <textarea class="input" name="alert" rows="3" [placeholder]="t('form.alert.placeholder')" aria-describedby="alert-hint"
+              [value]="values().alert" (input)="set('alert', $any($event.target).value)"></textarea>
+            <span class="hint muted" id="alert-hint">{{ t('form.alert.hint') }}</span>
+          </label>
+          <label class="field wide">
+            <span class="label">{{ t('form.notes') }}</span>
+            <textarea class="input" name="notes" rows="4" [value]="values().notes" (input)="set('notes', $any($event.target).value)"></textarea>
+          </label>
+        </div>
+      </section>
+    </form>
+  }
+</div>

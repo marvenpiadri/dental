@@ -59,6 +59,7 @@ export class AppointmentEditorComponent implements OnInit {
   protected readonly createStatuses: AppointmentStatus[] = ['scheduled', 'confirmed'];
 
   protected readonly patientId = signal<string | null>(null);
+  protected readonly patientAlert = computed(() => this.store.patientMap().get(this.patientId() ?? '')?.alert ?? null);
   protected readonly start = signal(new Date());
   protected readonly duration = signal(30);
   protected readonly dentistId = signal('');

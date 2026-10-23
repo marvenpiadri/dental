@@ -1,0 +1,214 @@
+.tall {
+  min-height: 320px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.search {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.search i {
+  position: absolute;
+  inset-inline-start: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--app-muted);
+  pointer-events: none;
+}
+
+.search .input {
+  padding-inline-start: 38px;
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pill:hover {
+  color: var(--app-text);
+  background: var(--app-hover);
+}
+
+.pill.on {
+  border-color: var(--app-text);
+  background: var(--app-text);
+  color: var(--app-bg);
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+.sort .input {
+  width: auto;
+  min-height: 34px;
+}
+
+/* one grid template shared by the header and every row keeps the columns aligned */
+.head,
+.row {
+  display: grid;
+  grid-template-columns: minmax(240px, 2.2fr) minmax(130px, 1fr) minmax(150px, 1fr) minmax(150px, 1fr) 16px;
+  align-items: center;
+  gap: 16px;
+}
+
+.head {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--app-line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows li + li {
+  border-top: 1px solid var(--app-line);
+}
+
+.row {
+  padding: 12px 18px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: var(--app-hover);
+}
+
+.row:focus-visible {
+  outline-offset: -2px;
+}
+
+.cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+}
+
+.who {
+  display: grid;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.sub {
+  min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.alert-icon {
+  margin-inline-start: 6px;
+  font-size: 12px;
+  color: var(--app-warn);
+}
+
+.chevron {
+  font-size: 11px;
+  color: var(--app-muted);
+}
+
+.mobile-label {
+  display: none;
+}
+
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--app-line);
+}
+
+@media (max-width: 900px) {
+  .head {
+    display: none;
+  }
+
+  /* on narrow screens each row becomes a small card: the identity first, details below with labels */
+  .row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+
+  .identity {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .chevron {
+    display: none;
+  }
+
+  .sort {
+    margin-inline-start: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .hide-sm {
+    display: none;
+  }
+}

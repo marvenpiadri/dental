@@ -15,9 +15,12 @@ import { MonthViewComponent } from '../calendar/components/month-view/month-view
 import { TimeGridViewComponent } from '../calendar/components/time-grid-view/time-grid-view.component';
 import { ToastStackComponent } from '../calendar/components/toast-stack/toast-stack.component';
 import { YearViewComponent } from '../calendar/components/year-view/year-view.component';
-import { CalendarEvent, CalendarTheme, CalendarViewType, CommitResult, EventDraft } from '../calendar/models/calendar.models';
+import { CalendarEvent, CalendarViewType, CommitResult, EventDraft } from '../calendar/models/calendar.models';
 import { CalendarStore } from '../calendar/services/calendar-store.service';
 import { isSameDay } from '../calendar/utils/date.utils';
+import { I18n } from '../core/i18n/i18n.service';
+import { ThemeService } from '../core/theme.service';
+import { parseIsoDate } from './patients/patient-rules';
 import { AppointmentEditorComponent, EditorProblem } from './components/appointment-editor/appointment-editor.component';
 import { AppointmentPanelComponent } from './components/appointment-panel/appointment-panel.component';
 import { WaitingRoomComponent } from './components/waiting-room/waiting-room.component';
@@ -31,8 +34,6 @@ interface EditorState {
   problem: EditorProblem | null;
   saving: boolean;
 }
-
-const THEME_KEY = 'denteus-calendar-theme';
 
 /**
  * The Denteus appointment calendar: the generic calendar views, wired to patients, dentists and chairs.
@@ -65,11 +66,18 @@ const THEME_KEY = 'denteus-calendar-theme';
 export class DentalCalendarComponent implements OnInit {
   protected readonly cal = inject(CalendarStore);
   protected readonly dental = inject(DentalStore);
+  private readonly themeService = inject(ThemeService);
+  private readonly i18n = inject(I18n);
 
   readonly defaultView = input<CalendarViewType>('day');
+  /** Hand-off from other pages: open on this day (`YYYY-MM-DD`), with this appointment selected... */
+  readonly initialDate = input<string>();
+  readonly initialAppointment = input<string>();
+  /** ...or start a booking, for this patient when one is given. */
+  readonly bookNew = input(false);
+  readonly bookForPatient = input<string>();
   readonly openPatient = output<string>();
   readonly openEncounter = output<string>();
-  readonly themeChange = output<CalendarTheme>();
 
   protected readonly groupBy = signal<GroupBy>('chair');
   protected readonly showCancelled = signal(false);
@@ -92,6 +100,11 @@ export class DentalCalendarComponent implements OnInit {
   });
 
   constructor() {
+    // The app owns light/dark; the calendar just follows it.
+    effect(() => this.cal.theme.set(this.themeService.theme()));
+    // Month and weekday names follow the app language. The calendar's own buttons are still English (see DESIGN.md).
+    effect(() => this.cal.locale.set(this.i18n.lang() === 'fr' ? 'fr-FR' : 'en-US'));
+
     effect(() => {
       const ctx = {
         patients: this.dental.patientMap(),
@@ -132,6 +145,7 @@ export class DentalCalendarComponent implements OnInit {
 
     this.cal.view.set(this.defaultView());
     this.cal.showAllDay.set(false);
+    this.applyHandOff();
 
     this.cal.gateway.set({
       update: async (event: CalendarEvent): Promise<CommitResult> => {
@@ -145,15 +159,27 @@ export class DentalCalendarComponent implements OnInit {
       },
     });
 
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(THEME_KEY);
-    } catch {
-      /* storage blocked: fall back to the system preference */
+  }
+
+  private applyHandOff(): void {
+    const day = this.initialDate() ? parseIsoDate(this.initialDate()!) : null;
+    if (day) this.cal.goToDate(day);
+
+    const appointmentId = this.initialAppointment();
+    const linked = appointmentId ? this.dental.appointments().find((a) => a.id === appointmentId) : undefined;
+    if (linked) {
+      this.selectedId.set(linked.id);
+      if (!day) this.cal.goToDate(linked.start);
+      this.cal.revealMinute.set(linked.start.getHours() * 60 + linked.start.getMinutes());
     }
-    const system = typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches;
-    this.cal.theme.set(stored === 'dark' || stored === 'light' ? stored : system ? 'dark' : 'light');
-    this.themeChange.emit(this.cal.theme());
+
+    if (this.bookNew()) {
+      this.openCreate();
+      const patientId = this.bookForPatient();
+      if (patientId && this.dental.patientMap().has(patientId)) {
+        this.editor.update((state) => state && { ...state, draft: { ...state.draft, patientId } });
+      }
+    }
   }
 
   protected openCreate(draft?: EventDraft): void {
@@ -238,17 +264,6 @@ export class DentalCalendarComponent implements OnInit {
   protected async onTransition(id: string, to: AppointmentStatus): Promise<void> {
     const result = await this.dental.transition(id, to);
     if (!result.ok) this.cal.notify(result.message);
-  }
-
-  protected toggleTheme(): void {
-    const next: CalendarTheme = this.cal.theme() === 'dark' ? 'light' : 'dark';
-    this.cal.theme.set(next);
-    this.themeChange.emit(next);
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* ignore */
-    }
   }
 
   protected openFromWaiting(id: string): void {

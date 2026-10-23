@@ -111,3 +111,13 @@ textarea.input.spaced {
   cursor: not-allowed;
   filter: none;
 }
+
+/* the patient's medical alert: amber like the profile banner, and readable, not just decorative */
+.medical {
+  border: 1px solid var(--app-warn);
+  color: var(--cal-text);
+}
+
+.medical cal-icon {
+  color: var(--app-warn);
+}

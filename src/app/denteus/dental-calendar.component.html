@@ -1,6 +1,6 @@
 <div class="shell" [class.sidebar-open]="sidebarOpen()">
   <aside class="sidebar" aria-label="Dentists and waiting room">
-    <cal-sidebar brand="Denteus" heading="Dentists">
+    <cal-sidebar brand="" heading="Dentists">
       <den-waiting-room [appointments]="waiting()" [inTreatment]="inTreatment()" (select)="openFromWaiting($event)" />
 
       <label class="filter">
@@ -19,7 +19,6 @@
       newLabel="New appointment"
       (newEvent)="openCreate()"
       (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"
-      (toggleTheme)="toggleTheme()"
     >
       @if (cal.view() === 'day') {
         <div class="group" role="group" aria-label="Show columns for">

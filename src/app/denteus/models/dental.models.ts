@@ -15,7 +15,20 @@ export interface Patient {
   id: string;
   fullName: string;
   phone: string;
+  email?: string;
+  /** ISO date, `YYYY-MM-DD`. Stored as a string so there is no time zone to get wrong. */
+  birthDate?: string;
+  sex?: 'female' | 'male';
+  city?: string;
+  /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
+  alert?: string;
+  notes?: string;
+  /** ISO timestamp. Absent on records created before this field existed. */
+  createdAt?: string;
 }
+
+/** What the patient form edits. Everything but the name is optional. */
+export type PatientInput = Omit<Patient, 'id' | 'createdAt'>;
 
 export interface Dentist {
   id: string;
