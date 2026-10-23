@@ -1,14 +1,22 @@
 :host { display: block; padding: 16px; }
-.arch { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
-.arch + .arch { margin-bottom: 14px; }
-.tooth { min-width: 0; height: 38px; padding: 0; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-panel); color: var(--app-text); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.scroll { overflow-x: auto; margin-bottom: 14px; }
+.arch { display: grid; grid-template-columns: repeat(16, minmax(36px, 1fr)); gap: 4px; min-width: 640px; }
+.arch + .arch { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--app-line); }
+.tooth { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 4px 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--app-muted); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.lower .tooth { flex-direction: column-reverse; }
+.tooth svg { width: 100%; height: 76px; }
+.tooth svg.mirror { transform: scaleX(-1); }
+.tooth svg.flip { transform: scaleY(-1); }
+.tooth svg.mirror.flip { transform: scale(-1, -1); }
 .tooth:hover { background: var(--app-hover); }
-.tooth.sel { outline: 2px solid var(--app-text); outline-offset: 1px; }
-.tooth[data-c='caries'] { border-color: var(--app-danger); color: var(--app-danger); }
-.tooth[data-c='filled'] { border-color: var(--app-info); color: var(--app-info); }
-.tooth[data-c='root-canal'] { border-color: var(--app-warn); color: var(--app-warn); }
-.tooth[data-c='crown'], .tooth[data-c='implant'] { background: var(--app-text); color: var(--app-bg); border-color: var(--app-text); }
-.tooth[data-c='missing'] { border-style: dashed; color: var(--app-muted); text-decoration: line-through; }
+.tooth.sel { border-color: var(--app-text); color: var(--app-text); }
+.tooth[data-c='caries'] svg { --show-caries: inline; }
+.tooth[data-c='filled'] svg { --show-filled: inline; }
+.tooth[data-c='root-canal'] svg { --show-root-canal: inline; }
+.tooth[data-c='crown'] svg { --show-crown: inline; }
+.tooth[data-c='implant'] svg { --show-implant: inline; --show-tooth: none; }
+.tooth[data-c='missing'] svg { --show-tooth: inline; opacity: 0.18; }
+.tooth[data-c='missing'] span { text-decoration: line-through; }
 .picker { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .options { display: flex; flex-wrap: wrap; gap: 6px; }
 .pill { min-height: 30px; padding: 0 12px; border: 1px solid var(--app-line); border-radius: 999px; background: transparent; color: var(--app-muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -18,4 +26,3 @@
 .hint:empty { display: none; }
 .summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0; list-style: none; color: var(--app-muted); }
 .summary strong { color: var(--app-text); }
-@media (max-width: 700px) { .tooth { height: 32px; font-size: 9px; } .arch { gap: 2px; } }

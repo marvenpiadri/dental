@@ -1,14 +1,22 @@
-<div class="arch" role="group" [attr.aria-label]="t('tooth.upper')">
+<div class="scroll">
+<div class="arch upper" role="group" [attr.aria-label]="t('tooth.upper')">
   @for (n of upper; track n) {
     <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
-      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">{{ n }}</button>
+      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">
+      <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg>
+      <span>{{ n }}</span>
+    </button>
   }
 </div>
-<div class="arch" role="group" [attr.aria-label]="t('tooth.lower')">
+<div class="arch lower" role="group" [attr.aria-label]="t('tooth.lower')">
   @for (n of lower; track n) {
     <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
-      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">{{ n }}</button>
+      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">
+      <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg>
+      <span>{{ n }}</span>
+    </button>
   }
+</div>
 </div>
 
 @if (selected(); as tooth) {

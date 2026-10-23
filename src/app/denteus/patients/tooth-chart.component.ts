@@ -35,6 +35,12 @@ export class ToothChartComponent {
   protected readonly selectedCondition = computed(() => this.teeth()[this.selected() ?? ''] ?? null);
   protected readonly summary = computed(() => Object.entries(this.teeth()).sort(([a], [b]) => +a - +b));
 
+  /** The artwork has two shapes per position (upper right, lower left, roots up); the other quadrants mirror them. */
+  protected shape(tooth: string): { id: string; mirror: boolean; flip: boolean } {
+    const quadrant = +tooth[0];
+    return { id: `t${quadrant % 2 ? tooth : `${quadrant === 2 ? 1 : 3}${tooth[1]}`}`, mirror: quadrant === 2 || quadrant === 4, flip: quadrant > 2 };
+  }
+
   protected pick(tooth: string): void {
     this.selected.update((current) => (current === tooth ? null : tooth));
   }
