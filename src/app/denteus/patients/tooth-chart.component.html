@@ -1,0 +1,36 @@
+<div class="arch" role="group" [attr.aria-label]="t('tooth.upper')">
+  @for (n of upper; track n) {
+    <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
+      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">{{ n }}</button>
+  }
+</div>
+<div class="arch" role="group" [attr.aria-label]="t('tooth.lower')">
+  @for (n of lower; track n) {
+    <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
+      [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">{{ n }}</button>
+  }
+</div>
+
+@if (selected(); as tooth) {
+  <div class="picker">
+    <strong>{{ t('tooth.number', { n: tooth }) }}</strong>
+    <div class="options">
+      @for (c of conditions; track c) {
+        <button type="button" class="pill" [class.on]="selectedCondition() === c" [attr.aria-pressed]="selectedCondition() === c" (click)="set(c)">{{ t(key[c]) }}</button>
+      }
+      @if (selectedCondition()) {
+        <button type="button" class="pill" (click)="set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i> {{ t('tooth.clear') }}</button>
+      }
+    </div>
+  </div>
+} @else {
+  <p class="hint">{{ summary().length ? '' : t('tooth.hint') }}</p>
+}
+
+@if (summary().length) {
+  <ul class="summary">
+    @for (entry of summary(); track entry[0]) {
+      <li><strong>{{ entry[0] }}</strong> {{ t(key[entry[1]]) }}</li>
+    }
+  </ul>
+}

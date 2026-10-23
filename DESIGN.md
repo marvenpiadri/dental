@@ -61,4 +61,4 @@ Copy rules (`en.ts` header): sentence case, buttons start with a verb, empty sta
 
 `DentalStore` is still the browser-side stand-in for the API (IndexedDB). Patient fields beyond name and phone are optional; the old records keep working. Patient rules (validation, accent-insensitive search, age) are pure functions in `patients/patient-rules.ts`, tested in `patient-rules.spec.ts`.
 
-Not built yet, and the biggest gaps for a real clinic: **opening hours and multiple sites** in clinic setup (dentists and chairs are done), sign-in and roles, the clinical record (odontogram, treatment plans), billing, reminders (WhatsApp/SMS), and the real API.
+Not built yet, and the biggest gaps for a real clinic: **opening hours and multiple sites** in clinic setup (dentists and chairs are done), sign-in and roles, treatment plans and per-visit clinical notes (the tooth chart exists: six conditions per tooth, adult FDI teeth only), billing, reminders (WhatsApp/SMS), and the real API.

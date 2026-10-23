@@ -12,6 +12,7 @@ import {
   Dentist,
   Patient,
   PatientInput,
+  ToothCondition,
   STATUS_META,
 } from '../models/dental.models';
 import {
@@ -157,9 +158,18 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt };
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, teeth: current.teeth }; // the form doesn't edit the chart, so keep it
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
+  }
+
+  /** Records (or clears, with `null`) one tooth's condition on the patient's chart. */
+  setTooth(patientId: string, tooth: string, condition: ToothCondition | null): void {
+    this.patients.update((list) => list.map((p) => {
+      if (p.id !== patientId) return p;
+      const { [tooth]: _old, ...rest } = p.teeth ?? {};
+      return { ...p, teeth: condition ? { ...rest, [tooth]: condition } : rest };
+    }));
   }
 
   /* ----------------------------- appointments ----------------------------- */

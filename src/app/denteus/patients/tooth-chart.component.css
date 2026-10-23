@@ -1,0 +1,21 @@
+:host { display: block; padding: 16px; }
+.arch { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
+.arch + .arch { margin-bottom: 14px; }
+.tooth { min-width: 0; height: 38px; padding: 0; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-panel); color: var(--app-text); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.tooth:hover { background: var(--app-hover); }
+.tooth.sel { outline: 2px solid var(--app-text); outline-offset: 1px; }
+.tooth[data-c='caries'] { border-color: var(--app-danger); color: var(--app-danger); }
+.tooth[data-c='filled'] { border-color: var(--app-info); color: var(--app-info); }
+.tooth[data-c='root-canal'] { border-color: var(--app-warn); color: var(--app-warn); }
+.tooth[data-c='crown'], .tooth[data-c='implant'] { background: var(--app-text); color: var(--app-bg); border-color: var(--app-text); }
+.tooth[data-c='missing'] { border-style: dashed; color: var(--app-muted); text-decoration: line-through; }
+.picker { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.options { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { min-height: 30px; padding: 0 12px; border: 1px solid var(--app-line); border-radius: 999px; background: transparent; color: var(--app-muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.pill:hover { color: var(--app-text); background: var(--app-hover); }
+.pill.on { border-color: var(--app-text); background: var(--app-text); color: var(--app-bg); }
+.hint { margin: 0; color: var(--app-muted); }
+.hint:empty { display: none; }
+.summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0; list-style: none; color: var(--app-muted); }
+.summary strong { color: var(--app-text); }
+@media (max-width: 700px) { .tooth { height: 32px; font-size: 9px; } .arch { gap: 2px; } }

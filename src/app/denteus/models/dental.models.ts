@@ -25,10 +25,15 @@ export interface Patient {
   notes?: string;
   /** ISO timestamp. Absent on records created before this field existed. */
   createdAt?: string;
+  /** Tooth chart: FDI tooth number (11-48) to its recorded condition. Teeth not listed are healthy. */
+  teeth?: Record<string, ToothCondition>;
 }
 
+export const TOOTH_CONDITIONS = ['caries', 'filled', 'root-canal', 'crown', 'implant', 'missing'] as const;
+export type ToothCondition = (typeof TOOTH_CONDITIONS)[number];
+
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth'>;
 
 export interface Dentist {
   id: string;

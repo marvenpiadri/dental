@@ -63,6 +63,13 @@
         </section>
       }
 
+      @if (store.loaded()) {
+        <section class="card" aria-labelledby="teeth-title">
+          <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
+          <den-tooth-chart [teeth]="p.teeth ?? {}" (change)="store.setTooth(p.id, $event.tooth, $event.condition)" />
+        </section>
+      }
+
       <div class="columns">
         <section class="card" aria-labelledby="appts-title">
           <header class="card-head">
