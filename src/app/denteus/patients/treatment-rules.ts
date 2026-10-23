@@ -1,4 +1,4 @@
-import { PROCEDURES, ProcedureId, TreatmentItem } from '../models/dental.models';
+import { PROCEDURES, Payment, ProcedureId, TreatmentItem } from '../models/dental.models';
 
 /** Starting prices (MAD) offered when a procedure is picked; the dentist can overwrite them per item. */
 // shortcut: one price list for the whole clinic, in code. Move to clinic setup when prices need editing.
@@ -22,4 +22,13 @@ export function parsePrice(text: string): number | null {
   const cleaned = text.replace(/[\s ]/g, '').replace(',', '.');
   if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
   return Math.round(Number(cleaned));
+}
+
+export interface Balance { charged: number; paid: number; due: number }
+
+/** Done work is what the patient is charged for; planned work is not billed yet. `due` is negative when they have paid ahead. */
+export function balance(plan: readonly TreatmentItem[], payments: readonly Payment[]): Balance {
+  const charged = planTotals(plan).done;
+  const paid = payments.reduce((n, p) => n + p.amount, 0);
+  return { charged, paid, due: charged - paid };
 }

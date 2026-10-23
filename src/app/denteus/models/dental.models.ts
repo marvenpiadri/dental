@@ -29,6 +29,20 @@ export interface Patient {
   teeth?: Record<string, ToothCondition>;
   /** Treatment plan: what was proposed and what has been done, with prices. */
   plan?: TreatmentItem[];
+  /** Money received from the patient. What they owe is the done work in `plan` minus these. */
+  payments?: Payment[];
+}
+
+export const PAYMENT_METHODS = ['cash', 'card', 'transfer'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export interface Payment {
+  id: string;
+  /** Whole units of the clinic's currency, more than zero. */
+  amount: number;
+  method: PaymentMethod;
+  /** ISO timestamp. */
+  at: string;
 }
 
 export const PROCEDURES = ['filling', 'cleaning', 'extraction', 'root-canal', 'crown', 'implant', 'xray', 'other'] as const;
@@ -50,7 +64,7 @@ export const TOOTH_CONDITIONS = ['caries', 'filled', 'root-canal', 'crown', 'imp
 export type ToothCondition = (typeof TOOTH_CONDITIONS)[number];
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan' | 'payments'>;
 
 export interface Dentist {
   id: string;

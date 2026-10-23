@@ -73,6 +73,11 @@
           <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
           <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" (edit)="store.changePlan(p.id, $event)" />
         </section>
+
+        <section class="card" aria-labelledby="bill-title">
+          <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
+          <den-billing [plan]="p.plan ?? []" [payments]="p.payments ?? []" (edit)="store.changePayments(p.id, $event)" />
+        </section>
       }
 
       <div class="columns">

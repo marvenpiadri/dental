@@ -1,0 +1,40 @@
+<dl class="sums">
+  <div><dt>{{ t('bill.charged') }}</dt><dd>{{ i18n.money(sums().charged) }}</dd></div>
+  <div><dt>{{ t('bill.paid') }}</dt><dd>{{ i18n.money(sums().paid) }}</dd></div>
+  <div class="due" [class.settled]="sums().due <= 0">
+    <dt>{{ t(sums().due < 0 ? 'bill.credit' : 'bill.due') }}</dt>
+    <dd>{{ i18n.money(sums().due < 0 ? -sums().due : sums().due) }}</dd>
+  </div>
+</dl>
+
+<form class="add" novalidate (submit)="$event.preventDefault(); add()">
+  <label class="field price">
+    <span class="label">{{ t('bill.amount') }}</span>
+    <input class="input" inputmode="numeric" [value]="amount()" (input)="amount.set($any($event.target).value)"
+      [attr.aria-invalid]="invalid() ? 'true' : null" aria-describedby="pay-error" />
+  </label>
+  <label class="field">
+    <span class="label">{{ t('bill.method') }}</span>
+    <select class="input" (change)="method.set($any($event.target).value)">
+      @for (m of methods; track m) { <option [value]="m" [selected]="method() === m">{{ t(methodKey[m]) }}</option> }
+    </select>
+  </label>
+  @if (sums().due > 0) { <button class="btn" type="button" (click)="fillDue()">{{ t('bill.fillDue', { amount: i18n.money(sums().due) }) }}</button> }
+  <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('bill.record') }}</button>
+</form>
+@if (invalid()) { <p class="error-text" id="pay-error" role="alert">{{ t('bill.amount.error') }}</p> }
+
+@if (recent().length) {
+  <ul class="items">
+    @for (p of recent(); track p.id) {
+      <li>
+        <span class="when">{{ when(p) }}</span>
+        <span class="chip" data-tone="neutral">{{ t(methodKey[p.method]) }}</span>
+        <span class="amount">{{ i18n.money(p.amount) }}</span>
+        <button type="button" class="btn btn--icon" [attr.aria-label]="t('bill.remove')" (click)="remove(p)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </li>
+    }
+  </ul>
+} @else {
+  <p class="empty-note">{{ t('bill.empty') }}</p>
+}

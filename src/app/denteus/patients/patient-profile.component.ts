@@ -6,13 +6,14 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { ToothChartComponent } from './tooth-chart.component';
+import { BillingComponent } from './billing.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent],
+  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
