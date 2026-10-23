@@ -6,6 +6,7 @@ import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, typeKey, waitingMinutes } from '../utils/appointment-labels';
 import { initials } from '../patients/patient-rules';
+import { balance } from '../patients/treatment-rules';
 
 /** The front desk's morning view: what is booked, who is waiting, who is next. */
 @Component({
@@ -77,6 +78,15 @@ export class TodayComponent {
       const next = visits.find((a) => now && a.end > now && a.status !== 'completed');
       return { dentist, visits: visits.length, next: next?.start ?? null };
     });
+  });
+
+  /** Patients who still owe money, biggest balance first. Only the top few are listed; the total covers everyone. */
+  protected readonly owing = computed(() => {
+    const rows = this.store.patients()
+      .map((patient) => ({ patient, due: balance(patient.plan ?? [], patient.payments ?? []).due }))
+      .filter((row) => row.due > 0)
+      .sort((a, b) => b.due - a.due);
+    return { rows: rows.slice(0, 5), count: rows.length, total: rows.reduce((n, row) => n + row.due, 0) };
   });
 
   protected patientName(a: Appointment): string {

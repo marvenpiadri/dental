@@ -106,6 +106,36 @@
         </section>
       </div>
 
+      <section class="card" aria-labelledby="owing-title">
+        <header class="card-head">
+          <h2 class="card-title" id="owing-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('today.owing.title') }}</h2>
+          @if (owing().count) { <span class="chip" data-tone="danger">{{ i18n.money(owing().total) }}</span> }
+        </header>
+        @if (owing().rows.length) {
+          <ul class="list">
+            @for (row of owing().rows; track row.patient.id) {
+              <li>
+                <a class="row" [routerLink]="['/patients', row.patient.id]">
+                  <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient.fullName) }}</span>
+                  <span class="who"><span class="name">{{ row.patient.fullName }}</span></span>
+                  <span class="name">{{ i18n.money(row.due) }}</span>
+                  <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
+                </a>
+              </li>
+            }
+          </ul>
+          @if (owing().count > owing().rows.length) {
+            <p class="more muted">{{ t('today.owing.more', { n: owing().count - owing().rows.length }) }}</p>
+          }
+        } @else {
+          <div class="empty">
+            <span class="icon-tile ok"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+            <h2>{{ t('today.owing.empty.title') }}</h2>
+            <p>{{ t('today.owing.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
       <section class="card" aria-labelledby="dentists-title">
         <header class="card-head">
           <h2 class="card-title" id="dentists-title"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>{{ t('today.dentists.title') }}</h2>
