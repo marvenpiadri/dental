@@ -27,6 +27,8 @@ export interface Patient {
   createdAt?: string;
   /** Tooth chart: FDI tooth number (11-48) to its recorded condition. Teeth not listed are healthy. */
   teeth?: Record<string, ToothCondition>;
+  /** Which faces of a tooth are affected ("MO" = mesial and occlusal), by tooth number. */
+  surfaces?: Record<string, string[]>;
   /** Treatment plan: what was proposed and what has been done, with prices. */
   plan?: TreatmentItem[];
   /** Money received from the patient. What they owe is the done work in `plan` minus these. */
@@ -95,7 +97,7 @@ export const TOOTH_CONDITIONS = ['caries', 'filled', 'root-canal', 'crown', 'imp
 export type ToothCondition = (typeof TOOTH_CONDITIONS)[number];
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan' | 'payments' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'surfaces' | 'plan' | 'payments' | 'visits'>;
 
 export interface Dentist {
   id: string;

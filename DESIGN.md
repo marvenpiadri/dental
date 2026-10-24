@@ -75,3 +75,6 @@ Optional. No staff = open app. Adding an owner on the Clinic page (Team and acce
 
 ## Recall and quotes
 Today lists patients whose last completed visit is 6+ months old with nothing booked (`recall-rules.ts`), each with a WhatsApp invite. The treatment plan prints a quote (devis) for planned work (`quote-html.ts`).
+
+## Tooth faces and baby teeth
+Caries and fillings can record faces (M O D B L, `surface-rules.ts`), shown as letters next to the tooth. Baby teeth (FDI 51-85) are a toggle on the chart: numbered shapes without artwork, same conditions, faces and treatment plan.

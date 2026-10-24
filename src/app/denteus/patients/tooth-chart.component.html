@@ -1,19 +1,25 @@
-<div class="scroll">
+<div class="dentition" role="group" [attr.aria-label]="t('tooth.dentition')">
+  <button type="button" class="pill" [class.on]="!baby()" [attr.aria-pressed]="!baby()" (click)="baby.set(false); selected.set(null)">{{ t('tooth.adult') }}</button>
+  <button type="button" class="pill" [class.on]="baby()" [attr.aria-pressed]="baby()" (click)="baby.set(true); selected.set(null)">{{ t('tooth.baby') }}</button>
+</div>
+<div class="scroll" [style.--cols]="baby() ? 10 : 16">
 <div class="arch upper" role="group" [attr.aria-label]="t('tooth.upper')">
-  @for (n of upper; track n) {
+  @for (n of upper(); track n) {
     <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
       [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">
-      <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg>
-      <span>{{ n }}</span>
+      @if (baby()) { <span class="milk" aria-hidden="true"></span> }
+      @else { <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg> }
+      <span>{{ n }}@if (faceSummary(n)) { <em>{{ faceSummary(n) }}</em> }</span>
     </button>
   }
 </div>
 <div class="arch lower" role="group" [attr.aria-label]="t('tooth.lower')">
-  @for (n of lower; track n) {
+  @for (n of lower(); track n) {
     <button type="button" class="tooth" [class.sel]="selected() === n" [attr.data-c]="teeth()[n]" [attr.aria-pressed]="selected() === n"
       [attr.aria-label]="n + (teeth()[n] ? ', ' + t(key[teeth()[n]]) : '')" (click)="pick(n)">
-      <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg>
-      <span>{{ n }}</span>
+      @if (baby()) { <span class="milk" aria-hidden="true"></span> }
+      @else { <svg viewBox="0 0 44 86" preserveAspectRatio="xMidYMid meet" aria-hidden="true" [class.mirror]="shape(n).mirror" [class.flip]="shape(n).flip"><use [attr.href]="'/teeth.svg#' + shape(n).id" /></svg> }
+      <span>{{ n }}@if (faceSummary(n)) { <em>{{ faceSummary(n) }}</em> }</span>
     </button>
   }
 </div>
@@ -31,6 +37,14 @@
         <button type="button" class="pill" (click)="set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i> {{ t('tooth.clear') }}</button>
       }
     </div>
+    @if (canMarkFaces()) {
+      <div class="options faces" role="group" [attr.aria-label]="t('tooth.faces')">
+        <span class="muted">{{ t('tooth.faces') }}</span>
+        @for (f of faces; track f) {
+          <button type="button" class="pill face" [class.on]="selectedFaces().includes(f)" [attr.aria-pressed]="selectedFaces().includes(f)" [attr.title]="t(faceKey[f])" (click)="toggleFace(f)">{{ f }}</button>
+        }
+      </div>
+    }
   </div>
 } @else {
   <p class="hint">{{ summary().length ? '' : t('tooth.hint') }}</p>
@@ -39,7 +53,7 @@
 @if (summary().length) {
   <ul class="summary">
     @for (entry of summary(); track entry[0]) {
-      <li><strong>{{ entry[0] }}</strong> {{ t(key[entry[1]]) }}</li>
+      <li><strong>{{ entry[0] }}</strong> {{ t(key[entry[1]]) }}@if (faceSummary(entry[0])) { <em> · {{ faceSummary(entry[0]) }}</em> }</li>
     }
   </ul>
 }

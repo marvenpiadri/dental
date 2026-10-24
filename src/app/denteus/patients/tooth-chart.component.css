@@ -1,6 +1,6 @@
 :host { display: block; padding: 16px; }
 .scroll { overflow-x: auto; margin-bottom: 14px; }
-.arch { display: grid; grid-template-columns: repeat(16, minmax(36px, 1fr)); gap: 4px; min-width: 640px; }
+.arch { display: grid; grid-template-columns: repeat(var(--cols, 16), minmax(36px, 1fr)); gap: 4px; min-width: 640px; }
 .arch + .arch { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--app-line); }
 .tooth { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 4px 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--app-muted); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
 .lower .tooth { flex-direction: column-reverse; }
@@ -27,3 +27,11 @@
 .summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0; list-style: none; color: var(--app-muted); }
 .summary strong { color: var(--app-text); }
 .pill.plan { border-style: dashed; }
+.dentition { display: flex; gap: 6px; margin-bottom: 12px; }
+.milk { width: 70%; height: 44px; border: 1.5px solid var(--app-line); border-radius: 40% 40% 50% 50%; background: var(--app-subtle); }
+.tooth[data-c] .milk { border-color: var(--app-text); }
+.tooth[data-c='missing'] .milk { opacity: 0.2; }
+.tooth em, .summary em { font-style: normal; color: var(--app-text); }
+.faces { align-items: center; }
+.pill.face { min-width: 34px; padding: 0; }
+.muted { color: var(--app-muted); }

@@ -6,6 +6,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { quoteHtml } from './quote-html';
 import { parsePrice, planTotals, procedureName } from './treatment-rules';
 import { UPPER, LOWER } from './tooth-chart.component';
+import { CHILD_LOWER, CHILD_UPPER } from './surface-rules';
 
 /** The patient's treatment plan: add work (optionally on a tooth), mark it done, see what is left to pay. */
 @Component({
@@ -27,7 +28,7 @@ export class TreatmentPlanComponent {
   protected readonly store = inject(DentalStore);
   protected readonly catalog = this.store.catalog;
   protected readonly nameOf = (id: string, name?: string) => procedureName(this.t, id, name);
-  protected readonly teeth = [...UPPER, ...LOWER].sort((a, b) => +a - +b);
+  protected readonly teeth = [...UPPER, ...LOWER, ...CHILD_UPPER, ...CHILD_LOWER].sort((a, b) => +a - +b);
 
   protected readonly draftTooth = signal('');
   protected readonly draftProcedure = signal('');

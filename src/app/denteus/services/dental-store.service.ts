@@ -187,7 +187,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, teeth: current.teeth, plan: current.plan, payments: current.payments, visits: current.visits }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, teeth: current.teeth, surfaces: current.surfaces, plan: current.plan, payments: current.payments, visits: current.visits }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -197,7 +197,17 @@ export class DentalStore {
     this.patients.update((list) => list.map((p) => {
       if (p.id !== patientId) return p;
       const { [tooth]: _old, ...rest } = p.teeth ?? {};
-      return { ...p, teeth: condition ? { ...rest, [tooth]: condition } : rest };
+      const { [tooth]: _faces, ...faces } = p.surfaces ?? {};
+      // clearing a tooth clears its faces too
+      return { ...p, teeth: condition ? { ...rest, [tooth]: condition } : rest, surfaces: condition ? p.surfaces : faces };
+    }));
+  }
+
+  setSurfaces(patientId: string, tooth: string, surfaces: string[]): void {
+    this.patients.update((list) => list.map((p) => {
+      if (p.id !== patientId) return p;
+      const { [tooth]: _old, ...rest } = p.surfaces ?? {};
+      return { ...p, surfaces: surfaces.length ? { ...rest, [tooth]: surfaces } : rest };
     }));
   }
 

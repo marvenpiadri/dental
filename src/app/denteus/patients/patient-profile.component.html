@@ -77,7 +77,7 @@
         <div class="pane" [hidden]="section() !== 'clinical'">
         <section class="card" aria-labelledby="teeth-title">
           <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
-          <den-tooth-chart [teeth]="p.teeth ?? {}" (mark)="store.setTooth(p.id, $event.tooth, $event.condition)" (planTooth)="planTooth.set($event)" />
+          <den-tooth-chart [teeth]="p.teeth ?? {}" [surfaces]="p.surfaces ?? {}" (markSurfaces)="store.setSurfaces(p.id, $event.tooth, $event.surfaces)" (mark)="store.setTooth(p.id, $event.tooth, $event.condition)" (planTooth)="planTooth.set($event)" />
         </section>
 
         <section class="card" aria-labelledby="visits-title">
