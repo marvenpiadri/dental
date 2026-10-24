@@ -6,6 +6,7 @@ import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, typeKey, waitingMinutes } from '../utils/appointment-labels';
 import { initials } from '../patients/patient-rules';
+import { reminderLink } from '../patients/reminder-rules';
 import { balance } from '../patients/treatment-rules';
 
 /** The front desk's morning view: what is booked, who is waiting, who is next. */
@@ -78,6 +79,26 @@ export class TodayComponent {
       const next = visits.find((a) => now && a.end > now && a.status !== 'completed');
       return { dentist, visits: visits.length, next: next?.start ?? null };
     });
+  });
+
+  /** Tomorrow's visits that still need a reminder: booked or confirmed, with a WhatsApp link when the number allows. */
+  protected readonly tomorrow = computed(() => {
+    const now = this.now();
+    if (!now) return [];
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return this.store.appointments()
+      .filter((a) => isSameDay(a.start, day) && (a.status === 'scheduled' || a.status === 'confirmed'))
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .map((a) => {
+        const patient = this.store.patientMap().get(a.patientId);
+        const message = this.t('reminder.message', {
+          name: patient?.fullName ?? '',
+          clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+          day: this.i18n.date(a.start, { weekday: 'long', day: 'numeric', month: 'long' }),
+          time: this.i18n.time(a.start),
+        });
+        return { appointment: a, patient, link: patient ? reminderLink(patient.phone, message) : null };
+      });
   });
 
   /** Patients who still owe money, biggest balance first. Only the top few are listed; the total covers everyone. */

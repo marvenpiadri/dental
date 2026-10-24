@@ -106,6 +106,37 @@
         </section>
       </div>
 
+      <section class="card" aria-labelledby="remind-title">
+        <header class="card-head">
+          <h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.title') }}</h2>
+          <span class="chip" data-tone="neutral">{{ tomorrow().length }}</span>
+        </header>
+        @if (tomorrow().length) {
+          <ul class="list">
+            @for (row of tomorrow(); track row.appointment.id) {
+              <li class="row static">
+                <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient?.fullName ?? '') }}</span>
+                <span class="who">
+                  <span class="name">{{ row.patient?.fullName ?? '—' }}</span>
+                  <span class="sub muted">{{ i18n.time(row.appointment.start) }} · {{ t(typeKey(row.appointment.type)) }}</span>
+                </span>
+                @if (row.link) {
+                  <a class="btn" [href]="row.link" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a>
+                } @else {
+                  <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
+            <h2>{{ t('today.remind.empty.title') }}</h2>
+            <p>{{ t('today.remind.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
       <section class="card" aria-labelledby="owing-title">
         <header class="card-head">
           <h2 class="card-title" id="owing-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('today.owing.title') }}</h2>
