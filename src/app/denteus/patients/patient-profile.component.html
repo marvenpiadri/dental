@@ -64,6 +64,17 @@
       }
 
       @if (store.loaded()) {
+        <div class="tabs sections" role="group" [attr.aria-label]="t('profile.sections')">
+          @for (item of sections; track item) {
+            <button type="button" class="pill" [class.on]="section() === item" [attr.aria-pressed]="section() === item" (click)="section.set(item)">
+              {{ t(sectionKey[item]) }}@if (item === 'billing' && due() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ i18n.money(due()) }})</span> }
+            </button>
+          }
+        </div>
+      }
+
+      @if (store.loaded()) {
+        <div class="pane" [hidden]="section() !== 'clinical'">
         <section class="card" aria-labelledby="teeth-title">
           <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
           <den-tooth-chart [teeth]="p.teeth ?? {}" (mark)="store.setTooth(p.id, $event.tooth, $event.condition)" (planTooth)="planTooth.set($event)" />
@@ -78,13 +89,17 @@
           <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
           <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" (edit)="store.changePlan(p.id, $event)" />
         </section>
+        </div>
 
+        <div class="pane" [hidden]="section() !== 'billing'">
         <section class="card" aria-labelledby="bill-title">
           <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
           <den-billing [patientName]="p.fullName" [plan]="p.plan ?? []" [payments]="p.payments ?? []" (edit)="store.changePayments(p.id, $event)" />
         </section>
+        </div>
       }
 
+      <div class="pane" [hidden]="section() !== 'overview'">
       <div class="columns">
         <section class="card" aria-labelledby="appts-title">
           <header class="card-head">
@@ -148,6 +163,7 @@
             </div>
           </section>
         </div>
+      </div>
       </div>
     </div>
   } @else {

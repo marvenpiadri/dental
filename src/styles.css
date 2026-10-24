@@ -451,3 +451,6 @@ body.cal-dragging * {
     padding: 14px;
   }
 }
+
+/* components set display on their own wrappers, which would otherwise beat the hidden attribute */
+[hidden] { display: none !important; }

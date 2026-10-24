@@ -293,6 +293,10 @@ export const en = {
   'rx.dentist': 'Dentist',
   'rx.signature': 'Signature',
   'rx.print': 'Print prescription',
+  'profile.sections': 'Patient file sections',
+  'profile.section.overview': 'Overview',
+  'profile.section.clinical': 'Clinical',
+  'profile.section.billing': 'Billing',
   'profile.back': 'Patients',
 
   'notFound.title': 'Page not found',

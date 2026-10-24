@@ -291,6 +291,10 @@ export const fr: Record<keyof typeof en, string> = {
   'rx.dentist': 'Dentiste',
   'rx.signature': 'Signature',
   'rx.print': 'Imprimer l’ordonnance',
+  'profile.sections': 'Sections du dossier',
+  'profile.section.overview': 'Aperçu',
+  'profile.section.clinical': 'Clinique',
+  'profile.section.billing': 'Facturation',
   'profile.back': 'Patients',
 
   'notFound.title': 'Page introuvable',

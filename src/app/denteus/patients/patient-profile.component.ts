@@ -1,16 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { I18n } from '../../core/i18n/i18n.service';
+import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
+import { balance } from './treatment-rules';
 import { ToothChartComponent } from './tooth-chart.component';
 import { BillingComponent } from './billing.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 
 type Tab = 'upcoming' | 'history';
+type Section = 'overview' | 'clinical' | 'billing';
 
 @Component({
   selector: 'den-patient-profile',
@@ -35,6 +37,15 @@ export class PatientProfileComponent {
   protected readonly initials = initials;
 
   protected readonly tab = signal<Tab>('upcoming');
+  protected readonly sections: Section[] = ['overview', 'clinical', 'billing'];
+  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', clinical: 'profile.section.clinical', billing: 'profile.section.billing' };
+  protected readonly section = signal<Section>('overview');
+  /** What the patient still owes, shown as a dot on the Billing tab. */
+  protected readonly due = computed(() => {
+    const p = this.patient();
+    return p ? balance(p.plan ?? [], p.payments ?? []).due : 0;
+  });
+  private readonly openNoteTab = effect(() => { if (this.note()) this.section.set('clinical'); }); // a link from the calendar lands on the notes
   /** Tooth chosen in the chart for the next plan item. */
   protected readonly planTooth = signal<string | null>(null);
   // Only read once the store has loaded, which only happens in the browser.
