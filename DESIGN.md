@@ -23,7 +23,7 @@ src/app/calendar/        the generic calendar (views, drag/resize, store). Stric
 src/app/denteus/         the clinic: DentalCalendar wrapper, Today, patients/, store, scheduling rules
 ```
 
-Routes: `/today`, `/setup` (dentists and chairs; saves on every change, refuses to remove ones that have appointments), `/calendar`, `/patients`, `/patients/new`, `/patients/:id`, `/patients/:id/edit`. All lazy.
+Routes: `/today`, `/reports` (money, visits, no-shows, per dentist), `/setup` (dentists and chairs; saves on every change, refuses to remove ones that have appointments), `/calendar`, `/patients`, `/patients/new`, `/patients/:id`, `/patients/:id/edit`. All lazy.
 
 ## Every appointment happens in the calendar
 

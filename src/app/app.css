@@ -130,4 +130,18 @@
   .tools {
     display: contents;
   }
+
+  /* eight items don't fit with labels: show the label of the current page only */
+  .item {
+    min-width: 0;
+  }
+
+  .item:not(.active) > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

@@ -24,6 +24,11 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'reports',
+    data: { titleKey: 'nav.reports' },
+    loadComponent: () => import('./denteus/reports/reports.component').then((m) => m.ReportsComponent),
+  },
+  {
     path: 'setup',
     data: { titleKey: 'nav.setup' },
     loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent),

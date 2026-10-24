@@ -1,0 +1,84 @@
+<header class="ds-head">
+  <div class="ds-head-main"><h1 class="ds-title">{{ t('nav.reports') }}</h1></div>
+  <div class="ds-actions tabs" role="group" [attr.aria-label]="t('reports.period')">
+    @for (p of periods; track p) {
+      <button type="button" class="pill" [class.on]="period() === p" [attr.aria-pressed]="period() === p" (click)="period.set(p)">{{ t(periodKey[p]) }}</button>
+    }
+  </div>
+</header>
+
+<div class="ds-body canvas">
+  @if (store.loadFailed()) {
+    <div class="card empty narrow">
+      <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+      <h2>{{ t('storage.error.title') }}</h2>
+      <p>{{ t('storage.error.body') }}</p>
+    </div>
+  } @else if (report(); as r) {
+    <div class="stack">
+      <section class="grid-kpi">
+        <article class="card kpi"><span class="icon-tile ok"><i class="fa-solid fa-coins" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.revenue') }}</p><strong class="value">{{ i18n.money(r.revenue) }}</strong></div></article>
+        <article class="card kpi"><span class="icon-tile"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.charged') }}</p><strong class="value">{{ i18n.money(r.charged) }}</strong></div></article>
+        <article class="card kpi"><span class="icon-tile"><i class="fa-regular fa-circle-check" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.visits') }}</p><strong class="value">{{ r.completed }}</strong></div></article>
+        <article class="card kpi"><span class="icon-tile warn"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.noShowRate') }}</p><strong class="value">{{ percent(r.noShowRate) }}</strong></div></article>
+        <article class="card kpi"><span class="icon-tile"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.newPatients') }}</p><strong class="value">{{ r.newPatients }}</strong></div></article>
+      </section>
+
+      <section class="card" aria-labelledby="series-title">
+        <header class="card-head"><h2 class="card-title" id="series-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i>{{ t('reports.revenue.title') }}</h2></header>
+        @if (r.revenue) {
+          <div class="bars" role="img" [attr.aria-label]="t('reports.revenue.alt', { total: i18n.money(r.revenue) })">
+            @for (b of r.series; track b.at.getTime()) {
+              <span class="bar" [style.height.%]="(b.amount / peak()) * 100" [class.zero]="!b.amount" [attr.title]="label(b.at) + ': ' + i18n.money(b.amount)"></span>
+            }
+          </div>
+          <div class="axis"><span>{{ label(r.series[0].at) }}</span><span>{{ label(r.series[r.series.length - 1].at) }}</span></div>
+        } @else {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span>
+            <h2>{{ t('reports.revenue.empty.title') }}</h2>
+            <p>{{ t('reports.revenue.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <div class="grid-2">
+        <section class="card" aria-labelledby="dentists-title">
+          <header class="card-head"><h2 class="card-title" id="dentists-title"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>{{ t('reports.byDentist') }}</h2></header>
+          @if (r.byDentist.length) {
+            <ul class="meter-list">
+              @for (d of r.byDentist; track d.dentist.id) {
+                <li>
+                  <span class="meter-label"><span class="dot" [style.background]="d.dentist.color" aria-hidden="true"></span>{{ d.dentist.name }}</span>
+                  <span class="meter"><span [style.width.%]="(d.completed / mostVisits()) * 100" [style.background]="d.dentist.color"></span></span>
+                  <span class="meter-value">{{ d.completed }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="note muted">{{ t('reports.byDentist.empty') }}</p>
+          }
+        </section>
+
+        <section class="card" aria-labelledby="methods-title">
+          <header class="card-head"><h2 class="card-title" id="methods-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('reports.byMethod') }}</h2></header>
+          <ul class="meter-list">
+            @for (m of methods; track m) {
+              <li>
+                <span class="meter-label">{{ t(methodKey[m]) }}</span>
+                <span class="meter"><span [style.width.%]="r.revenue ? (r.byMethod[m] / r.revenue) * 100 : 0"></span></span>
+                <span class="meter-value">{{ i18n.money(r.byMethod[m]) }}</span>
+              </li>
+            }
+          </ul>
+          <p class="note muted">{{ i18n.tn('reports.missed', r.noShows + r.cancelled) }}</p>
+        </section>
+      </div>
+    </div>
+  } @else {
+    <div class="stack" aria-busy="true" [attr.aria-label]="t('common.loading')">
+      <div class="grid-kpi"><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>
+      <span class="skeleton tall"></span>
+    </div>
+  }
+</div>
