@@ -31,6 +31,27 @@ export interface Patient {
   plan?: TreatmentItem[];
   /** Money received from the patient. What they owe is the done work in `plan` minus these. */
   payments?: Payment[];
+  /** What was found and done at each visit, newest last. */
+  visits?: VisitNote[];
+}
+
+export interface PrescriptionLine {
+  drug: string;
+  /** Free text ("1 g, 3 times a day"): the dentist decides, the app never suggests doses. */
+  dosage: string;
+  duration: string;
+}
+
+export interface VisitNote {
+  id: string;
+  /** ISO timestamp the note was written. */
+  at: string;
+  appointmentId?: string;
+  dentistId?: string;
+  complaint?: string;
+  findings?: string;
+  care?: string;
+  prescription?: PrescriptionLine[];
 }
 
 export const PAYMENT_METHODS = ['cash', 'card', 'transfer'] as const;
@@ -74,7 +95,7 @@ export const TOOTH_CONDITIONS = ['caries', 'filled', 'root-canal', 'crown', 'imp
 export type ToothCondition = (typeof TOOTH_CONDITIONS)[number];
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan' | 'payments'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'teeth' | 'plan' | 'payments' | 'visits'>;
 
 export interface Dentist {
   id: string;

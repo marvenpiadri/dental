@@ -79,7 +79,7 @@
     @if (encounterAvailable()) {
       <button type="button" class="link-btn" (click)="openEncounter.emit(appointment().id)">
         <cal-icon name="file-text" [size]="15" />
-        {{ appointment().encounterId ? 'Open clinical encounter' : 'Start clinical encounter' }}
+        Write visit note
       </button>
     }
   </div>

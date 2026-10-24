@@ -69,6 +69,11 @@
           <den-tooth-chart [teeth]="p.teeth ?? {}" (mark)="store.setTooth(p.id, $event.tooth, $event.condition)" (planTooth)="planTooth.set($event)" />
         </section>
 
+        <section class="card" aria-labelledby="visits-title">
+          <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
+          <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
+        </section>
+
         <section class="card" aria-labelledby="plan-title">
           <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
           <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" (edit)="store.changePlan(p.id, $event)" />

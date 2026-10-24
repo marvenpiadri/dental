@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { DentalCalendarComponent } from './dental-calendar.component';
+import { DentalStore } from './services/dental-store.service';
 
 /**
  * The calendar depends on the clock and the browser's time zone, which the server doesn't share:
@@ -26,6 +27,7 @@ import { DentalCalendarComponent } from './dental-calendar.component';
         [bookNew]="booking()"
         [bookForPatient]="patient()"
         (openPatient)="openPatient($event)"
+        (openEncounter)="openVisitNote($event)"
       />
     } @placeholder {
       <div class="skeleton" style="height: 100%" aria-busy="true"></div>
@@ -40,8 +42,15 @@ export class CalendarPageComponent {
 
   protected readonly booking = computed(() => this.book() === '1');
   private readonly router = inject(Router);
+  private readonly store = inject(DentalStore);
 
   protected openPatient(patientId: string): void {
     void this.router.navigate(['/patients', patientId]);
+  }
+
+  /** The panel's "visit note" button: the note is written on the patient's file, linked to this appointment. */
+  protected openVisitNote(appointmentId: string): void {
+    const appointment = this.store.appointments().find((a) => a.id === appointmentId);
+    if (appointment) void this.router.navigate(['/patients', appointment.patientId], { queryParams: { note: appointmentId } });
   }
 }

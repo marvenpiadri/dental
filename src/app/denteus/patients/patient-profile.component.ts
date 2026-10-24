@@ -7,13 +7,14 @@ import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } 
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { ToothChartComponent } from './tooth-chart.component';
 import { BillingComponent } from './billing.component';
+import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent],
+  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +23,8 @@ type Tab = 'upcoming' | 'history';
 export class PatientProfileComponent {
   /** Bound from the route (`/patients/:id`). */
   readonly id = input.required<string>();
+  /** Appointment to write a visit note for (`/patients/:id?note=<appointment id>`, from the calendar). */
+  readonly note = input<string>();
 
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
@@ -40,7 +43,7 @@ export class PatientProfileComponent {
   protected readonly patient = computed(() => this.store.patientMap().get(this.id()) ?? null);
   protected readonly missing = computed(() => this.store.loaded() && !this.patient());
 
-  private readonly appointments = computed(() => this.store.appointments().filter((a) => a.patientId === this.id()));
+  protected readonly appointments = computed(() => this.store.appointments().filter((a) => a.patientId === this.id()));
 
   protected readonly upcoming = computed(() =>
     this.appointments()
