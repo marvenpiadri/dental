@@ -92,7 +92,7 @@
 
         <section class="card" aria-labelledby="plan-title">
           <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
-          <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" (edit)="store.changePlan(p.id, $event)" />
+          <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
         </section>
         </div>
 

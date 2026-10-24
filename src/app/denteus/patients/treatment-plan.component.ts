@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, ou
 import { I18n } from '../../core/i18n/i18n.service';
 import { TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { quoteHtml } from './quote-html';
 import { parsePrice, planTotals, procedureName } from './treatment-rules';
 import { UPPER, LOWER } from './tooth-chart.component';
 
@@ -18,11 +19,13 @@ export class TreatmentPlanComponent {
   readonly plan = input<TreatmentItem[]>([]);
   /** A tooth picked in the chart: preselected in the add form. */
   readonly tooth = input<string | null>(null);
+  readonly patientName = input('');
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
 
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
-  protected readonly catalog = inject(DentalStore).catalog;
+  protected readonly store = inject(DentalStore);
+  protected readonly catalog = this.store.catalog;
   protected readonly nameOf = (id: string, name?: string) => procedureName(this.t, id, name);
   protected readonly teeth = [...UPPER, ...LOWER].sort((a, b) => +a - +b);
 
@@ -67,6 +70,27 @@ export class TreatmentPlanComponent {
   protected toggle(item: TreatmentItem): void {
     const done = item.status === 'planned';
     this.edit.emit((plan) => plan.map((i) => (i.id === item.id ? { ...i, status: done ? 'done' : 'planned', doneAt: done ? new Date().toISOString() : undefined } : i)));
+  }
+
+  /** Opens the quote for the planned work in a new window and prints it. A blocked pop-up simply does nothing. */
+  protected printQuote(): void {
+    const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? '', name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price) }));
+    if (!lines.length) return;
+    const t = this.t;
+    const html = quoteHtml({
+      clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+      patient: this.patientName(),
+      date: this.i18n.date(new Date(), { day: 'numeric', month: 'long', year: 'numeric' }),
+      lines,
+      total: this.i18n.money(this.totals().planned),
+      labels: { title: t('quote.title'), patient: t('receipt.patient'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('quote.note') },
+      lang: this.i18n.lang(),
+    });
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   }
 
   protected remove(item: TreatmentItem): void {

@@ -14,7 +14,7 @@ export interface ReceiptData {
 }
 
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const esc = (text: string) => text.replace(/[&<>"']/g, (c) => ESCAPES[c]);
+export const esc = (text: string) => text.replace(/[&<>"']/g, (c) => ESCAPES[c]);
 
 /** A single A5-friendly page the browser prints. Everything typed by staff is escaped: names end up inside HTML. */
 export function receiptHtml(r: ReceiptData): string {

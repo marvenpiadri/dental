@@ -6,6 +6,7 @@ import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, typeKey, waitingMinutes } from '../utils/appointment-labels';
 import { initials } from '../patients/patient-rules';
+import { recallDue } from '../patients/recall-rules';
 import { reminderLink } from '../patients/reminder-rules';
 import { balance } from '../patients/treatment-rules';
 
@@ -108,6 +109,20 @@ export class TodayComponent {
       .filter((row) => row.due > 0)
       .sort((a, b) => b.due - a.due);
     return { rows: rows.slice(0, 5), count: rows.length, total: rows.reduce((n, row) => n + row.due, 0) };
+  });
+
+  /** Patients overdue for a check-up, with a WhatsApp link to invite them. */
+  protected readonly recall = computed(() => {
+    const now = this.now();
+    if (!now) return { rows: [], count: 0 };
+    const all = recallDue(this.store.patients(), this.store.appointments(), now);
+    const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
+    const rows = all.slice(0, 5).map(({ patient, lastVisit }) => ({
+      patient,
+      lastVisit,
+      link: reminderLink(patient.phone, this.t('recall.message', { name: patient.fullName, clinic })),
+    }));
+    return { rows, count: all.length };
   });
 
   protected patientName(a: Appointment): string {

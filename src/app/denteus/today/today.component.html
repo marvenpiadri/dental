@@ -138,6 +138,35 @@
         }
       </section>
 
+      <section class="card" aria-labelledby="recall-title">
+        <header class="card-head">
+          <h2 class="card-title" id="recall-title"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i>{{ t('today.recall.title') }}</h2>
+          <span class="chip" data-tone="neutral">{{ recall().count }}</span>
+        </header>
+        @if (recall().rows.length) {
+          <ul class="list">
+            @for (row of recall().rows; track row.patient.id) {
+              <li class="row static">
+                <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient.fullName) }}</span>
+                <span class="who">
+                  <span class="name">{{ row.patient.fullName }}</span>
+                  <span class="sub muted">{{ t('today.recall.last', { date: i18n.date(row.lastVisit, { day: 'numeric', month: 'short', year: 'numeric' }) }) }}</span>
+                </span>
+                @if (row.link) { <a class="btn" [href]="row.link" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }
+                @else { <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span> }
+              </li>
+            }
+          </ul>
+          @if (recall().count > recall().rows.length) { <p class="more muted">{{ t('today.owing.more', { n: recall().count - recall().rows.length }) }}</p> }
+        } @else {
+          <div class="empty">
+            <span class="icon-tile ok"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+            <h2>{{ t('today.recall.empty.title') }}</h2>
+            <p>{{ t('today.recall.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
       <section class="card" aria-labelledby="owing-title">
         <header class="card-head">
           <h2 class="card-title" id="owing-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('today.owing.title') }}</h2>

@@ -72,3 +72,6 @@ Optional. No staff = open app. Adding an owner on the Clinic page (Team and acce
 
 ## Practice page, notes, install
 `/practice`: expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; not in backups yet. Visit notes can be edited (keep id and date). `manifest.webmanifest` + icons make the app installable; there is no service worker, so it still needs the server to open.
+
+## Recall and quotes
+Today lists patients whose last completed visit is 6+ months old with nothing booked (`recall-rules.ts`), each with a WhatsApp invite. The treatment plan prints a quote (devis) for planned work (`quote-html.ts`).

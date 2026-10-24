@@ -19,3 +19,4 @@
 .totals dd { margin: 0; font-variant-numeric: tabular-nums; }
 .totals .sum dd { font-weight: 700; }
 .empty-note { margin: 14px 0 0; color: var(--app-muted); }
+.quote { padding: 0 18px 14px; }
