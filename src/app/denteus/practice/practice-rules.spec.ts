@@ -1,4 +1,4 @@
-import { isLate, isLow, monthTotal, wholeNumber } from './practice-rules';
+import { implantsInLot, sortTasks, isLate, isLow, monthTotal, wholeNumber } from './practice-rules';
 
 describe('practice rules', () => {
   it('totals one month of expenses', () => {
@@ -18,5 +18,14 @@ describe('practice rules', () => {
   it('reads whole numbers only', () => {
     expect(wholeNumber('12')).toBe(12);
     expect([wholeNumber('1.5'), wholeNumber('-3'), wholeNumber(''), wholeNumber('abc', 7)]).toEqual([0, 0, 0, 7]);
+  });
+  it('puts open tasks before done ones, keeping order', () => {
+    const t = [{ id: 'a', text: '', done: true }, { id: 'b', text: '', done: false }, { id: 'c', text: '', done: false }];
+    expect(sortTasks(t).map((x) => x.id)).toEqual(['b', 'c', 'a']);
+  });
+  it('finds implants by lot, ignoring case and blanks', () => {
+    const r = [{ id: '1', patientId: 'p', tooth: '11', brand: 'B', lot: 'AB12', day: '' }, { id: '2', patientId: 'q', tooth: '21', brand: 'B', lot: 'ZZ', day: '' }];
+    expect(implantsInLot(r, ' ab12 ').map((x) => x.id)).toEqual(['1']);
+    expect(implantsInLot(r, '')).toEqual([]);
   });
 });

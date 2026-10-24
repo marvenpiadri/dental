@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, afterNextRender, computed, inject, 
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
-import { LAB_STATUSES, LabOrder, LabStatus, isLate, isLow, monthTotal, wholeNumber } from './practice-rules';
+import { LAB_STATUSES, LabOrder, LabStatus, implantsInLot, isLate, isLow, monthTotal, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
-type Tab = 'expenses' | 'stock' | 'lab';
+type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
 
 /** The daily running of the clinic outside the chair: what was spent, what is running out, what is at the lab. */
 @Component({
@@ -21,11 +21,12 @@ export class PracticeComponent {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
 
-  protected readonly tabs: Tab[] = ['expenses', 'stock', 'lab'];
-  protected readonly tabKey: Record<Tab, Key> = { expenses: 'practice.tab.expenses', stock: 'practice.tab.stock', lab: 'practice.tab.lab' };
+  protected readonly tabs: Tab[] = ['tasks', 'expenses', 'stock', 'lab', 'trace'];
+  protected readonly tabKey: Record<Tab, Key> = { tasks: 'practice.tab.tasks', trace: 'practice.tab.trace', expenses: 'practice.tab.expenses', stock: 'practice.tab.stock', lab: 'practice.tab.lab' };
   protected readonly statuses = LAB_STATUSES;
   protected readonly statusKey: Record<LabStatus, Key> = { sent: 'practice.lab.status.sent', ready: 'practice.lab.status.ready', fitted: 'practice.lab.status.fitted' };
-  protected readonly tab = signal<Tab>('expenses');
+  protected readonly tab = signal<Tab>('tasks');
+  protected readonly lot = signal('');
   protected readonly invalid = signal(false);
   /** Set in the browser only: the server doesn't know the visitor's day. */
   protected readonly today = signal('');
@@ -33,6 +34,11 @@ export class PracticeComponent {
   protected readonly monthSpent = computed(() => this.today() ? monthTotal(this.practice.expenses(), this.today().slice(0, 7)) : 0);
   protected readonly newestFirst = computed(() => [...this.practice.expenses()].sort((a, b) => b.day.localeCompare(a.day)));
   protected readonly lowCount = computed(() => this.practice.stock().filter(isLow).length);
+  protected readonly taskList = computed(() => sortTasks(this.practice.tasks()));
+  protected readonly openTasks = computed(() => this.practice.tasks().filter((x) => !x.done).length);
+  protected readonly lotMatches = computed(() => implantsInLot(this.practice.implants(), this.lot()));
+  protected readonly implantList = computed(() => [...this.practice.implants()].sort((a, b) => b.day.localeCompare(a.day)));
+  protected readonly cycleList = computed(() => [...this.practice.cycles()].sort((a, b) => b.day.localeCompare(a.day)));
   protected readonly orders = computed(() => [...this.practice.lab()].sort((a, b) => a.due.localeCompare(b.due)));
 
   constructor() {
@@ -67,6 +73,28 @@ export class PracticeComponent {
     if (!patientId || !work.trim()) { this.invalid.set(true); return; }
     this.invalid.set(false);
     this.practice.changeLab((list) => [...list, { id: crypto.randomUUID(), patientId, work: work.trim(), lab: lab.trim(), due, status: 'sent' }]);
+  }
+
+  protected addTask(text: string): void {
+    if (!text.trim()) { this.invalid.set(true); return; }
+    this.invalid.set(false);
+    this.practice.changeTasks((list) => [...list, { id: crypto.randomUUID(), text: text.trim(), done: false }]);
+  }
+
+  protected toggleTask(id: string): void {
+    this.practice.changeTasks((list) => list.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
+  }
+
+  protected addImplant(patientId: string, tooth: string, brand: string, lot: string): void {
+    if (!patientId || !brand.trim() || !lot.trim()) { this.invalid.set(true); return; }
+    this.invalid.set(false);
+    this.practice.changeImplants((list) => [...list, { id: crypto.randomUUID(), patientId, tooth: tooth.trim(), brand: brand.trim(), lot: lot.trim(), day: this.today() }]);
+  }
+
+  protected addCycle(device: string, lot: string, operator: string): void {
+    if (!device.trim()) { this.invalid.set(true); return; }
+    this.invalid.set(false);
+    this.practice.changeCycles((list) => [...list, { id: crypto.randomUUID(), day: this.today(), device: device.trim(), lot: lot.trim(), operator: operator.trim() }]);
   }
 
   protected setStatus(id: string, status: string): void {

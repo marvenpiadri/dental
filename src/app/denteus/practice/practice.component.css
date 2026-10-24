@@ -12,3 +12,7 @@
 .qty { min-width: 28px; text-align: center; }
 .empty-note { margin: 0; padding: 24px 16px; text-align: center; color: var(--app-muted); border-top: 1px solid var(--app-line); }
 @media (max-width: 700px) { .row { flex-wrap: wrap; } .row .input.num, .row .input.date { width: 100%; flex: 1 1 100%; } }
+.check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--app-text); }
+.done { text-decoration: line-through; color: var(--app-muted); }
+.chip.count::before { display: none; }
