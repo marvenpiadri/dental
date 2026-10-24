@@ -23,7 +23,11 @@ export class ThemeService {
   readonly theme = signal<Theme>(this.initial());
 
   constructor() {
-    effect(() => this.doc.documentElement.setAttribute('data-theme', this.theme()));
+    effect(() => {
+      const root = this.doc.documentElement;
+      root.setAttribute('data-theme', this.theme());
+      root.classList.toggle('dark', this.theme() === 'dark'); // the odontogram library themes itself from `.dark`
+    });
   }
 
   toggle(): void {

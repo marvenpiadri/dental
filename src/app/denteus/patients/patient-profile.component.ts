@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { balance } from './treatment-rules';
-import { ToothChartComponent } from './tooth-chart.component';
+import { PatientOdontogramComponent } from './patient-odontogram.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
@@ -18,7 +18,7 @@ type Section = 'overview' | 'clinical' | 'billing';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
+  imports: [RouterLink, PatientOdontogramComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,7 +51,6 @@ export class PatientProfileComponent {
   });
   private readonly openNoteTab = effect(() => { if (this.note() && this.auth.can('clinical')) this.section.set('clinical'); }); // a link from the calendar lands on the notes
   /** Tooth chosen in the chart for the next plan item. */
-  protected readonly planTooth = signal<string | null>(null);
   // Only read once the store has loaded, which only happens in the browser.
   private readonly now = new Date();
 

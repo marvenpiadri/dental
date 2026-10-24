@@ -2,7 +2,7 @@ import { Appointment, Patient } from '../models/dental.models';
 import { makeBackup, parseBackup } from './backup';
 
 const when = new Date('2026-10-23T09:00:00.000Z');
-const patient: Patient = { id: 'p1', fullName: 'Sara Benali', phone: '0612345678', teeth: { '16': 'caries' }, plan: [{ id: 'i1', procedure: 'crown', price: 2500, status: 'done' }], payments: [{ id: 'y1', amount: 500, method: 'cash', at: when.toISOString() }] };
+const patient: Patient = { id: 'p1', fullName: 'Sara Benali', phone: '0612345678', odontogram: { version: '2.22', teeth: {} }, plan: [{ id: 'i1', procedure: 'crown', price: 2500, status: 'done' }], payments: [{ id: 'y1', amount: 500, method: 'cash', at: when.toISOString() }] };
 const appointment: Appointment = {
   id: 'a1', patientId: 'p1', dentistId: 'd1', chairId: 'c1', type: 'checkup', status: 'scheduled',
   start: when, end: new Date(when.getTime() + 1_800_000), createdAt: when, createdBy: 'Front desk',

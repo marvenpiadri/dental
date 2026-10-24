@@ -77,7 +77,13 @@
         <div class="pane" [hidden]="section() !== 'clinical'">
         <section class="card" aria-labelledby="teeth-title">
           <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
-          <den-tooth-chart [teeth]="p.teeth ?? {}" [surfaces]="p.surfaces ?? {}" (markSurfaces)="store.setSurfaces(p.id, $event.tooth, $event.surfaces)" (mark)="store.setTooth(p.id, $event.tooth, $event.condition)" (planTooth)="planTooth.set($event)" />
+          @defer (on viewport) {
+            @for (key of [p.id]; track key) {
+              <den-odontogram [patientName]="p.fullName" [birthDate]="p.birthDate" [chart]="p.odontogram" (save)="store.setOdontogram(p.id, $event)" />
+            }
+          } @placeholder {
+            <span class="skeleton"></span>
+          }
         </section>
 
         <section class="card" aria-labelledby="visits-title">
@@ -92,7 +98,7 @@
 
         <section class="card" aria-labelledby="plan-title">
           <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
-          <den-treatment-plan [plan]="p.plan ?? []" [tooth]="planTooth()" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+          <den-treatment-plan [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
         </section>
         </div>
 

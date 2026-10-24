@@ -5,8 +5,7 @@ import { TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { quoteHtml } from './quote-html';
 import { parsePrice, planTotals, procedureName } from './treatment-rules';
-import { UPPER, LOWER } from './tooth-chart.component';
-import { CHILD_LOWER, CHILD_UPPER } from './surface-rules';
+import { CHILD_LOWER, CHILD_UPPER, LOWER, UPPER } from './tooth-numbers';
 
 /** The patient's treatment plan: add work (optionally on a tooth), mark it done, see what is left to pay. */
 @Component({
