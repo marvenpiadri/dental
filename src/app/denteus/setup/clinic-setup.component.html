@@ -54,6 +54,26 @@
         }
       </section>
 
+      <section class="card" aria-labelledby="acts-title">
+        <header class="card-head">
+          <h2 class="card-title" id="acts-title"><i class="fa-solid fa-tags" aria-hidden="true"></i>{{ t('setup.acts') }}</h2>
+          <button type="button" class="btn" (click)="addAct()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.act.add') }}</button>
+        </header>
+        @for (a of store.catalog(); track a.id) {
+          <div class="row">
+            <input class="input" [value]="nameOf(a.id, a.name)" [attr.aria-label]="t('setup.name')" (change)="renameAct(a, $any($event.target).value.trim())" />
+            <input class="input price" inputmode="numeric" [value]="a.price" [attr.aria-label]="t('plan.price')" (change)="repriceAct(a, $any($event.target))" />
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: nameOf(a.id, a.name) })" (click)="removeAct(a)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        } @empty {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-tags" aria-hidden="true"></i></span>
+            <h2>{{ t('setup.acts.empty.title') }}</h2>
+            <p>{{ t('setup.acts.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
       <section class="card" aria-labelledby="backup-title">
         <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
         <div class="card-body backup">

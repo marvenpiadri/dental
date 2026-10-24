@@ -8,7 +8,7 @@ const appointment: Appointment = {
   start: when, end: new Date(when.getTime() + 1_800_000), createdAt: when, createdBy: 'Front desk',
   history: [{ from: null, to: 'scheduled', at: when, by: 'Front desk' }], scheduleHistory: [],
 };
-const data = { locations: [], dentists: [{ id: 'd1', name: 'Dr. A', specialty: '', color: '#000' }], chairs: [{ id: 'c1', name: 'Chair 1' }], patients: [patient], appointments: [appointment] };
+const data = { locations: [], dentists: [{ id: 'd1', name: 'Dr. A', specialty: '', color: '#000' }], chairs: [{ id: 'c1', name: 'Chair 1' }], patients: [patient], appointments: [appointment], catalog: [{ id: 'crown', name: 'Zirconia crown', price: 3000 }] };
 
 describe('backup', () => {
   it('round-trips a clinic, dates included', () => {
@@ -16,8 +16,16 @@ describe('backup', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.patients).toEqual([patient]);
+    expect(result.data.catalog).toEqual(data.catalog);
     expect(result.data.appointments[0].start).toEqual(when);
     expect(result.data.appointments[0].history[0].at).toEqual(when);
+  });
+
+  it('gives a backup from before the catalog existed the built-in acts', () => {
+    const old = JSON.parse(makeBackup(data, when));
+    delete old.catalog;
+    const result = parseBackup(JSON.stringify(old));
+    expect(result.ok && result.data.catalog.length).toBe(8);
   });
 
   it('refuses files that are not backups', () => {

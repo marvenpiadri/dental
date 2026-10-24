@@ -9,3 +9,4 @@
 .confirm { padding: 14px 16px; border: 1px solid var(--app-warn); border-radius: var(--radius-control); background: var(--app-subtle); }
 .confirm strong { display: block; margin-bottom: 4px; }
 .ok { display: flex; align-items: center; gap: 8px; color: var(--app-ok); }
+.row .input.price { flex: none; width: 120px; }

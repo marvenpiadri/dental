@@ -3,6 +3,7 @@ import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angu
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicData } from './backup';
 import { ClinicDatabase } from './clinic-database.service';
+import { defaultCatalog } from '../patients/treatment-rules';
 import {
   ApiResult,
   Appointment,
@@ -13,6 +14,7 @@ import {
   Dentist,
   Patient,
   PatientInput,
+  CatalogEntry,
   ToothCondition,
   Payment,
   TreatmentItem,
@@ -66,6 +68,8 @@ export class DentalStore {
   readonly patients = signal<Patient[]>([]);
   readonly dentists = signal<Dentist[]>([]);
   readonly chairs = signal<Chair[]>([]);
+  /** The acts the clinic offers and their usual prices. */
+  readonly catalog = signal<CatalogEntry[]>(defaultCatalog());
   readonly appointments = signal<Appointment[]>([]);
 
   /** Recorded on every change. In the real app this is the signed-in user. */
@@ -121,12 +125,18 @@ export class DentalStore {
     this.locations.set(locations);
     this.dentists.set(resources.dentists);
     this.chairs.set(resources.chairs);
+    this.catalog.set((await this.database.loadSetting<CatalogEntry[]>('catalog')) ?? defaultCatalog());
 
     const saved = await this.database.loadSchedulingSnapshot();
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
     this.loaded.set(true);
+  }
+
+  async saveCatalog(entries: CatalogEntry[]): Promise<void> {
+    await this.database.saveSetting('catalog', entries);
+    this.catalog.set(entries);
   }
 
   /** The clinic setup flow calls this when a site is created or changed. */
@@ -144,13 +154,14 @@ export class DentalStore {
 
   /** Everything the clinic has, as the data a backup file holds. */
   snapshot(): ClinicData {
-    return { locations: this.locations(), dentists: this.dentists(), chairs: this.chairs(), patients: this.patients(), appointments: this.appointments() };
+    return { locations: this.locations(), dentists: this.dentists(), chairs: this.chairs(), patients: this.patients(), appointments: this.appointments(), catalog: this.catalog() };
   }
 
   /** Replaces everything in this browser with a restored backup. Written to IndexedDB first, so a failure leaves the screen as it was. */
   async restore(data: ClinicData): Promise<void> {
     await this.saveLocations(data.locations);
     await this.saveResources(data.dentists, data.chairs);
+    await this.saveCatalog(data.catalog);
     await this.database.saveSchedulingSnapshot(data.patients, data.appointments);
     this.patients.set(data.patients);
     this.appointments.set(data.appointments);

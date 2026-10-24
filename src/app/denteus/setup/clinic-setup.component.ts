@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
-import { Chair, Dentist } from '../models/dental.models';
+import { CatalogEntry, Chair, Dentist } from '../models/dental.models';
+import { parsePrice, procedureName } from '../patients/treatment-rules';
 import { BackupResult, makeBackup, parseBackup } from '../services/backup';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
@@ -39,6 +40,33 @@ export class ClinicSetupComponent {
     const taken = new Set(this.store.dentists().map((d) => d.color));
     const color = PALETTE.find((c) => !taken.has(c)) ?? PALETTE[this.store.dentists().length % PALETTE.length];
     void this.save([...this.store.dentists(), { id: crypto.randomUUID(), name: this.t('setup.dentist.new'), specialty: '', color }], this.store.chairs());
+  }
+
+  protected readonly nameOf = (id: string, name?: string) => procedureName(this.t, id, name);
+
+  protected addAct(): void {
+    void this.saveActs([...this.store.catalog(), { id: crypto.randomUUID(), name: this.t('setup.act.new'), price: 0 }]);
+  }
+
+  protected renameAct(entry: CatalogEntry, name: string): void {
+    if (!name) return; // an act without a name can't be picked from the list
+    void this.saveActs(this.store.catalog().map((e) => (e.id === entry.id ? { ...e, name } : e)));
+  }
+
+  protected repriceAct(entry: CatalogEntry, input: HTMLInputElement): void {
+    const price = parsePrice(input.value);
+    if (price === null) { input.value = String(entry.price); return; } // keep the old price rather than save nonsense
+    void this.saveActs(this.store.catalog().map((e) => (e.id === entry.id ? { ...e, price } : e)));
+  }
+
+  /** Old plans keep the name they were written with, so removing an act never changes them. */
+  protected removeAct(entry: CatalogEntry): void {
+    void this.saveActs(this.store.catalog().filter((e) => e.id !== entry.id));
+  }
+
+  private async saveActs(entries: CatalogEntry[]): Promise<void> {
+    this.failed.set(false);
+    try { await this.store.saveCatalog(entries); } catch { this.failed.set(true); }
   }
 
   protected addChair(): void {

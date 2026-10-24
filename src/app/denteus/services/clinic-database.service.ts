@@ -166,6 +166,23 @@ export class ClinicDatabase {
     return { dentists, chairs };
   }
 
+  /** Small clinic-wide values (the act catalog) live in the `settings` store as `{ id, value }`. */
+  async loadSetting<T>(id: string): Promise<T | undefined> {
+    const db = await this.open();
+    const transaction = db.transaction('settings', 'readonly');
+    const done = transactionDone(transaction);
+    const row = await requestResult<{ value: T } | undefined>(transaction.objectStore('settings').get(id));
+    await done;
+    return row?.value;
+  }
+
+  async saveSetting(id: string, value: unknown): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('settings', 'readwrite');
+    transaction.objectStore('settings').put({ id, value });
+    await transactionDone(transaction);
+  }
+
   async clearSchedulingData(): Promise<void> {
     const db = await this.open();
     const transaction = db.transaction(['patients', 'appointments'], 'readwrite');

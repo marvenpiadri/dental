@@ -1,4 +1,5 @@
-import { Appointment, Chair, ClinicLocation, Dentist, Patient } from '../models/dental.models';
+import { defaultCatalog } from '../patients/treatment-rules';
+import { Appointment, CatalogEntry, Chair, ClinicLocation, Dentist, Patient } from '../models/dental.models';
 
 export interface ClinicData {
   locations: ClinicLocation[];
@@ -6,6 +7,7 @@ export interface ClinicData {
   chairs: Chair[];
   patients: Patient[];
   appointments: Appointment[];
+  catalog: CatalogEntry[];
 }
 
 /** The file a clinic downloads. Dates are ISO strings, which is also what a PostgreSQL import wants. */
@@ -81,6 +83,8 @@ export function parseBackup(source: string): BackupResult {
       chairs: raw['chairs'] as Chair[],
       patients: patients as Patient[],
       appointments: appointments as Appointment[],
+      // backups made before the catalog existed have none: start from the built-in acts
+      catalog: Array.isArray(raw['catalog']) && withId(raw['catalog'] as unknown[]) ? (raw['catalog'] as CatalogEntry[]) : defaultCatalog(),
     },
   };
 }

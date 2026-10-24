@@ -1,5 +1,5 @@
 import { TreatmentItem } from '../models/dental.models';
-import { balance, parsePrice, planTotals } from './treatment-rules';
+import { balance, defaultCatalog, parsePrice, planTotals, procedureName } from './treatment-rules';
 
 const item = (price: number, status: TreatmentItem['status']): TreatmentItem => ({ id: String(price) + status, procedure: 'filling', price, status });
 
@@ -31,5 +31,18 @@ describe('balance', () => {
   });
   it('goes negative when paid ahead', () => {
     expect(balance([item(300, 'done')], [pay(500)]).due).toBe(-200);
+  });
+});
+
+describe('catalog', () => {
+  const t = (key: string) => `[${key}]`;
+  it('starts with the built-in acts and their prices', () => {
+    expect(defaultCatalog()).toContainEqual({ id: 'crown', price: 2500 });
+    expect(defaultCatalog()).toHaveLength(8);
+  });
+  it('names an act by its own name, else its translation, else its id', () => {
+    expect(procedureName(t, 'crown', 'Zirconia crown')).toBe('Zirconia crown');
+    expect(procedureName(t, 'crown')).toBe('[proc.crown]');
+    expect(procedureName(t, 'custom-id')).toBe('custom-id');
   });
 });

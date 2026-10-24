@@ -48,11 +48,21 @@ export interface Payment {
 export const PROCEDURES = ['filling', 'cleaning', 'extraction', 'root-canal', 'crown', 'implant', 'xray', 'other'] as const;
 export type ProcedureId = (typeof PROCEDURES)[number];
 
+/** One act the clinic offers, with its usual price. Built-in acts have no `name`: they are translated. */
+export interface CatalogEntry {
+  id: string;
+  name?: string;
+  price: number;
+}
+
 export interface TreatmentItem {
   id: string;
   /** FDI tooth number, absent for work that isn't about one tooth (a cleaning). */
   tooth?: string;
-  procedure: ProcedureId;
+  /** A catalog entry's id: one of `PROCEDURES` for the built-ins, otherwise generated. */
+  procedure: string;
+  /** The act's name when the item was added, so renaming or removing a catalog entry never rewrites old plans. */
+  name?: string;
   /** In the clinic's currency, whole units. */
   price: number;
   status: 'planned' | 'done';

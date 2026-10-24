@@ -9,7 +9,7 @@
   <label class="field grow">
     <span class="label">{{ t('plan.procedure') }}</span>
     <select class="input" (change)="setProcedure($any($event.target).value)">
-      @for (p of procedures; track p) { <option [value]="p" [selected]="draftProcedure() === p">{{ t(key[p]) }}</option> }
+      @for (entry of catalog(); track entry.id) { <option [value]="entry.id" [selected]="draftProcedure() === entry.id">{{ nameOf(entry.id, entry.name) }}</option> }
     </select>
   </label>
   <label class="field price">
@@ -19,6 +19,7 @@
   </label>
   <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('plan.add') }}</button>
 </form>
+@if (!catalog().length) { <p class="error-text" role="alert">{{ t('plan.catalog.empty') }} <a routerLink="/setup">{{ t('nav.setup') }}</a></p> }
 @if (priceInvalid()) { <p class="error-text" id="price-error" role="alert">{{ t('plan.price.error') }}</p> }
 
 @if (sorted().length) {
@@ -29,7 +30,7 @@
           <i class="fa-solid fa-check" aria-hidden="true"></i>
         </button>
         <span class="chip" data-tone="neutral">{{ item.tooth ?? '—' }}</span>
-        <span class="name">{{ t(key[item.procedure]) }}</span>
+        <span class="name">{{ nameOf(item.procedure, item.name) }}</span>
         <span class="amount">{{ i18n.money(item.price) }}</span>
         <button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="remove(item)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </li>
