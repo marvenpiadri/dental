@@ -74,6 +74,28 @@
         }
       </section>
 
+      <section class="card" aria-labelledby="team-title">
+        <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
+        <p class="muted intro">{{ t('team.intro') }}</p>
+        @for (m of auth.staff(); track m.id) {
+          <div class="row">
+            <span class="avatar" style="--size: 32px" aria-hidden="true">{{ m.name.slice(0, 2) }}</span>
+            <strong class="grow">{{ m.name }}</strong>
+            <span class="chip" data-tone="neutral">{{ t(roleKey[m.role]) }}</span>
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: m.name })" (click)="removeMember(m.id)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        }
+        <form class="row" (submit)="$event.preventDefault(); addMember(name.value, role.value, pin.value); name.value = ''; pin.value = ''">
+          <input class="input" #name [attr.aria-label]="t('team.name')" [placeholder]="t('team.name')" />
+          <select class="input role" #role [attr.aria-label]="t('team.role.owner')">
+            @for (r of roles; track r) { <option [value]="r">{{ t(roleKey[r]) }}</option> }
+          </select>
+          <input class="input pin" #pin type="password" inputmode="numeric" maxlength="8" autocomplete="off" [attr.aria-label]="t('team.pin')" [placeholder]="t('team.pin')" />
+          <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('team.add') }}</button>
+        </form>
+        @if (teamProblem()) { <p class="error-text intro" role="alert">{{ t(teamProblem()!) }}</p> }
+      </section>
+
       <section class="card" aria-labelledby="backup-title">
         <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
         <div class="card-body backup">

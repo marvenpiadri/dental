@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { permissionGuard } from './core/auth/permission.guard';
 
 /** Every page is lazy: the first load carries the shell only. `titleKey` is translated by PageTitle. */
 export const routes: Routes = [
@@ -25,12 +26,14 @@ export const routes: Routes = [
   },
   {
     path: 'reports',
-    data: { titleKey: 'nav.reports' },
+    canActivate: [permissionGuard],
+    data: { permission: 'reports', titleKey: 'nav.reports' },
     loadComponent: () => import('./denteus/reports/reports.component').then((m) => m.ReportsComponent),
   },
   {
     path: 'setup',
-    data: { titleKey: 'nav.setup' },
+    canActivate: [permissionGuard],
+    data: { permission: 'setup', titleKey: 'nav.setup' },
     loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent),
   },
   {

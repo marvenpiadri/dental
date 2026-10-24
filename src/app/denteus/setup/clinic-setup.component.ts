@@ -1,4 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
+import { ROLES, Role } from '../../core/auth/auth-rules';
+import { ROLE_KEY } from '../../core/auth/sign-in.component';
+import { Key } from '../../core/i18n/i18n.service';
 import { I18n } from '../../core/i18n/i18n.service';
 import { CatalogEntry, Chair, Dentist } from '../models/dental.models';
 import { parsePrice, procedureName } from '../patients/treatment-rules';
@@ -20,6 +24,19 @@ export class ClinicSetupComponent {
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
+
+  protected readonly auth = inject(AuthService);
+  protected readonly roles = ROLES;
+  protected readonly roleKey = ROLE_KEY;
+  protected readonly teamProblem = signal<Key | null>(null);
+
+  protected async addMember(name: string, role: string, pin: string): Promise<void> {
+    this.teamProblem.set((await this.auth.addStaff(name, role as Role, pin)) ? null : 'team.invalid');
+  }
+
+  protected async removeMember(id: string): Promise<void> {
+    this.teamProblem.set((await this.auth.removeStaff(id)) ? null : 'team.last');
+  }
 
   protected readonly failed = signal(false);
   protected readonly blocked = signal<string | null>(null);

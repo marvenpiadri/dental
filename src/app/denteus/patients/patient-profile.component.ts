@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
@@ -38,7 +39,9 @@ export class PatientProfileComponent {
   protected readonly initials = initials;
 
   protected readonly tab = signal<Tab>('upcoming');
-  protected readonly sections: Section[] = ['overview', 'clinical', 'billing'];
+  private readonly auth = inject(AuthService);
+  /** Dentists don't see billing, reception doesn't see clinical records. */
+  protected readonly sections = computed(() => (['overview', 'clinical', 'billing'] as Section[]).filter((x) => x === 'overview' || this.auth.can(x)));
   protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', clinical: 'profile.section.clinical', billing: 'profile.section.billing' };
   protected readonly section = signal<Section>('overview');
   /** What the patient still owes, shown as a dot on the Billing tab. */
@@ -46,7 +49,7 @@ export class PatientProfileComponent {
     const p = this.patient();
     return p ? balance(p.plan ?? [], p.payments ?? []).due : 0;
   });
-  private readonly openNoteTab = effect(() => { if (this.note()) this.section.set('clinical'); }); // a link from the calendar lands on the notes
+  private readonly openNoteTab = effect(() => { if (this.note() && this.auth.can('clinical')) this.section.set('clinical'); }); // a link from the calendar lands on the notes
   /** Tooth chosen in the chart for the next plan item. */
   protected readonly planTooth = signal<string | null>(null);
   // Only read once the store has loaded, which only happens in the browser.

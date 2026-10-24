@@ -65,7 +65,7 @@
 
       @if (store.loaded()) {
         <div class="tabs sections" role="group" [attr.aria-label]="t('profile.sections')">
-          @for (item of sections; track item) {
+          @for (item of sections(); track item) {
             <button type="button" class="pill" [class.on]="section() === item" [attr.aria-pressed]="section() === item" (click)="section.set(item)">
               {{ t(sectionKey[item]) }}@if (item === 'billing' && due() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ i18n.money(due()) }})</span> }
             </button>

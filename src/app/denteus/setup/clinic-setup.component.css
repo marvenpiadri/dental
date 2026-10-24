@@ -10,3 +10,7 @@
 .confirm strong { display: block; margin-bottom: 4px; }
 .ok { display: flex; align-items: center; gap: 8px; color: var(--app-ok); }
 .row .input.price { flex: none; width: 120px; }
+.intro { margin: 0; padding: 14px 18px 0; }
+.grow { flex: 1; }
+.row .input.role { flex: none; width: 140px; }
+.row .input.pin { flex: none; width: 170px; }

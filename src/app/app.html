@@ -1,3 +1,6 @@
+@if (auth.gate()) {
+  <den-sign-in />
+} @else {
 <div class="app-shell">
   <nav class="rail" [attr.aria-label]="t('nav.main')">
     <a class="brand" routerLink="/today" [attr.aria-label]="t('app.home')">D<span>.</span></a>
@@ -15,16 +18,26 @@
       <span>{{ t('nav.patients') }}</span>
     </a>
 
+    @if (auth.can('reports')) {
     <a class="item" routerLink="/reports" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
       <span>{{ t('nav.reports') }}</span>
     </a>
+    }
+    @if (auth.can('setup')) {
     <a class="item" routerLink="/setup" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-gear" aria-hidden="true"></i>
       <span>{{ t('nav.setup') }}</span>
     </a>
+    }
 
     <div class="tools">
+      @if (auth.user(); as me) {
+        <button class="item" type="button" (click)="auth.signOut()" [attr.aria-label]="t('nav.signout') + ': ' + me.name" [attr.title]="me.name">
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+          <span>{{ t('nav.signout') }}</span>
+        </button>
+      }
       <button class="item" type="button" (click)="i18n.setLang(nextLang())" [attr.aria-label]="t('nav.language') + ': ' + nextLangLabel()" [attr.title]="nextLangLabel()">
         <i class="fa-solid fa-globe" aria-hidden="true"></i>
         <span>{{ nextLangShort() }}</span>
@@ -41,3 +54,4 @@
     <router-outlet />
   </main>
 </div>
+}
