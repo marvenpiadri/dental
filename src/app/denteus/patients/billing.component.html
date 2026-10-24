@@ -31,6 +31,7 @@
         <span class="when">{{ when(p) }}</span>
         <span class="chip" data-tone="neutral">{{ t(methodKey[p.method]) }}</span>
         <span class="amount">{{ i18n.money(p.amount) }}</span>
+        <button type="button" class="btn btn--icon" [attr.aria-label]="t('receipt.print')" (click)="print(p)"><i class="fa-solid fa-print" aria-hidden="true"></i></button>
         <button type="button" class="btn btn--icon" [attr.aria-label]="t('bill.remove')" (click)="remove(p)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </li>
     }

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
+import { DentalStore } from '../services/dental-store.service';
+import { receiptHtml } from './receipt-html';
 import { balance, parsePrice } from './treatment-rules';
 
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer' };
@@ -15,9 +17,12 @@ const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.ca
 export class BillingComponent {
   readonly plan = input<TreatmentItem[]>([]);
   readonly payments = input<Payment[]>([]);
+  /** Name on the receipt. */
+  readonly patientName = input('');
   readonly edit = output<(payments: Payment[]) => Payment[]>();
 
   protected readonly i18n = inject(I18n);
+  private readonly store = inject(DentalStore);
   protected readonly t = this.i18n.t;
   protected readonly methods = PAYMENT_METHODS;
   protected readonly methodKey = METHOD_KEY;
@@ -46,6 +51,31 @@ export class BillingComponent {
 
   protected remove(payment: Payment): void {
     this.edit.emit((list) => list.filter((p) => p.id !== payment.id));
+  }
+
+  /** Opens the receipt in a new window and prints it. A blocked pop-up simply does nothing: the browser shows its own notice. */
+  protected print(payment: Payment): void {
+    const t = this.t;
+    const sums = this.sums();
+    const html = receiptHtml({
+      clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+      patient: this.patientName(),
+      number: payment.id.slice(0, 8).toUpperCase(),
+      date: this.when(payment),
+      method: t(METHOD_KEY[payment.method]),
+      amount: this.i18n.money(payment.amount),
+      charged: this.i18n.money(sums.charged),
+      paid: this.i18n.money(sums.paid),
+      due: this.i18n.money(Math.max(0, sums.due)),
+      labels: { title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') },
+      lang: this.i18n.lang(),
+      dir: 'ltr', // shortcut: receipts are left-to-right until an RTL language is added
+    });
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   }
 
   protected when(payment: Payment): string {
