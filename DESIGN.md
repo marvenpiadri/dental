@@ -69,3 +69,6 @@ Backup and restore (Clinic page) is the safety net while data lives only in the 
 
 ## Team sign-in (roles)
 Optional. No staff = open app. Adding an owner on the Clinic page (Team and access) turns on a PIN sign-in. Owner sees everything, dentist sees Overview + Clinical, reception sees Overview + Billing; Reports and Clinic are owner-only (`permissionGuard`, route `data.permission`). Staff live in IndexedDB `settings` (salted SHA-256), session in `sessionStorage`, and are not part of backups. This is a UI lock, not security: real access control arrives with the Postgres backend.
+
+## Practice page, notes, install
+`/practice`: expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; not in backups yet. Visit notes can be edited (keep id and date). `manifest.webmanifest` + icons make the app installable; there is no service worker, so it still needs the server to open.

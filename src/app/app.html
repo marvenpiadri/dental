@@ -18,6 +18,10 @@
       <span>{{ t('nav.patients') }}</span>
     </a>
 
+    <a class="item" routerLink="/practice" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+      <span>{{ t('nav.practice') }}</span>
+    </a>
     @if (auth.can('reports')) {
     <a class="item" routerLink="/reports" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>

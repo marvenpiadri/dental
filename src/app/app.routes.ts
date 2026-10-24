@@ -25,6 +25,11 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'practice',
+    data: { titleKey: 'nav.practice' },
+    loadComponent: () => import('./denteus/practice/practice.component').then((m) => m.PracticeComponent),
+  },
+  {
     path: 'reports',
     canActivate: [permissionGuard],
     data: { permission: 'reports', titleKey: 'nav.reports' },

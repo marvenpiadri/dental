@@ -53,6 +53,7 @@
           @if (appointmentOf(n); as a) { <span class="chip" data-tone="neutral">{{ t(typeKey(a.type)) }}</span> }
           <span class="spacer"></span>
           @if (n.prescription?.length) { <button type="button" class="btn" (click)="print(n)"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('rx.print') }}</button> }
+          <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.edit')" (click)="correct(n)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
           <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.remove')" (click)="remove(n)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
         </header>
         <dl>

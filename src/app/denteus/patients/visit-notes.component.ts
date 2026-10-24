@@ -40,6 +40,8 @@ export class VisitNotesComponent {
   protected readonly care = signal('');
   protected readonly lines = signal<PrescriptionLine[]>([emptyLine()]);
   protected readonly empty = signal(false);
+  /** Set while an existing note is being corrected. */
+  private readonly editing = signal<string | null>(null);
 
   protected readonly newestFirst = computed(() => [...this.notes()].sort((a, b) => b.at.localeCompare(a.at)));
   protected readonly recentAppointments = computed(() => [...this.appointments()].sort((a, b) => b.start.getTime() - a.start.getTime()));
@@ -79,21 +81,35 @@ export class VisitNotesComponent {
   protected save(): void {
     const content = noteContent({ complaint: this.complaint(), findings: this.findings(), care: this.care(), lines: this.lines() });
     if (!content) { this.empty.set(true); return; }
-    const note: VisitNote = { id: crypto.randomUUID(), at: new Date().toISOString(), ...content };
+    const old = this.notes().find((n) => n.id === this.editing());
+    // a corrected note keeps its id and its original date
+    const note: VisitNote = { id: old?.id ?? crypto.randomUUID(), at: old?.at ?? new Date().toISOString(), ...content };
     if (this.appointmentId()) note.appointmentId = this.appointmentId();
     if (this.dentistId()) note.dentistId = this.dentistId();
-    this.edit.emit((notes) => [...notes, note]);
+    this.edit.emit((notes) => (old ? notes.map((n) => (n.id === old.id ? note : n)) : [...notes, note]));
     this.reset();
   }
 
   protected reset(): void {
     this.open.set(false);
+    this.editing.set(null);
     this.empty.set(false);
     this.appointmentId.set('');
     this.complaint.set('');
     this.findings.set('');
     this.care.set('');
     this.lines.set([emptyLine()]);
+  }
+
+  protected correct(note: VisitNote): void {
+    this.editing.set(note.id);
+    this.appointmentId.set(note.appointmentId ?? '');
+    this.dentistId.set(note.dentistId ?? this.dentists()[0]?.id ?? '');
+    this.complaint.set(note.complaint ?? '');
+    this.findings.set(note.findings ?? '');
+    this.care.set(note.care ?? '');
+    this.lines.set(note.prescription?.length ? note.prescription.map((l) => ({ ...l })) : [emptyLine()]);
+    this.open.set(true);
   }
 
   protected remove(note: VisitNote): void {
