@@ -53,6 +53,31 @@
           </div>
         }
       </section>
+
+      <section class="card" aria-labelledby="backup-title">
+        <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
+        <div class="card-body backup">
+          <p class="muted">{{ t('setup.backup.intro') }}</p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" (click)="exportBackup()"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ t('setup.backup.export') }}</button>
+            <label class="btn"><i class="fa-solid fa-upload" aria-hidden="true"></i>{{ t('setup.backup.import') }}
+              <input class="sr-only" type="file" accept="application/json,.json" (change)="chooseBackup($any($event.target))" />
+            </label>
+          </div>
+          @if (importProblem(); as key) { <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t($any(key)) }}</p> }
+          @if (restored()) { <p class="ok" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>{{ t('setup.backup.done') }}</p> }
+          @if (pending(); as backup) {
+            <div class="confirm" role="alertdialog" aria-labelledby="confirm-title">
+              <strong id="confirm-title">{{ t('setup.backup.confirm.title') }}</strong>
+              <p>{{ t('setup.backup.confirm.body', { patients: i18n.tn('backup.patients', backup.data.patients.length), appointments: i18n.tn('backup.appointments', backup.data.appointments.length) }) }}</p>
+              <div class="actions">
+                <button type="button" class="btn btn--primary" (click)="confirmRestore()">{{ t('setup.backup.confirm.yes') }}</button>
+                <button type="button" class="btn" (click)="pending.set(null)">{{ t('common.cancel') }}</button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
     }
   </div>
 </div>

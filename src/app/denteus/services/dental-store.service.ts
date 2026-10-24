@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
+import { ClinicData } from './backup';
 import { ClinicDatabase } from './clinic-database.service';
 import {
   ApiResult,
@@ -139,6 +140,20 @@ export class DentalStore {
     await this.database.saveResources(dentists, chairs);
     this.dentists.set(dentists);
     this.chairs.set(chairs);
+  }
+
+  /** Everything the clinic has, as the data a backup file holds. */
+  snapshot(): ClinicData {
+    return { locations: this.locations(), dentists: this.dentists(), chairs: this.chairs(), patients: this.patients(), appointments: this.appointments() };
+  }
+
+  /** Replaces everything in this browser with a restored backup. Written to IndexedDB first, so a failure leaves the screen as it was. */
+  async restore(data: ClinicData): Promise<void> {
+    await this.saveLocations(data.locations);
+    await this.saveResources(data.dentists, data.chairs);
+    await this.database.saveSchedulingSnapshot(data.patients, data.appointments);
+    this.patients.set(data.patients);
+    this.appointments.set(data.appointments);
   }
 
   /** Wait for queued IndexedDB writes to finish. */

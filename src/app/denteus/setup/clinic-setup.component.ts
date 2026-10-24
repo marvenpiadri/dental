@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Chair, Dentist } from '../models/dental.models';
+import { BackupResult, makeBackup, parseBackup } from '../services/backup';
 import { DentalStore } from '../services/dental-store.service';
+import { localIsoDay } from '../utils/appointment-labels';
 
 const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
@@ -15,10 +17,16 @@ const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4
 })
 export class ClinicSetupComponent {
   protected readonly store = inject(DentalStore);
-  protected readonly t = inject(I18n).t;
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
 
   protected readonly failed = signal(false);
   protected readonly blocked = signal<string | null>(null);
+
+  /** A backup the user picked, waiting for their confirmation before it replaces the clinic. */
+  protected readonly pending = signal<Extract<BackupResult, { ok: true }> | null>(null);
+  protected readonly importProblem = signal<string | null>(null);
+  protected readonly restored = signal(false);
 
   /** Ids that appointments point to: removing them would orphan those visits. */
   private readonly used = computed(() => {
@@ -56,6 +64,40 @@ export class ClinicSetupComponent {
   protected removeChair(c: Chair): void {
     if (this.refuse(c.id, c.name)) return;
     void this.save(this.store.dentists(), this.store.chairs().filter((x) => x.id !== c.id));
+  }
+
+  protected exportBackup(): void {
+    const now = new Date();
+    const url = URL.createObjectURL(new Blob([makeBackup(this.store.snapshot(), now)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dentaleus-backup-${localIsoDay(now)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  protected async chooseBackup(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = ''; // picking the same file again must fire a new change
+    this.pending.set(null);
+    this.restored.set(false);
+    this.importProblem.set(null);
+    if (!file) return;
+    const result = parseBackup(await file.text());
+    if (result.ok) this.pending.set(result);
+    else this.importProblem.set(`setup.backup.error.${result.reason}`);
+  }
+
+  protected async confirmRestore(): Promise<void> {
+    const backup = this.pending();
+    if (!backup) return;
+    try {
+      await this.store.restore(backup.data);
+      this.restored.set(true);
+      this.pending.set(null);
+    } catch {
+      this.importProblem.set('setup.backup.error.save');
+    }
   }
 
   private refuse(id: string, name: string): boolean {
