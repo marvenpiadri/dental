@@ -306,6 +306,8 @@ export const fr: Record<keyof typeof en, string> = {
   'docs.error.storage': 'Le fichier n’a pas pu être enregistré dans ce navigateur. Vérifiez que le stockage du site est autorisé et qu’il reste de la place.',
   'profile.back': 'Patients',
 
+  'today.remind.sent': 'Envoyé',
+  'today.remind.again': 'Renvoyer',
   'nav.signout': 'Se déconnecter',
   'auth.title': 'Qui utilise Dentaleus ?',
   'auth.who': 'Membre de l’équipe',

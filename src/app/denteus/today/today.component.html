@@ -120,8 +120,9 @@
                   <span class="name">{{ row.patient?.fullName ?? '—' }}</span>
                   <span class="sub muted">{{ i18n.time(row.appointment.start) }} · {{ t(typeKey(row.appointment.type)) }}</span>
                 </span>
+                @if (row.appointment.remindedAt) { <span class="chip" data-tone="ok">{{ t('today.remind.sent') }}</span> }
                 @if (row.link) {
-                  <a class="btn" [href]="row.link" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a>
+                  <a class="btn" [href]="row.link" target="_blank" rel="noopener" (click)="store.markReminded(row.appointment.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t(row.appointment.remindedAt ? 'today.remind.again' : 'today.remind.send') }}</a>
                 } @else {
                   <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span>
                 }

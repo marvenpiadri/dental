@@ -308,6 +308,8 @@ export const en = {
   'docs.error.storage': 'The file couldn’t be saved in this browser. Check that site storage is allowed and has free space.',
   'profile.back': 'Patients',
 
+  'today.remind.sent': 'Sent',
+  'today.remind.again': 'Send again',
   'nav.signout': 'Sign out',
   'auth.title': 'Who is using Dentaleus?',
   'auth.who': 'Team member',

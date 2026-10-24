@@ -206,6 +206,12 @@ export class DentalStore {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, plan: change(p.plan ?? []) } : p)));
   }
 
+  /** Remembers that a reminder was sent, so the front desk doesn't message the same patient twice. */
+  markReminded(appointmentId: string): void {
+    const at = new Date().toISOString();
+    this.appointments.update((list) => list.map((a) => (a.id === appointmentId ? { ...a, remindedAt: at } : a)));
+  }
+
   /** Same shape as `changePlan`, for the patient's visit notes. */
   changeVisits(patientId: string, change: (visits: VisitNote[]) => VisitNote[]): void {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, visits: change(p.visits ?? []) } : p)));

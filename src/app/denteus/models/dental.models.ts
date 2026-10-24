@@ -199,6 +199,8 @@ export interface Appointment {
   reason?: string;
   note?: string;
   encounterId?: string;
+  /** ISO time the WhatsApp reminder was opened for this visit. */
+  remindedAt?: string;
   createdAt: Date;
   createdBy: string;
   history: StatusChange[];
