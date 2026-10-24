@@ -228,3 +228,16 @@ export type ApiResult<T> =
       /** One line per problem, e.g. which resource is taken and when. */
       details: string[];
     };
+
+/** A file attached to a patient (X-ray, photo, report). Kept in IndexedDB only, outside the backup file. */
+export interface PatientDocument {
+  id: string;
+  patientId: string;
+  name: string;
+  /** MIME type. */
+  type: string;
+  size: number;
+  /** ISO timestamp. */
+  addedAt: string;
+  blob: Blob;
+}

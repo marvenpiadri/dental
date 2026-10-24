@@ -8,6 +8,7 @@ import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { balance } from './treatment-rules';
 import { ToothChartComponent } from './tooth-chart.component';
 import { BillingComponent } from './billing.component';
+import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 
@@ -16,7 +17,7 @@ type Section = 'overview' | 'clinical' | 'billing';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent],
+  imports: [RouterLink, ToothChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
