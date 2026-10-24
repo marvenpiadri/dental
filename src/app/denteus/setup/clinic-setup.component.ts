@@ -6,9 +6,18 @@ import { Key } from '../../core/i18n/i18n.service';
 import { I18n } from '../../core/i18n/i18n.service';
 import { CatalogEntry, Chair, Dentist } from '../models/dental.models';
 import { parsePrice, procedureName } from '../patients/treatment-rules';
-import { BackupResult, makeBackup, parseBackup } from '../services/backup';
+import { PracticeStore } from '../practice/practice-store.service';
+import { ClinicDatabase } from '../services/clinic-database.service';
+import { BackupDocument, BackupResult, makeBackup, parseBackup } from '../services/backup';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
+
+const toDataUrl = (blob: Blob): Promise<string> => new Promise((done, fail) => {
+  const reader = new FileReader();
+  reader.onload = () => done(reader.result as string);
+  reader.onerror = () => fail(reader.error);
+  reader.readAsDataURL(blob);
+});
 
 const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
@@ -38,6 +47,8 @@ export class ClinicSetupComponent {
     this.teamProblem.set((await this.auth.removeStaff(id)) ? null : 'team.last');
   }
 
+  private readonly practice = inject(PracticeStore);
+  private readonly database = inject(ClinicDatabase);
   protected readonly failed = signal(false);
   protected readonly blocked = signal<string | null>(null);
 
@@ -111,9 +122,11 @@ export class ClinicSetupComponent {
     void this.save(this.store.dentists(), this.store.chairs().filter((x) => x.id !== c.id));
   }
 
-  protected exportBackup(): void {
+  protected async exportBackup(): Promise<void> {
     const now = new Date();
-    const url = URL.createObjectURL(new Blob([makeBackup(this.store.snapshot(), now)], { type: 'application/json' }));
+    const documents = await Promise.all((await this.database.allDocuments()).map(async ({ blob, ...doc }): Promise<BackupDocument> => ({ ...doc, data: await toDataUrl(blob) })));
+    const data = { ...this.store.snapshot(), practice: await this.practice.snapshot(), documents };
+    const url = URL.createObjectURL(new Blob([makeBackup(data, now)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = `dentaleus-backup-${localIsoDay(now)}.json`;
@@ -138,6 +151,9 @@ export class ClinicSetupComponent {
     if (!backup) return;
     try {
       await this.store.restore(backup.data);
+      // backups from before these existed leave them as they are
+      if (backup.data.practice) await this.practice.restore(backup.data.practice);
+      if (backup.data.documents) await this.database.replaceDocuments(await Promise.all(backup.data.documents.map(async ({ data, ...doc }) => ({ ...doc, blob: await (await fetch(data)).blob() }))));
       this.restored.set(true);
       this.pending.set(null);
     } catch {

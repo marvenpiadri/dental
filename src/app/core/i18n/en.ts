@@ -51,7 +51,7 @@ export const en = {
   'setup.acts.empty.body': 'Add the acts you perform and their usual price. They are offered when you plan a treatment, and the price can still be changed per patient.',
   'plan.catalog.empty': 'Add at least one procedure before planning a treatment, in',
   'setup.backup': 'Backup',
-  'setup.backup.intro': 'Your clinic data is stored in this browser only. Download a backup regularly and keep it somewhere safe; it is also the file you will use to move to another computer.',
+  'setup.backup.intro': 'Your clinic data is stored in this browser only. Download a backup regularly (it includes patient files, tasks, stock, lab and traceability records) and keep it somewhere safe; it is also the file you will use to move to another computer.',
   'setup.backup.export': 'Download backup',
   'setup.backup.import': 'Restore from a backup',
   'setup.backup.done': 'Backup restored.',

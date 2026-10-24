@@ -1,5 +1,6 @@
 import { Injectable, WritableSignal, inject, signal } from '@angular/core';
 import { ClinicDatabase } from '../services/clinic-database.service';
+import { PRACTICE_KEYS, PracticeData } from '../services/backup';
 import { Expense, ImplantRecord, LabOrder, SterilizationCycle, StockItem, Task } from './practice-rules';
 
 /**
@@ -30,6 +31,21 @@ export class PracticeStore {
       this.loaded.set(true);
     })();
     return this.loading;
+  }
+
+  private readonly lists = { expenses: this.expenses, stock: this.stock, lab: this.lab, tasks: this.tasks, implants: this.implants, steril: this.cycles } as unknown as Record<(typeof PRACTICE_KEYS)[number], WritableSignal<unknown[]>>;
+
+  /** For backups: what is in the lists now (loads them first, so an early export isn't empty). */
+  async snapshot(): Promise<PracticeData> {
+    await this.init();
+    return Object.fromEntries(PRACTICE_KEYS.map((k) => [k, this.lists[k]()])) as PracticeData;
+  }
+
+  /** Replaces the lists with a backup's. Saved first, shown after, like the rest of a restore. */
+  async restore(data: PracticeData): Promise<void> {
+    await this.init();
+    for (const key of PRACTICE_KEYS) await this.db.saveSetting(key, data[key]);
+    for (const key of PRACTICE_KEYS) this.lists[key].set(data[key]);
   }
 
   changeExpenses(change: (list: Expense[]) => Expense[]): void { this.apply(this.expenses, 'expenses', change); }

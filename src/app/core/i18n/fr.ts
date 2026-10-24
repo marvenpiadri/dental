@@ -49,7 +49,7 @@ export const fr: Record<keyof typeof en, string> = {
   'setup.acts.empty.body': 'Ajoutez les actes que vous pratiquez et leur tarif habituel. Ils sont proposés dans le plan de traitement, et le prix reste modifiable par patient.',
   'plan.catalog.empty': 'Ajoutez au moins un acte avant de planifier un soin, dans',
   'setup.backup': 'Sauvegarde',
-  'setup.backup.intro': 'Les données du cabinet sont stockées dans ce navigateur uniquement. Téléchargez régulièrement une sauvegarde et gardez-la en lieu sûr ; c’est aussi le fichier à utiliser pour passer sur un autre ordinateur.',
+  'setup.backup.intro': 'Les données du cabinet sont stockées dans ce navigateur uniquement. Téléchargez régulièrement une sauvegarde (elle inclut les fichiers patients, tâches, stock, prothèses et traçabilité) et gardez-la en lieu sûr ; c’est aussi le fichier à utiliser pour passer sur un autre ordinateur.',
   'setup.backup.export': 'Télécharger la sauvegarde',
   'setup.backup.import': 'Restaurer une sauvegarde',
   'setup.backup.done': 'Sauvegarde restaurée.',

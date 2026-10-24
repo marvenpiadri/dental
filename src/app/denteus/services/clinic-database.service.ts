@@ -185,6 +185,24 @@ export class ClinicDatabase {
     return docs.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
   }
 
+  async allDocuments(): Promise<PatientDocument[]> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readonly');
+    const done = transactionDone(transaction);
+    const docs = await requestResult<PatientDocument[]>(transaction.objectStore('documents').getAll());
+    await done;
+    return docs;
+  }
+
+  /** One transaction: a failure leaves the old documents in place. */
+  async replaceDocuments(docs: PatientDocument[]): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readwrite');
+    transaction.objectStore('documents').clear();
+    for (const doc of docs) transaction.objectStore('documents').put(doc);
+    await transactionDone(transaction);
+  }
+
   async deleteDocument(id: string): Promise<void> {
     const db = await this.open();
     const transaction = db.transaction('documents', 'readwrite');

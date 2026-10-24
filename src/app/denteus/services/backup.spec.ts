@@ -43,3 +43,15 @@ describe('backup', () => {
     expect(parseBackup(JSON.stringify(noName))).toEqual({ ok: false, reason: 'damaged' });
   });
 });
+
+describe('backup extras', () => {
+  const base = { app: 'dentaleus', version: 1, locations: [], dentists: [], chairs: [], patients: [], appointments: [] };
+  it('reads practice lists and documents when present, and none when absent', () => {
+    expect(parseBackup(JSON.stringify(base))).toMatchObject({ ok: true, data: { practice: undefined, documents: undefined } });
+    const r = parseBackup(JSON.stringify({ ...base, practice: { tasks: [{ id: 't' }] }, documents: [{ id: 'd', patientId: 'p', data: 'data:text/plain;base64,aGk=' }] }));
+    expect(r).toMatchObject({ ok: true, data: { practice: { tasks: [{ id: 't' }], expenses: [] }, documents: [{ id: 'd' }] } });
+  });
+  it('refuses a document without its bytes', () => {
+    expect(parseBackup(JSON.stringify({ ...base, documents: [{ id: 'd', patientId: 'p' }] }))).toEqual({ ok: false, reason: 'damaged' });
+  });
+});

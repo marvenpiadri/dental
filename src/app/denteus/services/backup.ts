@@ -1,6 +1,12 @@
 import { defaultCatalog } from '../patients/treatment-rules';
 import { Appointment, CatalogEntry, Chair, ClinicLocation, Dentist, Patient } from '../models/dental.models';
 
+export const PRACTICE_KEYS = ['expenses', 'stock', 'lab', 'tasks', 'implants', 'steril'] as const;
+export type PracticeData = Record<(typeof PRACTICE_KEYS)[number], unknown[]>;
+
+/** A patient file (X-ray, scan) as it travels in a backup: the bytes are a data URL. */
+export interface BackupDocument { id: string; patientId: string; name: string; type: string; size: number; addedAt: string; data: string }
+
 export interface ClinicData {
   locations: ClinicLocation[];
   dentists: Dentist[];
@@ -8,6 +14,9 @@ export interface ClinicData {
   patients: Patient[];
   appointments: Appointment[];
   catalog: CatalogEntry[];
+  /** Optional: backups made before the Practice page or document backups don't have them. */
+  practice?: PracticeData;
+  documents?: BackupDocument[];
 }
 
 /** The file a clinic downloads. Dates are ISO strings, which is also what a PostgreSQL import wants. */
@@ -74,6 +83,11 @@ export function parseBackup(source: string): BackupResult {
   const appointments = (raw['appointments'] as unknown[]).map(reviveAppointment);
   if (appointments.some((a) => a === null)) return { ok: false, reason: 'damaged' };
 
+  const rawPractice = raw['practice'];
+  const practice = isRecord(rawPractice) ? (Object.fromEntries(PRACTICE_KEYS.map((k) => [k, Array.isArray(rawPractice[k]) ? rawPractice[k] : []])) as PracticeData) : undefined;
+  const rawDocs = raw['documents'];
+  if (rawDocs !== undefined && !(Array.isArray(rawDocs) && rawDocs.every((d) => isRecord(d) && text(d['id']) && text(d['patientId']) && text(d['data'])))) return { ok: false, reason: 'damaged' };
+
   return {
     ok: true,
     exportedAt: typeof raw['exportedAt'] === 'string' ? raw['exportedAt'] : '',
@@ -84,6 +98,8 @@ export function parseBackup(source: string): BackupResult {
       patients: patients as Patient[],
       appointments: appointments as Appointment[],
       // backups made before the catalog existed have none: start from the built-in acts
+      practice,
+      documents: rawDocs as BackupDocument[] | undefined,
       catalog: Array.isArray(raw['catalog']) && withId(raw['catalog'] as unknown[]) ? (raw['catalog'] as CatalogEntry[]) : defaultCatalog(),
     },
   };
