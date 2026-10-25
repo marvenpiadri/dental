@@ -128,3 +128,26 @@ describe('status vs plan', () => {
     expect(c.globals.edentulous).toBe(false);
   });
 });
+
+import { compareExaminations, examinationsOf, makeExamination, suggestedDiagnoses } from './exam';
+describe('examinations', () => {
+  const base = newChart();
+  const a = makeExamination('p1', base, { id: 'e1', date: '2026-01-10' });
+  const worse = applied(editChart(base, 'status', [16], { kind: 'caries', surface: 'occlusal', on: true }));
+  const b = makeExamination('p1', worse, { id: 'e2', date: '2026-06-10' });
+  it('history is frozen and per patient', () => {
+    expect(a.chart.teeth['16']!.caries).toEqual([]);
+    const other = makeExamination('p2', base, { id: 'e3', date: '2026-07-01' });
+    expect(examinationsOf('p1', [a, b, other]).map((e) => e.id)).toEqual(['e2', 'e1']);
+    expect(examinationsOf('p1', undefined)).toEqual([]);
+  });
+  it('compares findings between visits', () => {
+    const d = compareExaminations(a, b);
+    expect(d.teeth.map((t) => t.tooth)).toEqual([16]);
+    expect(d.teeth[0]!.fields.some((f) => f.field === 'caries')).toBe(true);
+  });
+  it('suggests, with a code, a diagnosis from findings', () => {
+    expect(suggestedDiagnoses(worse).some((s) => s.tooth === 16 && s.key === 'caries')).toBe(true);
+    expect(suggestedDiagnoses(base)).toEqual([]);
+  });
+});

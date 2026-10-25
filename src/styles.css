@@ -5,6 +5,7 @@
 @import '@fortawesome/fontawesome-free/css/brands.min.css';
 /* The odontogram library's own styles, scoped to its root by tools/scope-odontogram-css.mjs. */
 @import './odontogram.css';
+@import './odontogram-brand.css';
 
 /* ---------------------------------------------------------------------------
    Dentaleus design system. Rules and rationale: DESIGN.md.
