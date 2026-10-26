@@ -45,6 +45,7 @@ export type ToothEdit =
   | { kind: 'perio'; site: string; pd?: number | null; gm?: number; bop?: boolean; sup?: boolean }
   | { kind: 'furcation'; entrance: string; grade: number | null }
   | { kind: 'plaque'; surface: string; on: boolean }
+  | { kind: 'index'; index: 'pi' | 'gi'; surface: string; grade: number }
   | { kind: 'dxOverride'; key: string; mode: 'add' | 'suppress' | null }
   | { kind: 'note'; value: string }
   | { kind: 'reset' };
@@ -163,6 +164,13 @@ function run(t: ToothRecord, toothNo: number, e: ToothEdit): EditResult {
       if (!VALID_PLAQUE_SURFACE.has(e.surface)) return rejected(`unknown plaque surface "${e.surface}"`);
       if (e.on) t.plaque.add(e.surface); else t.plaque.delete(e.surface);
       return { ok: true, changed: true };
+    case 'index': {
+      if (!VALID_PLAQUE_SURFACE.has(e.surface)) return rejected(`unknown surface "${e.surface}"`);
+      if (!Number.isInteger(e.grade) || e.grade < 0 || e.grade > 3) return rejected('index grade must be 0–3');
+      const m = t[e.index] as Map<string, number>;
+      if (e.grade === 0) m.delete(e.surface); else m.set(e.surface, e.grade);
+      return { ok: true, changed: true };
+    }
     case 'dxOverride':
       if (!TOOTH_LEVEL_DX_KEYS.has(e.key)) return rejected(`unknown diagnosis "${e.key}"`);
       if (e.mode !== null && !VALID_DX_OVERRIDE_VALUE.has(e.mode)) return rejected('override must be add or suppress');

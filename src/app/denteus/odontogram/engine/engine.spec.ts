@@ -1,6 +1,7 @@
 import { ALL_TEETH, newChart, readChart, writeChart, type Chart } from './chart';
 import { editChart, plannedTeeth, planChanges, setEdentulous, type EditOutcome } from './plan';
 import { applyEdit } from './edits';
+import { indexSummary } from './perio';
 import { defaultState } from './vendor/state/payload';
 
 const applied = (o: EditOutcome): Chart => { if (o.kind !== 'applied') throw new Error('confirm'); return o.chart; };
@@ -211,5 +212,30 @@ describe('tooth note', () => {
     expect(readChart(writeChart(c)).chart!.status.get(11)!.note).toBe('watch the mesial');
     const o = editChart(c, 'status', [11], { kind: 'note', value: 'x'.repeat(501) });
     expect(o.kind === 'applied' && o.rejected.length).toBe(1);
+  });
+});
+
+describe('plaque and gingival indices', () => {
+  it('validates grades and surfaces', () => {
+    const t = defaultState();
+    expect(applyEdit(t, 16, { kind: 'index', index: 'pi', surface: 'buccal', grade: 4 }).ok).toBe(false);
+    expect(applyEdit(t, 16, { kind: 'index', index: 'gi', surface: 'top', grade: 1 }).ok).toBe(false);
+    expect(applyEdit(t, 16, { kind: 'index', index: 'pi', surface: 'buccal', grade: 2 }).ok).toBe(true);
+    expect(t.pi.get('buccal')).toBe(2);
+    applyEdit(t, 16, { kind: 'index', index: 'pi', surface: 'buccal', grade: 0 });
+    expect(t.pi.size).toBe(0);
+  });
+  it('summarises O\'Leary and mean grades, and round trips', () => {
+    let c = newChart();
+    expect(indexSummary(c)).toEqual({ olearyPercent: 0, meanPi: null, meanGi: null });
+    c = applied(editChart(c, 'status', [16], { kind: 'plaque', surface: 'buccal', on: true }));
+    c = applied(editChart(c, 'status', [16], { kind: 'index', index: 'gi', surface: 'buccal', grade: 2 }));
+    c = applied(editChart(c, 'status', [16], { kind: 'index', index: 'gi', surface: 'mesial', grade: 2 }));
+    const present = [...c.status.values()].length;
+    expect(indexSummary(c).olearyPercent).toBe(Math.round((1 / (present * 4)) * 1000) / 10);
+    expect(indexSummary(c).meanGi).toBe(1);
+    const back = readChart(JSON.parse(JSON.stringify(writeChart(c))));
+    expect(back.issues).toEqual([]);
+    expect(indexSummary(back.chart!)).toEqual(indexSummary(c));
   });
 });

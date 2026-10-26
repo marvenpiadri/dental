@@ -77,6 +77,34 @@ export function perioSummary(chart: Chart): PerioSummary {
   return { chartedSites: charted, bleedingSites: bleeding, bopPercent: charted ? Math.round((bleeding / charted) * 1000) / 10 : 0, maxPd: charted ? maxPd : null, maxFurcation: maxFurc || null };
 }
 
+export interface IndexSummary { olearyPercent: number | null; meanPi: number | null; meanGi: number | null }
+
+/**
+ * O'Leary = plaque surfaces / (4 × present teeth). Silness-Löe PI and Löe-Silness GI are averaged over
+ * teeth with at least one graded surface (an ungraded surface counts as 0, the format has no "not scored").
+ * shortcut: no per-tooth index-teeth subset (Ramfjord), add if a protocol asks for it.
+ */
+export function indexSummary(chart: Chart): IndexSummary {
+  let present = 0, plaque = 0;
+  const sum = { pi: 0, gi: 0 }, n = { pi: 0, gi: 0 };
+  for (const num of ALL_TEETH) {
+    const t = chart.status.get(num);
+    if (!t || !isToothPresent(t.toothSelection)) continue;
+    present++;
+    plaque += t.plaque.size;
+    for (const k of ['pi', 'gi'] as const) {
+      const m = t[k] as Map<string, number>;
+      if (m.size) { sum[k] += [...m.values()].reduce((a, b) => a + b, 0) / 4; n[k]++; }
+    }
+  }
+  const r = (v: number) => Math.round(v * 100) / 100;
+  return {
+    olearyPercent: present && plaque ? Math.round((plaque / (present * 4)) * 1000) / 10 : present ? 0 : null,
+    meanPi: n.pi ? r(sum.pi / n.pi) : null,
+    meanGi: n.gi ? r(sum.gi / n.gi) : null,
+  };
+}
+
 export interface PerioClassificationResult {
   diagnosis: string; stage: string; grade: string; extent: string;
   derived: PerioClassification;

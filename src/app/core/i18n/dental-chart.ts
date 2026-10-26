@@ -262,6 +262,18 @@ const D = {
   'dc.num.fdi': ['FDI', 'FDI'],
   'dc.num.universal': ['Universal', 'Universelle'],
   'dc.num.palmer': ['Palmer', 'Palmer'],
+  'dc.idx.title': ['Plaque and gingival indices', 'Indices de plaque et gingival'],
+  'dc.idx.plaque': ['Plaque', 'Plaque'],
+  'dc.idx.pi': ['PI (0–3)', 'IP (0–3)'],
+  'dc.idx.gi': ['GI (0–3)', 'IG (0–3)'],
+  'dc.idx.mesial': ['Mesial', 'Mésial'],
+  'dc.idx.distal': ['Distal', 'Distal'],
+  'dc.idx.buccal': ['Buccal', 'Vestibulaire'],
+  'dc.idx.lingual': ['Lingual', 'Lingual'],
+  'dc.ps.oleary': ['Plaque {n}%', 'Plaque {n} %'],
+  'dc.ps.pi': ['PI {n}', 'IP {n}'],
+  'dc.ps.gi': ['GI {n}', 'IG {n}'],
+  'dc.idx.hint': ['Grades are recorded per surface; an unscored surface counts as 0 in the averages of scored teeth.', 'Les grades sont notés par face ; une face non notée compte 0 dans la moyenne des dents notées.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

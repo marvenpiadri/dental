@@ -27,6 +27,23 @@ import { label } from './labels';
           }
         </tbody>
       </table></div>
+      <div class="scroll"><table>
+        <caption class="sr-only">{{ t('dc.idx.title') }}</caption>
+        <thead><tr><th scope="col">{{ t('dc.idx.title') }}</th><th scope="col">{{ t('dc.idx.plaque') }}</th><th scope="col">{{ t('dc.idx.pi') }}</th><th scope="col">{{ t('dc.idx.gi') }}</th></tr></thead>
+        <tbody>
+          @for (s of surfaces; track s) {
+            <tr>
+              <th scope="row">{{ t(surfaceKey[s]) }}</th>
+              <td><input type="checkbox" [disabled]="disabled()" [attr.aria-label]="t('dc.idx.plaque') + ' ' + s" [checked]="state().plaque.has(s)" (change)="edit.emit({ kind: 'plaque', surface: s, on: checked($event) })" /></td>
+              @for (k of indices; track k) {
+                <td><select class="input num" [disabled]="disabled()" [attr.aria-label]="k.toUpperCase() + ' ' + s" (change)="setIndex(k, s, $event)">
+                  @for (g of [0,1,2,3]; track g) { <option [value]="g" [selected]="grade(k, s) === g">{{ g }}</option> }
+                </select></td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table></div>
       @if (entrances().length) {
         <div class="furc">
           @for (en of entrances(); track en) {
@@ -60,6 +77,11 @@ export class PerioEditorComponent {
   readonly disabled = input(false);
   readonly edit = output<ToothEdit>();
   protected readonly sites = PERIO_SITES;
+  protected readonly surfaces = ['mesial', 'distal', 'buccal', 'lingual'] as const;
+  protected readonly surfaceKey = { mesial: 'dc.idx.mesial', distal: 'dc.idx.distal', buccal: 'dc.idx.buccal', lingual: 'dc.idx.lingual' } as const;
+  protected readonly indices = ['pi', 'gi'] as const;
+  protected grade(k: 'pi' | 'gi', s: string): number { return (this.state()[k] as Map<string, number>).get(s) ?? 0; }
+  protected setIndex(k: 'pi' | 'gi', s: string, e: Event): void { this.edit.emit({ kind: 'index', index: k, surface: s, grade: Number((e.target as HTMLSelectElement).value) }); }
 
   protected readonly allowed = computed(() => { const s = String(this.state().toothSelection); return s === 'tooth-base' || s === 'milktooth'; });
   protected readonly entrances = computed(() => (this.allowed() ? furcationEntrances(this.no()) : []));

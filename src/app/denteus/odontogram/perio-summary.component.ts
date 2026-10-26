@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
 import type { Chart } from './engine/chart';
-import { OVERRIDE_VALUES, classifyPerio, perioSummary, readCaseMeta, type CaseMeta } from './engine/perio';
+import { OVERRIDE_VALUES, classifyPerio, indexSummary, perioSummary, readCaseMeta, type CaseMeta } from './engine/perio';
 
 type OverrideKey = keyof typeof OVERRIDE_VALUES;
 
@@ -13,6 +13,9 @@ type OverrideKey = keyof typeof OVERRIDE_VALUES;
     <div class="chips">
       <span class="chip" data-tone="neutral">{{ t('dc.ps.sites', { n: sum().chartedSites }) }}</span>
       <span class="chip" [attr.data-tone]="sum().bopPercent >= 10 ? 'warn' : 'ok'">BOP {{ sum().bopPercent }}%</span>
+      @if (idx().olearyPercent !== null && idx().olearyPercent! > 0) { <span class="chip" data-tone="neutral">{{ t('dc.ps.oleary', { n: idx().olearyPercent! }) }}</span> }
+      @if (idx().meanPi !== null) { <span class="chip" data-tone="neutral">{{ t('dc.ps.pi', { n: idx().meanPi! }) }}</span> }
+      @if (idx().meanGi !== null) { <span class="chip" data-tone="neutral">{{ t('dc.ps.gi', { n: idx().meanGi! }) }}</span> }
       @if (sum().maxPd !== null) { <span class="chip" data-tone="neutral">{{ t('dc.ps.maxPd', { n: sum().maxPd! }) }}</span> }
     </div>
     <div class="grid">
@@ -59,6 +62,7 @@ export class PerioSummaryComponent {
   readonly patch = output<Partial<CaseMeta>>();
 
   protected readonly sum = computed(() => perioSummary(this.chart()));
+  protected readonly idx = computed(() => indexSummary(this.chart()));
   protected readonly meta = computed(() => readCaseMeta(this.chart().caseMeta));
   protected readonly result = computed(() => classifyPerio(this.chart()));
   protected readonly values = OVERRIDE_VALUES;
