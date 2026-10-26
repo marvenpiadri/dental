@@ -27,6 +27,17 @@ describe('chart round trip', () => {
     expect(chart).not.toBeNull();
     expect(issues.map((i) => i.path).sort()).toEqual(['teeth.11.mobility', 'teeth.99']);
   });
+  it('loads an older, sparse payload (no version, missing teeth and fields) without losing what it has', () => {
+    let c = newChart();
+    c = applied(editChart(c, 'status', [11], { kind: 'restoration', value: 'crown|emax' }));
+    const full = writeChart(c) as unknown as { teeth: Record<string, Record<string, unknown>> };
+    const sparse = { teeth: { 11: { restorationType: full.teeth['11']!['restorationType'], restorationMaterial: full.teeth['11']!['restorationMaterial'] } } };
+    const out = readChart(sparse);
+    expect(out.chart).not.toBeNull();
+    expect(out.chart!.status.get(11)!.restorationType).toBe('crown');
+    expect(out.chart!.status.get(12)).toEqual(defaultState());
+    expect(out.issues).toEqual([]);
+  });
   it('keeps case metadata and plan, and omits an identical plan', () => {
     let c = newChart();
     c.caseMeta = { age: 41 };
