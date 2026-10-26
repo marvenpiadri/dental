@@ -150,3 +150,30 @@ describe('examinations', () => {
     expect(suggestedDiagnoses(base)).toEqual([]);
   });
 });
+
+import { classifyPerio, patchCaseMeta, perioSummary, readCaseMeta } from './perio';
+describe('periodontal', () => {
+  const probe = (c: Chart, tooth: number, site: string, pd: number, gm = 0, bop = false): Chart =>
+    applied(editChart(c, 'status', [tooth], { kind: 'perio', site, pd, gm, bop }));
+  it('no probing, no classification', () => { expect(classifyPerio(newChart())).toBeNull(); });
+  it('summarises bleeding and depth', () => {
+    let c = probe(newChart(), 11, 'MB', 5, 0, true);
+    c = probe(c, 11, 'B', 3);
+    expect(perioSummary(c)).toMatchObject({ chartedSites: 2, bleedingSites: 1, bopPercent: 50, maxPd: 5 });
+  });
+  it('classifies severe loss and lets an override win', () => {
+    let c = newChart();
+    for (const t of [11, 12, 21]) c = probe(c, t, 'MB', 8, 0, true);
+    const r = classifyPerio(c)!;
+    expect(r.derived.diagnosis).toBe('periodontitis');
+    const o = classifyPerio(patchCaseMeta(c, { stageOverride: 'II' }))!;
+    expect(o.stage).toBe('II');
+    expect(o.overridden.stage).toBe(true);
+  });
+  it('case meta is clamped, optional, and keeps unknown fields', () => {
+    expect(readCaseMeta({ age: 999, hba1c: 1, smokingStatus: 'x' })).toMatchObject({ age: 120, hba1c: 3, smokingStatus: 'unknown' });
+    const c = patchCaseMeta({ ...newChart(), caseMeta: { age: 40, other: 'kept' } }, { smokingStatus: 'current' });
+    expect(c.caseMeta).toEqual({ age: 40, other: 'kept', smokingStatus: 'current' });
+    expect(patchCaseMeta(newChart(), { age: null }).caseMeta).toBeUndefined();
+  });
+});

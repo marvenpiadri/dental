@@ -6,6 +6,8 @@ import { compareExaminations, makeExamination, suggestedDiagnoses, type Examinat
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
 import { defaultState } from './engine/vendor/state/payload';
 import { label } from './labels';
+import { patchCaseMeta, type CaseMeta } from './engine/perio';
+import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothTileComponent } from './tooth-tile.component';
@@ -20,7 +22,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [ToothTileComponent, ToothEditorComponent, PerioEditorComponent],
+  imports: [ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -119,6 +121,12 @@ export class DentalChartComponent {
     if (p.edit === 'edentulous') this.edentulous(true); else this.apply(p.edit, true, p.teeth);
   }
 
+  protected patchMeta(p: Partial<CaseMeta>): void {
+    if (this.readOnly()) return;
+    const next = patchCaseMeta(this.chart(), p);
+    this.chart.set(next);
+    this.save.emit(writeChart(next));
+  }
   protected setDx(d: { tooth: number; key: string }, mode: 'add' | 'suppress' | null): void { this.apply({ kind: 'dxOverride', key: d.key, mode }, false, [d.tooth]); }
   protected isConfirmed(d: SuggestedDiagnosis): boolean {
     const o = this.shown().status.get(d.tooth)?.dxOverrides as Map<string, string> | undefined;

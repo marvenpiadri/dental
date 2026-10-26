@@ -78,6 +78,7 @@
       } @else { <p class="hint">{{ t('dc.pickTooth') }}</p> }
     }
     @case ('perio') {
+      <den-perio-summary [chart]="shown()" [disabled]="readOnly()" (patch)="patchMeta($event)" />
       @if (firstState(); as st) {
         <den-perio-editor [no]="firstSelected()!" [state]="st" [disabled]="readOnly() || mode() === 'plan'" (edit)="apply($event, false, [firstSelected()!])" />
         @if (mode() === 'plan') { <p class="hint">{{ t('dc.perio.statusOnly') }}</p> }
