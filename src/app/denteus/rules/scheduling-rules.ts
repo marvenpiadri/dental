@@ -1,3 +1,4 @@
+import type { Key } from '../../core/i18n/i18n.service';
 import { Appointment, AppointmentStatus } from '../models/dental.models';
 
 /**
@@ -75,11 +76,11 @@ export function findConflicts(candidate: Candidate, existing: readonly Appointme
 }
 
 /** Returns a message when the times themselves are unacceptable, otherwise null. */
-export function validateTiming(start: Date, end: Date): string | null {
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 'The date or time is not valid.';
+export function validateTiming(start: Date, end: Date): { key: Key; n?: number } | null {
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return { key: 'er.badTime' };
   const minutes = (end.getTime() - start.getTime()) / 60_000;
-  if (minutes < MIN_DURATION_MIN) return `An appointment lasts at least ${MIN_DURATION_MIN} minutes.`;
-  if (minutes > MAX_DURATION_MIN) return `An appointment cannot last more than ${MAX_DURATION_MIN / 60} hours.`;
-  if (start.toDateString() !== new Date(end.getTime() - 1).toDateString()) return 'An appointment must start and end on the same day.';
+  if (minutes < MIN_DURATION_MIN) return { key: 'er.min', n: MIN_DURATION_MIN };
+  if (minutes > MAX_DURATION_MIN) return { key: 'er.max', n: MAX_DURATION_MIN / 60 };
+  if (start.toDateString() !== new Date(end.getTime() - 1).toDateString()) return { key: 'er.sameDay' };
   return null;
 }

@@ -2,6 +2,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicData } from './backup';
+import { I18n } from '../../core/i18n/i18n.service';
+import { STATUS_LABEL } from '../utils/domain-keys';
 import { ClinicDatabase } from './clinic-database.service';
 import { defaultCatalog } from '../patients/treatment-rules';
 import type { Examination } from '../odontogram/engine/exam';
@@ -19,7 +21,6 @@ import {
   Payment,
   VisitNote,
   TreatmentItem,
-  STATUS_META,
 } from '../models/dental.models';
 import {
   Candidate,
@@ -89,6 +90,7 @@ export class DentalStore {
   private initialization: Promise<void> | null = null;
   private persistQueue: Promise<void> = Promise.resolve();
   private readonly database = inject(ClinicDatabase);
+  private readonly t = inject(I18n).t;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly persistenceError = signal<string | null>(null);
 
@@ -228,7 +230,7 @@ export class DentalStore {
   /* ----------------------------- appointments ----------------------------- */
 
   async createAppointment(draft: AppointmentDraft): Promise<ApiResult<Appointment>> {
-    if (!draft.patientId) return fail('invalid', 'Select a patient.');
+    if (!draft.patientId) return fail('invalid', this.t('er.select'));
     const candidate = this.candidateOf(draft);
     const problem = this.check(candidate);
     if (problem) return problem;
@@ -258,7 +260,7 @@ export class DentalStore {
   /** Full edit from the booking form. Keeps the same appointment (identity and history). */
   async updateAppointment(id: string, draft: AppointmentDraft): Promise<ApiResult<Appointment>> {
     const current = this.find(id);
-    if (!current) return fail('not-found', 'This appointment no longer exists.');
+    if (!current) return fail('not-found', this.t('er.gone'));
 
     // once the visit is under way or over, only the free-text fields may change
     if (!isMovable(current.status)) {
@@ -266,7 +268,7 @@ export class DentalStore {
       this.replace(next);
       return { ok: true, value: next };
     }
-    if (!draft.patientId) return fail('invalid', 'Select a patient.');
+    if (!draft.patientId) return fail('invalid', this.t('er.select'));
 
     const candidate = { ...this.candidateOf(draft), id };
     const problem = this.check(candidate);
@@ -287,9 +289,9 @@ export class DentalStore {
   /** Drag and drop / resize. Only the schedule changes. */
   async reschedule(id: string, change: RescheduleChange): Promise<ApiResult<Appointment>> {
     const current = this.find(id);
-    if (!current) return fail('not-found', 'This appointment no longer exists.');
+    if (!current) return fail('not-found', this.t('er.gone'));
     if (!isMovable(current.status)) {
-      return fail('forbidden', `${STATUS_META[current.status].label} appointments can't be rescheduled.`);
+      return fail('forbidden', this.t('er.nomove', { s: this.t(STATUS_LABEL[current.status]) }));
     }
     const dentistId = change.dentistId ?? current.dentistId;
     const chairId = change.chairId ?? current.chairId;
@@ -311,12 +313,12 @@ export class DentalStore {
 
   async transition(id: string, to: AppointmentStatus): Promise<ApiResult<Appointment>> {
     const current = this.find(id);
-    if (!current) return fail('not-found', 'This appointment no longer exists.');
+    if (!current) return fail('not-found', this.t('er.gone'));
     if (!canTransition(current.status, to)) {
-      return fail('forbidden', `A ${STATUS_META[current.status].label.toLowerCase()} appointment can't become ${STATUS_META[to].label.toLowerCase()}.`);
+      return fail('forbidden', this.t('er.notrans', { a: this.t(STATUS_LABEL[current.status]).toLowerCase(), b: this.t(STATUS_LABEL[to]).toLowerCase() }));
     }
     if (to === 'arrived' && current.start.toDateString() !== new Date().toDateString()) {
-      return fail('forbidden', 'A patient can only be marked as arrived on the day of the appointment.');
+      return fail('forbidden', this.t('er.arrivedToday'));
     }
     if (to === 'scheduled') {
       // reinstating: the slot may have been taken in the meantime
@@ -342,7 +344,7 @@ export class DentalStore {
   /** Human-readable problems the candidate would cause; empty when the slot is free. Instant UI feedback only. */
   previewConflicts(candidate: Candidate): string[] {
     const timing = validateTiming(candidate.start, candidate.end);
-    if (timing) return [timing];
+    if (timing) return [this.t(timing.key, { n: timing.n ?? 0 })];
     return this.describeConflicts(candidate);
   }
 
@@ -370,10 +372,10 @@ export class DentalStore {
   /** Validation plus conflicts; returns a failure result or null when everything is fine. */
   private check(candidate: Candidate): ApiResult<never> | null {
     const timing = validateTiming(candidate.start, candidate.end);
-    if (timing) return fail('invalid', timing);
-    if (!this.dentistMap().has(candidate.dentistId)) return fail('invalid', 'Choose a dentist.');
-    if (!this.chairMap().has(candidate.chairId)) return fail('invalid', 'Choose a treatment chair.');
-    if (!this.patientMap().has(candidate.patientId)) return fail('invalid', 'Select a patient.');
+    if (timing) return fail('invalid', this.t(timing.key, { n: timing.n ?? 0 }));
+    if (!this.dentistMap().has(candidate.dentistId)) return fail('invalid', this.t('er.dentist'));
+    if (!this.chairMap().has(candidate.chairId)) return fail('invalid', this.t('er.chair'));
+    if (!this.patientMap().has(candidate.patientId)) return fail('invalid', this.t('er.select'));
 
     const details = this.describeConflicts(candidate);
     if (details.length) return fail('conflict', details.join(' '), details);
@@ -383,14 +385,14 @@ export class DentalStore {
   private describeConflicts(candidate: Candidate): string[] {
     return findConflicts(candidate, this.appointments()).map((c) => {
       const when = `${formatTime(c.with.start)}–${formatTime(c.with.end)}`;
-      const who = this.patientMap().get(c.with.patientId)?.fullName ?? 'another patient';
+      const who = this.patientMap().get(c.with.patientId)?.fullName ?? this.t('er.other');
       switch (c.resource) {
         case 'dentist':
-          return `${this.dentistMap().get(c.with.dentistId)?.name ?? 'The dentist'} is already booked ${when} (${who}).`;
+          return this.t('er.dentistBusy', { n: this.dentistMap().get(c.with.dentistId)?.name ?? this.t('er.theDentist'), w: when, p: who });
         case 'chair':
-          return `${this.chairMap().get(c.with.chairId)?.name ?? 'The chair'} is in use ${when} (${who}).`;
+          return this.t('er.chairBusy', { n: this.chairMap().get(c.with.chairId)?.name ?? this.t('er.theChair'), w: when, p: who });
         case 'patient':
-          return `${this.patientMap().get(c.with.patientId)?.fullName ?? 'The patient'} already has an appointment ${when} with ${this.dentistMap().get(c.with.dentistId)?.name ?? 'another dentist'}.`;
+          return this.t('er.patientBusy', { n: this.patientMap().get(c.with.patientId)?.fullName ?? this.t('er.thePatient'), w: when, d: this.dentistMap().get(c.with.dentistId)?.name ?? this.t('er.anotherDentist') });
       }
     });
   }
