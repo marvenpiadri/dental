@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSign
 import { I18n, type Key } from '../../core/i18n/i18n.service';
 import { ALL_TEETH, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
+import { exportFhir, exportJson, importFhir, importJson } from './engine/io';
 import { compareExaminations, makeExamination, suggestedDiagnoses, type Examination, type SuggestedDiagnosis } from './engine/exam';
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
 import { defaultState } from './engine/vendor/state/payload';
@@ -126,6 +127,30 @@ export class DentalChartComponent {
     const next = patchCaseMeta(this.chart(), p);
     this.chart.set(next);
     this.save.emit(writeChart(next));
+  }
+  protected readonly incoming = signal<{ chart: Chart; issues: number } | null>(null);
+  protected download(kind: 'json' | 'fhir'): void {
+    const text = kind === 'json' ? exportJson(this.shown()) : exportFhir(this.shown());
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `dental-chart-${this.patientId()}.${kind === 'json' ? 'json' : 'fhir.json'}`; a.click();
+    URL.revokeObjectURL(url);
+  }
+  protected async pickFile(e: Event): Promise<void> {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.readOnly()) return;
+    const text = await file.text();
+    const r = text.includes('"resourceType"') ? importFhir(text) : importJson(text);
+    if (!r.chart) { this.notice.set(this.t('dc.import.bad', { why: r.error ?? r.issues[0]?.message ?? '' })); return; }
+    this.notice.set('');
+    this.incoming.set({ chart: r.chart, issues: r.issues.length });
+  }
+  protected applyImport(): void {
+    const inc = this.incoming();
+    if (!inc) return;
+    this.chart.set(inc.chart); this.save.emit(writeChart(inc.chart)); this.incoming.set(null); this.selected.set([]);
   }
   protected setDx(d: { tooth: number; key: string }, mode: 'add' | 'suppress' | null): void { this.apply({ kind: 'dxOverride', key: d.key, mode }, false, [d.tooth]); }
   protected isConfirmed(d: SuggestedDiagnosis): boolean {

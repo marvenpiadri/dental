@@ -33,3 +33,5 @@
 .what { flex: 1 1 200px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .chg { font-size: 12px; color: var(--app-muted); }
 code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--app-hover); }
+.xfer { flex-wrap: wrap; }
+.btn.disabled { opacity: .5; pointer-events: none; }

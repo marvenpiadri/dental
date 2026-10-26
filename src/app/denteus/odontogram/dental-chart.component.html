@@ -111,6 +111,15 @@
       }
     }
     @case ('history') {
+      <div class="row xfer">
+        <button type="button" class="btn" (click)="download('json')"><i class="fa-solid fa-file-code" aria-hidden="true"></i>{{ t('dc.export.json') }}</button>
+        <button type="button" class="btn" (click)="download('fhir')"><i class="fa-solid fa-file-medical" aria-hidden="true"></i>{{ t('dc.export.fhir') }}</button>
+        <label class="btn" [class.disabled]="readOnly()"><i class="fa-solid fa-file-import" aria-hidden="true"></i>{{ t('dc.import') }}<input type="file" accept=".json,application/json" class="sr-only" [disabled]="readOnly()" (change)="pickFile($event)" /></label>
+      </div>
+      @if (incoming(); as inc) {
+        <div class="banner warn" role="alertdialog"><i class="fa-solid fa-file-import" aria-hidden="true"></i><span>{{ t('dc.import.ready', { n: inc.issues }) }}</span>
+          <button type="button" class="btn btn--primary" (click)="applyImport()">{{ t('dc.import.replace') }}</button><button type="button" class="btn" (click)="incoming.set(null)">{{ t('dc.cancel') }}</button></div>
+      }
       @if (!examinations().length) { <p class="hint">{{ t('dc.history.none') }}</p> }
       <ul class="dx">
         @for (e of examinations(); track e.id) {

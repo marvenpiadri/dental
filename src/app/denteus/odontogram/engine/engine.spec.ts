@@ -177,3 +177,19 @@ describe('periodontal', () => {
     expect(patchCaseMeta(newChart(), { age: null }).caseMeta).toBeUndefined();
   });
 });
+
+import { exportFhir, exportJson, importFhir, importJson } from './io';
+describe('import / export', () => {
+  const c = applied(editChart(newChart(), 'status', [16], { kind: 'caries', surface: 'occlusal', on: true }));
+  it('JSON round trips and rejects junk', () => {
+    expect(writeChart(importJson(exportJson(c)).chart!)).toEqual(writeChart(c));
+    expect(importJson('{nope').error).toBeTruthy();
+    expect(importJson('[]').chart).toBeNull();
+  });
+  it('FHIR round trips the findings and rejects non-bundles', () => {
+    const back = importFhir(exportFhir(c));
+    expect(back.chart?.status.get(16)?.caries.has('caries-occlusal')).toBe(true);
+    expect(importFhir('{"resourceType":"Patient"}').chart?.status.get(16)?.caries.size ?? 0).toBe(0);
+    expect(importFhir('x').error).toBeTruthy();
+  });
+});

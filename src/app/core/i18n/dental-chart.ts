@@ -124,6 +124,12 @@ const D = {
   'dc.ps.stage': ['Stage', 'Stade'],
   'dc.ps.unknown': ['Unknown', 'Inconnu'],
   'dc.ps.yes': ['Yes', 'Oui'],
+  'dc.export.fhir': ['Export FHIR', 'Exporter en FHIR'],
+  'dc.export.json': ['Export JSON', 'Exporter en JSON'],
+  'dc.import': ['Import chart', 'Importer un schéma'],
+  'dc.import.bad': ['That file can’t be imported: {why}.', 'Ce fichier ne peut pas être importé : {why}.'],
+  'dc.import.ready': ['File read ({n} values were not recognised and will be reset). Importing replaces the working chart; saved examinations are kept.', 'Fichier lu ({n} valeurs non reconnues seront réinitialisées). L’import remplace le schéma en cours ; les examens enregistrés sont conservés.'],
+  'dc.import.replace': ['Replace working chart', 'Remplacer le schéma en cours'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
