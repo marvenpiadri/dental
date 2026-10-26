@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { balance } from './treatment-rules';
-import { PatientOdontogramComponent } from './patient-odontogram.component';
+import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
@@ -18,7 +18,7 @@ type Section = 'overview' | 'clinical' | 'billing';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, PatientOdontogramComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
+  imports: [RouterLink, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

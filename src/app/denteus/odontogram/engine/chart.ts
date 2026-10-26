@@ -40,7 +40,7 @@ export interface ImportIssue { path: string; message: string }
 export interface ReadResult { chart: Chart | null; issues: ImportIssue[] }
 
 const DEFAULT_GLOBALS: ChartGlobals = {
-  wisdomVisible: true, showBase: true, occlusalVisible: true, showHealthyPulp: false, edentulous: false,
+  wisdomVisible: true, showBase: false, occlusalVisible: true, showHealthyPulp: true, edentulous: false,
 };
 // Fields the source migrates on purpose for pre-2.0 payloads; a changed value there is not a data fault.
 const MIGRATED = new Set(['crownMaterial', 'bridgeUnit', 'cariesSeverity', 'secondaryCaries']);

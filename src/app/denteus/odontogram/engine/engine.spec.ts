@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest';
 import { ALL_TEETH, newChart, readChart, writeChart, type Chart } from './chart';
 import { editChart, plannedTeeth, planChanges, setEdentulous, type EditOutcome } from './plan';
 import { applyEdit } from './edits';

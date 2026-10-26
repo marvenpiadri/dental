@@ -1,3 +1,4 @@
+import { dcFr } from './dental-chart';
 import type { en } from './en';
 
 /** Typed against the English source: a key missing here is a compile error. */
@@ -369,4 +370,5 @@ export const fr: Record<keyof typeof en, string> = {
   'notFound.heading': 'Cette page n’existe pas',
   'notFound.body': 'Le lien est peut-être ancien ou mal saisi.',
   'notFound.cta': 'Aller à Aujourd’hui',
+  ...dcFr,
 };

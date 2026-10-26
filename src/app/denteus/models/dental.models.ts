@@ -1,3 +1,4 @@
+import type { Examination } from '../odontogram/engine/exam';
 import type { IconName } from '../../calendar/components/cal-icon/cal-icon.component';
 import type { EventTone } from '../../calendar/models/calendar.models';
 
@@ -25,9 +26,10 @@ export interface Patient {
   notes?: string;
   /** ISO timestamp. Absent on records created before this field existed. */
   createdAt?: string;
-  /** Tooth chart: FDI tooth number (11-48) to its recorded condition. Teeth not listed are healthy. */
-  /** The odontogram library's chart payload for this patient (status chart, plan chart and case data). */
+  /** The working dental chart (CRM engine payload: findings, plan, case data). Validated on read, never trusted. */
   odontogram?: unknown;
+  /** Dated, frozen snapshots of the chart, one per examination. */
+  examinations?: Examination[];
   /** Treatment plan: what was proposed and what has been done, with prices. */
   plan?: TreatmentItem[];
   /** Money received from the patient. What they owe is the done work in `plan` minus these. */
@@ -94,7 +96,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'plan' | 'payments' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'visits'>;
 
 export interface Dentist {
   id: string;

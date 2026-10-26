@@ -127,10 +127,10 @@ export function buildOdontogramConcepts(): CodeSystemConcept[] {
 
 /**
  * The engine's CodeSystem resource. `version` defaults to the library version
- * (`__APP_VERSION__`, injected from package.json by Vite at build/test time), so
+ * (`"2.7.0"`, injected from package.json by Vite at build/test time), so
  * the published `fhir/CodeSystem-odontogram.json` is regenerated per release.
  */
-export function buildOdontogramCodeSystem(version: string = __APP_VERSION__): CodeSystem {
+export function buildOdontogramCodeSystem(version: string = "2.7.0"): CodeSystem {
   const concept = buildOdontogramConcepts();
   return {
     resourceType: "CodeSystem",

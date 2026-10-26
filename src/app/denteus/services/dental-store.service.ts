@@ -4,6 +4,7 @@ import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicData } from './backup';
 import { ClinicDatabase } from './clinic-database.service';
 import { defaultCatalog } from '../patients/treatment-rules';
+import type { Examination } from '../odontogram/engine/exam';
 import {
   ApiResult,
   Appointment,
@@ -186,13 +187,13 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, plan: current.plan, payments: current.payments, visits: current.visits }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, visits: current.visits }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
 
   /** Records (or clears, with `null`) one tooth's condition on the patient's chart. */
-  /** Saves the odontogram's payload on the patient (the library produces and reads it; the app stores it as is). */
+  /** Saves the working chart's payload on the patient. */
   setOdontogram(patientId: string, odontogram: unknown): void {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, odontogram } : p)));
   }
@@ -206,6 +207,12 @@ export class DentalStore {
   markReminded(appointmentId: string): void {
     const at = new Date().toISOString();
     this.appointments.update((list) => list.map((a) => (a.id === appointmentId ? { ...a, remindedAt: at } : a)));
+  }
+
+  /** Appends an examination snapshot to this patient only (the record carries its own patientId; a mismatch is dropped). */
+  addExamination(patientId: string, exam: Examination): void {
+    if (exam.patientId !== patientId) return;
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, examinations: [...(p.examinations ?? []), exam] } : p)));
   }
 
   /** Same shape as `changePlan`, for the patient's visit notes. */

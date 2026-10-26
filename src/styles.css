@@ -3,9 +3,6 @@
 @import '@fortawesome/fontawesome-free/css/solid.min.css';
 @import '@fortawesome/fontawesome-free/css/regular.min.css';
 @import '@fortawesome/fontawesome-free/css/brands.min.css';
-/* The odontogram library's own styles, scoped to its root by tools/scope-odontogram-css.mjs. */
-@import './odontogram.css';
-@import './odontogram-brand.css';
 
 /* ---------------------------------------------------------------------------
    Dentaleus design system. Rules and rationale: DESIGN.md.
@@ -144,8 +141,6 @@ den-calendar *::after {
   overflow: auto;
 }
 
-/* The CRM's generic classes (.btn, .card, .row...) must not restyle the odontogram, which uses the same names. */
-@scope (body) to (.odontogram-root) {
 
 /* ---- FREE: canvas and cards -------------------------------------------------- */
 
@@ -439,8 +434,6 @@ textarea.input {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
 }
 
 /* applied by the calendar while an event is being dragged */

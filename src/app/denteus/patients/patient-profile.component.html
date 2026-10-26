@@ -77,13 +77,15 @@
         <div class="pane" [hidden]="section() !== 'clinical'">
         <section class="card" aria-labelledby="teeth-title">
           <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
-          @defer (on viewport) {
-            @for (key of [p.id]; track key) {
-              <den-odontogram [patientName]="p.fullName" [birthDate]="p.birthDate" [chart]="p.odontogram" (save)="store.setOdontogram(p.id, $event)" />
+          <div class="card-body">
+            @defer (on viewport) {
+              @for (key of [p.id]; track key) {
+                <den-dental-chart [patientId]="p.id" [raw]="p.odontogram" [examinations]="p.examinations ?? []" (save)="store.setOdontogram(p.id, $event)" (examSave)="store.addExamination(p.id, $event)" />
+              }
+            } @placeholder {
+              <span class="skeleton"></span>
             }
-          } @placeholder {
-            <span class="skeleton"></span>
-          }
+          </div>
         </section>
 
         <section class="card" aria-labelledby="visits-title">

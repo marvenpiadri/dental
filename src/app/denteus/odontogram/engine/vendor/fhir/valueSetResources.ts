@@ -44,7 +44,7 @@ function base(id: string, title: string, description: string, version: string): 
 }
 
 /** One ValueSet per `LOCAL_VALUE_MAPS` group (explicit concept lists). */
-export function buildGroupValueSets(version: string = __APP_VERSION__): ValueSet[] {
+export function buildGroupValueSets(version: string = "2.7.0"): ValueSet[] {
   return Object.entries(LOCAL_VALUE_MAPS).map(([group, entries]) => {
     const vs = base(`odontogram-${group}`, `Odontogram — ${group} values`,
       `The allowed values of the engine's "${group}" axis (engine-local codes; the display is the one this axis uses).`, version);
@@ -54,7 +54,7 @@ export function buildGroupValueSets(version: string = __APP_VERSION__): ValueSet
 }
 
 /** Finding-type codes: every `Observation.code` the export emits under the local system. */
-export function buildFindingTypesValueSet(version: string = __APP_VERSION__): ValueSet {
+export function buildFindingTypesValueSet(version: string = "2.7.0"): ValueSet {
   const vs = base("odontogram-finding-types", "Odontogram — finding types",
     "The Observation.code concepts of the engine's FHIR export: one per clinical-axis registry entry plus the hand-emitted whole-mouth and per-surface finding types.", version);
   const concept = [
@@ -70,19 +70,19 @@ export function buildFindingTypesValueSet(version: string = __APP_VERSION__): Va
 }
 
 /** Every concept of the CodeSystem (intensional — no enumeration). */
-export function buildAllCodesValueSet(version: string = __APP_VERSION__): ValueSet {
+export function buildAllCodesValueSet(version: string = "2.7.0"): ValueSet {
   const vs = base("odontogram-all", "Odontogram — all engine-local codes",
     "Every concept of the React Advanced Odontogram CodeSystem (intensional include of the whole code system).", version);
   vs.compose = { include: [{ system: LOCAL_SYSTEM }] };
   return vs;
 }
 
-export function buildOdontogramValueSets(version: string = __APP_VERSION__): ValueSet[] {
+export function buildOdontogramValueSets(version: string = "2.7.0"): ValueSet[] {
   return [...buildGroupValueSets(version), buildFindingTypesValueSet(version), buildAllCodesValueSet(version)];
 }
 
 /** `filename -> JSON` for every file of the `fhir/` package, CodeSystem included. */
-export function buildFhirPackageFiles(version: string = __APP_VERSION__): Record<string, unknown> {
+export function buildFhirPackageFiles(version: string = "2.7.0"): Record<string, unknown> {
   const cs = buildOdontogramCodeSystem(version);
   const valueSets = buildOdontogramValueSets(version);
   const files: Record<string, unknown> = { "CodeSystem-odontogram.json": cs };

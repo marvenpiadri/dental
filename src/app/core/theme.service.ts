@@ -26,7 +26,7 @@ export class ThemeService {
     effect(() => {
       const root = this.doc.documentElement;
       root.setAttribute('data-theme', this.theme());
-      root.classList.toggle('dark', this.theme() === 'dark'); // the odontogram library themes itself from `.dark`
+      root.classList.toggle('dark', this.theme() === 'dark');
     });
   }
 

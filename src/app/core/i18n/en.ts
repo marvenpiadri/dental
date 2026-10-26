@@ -1,3 +1,4 @@
+import { dcEn } from './dental-chart';
 /**
  * Source language. Copy rules: sentence case, buttons start with a verb, empty states say what this is,
  * why it's empty and what to do, errors say what happened and how to fix it. `{n}` style tokens are
@@ -371,4 +372,5 @@ export const en = {
   'notFound.heading': 'This page doesn’t exist',
   'notFound.body': 'The link may be old or mistyped.',
   'notFound.cta': 'Go to Today',
+  ...dcEn,
 } as const;

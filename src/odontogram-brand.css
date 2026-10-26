@@ -1,9 +1,0 @@
-/* The CRM's look for the odontogram library. Loaded after the scoped library styles (odontogram.css). */
-
-/* Header: keep the library's options (tour, settings, export, import, credits), drop its branding, GitHub link and the
-   language and theme switches, which the CRM's own switches drive. */
-.odontogram-root .topbar .brand,
-.odontogram-root #languageMenu,
-.odontogram-root #btnGithubLink,
-.odontogram-root .topbar-actions > button.btn-theme:nth-of-type(2) { display: none; }
-.odontogram-root .topbar { justify-content: flex-end; position: static; padding: 10px 16px; backdrop-filter: none; background: var(--app-panel); border-bottom: 1px solid var(--app-line); }
