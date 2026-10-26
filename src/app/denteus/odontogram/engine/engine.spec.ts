@@ -193,3 +193,12 @@ describe('import / export', () => {
     expect(importFhir('x').error).toBeTruthy();
   });
 });
+
+describe('tooth note', () => {
+  it('is stored, round trips and has a limit', () => {
+    const c = applied(editChart(newChart(), 'status', [11], { kind: 'note', value: 'watch the mesial' }));
+    expect(readChart(writeChart(c)).chart!.status.get(11)!.note).toBe('watch the mesial');
+    const o = editChart(c, 'status', [11], { kind: 'note', value: 'x'.repeat(501) });
+    expect(o.kind === 'applied' && o.rejected.length).toBe(1);
+  });
+});

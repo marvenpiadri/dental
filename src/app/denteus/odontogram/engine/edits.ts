@@ -11,6 +11,7 @@ import type { ToothRecord } from './chart';
 
 /** Source: MILKTOOTH_BLOCKED — second-dentition-only molars cannot be set as deciduous. */
 const MILKTOOTH_BLOCKED = new Set([16, 17, 18, 26, 27, 28, 36, 37, 38, 46, 47, 48]);
+export const NOTE_MAX = 500;
 export const SURFACES = ['buccal', 'mesial', 'occlusal', 'distal', 'lingual'] as const;
 
 const ENUM_FIELDS = {
@@ -45,6 +46,7 @@ export type ToothEdit =
   | { kind: 'furcation'; entrance: string; grade: number | null }
   | { kind: 'plaque'; surface: string; on: boolean }
   | { kind: 'dxOverride'; key: string; mode: 'add' | 'suppress' | null }
+  | { kind: 'note'; value: string }
   | { kind: 'reset' };
 
 export type EditResult = { ok: true; changed: boolean } | { ok: false; reason: string };
@@ -165,6 +167,10 @@ function run(t: ToothRecord, toothNo: number, e: ToothEdit): EditResult {
       if (!TOOTH_LEVEL_DX_KEYS.has(e.key)) return rejected(`unknown diagnosis "${e.key}"`);
       if (e.mode !== null && !VALID_DX_OVERRIDE_VALUE.has(e.mode)) return rejected('override must be add or suppress');
       if (e.mode === null) t.dxOverrides.delete(e.key); else t.dxOverrides.set(e.key, e.mode);
+      return { ok: true, changed: true };
+    case 'note':
+      if (e.value.length > NOTE_MAX) return rejected(`note is longer than ${NOTE_MAX} characters`);
+      t.note = e.value;
       return { ok: true, changed: true };
     case 'reset':
       Object.assign(t, defaultState());

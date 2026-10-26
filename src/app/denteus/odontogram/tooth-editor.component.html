@@ -195,4 +195,6 @@
     </section>
   }
 </div>
+<label class="field"><span class="label">{{ t('dc.note') }}</span>
+  <textarea class="input" rows="2" maxlength="500" [disabled]="off || teeth().length > 1" [value]="field('note') === 'undefined' ? '' : field('note')" (change)="edit.emit({ kind: 'note', value: value($event) })"></textarea></label>
 <button type="button" class="btn" [disabled]="off" (click)="edit.emit({ kind: 'reset' })"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>{{ t('dc.reset') }}</button>

@@ -79,6 +79,7 @@ const D = {
   'dc.perio.statusOnly': ['Probing is a finding: switch to Findings to edit it.', 'Le sondage est un constat : passez en mode Constats pour le modifier.'],
   'dc.perio.sup': ['Pus', 'Pus'],
   'dc.perio.title': ['Probing, tooth {n}', 'Sondage, dent {n}'],
+  'dc.note': ['Tooth note', 'Note sur la dent'],
   'dc.pickTooth': ['Select a tooth on the chart to edit it. Ctrl or Shift-click selects several.', 'Sélectionnez une dent sur le schéma pour la modifier. Ctrl ou Maj-clic en sélectionne plusieurs.'],
   'dc.planBanner': ['Treatment plan: dashed work is proposed, not done. Findings stay unchanged.', 'Plan de traitement : le travail en pointillés est proposé, pas réalisé. Les constats restent inchangés.'],
   'dc.planned': ['planned', 'prévue'],
