@@ -77,8 +77,8 @@
     <div>
       <label class="label" for="ap-type">{{ t('ap.type') }}</label>
       <select id="ap-type" class="input" [disabled]="scheduleLocked()" (change)="onType($any($event.target).value)">
-        @for (t of types; track t.id) {
-          <option [value]="t.id" [selected]="t.id === type()">{{ t.label }}</option>
+        @for (tp of types; track tp.id) {
+          <option [value]="tp.id" [selected]="tp.id === type()">{{ t(typeKey(tp.id)) }}</option>
         }
       </select>
     </div>
@@ -87,13 +87,13 @@
       @if (mode() === 'create') {
         <select id="ap-status" class="input" (change)="status.set($any($event.target).value)">
           @for (s of createStatuses; track s) {
-            <option [value]="s" [selected]="s === status()">{{ statusMeta[s].label }}</option>
+            <option [value]="s" [selected]="s === status()">{{ t(statusLabel[s]) }}</option>
           }
         </select>
       } @else {
         <p class="readonly status-read">
           <cal-icon [name]="statusMeta[status()].icon" [size]="15" [stroke]="2.2" />
-          {{ statusMeta[status()].label }}
+          {{ t(statusLabel[status()]) }}
         </p>
       }
     </div>

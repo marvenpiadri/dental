@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, model, output, signal } from '@angular/core';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
+import { I18n } from '../../../core/i18n/i18n.service';
 import { Patient } from '../../models/dental.models';
 
 /** Search an existing patient by name or phone, or add a new one without leaving the booking form. */
@@ -16,6 +17,7 @@ export class PatientPickerComponent {
   /** Emits the details of a patient to create; the parent creates it and selects it. */
   readonly createPatient = output<{ fullName: string; phone: string }>();
 
+  protected readonly t = inject(I18n).t;
   protected readonly query = signal('');
   protected readonly searching = signal(false);
   protected readonly creating = signal(false);

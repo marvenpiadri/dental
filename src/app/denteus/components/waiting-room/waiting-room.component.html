@@ -1,7 +1,7 @@
-<section aria-label="Waiting room">
+<section [attr.aria-label]="t('wr.title')">
   <p class="section">
     <cal-icon name="clock" [size]="13" [stroke]="2.3" />
-    Waiting room
+    {{ t('wr.title') }}
     <span class="count">{{ rows().length }}</span>
   </p>
 
@@ -14,10 +14,10 @@
       </span>
     </button>
   } @empty {
-    <p class="empty">Nobody is waiting.</p>
+    <p class="empty">{{ t('wr.none') }}</p>
   }
 
   @if (inTreatment() > 0) {
-    <p class="treat"><cal-icon name="play" [size]="12" [stroke]="2.4" /> {{ inTreatment() }} in treatment</p>
+    <p class="treat"><cal-icon name="play" [size]="12" [stroke]="2.4" /> {{ t('wr.treat', { n: inTreatment() }) }}</p>
   }
 </section>

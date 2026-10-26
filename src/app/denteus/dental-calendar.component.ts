@@ -112,6 +112,7 @@ export class DentalCalendarComponent implements OnInit {
         dentists: this.dental.dentistMap(),
         chairs: this.dental.chairMap(),
         groupBy: this.groupBy(),
+        t: this.t,
       };
       const showCancelled = this.showCancelled();
       this.cal.events.set(this.dental.appointments()

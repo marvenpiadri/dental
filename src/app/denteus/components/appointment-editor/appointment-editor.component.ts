@@ -9,6 +9,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
 import { I18n } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
 import { DateTimeFieldComponent } from '../../../calendar/components/datetime-field/datetime-field.component';
@@ -58,6 +59,8 @@ export class AppointmentEditorComponent implements OnInit {
 
   protected readonly types = APPOINTMENT_TYPES;
   protected readonly statusMeta = STATUS_META;
+  protected readonly statusLabel = STATUS_LABEL;
+  protected readonly typeKey = typeKey;
   protected readonly createStatuses: AppointmentStatus[] = ['scheduled', 'confirmed'];
 
   protected readonly patientId = signal<string | null>(null);

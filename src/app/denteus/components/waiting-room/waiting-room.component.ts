@@ -3,6 +3,7 @@ import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon
 import { CalendarStore } from '../../../calendar/services/calendar-store.service';
 import { formatTime } from '../../../calendar/utils/date.utils';
 import { Appointment } from '../../models/dental.models';
+import { I18n } from '../../../core/i18n/i18n.service';
 import { DentalStore } from '../../services/dental-store.service';
 
 interface Row {
@@ -33,6 +34,7 @@ export class WaitingRoomComponent {
 
   private readonly dental = inject(DentalStore);
   private readonly cal = inject(CalendarStore);
+  protected readonly t = inject(I18n).t;
 
   protected readonly rows = computed<Row[]>(() => {
     const now = this.cal.now().getTime();
@@ -42,11 +44,11 @@ export class WaitingRoomComponent {
       const dentist = this.dental.dentistMap().get(a.dentistId);
       return {
         id: a.id,
-        patient: this.dental.patientMap().get(a.patientId)?.fullName ?? 'Unknown patient',
+        patient: this.dental.patientMap().get(a.patientId)?.fullName ?? this.t('pn.unknown'),
         dentist: dentist?.name ?? '',
         color: dentist?.color ?? '#64748b',
         time: formatTime(a.start),
-        waited: minutes < 1 ? 'just arrived' : `waiting ${minutes} min`,
+        waited: minutes < 1 ? this.t('wr.just') : this.t('wr.wait', { n: minutes }),
       };
     });
   });

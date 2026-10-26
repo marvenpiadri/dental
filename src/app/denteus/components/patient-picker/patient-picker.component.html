@@ -8,7 +8,7 @@
           <span class="phone">{{ p.phone }}</span>
         }
       </span>
-      <button type="button" class="link" (click)="startSearch()">Change</button>
+      <button type="button" class="link" (click)="startSearch()">{{ t('pk.change') }}</button>
     </div>
   }
 }
@@ -21,15 +21,15 @@
         id="patient-search"
         class="input"
         type="search"
-        placeholder="Search patients by name or phone"
+        [placeholder]="t('pk.search')"
         autocomplete="off"
-        aria-label="Search patients"
+        [attr.aria-label]="t('pk.searchAria')"
         [value]="query()"
         (input)="query.set($any($event.target).value)"
         (keydown.enter)="onEnter($event)"
       />
     </div>
-    <ul class="results" role="listbox" aria-label="Patients">
+    <ul class="results" role="listbox" [attr.aria-label]="t('pk.list')">
       @for (p of matches(); track p.id) {
         <li>
           <button type="button" role="option" class="row" [attr.aria-selected]="p.id === patientId()" (click)="pick(p)">
@@ -39,12 +39,12 @@
           </button>
         </li>
       } @empty {
-        <li class="none">No patient matches “{{ query() }}”.</li>
+        <li class="none">{{ t('pk.none', { q: query() }) }}</li>
       }
       <li>
         <button type="button" class="row add" (click)="startCreate()">
           <cal-icon name="plus" [size]="15" />
-          <span class="name">New patient{{ query().trim() ? ': ' + query().trim() : '' }}</span>
+          <span class="name">{{ t('pk.new') }}{{ query().trim() ? ': ' + query().trim() : '' }}</span>
         </button>
       </li>
     </ul>
@@ -54,24 +54,24 @@
         <input
           class="input"
           type="text"
-          placeholder="Full name"
-          aria-label="New patient full name"
+          [placeholder]="t('pk.name')"
+          [attr.aria-label]="t('pk.nameAria')"
           [value]="newName()"
           (input)="newName.set($any($event.target).value)"
         />
         <input
           class="input"
           type="tel"
-          placeholder="Phone"
-          aria-label="New patient phone"
+          [placeholder]="t('pk.phone')"
+          [attr.aria-label]="t('pk.phoneAria')"
           [value]="newPhone()"
           (input)="newPhone.set($any($event.target).value)"
           (keydown.enter)="confirmCreate()"
         />
       </div>
       <div class="create-actions">
-        <button type="button" class="link" (click)="creating.set(false)">Back</button>
-        <button type="button" class="add-btn" [disabled]="!newName().trim()" (click)="confirmCreate()">Add patient</button>
+        <button type="button" class="link" (click)="creating.set(false)">{{ t('pk.back') }}</button>
+        <button type="button" class="add-btn" [disabled]="!newName().trim()" (click)="confirmCreate()">{{ t('pk.add') }}</button>
       </div>
     </div>
   }
