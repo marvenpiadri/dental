@@ -1,11 +1,11 @@
 <div class="backdrop" (pointerdown)="cancel.emit()"></div>
 
 <div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="ap-heading">
-  <button type="button" class="close" aria-label="Close" (click)="cancel.emit()">
+  <button type="button" class="close" [attr.aria-label]="t('ap.close')" (click)="cancel.emit()">
     <cal-icon name="x" [size]="17" />
   </button>
 
-  <h2 class="heading" id="ap-heading">{{ mode() === 'edit' ? 'Edit appointment' : 'New appointment' }}</h2>
+  <h2 class="heading" id="ap-heading">{{ mode() === 'edit' ? t('ap.edit') : t('ap.new') }}</h2>
 
   @if (problem(); as p) {
     <div class="alert" role="alert">
@@ -23,7 +23,7 @@
     </div>
   }
 
-  <span class="label">Patient</span>
+  <span class="label">{{ t('ap.patient') }}</span>
   @if (scheduleLocked()) {
     <p class="readonly">{{ store.patientMap().get(patientId() ?? '')?.fullName }}</p>
   } @else {
@@ -32,23 +32,23 @@
   @if (patientAlert(); as medicalAlert) {
     <div class="warn medical" role="note">
       <cal-icon name="alert" [size]="15" />
-      <div><strong>Medical alert.</strong> {{ medicalAlert }}</div>
+      <div><strong>{{ t('ap.alert') }}</strong> {{ medicalAlert }}</div>
     </div>
   }
 
   <div class="label-row">
-    <span class="label">Date and time</span>
-    <span class="hint">Ends at {{ endLabel() }}</span>
+    <span class="label">{{ t('ap.when') }}</span>
+    <span class="hint">{{ t('ap.ends', { time: endLabel() }) }}</span>
   </div>
   <div class="grid2">
     @if (scheduleLocked()) {
       <p class="readonly">{{ startLabel() }}</p>
-      <p class="readonly">{{ duration() }} min</p>
+      <p class="readonly">{{ t('ap.min', { n: duration() }) }}</p>
     } @else {
-      <cal-datetime-field label="Start" [value]="start()" (valueChange)="start.set($event)" />
-      <select class="input" aria-label="Duration" [value]="duration()" (change)="onDuration(+$any($event.target).value)">
+      <cal-datetime-field [label]="t('ap.start')" [value]="start()" (valueChange)="start.set($event)" />
+      <select class="input" [attr.aria-label]="t('ap.duration')" [value]="duration()" (change)="onDuration(+$any($event.target).value)">
         @for (m of durations(); track m) {
-          <option [value]="m" [selected]="m === duration()">{{ m }} min</option>
+          <option [value]="m" [selected]="m === duration()">{{ t('ap.min', { n: m }) }}</option>
         }
       </select>
     }
@@ -56,7 +56,7 @@
 
   <div class="grid2">
     <div>
-      <label class="label" for="ap-dentist">Dentist</label>
+      <label class="label" for="ap-dentist">{{ t('ap.dentist') }}</label>
       <select id="ap-dentist" class="input" [disabled]="scheduleLocked()" (change)="dentistId.set($any($event.target).value)">
         @for (d of store.dentists(); track d.id) {
           <option [value]="d.id" [selected]="d.id === dentistId()">{{ d.name }} · {{ d.specialty }}</option>
@@ -64,7 +64,7 @@
       </select>
     </div>
     <div>
-      <label class="label" for="ap-chair">Treatment chair</label>
+      <label class="label" for="ap-chair">{{ t('ap.chair') }}</label>
       <select id="ap-chair" class="input" [disabled]="scheduleLocked()" (change)="chairId.set($any($event.target).value)">
         @for (c of store.chairs(); track c.id) {
           <option [value]="c.id" [selected]="c.id === chairId()">{{ c.name }}</option>
@@ -75,7 +75,7 @@
 
   <div class="grid2">
     <div>
-      <label class="label" for="ap-type">Appointment type</label>
+      <label class="label" for="ap-type">{{ t('ap.type') }}</label>
       <select id="ap-type" class="input" [disabled]="scheduleLocked()" (change)="onType($any($event.target).value)">
         @for (t of types; track t.id) {
           <option [value]="t.id" [selected]="t.id === type()">{{ t.label }}</option>
@@ -83,7 +83,7 @@
       </select>
     </div>
     <div>
-      <label class="label" for="ap-status">Status</label>
+      <label class="label" for="ap-status">{{ t('ap.status') }}</label>
       @if (mode() === 'create') {
         <select id="ap-status" class="input" (change)="status.set($any($event.target).value)">
           @for (s of createStatuses; track s) {
@@ -99,22 +99,22 @@
     </div>
   </div>
 
-  <label class="label" for="ap-reason">Reason for visit</label>
+  <label class="label" for="ap-reason">{{ t('ap.reason') }}</label>
   <input
     id="ap-reason"
     class="input spaced"
     type="text"
-    placeholder="Optional"
+    [placeholder]="t('ap.optional')"
     [value]="reason()"
     (input)="reason.set($any($event.target).value)"
   />
 
-  <label class="label" for="ap-note">Internal note</label>
+  <label class="label" for="ap-note">{{ t('ap.note') }}</label>
   <textarea
     id="ap-note"
     class="input spaced"
     rows="2"
-    placeholder="Visible to staff only"
+    [placeholder]="t('ap.staffOnly')"
     [value]="note()"
     (input)="note.set($any($event.target).value)"
   ></textarea>
@@ -128,9 +128,9 @@
 
   <div class="footer">
     <span class="spacer"></span>
-    <button type="button" class="btn ghost" (click)="cancel.emit()">Cancel</button>
+    <button type="button" class="btn ghost" (click)="cancel.emit()">{{ t('dc.cancel') }}</button>
     <button type="button" class="btn primary" [disabled]="!canSave()" (click)="submit()">
-      {{ saving() ? 'Saving…' : mode() === 'edit' ? 'Save changes' : 'Book appointment' }}
+      {{ saving() ? t('ap.saving') : mode() === 'edit' ? t('ap.save') : t('ap.book') }}
     </button>
   </div>
 </div>

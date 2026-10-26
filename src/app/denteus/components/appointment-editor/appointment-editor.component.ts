@@ -9,6 +9,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { I18n } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
 import { DateTimeFieldComponent } from '../../../calendar/components/datetime-field/datetime-field.component';
 import { formatDateTimeInput, formatTime, addMinutes } from '../../../calendar/utils/date.utils';
@@ -43,6 +44,7 @@ const DURATIONS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15); // 15 min 
   host: { '(keydown.escape)': 'cancel.emit()' },
 })
 export class AppointmentEditorComponent implements OnInit {
+  protected readonly t = inject(I18n).t;
   readonly draft = input.required<AppointmentDraft>();
   readonly mode = input<'create' | 'edit'>('create');
   /** Set by the parent when the server refused the last save. */

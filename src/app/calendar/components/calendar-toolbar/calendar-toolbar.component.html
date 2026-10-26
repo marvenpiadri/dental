@@ -1,6 +1,6 @@
 <div class="bar">
   <div class="left">
-    <button type="button" class="icon-btn menu" aria-label="Toggle sidebar" (click)="toggleSidebar.emit()">
+    <button type="button" class="icon-btn menu" [attr.aria-label]="t('cal.sidebar')" (click)="toggleSidebar.emit()">
       <cal-icon name="menu" [size]="18" />
     </button>
     <button type="button" class="new-btn" [title]="newLabel() + ' (N)'" (click)="newEvent.emit()">
@@ -9,7 +9,7 @@
     </button>
   </div>
 
-  <div class="segmented" role="tablist" aria-label="Calendar view">
+  <div class="segmented" role="tablist" [attr.aria-label]="t('cal.view')">
     @for (v of views; track v.id) {
       <button
         type="button"
@@ -19,7 +19,7 @@
         [attr.aria-selected]="store.view() === v.id"
         (click)="store.setView(v.id)"
       >
-        {{ v.label }}
+        {{ t(v.key) }}
       </button>
     }
   </div>
@@ -43,11 +43,11 @@
 <div class="heading">
   <h1 class="title">{{ store.title() }}</h1>
   <div class="nav">
-    <button type="button" class="nav-btn square" aria-label="Previous" (click)="store.prev()">
+    <button type="button" class="nav-btn square" [attr.aria-label]="t('cal.prev')" (click)="store.prev()">
       <cal-icon name="chevron-left" [size]="16" />
     </button>
-    <button type="button" class="nav-btn today" (click)="store.goToday()">Today</button>
-    <button type="button" class="nav-btn square" aria-label="Next" (click)="store.next()">
+    <button type="button" class="nav-btn today" (click)="store.goToday()">{{ t('cal.today') }}</button>
+    <button type="button" class="nav-btn square" [attr.aria-label]="t('cal.next')" (click)="store.next()">
       <cal-icon name="chevron-right" [size]="16" />
     </button>
   </div>

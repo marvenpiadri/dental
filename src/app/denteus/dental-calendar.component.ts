@@ -68,6 +68,7 @@ export class DentalCalendarComponent implements OnInit {
   protected readonly dental = inject(DentalStore);
   private readonly themeService = inject(ThemeService);
   private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
 
   readonly defaultView = input<CalendarViewType>('day');
   /** Hand-off from other pages: open on this day (`YYYY-MM-DD`), with this appointment selected... */

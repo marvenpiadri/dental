@@ -25,11 +25,11 @@
           <button type="button" class="nav" aria-label="Previous year" (click)="shiftMonth(-12)">
             <cal-icon name="chevrons-left" [size]="14" />
           </button>
-          <button type="button" class="nav" aria-label="Previous month" (click)="shiftMonth(-1)">
+          <button type="button" class="nav" [attr.aria-label]="t('cal.prevMonth')" (click)="shiftMonth(-1)">
             <cal-icon name="chevron-left" [size]="14" />
           </button>
           <span class="cal-title">{{ cursorTitle() }}</span>
-          <button type="button" class="nav" aria-label="Next month" (click)="shiftMonth(1)">
+          <button type="button" class="nav" [attr.aria-label]="t('cal.nextMonth')" (click)="shiftMonth(1)">
             <cal-icon name="chevron-right" [size]="14" />
           </button>
           <button type="button" class="nav" aria-label="Next year" (click)="shiftMonth(12)">
