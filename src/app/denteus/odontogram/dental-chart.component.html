@@ -18,6 +18,9 @@
         @if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
     </div>
     <div class="actions">
+      <select class="btn" [attr.aria-label]="t('dc.numbering')" (change)="setNumbering($any($event.target).value)">
+        @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }
+      </select>
       <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
       <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
       <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>
@@ -56,7 +59,7 @@
       <div class="arch" [class.lower]="$index === 1">
         @for (n of arch; track n) {
           @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-          <den-tooth-tile [no]="n" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
             [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
             [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
         }
@@ -73,7 +76,7 @@
   @switch (tab()) {
     @case ('tooth') {
       @if (firstState(); as st) {
-        <p class="hint">{{ selected().length > 1 ? t('dc.editing.many', { n: selected().length }) : t('dc.editing.one', { n: firstSelected()! }) }}</p>
+        <p class="hint">{{ selected().length > 1 ? t('dc.editing.many', { n: selected().length }) : t('dc.editing.one', { n: num(firstSelected()!) }) }}</p>
         <den-tooth-editor [state]="st" [teeth]="selected()" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event)" />
       } @else { <p class="hint">{{ t('dc.pickTooth') }}</p> }
     }

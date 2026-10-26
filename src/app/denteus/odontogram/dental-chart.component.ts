@@ -7,11 +7,17 @@ import { compareExaminations, makeExamination, suggestedDiagnoses, type Examinat
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
 import { defaultState } from './engine/vendor/state/payload';
 import { label } from './labels';
+import { NUMBERING_SYSTEMS, formatTooth, type NumberingSystem } from './engine/numbering';
 import { patchCaseMeta, type CaseMeta } from './engine/perio';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothTileComponent } from './tooth-tile.component';
+
+const NUMBERING_KEY = 'dentaleus.numbering';
+function storedNumbering(): NumberingSystem {
+  try { return NUMBERING_SYSTEMS.find((s) => s === localStorage.getItem(NUMBERING_KEY)) ?? 'fdi'; } catch { return 'fdi'; }
+}
 
 type Tab = 'tooth' | 'perio' | 'findings' | 'history';
 interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: number[] }
@@ -44,6 +50,15 @@ export class DentalChartComponent {
   protected readonly locked = computed(() => this.source().chart === null);
   protected readonly chart = linkedSignal<Chart>(() => this.source().chart ?? newChart());
   protected readonly mode = signal<ChartMode>('status');
+  protected readonly numberings = NUMBERING_SYSTEMS;
+  protected readonly numbering = signal<NumberingSystem>(storedNumbering());
+  protected setNumbering(v: string): void {
+    const s = NUMBERING_SYSTEMS.find((x) => x === v) ?? 'fdi';
+    this.numbering.set(s);
+    try { localStorage.setItem(NUMBERING_KEY, s); } catch { /* preference only; private mode just forgets it */ }
+  }
+  protected num(n: number): string { return formatTooth(n, this.numbering()); }
+  protected numLabel(s: NumberingSystem): Key { return `dc.num.${s}`; }
   protected readonly selected = signal<readonly number[]>([]);
   protected readonly tab = signal<Tab>('tooth');
   protected readonly pending = signal<Pending | null>(null);
@@ -89,7 +104,7 @@ export class DentalChartComponent {
   }
   protected findingsOf(n: number): ToothRecord | null { return this.mode() === 'plan' ? (this.shown().status.get(n) ?? null) : null; }
   protected isPlanned(n: number): boolean { return this.planned().includes(n); }
-  protected toothLabel(n: number): string { return `${n}${this.isPlanned(n) ? ' · ' + this.t('dc.planned') : ''}`; }
+  protected toothLabel(n: number): string { return `${this.num(n)}${this.isPlanned(n) ? ' · ' + this.t('dc.planned') : ''}`; }
   protected name(code: string): string { return label(code, this.i18n.lang()); }
   protected today(): string { return new Date().toISOString().slice(0, 10); }
 

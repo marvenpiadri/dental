@@ -12,9 +12,9 @@ import { ToothArt, type Template } from './tooth-art.service';
   host: { '[class.upper]': 'upper()' },
   template: `
     <button type="button" class="tile" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="pick.emit($event)">
-      @if (upper()) { <span class="no">{{ no() }}</span> }
+      @if (upper()) { <span class="no">{{ shown() }}</span> }
       <span class="art" #art [style.transform]="transform()"></span>
-      @if (!upper()) { <span class="no">{{ no() }}</span> }
+      @if (!upper()) { <span class="no">{{ shown() }}</span> }
     </button>
   `,
   styles: `
@@ -31,6 +31,9 @@ import { ToothArt, type Template } from './tooth-art.service';
 })
 export class ToothTileComponent {
   readonly no = input.required<number>();
+  /** Number as shown to the user (numbering system); defaults to the FDI number. */
+  readonly display = input<string | null>(null);
+  protected readonly shown = computed(() => this.display() ?? String(this.no()));
   readonly state = input.required<ToothRecord>();
   /** When drawing the plan: the findings, so proposed work can be told apart from existing work. */
   readonly findings = input<ToothRecord | null>(null);

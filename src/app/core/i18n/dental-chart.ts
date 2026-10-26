@@ -258,6 +258,10 @@ const D = {
   'er.dentistBusy': ['{n} is already booked {w} ({p}).', '{n} est déjà pris {w} ({p}).'],
   'er.chairBusy': ['{n} is in use {w} ({p}).', '{n} est occupé {w} ({p}).'],
   'er.patientBusy': ['{n} already has an appointment {w} with {d}.', '{n} a déjà un rendez-vous {w} avec {d}.'],
+  'dc.numbering': ['Tooth numbering', 'Numérotation des dents'],
+  'dc.num.fdi': ['FDI', 'FDI'],
+  'dc.num.universal': ['Universal', 'Universelle'],
+  'dc.num.palmer': ['Palmer', 'Palmer'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
