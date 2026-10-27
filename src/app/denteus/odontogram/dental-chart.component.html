@@ -78,6 +78,7 @@
       @if (firstState(); as st) {
         <p class="hint">{{ selected().length > 1 ? t('dc.editing.many', { n: selected().length }) : t('dc.editing.one', { n: num(firstSelected()!) }) }}</p>
         <den-tooth-editor [state]="st" [teeth]="selected()" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event)" />
+        <den-tooth-files [patientId]="patientId()" [tooth]="firstSelected()!" />
       } @else { <p class="hint">{{ t('dc.pickTooth') }}</p> }
     }
     @case ('perio') {

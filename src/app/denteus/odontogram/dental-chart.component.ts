@@ -14,6 +14,7 @@ import { patchCaseMeta, type CaseMeta } from './engine/perio';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
+import { ToothFilesComponent } from './tooth-files.component';
 import { ToothTileComponent } from './tooth-tile.component';
 
 const NUMBERING_KEY = 'dentaleus.numbering';
@@ -31,7 +32,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
+  imports: [ToothFilesComponent, ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',

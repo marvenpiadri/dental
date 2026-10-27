@@ -319,6 +319,7 @@ const D = {
   'docs.filter': ['Show', 'Afficher'],
   'docs.all': ['All files', 'Tous les fichiers'],
   'docs.tag': ['Tooth for {name}', 'Dent pour {name}'],
+  'dc.files': ['Files for tooth {n}', 'Fichiers de la dent {n}'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
