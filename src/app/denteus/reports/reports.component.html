@@ -1,6 +1,7 @@
 <header class="ds-head">
   <div class="ds-head-main"><h1 class="ds-title">{{ t('nav.reports') }}</h1></div>
   <div class="ds-actions tabs" role="group" [attr.aria-label]="t('reports.period')">
+    <button type="button" class="pill" [disabled]="!report()" (click)="exportCsv()"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> {{ t('reports.export') }}</button>
     @for (p of periods; track p) {
       <button type="button" class="pill" [class.on]="period() === p" [attr.aria-pressed]="period() === p" (click)="period.set(p)">{{ t(periodKey[p]) }}</button>
     }

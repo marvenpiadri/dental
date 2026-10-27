@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, afterNextRender, computed, inject, 
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { paymentsCsv } from './payments-csv';
 import { Period, buildReport } from './report-rules';
 
 const PERIOD_KEY: Record<Period, Key> = { month: 'reports.month', '30d': 'reports.30d', year: 'reports.year' };
@@ -43,6 +44,19 @@ export class ReportsComponent {
 
   protected label(at: Date): string {
     return this.i18n.date(at, this.period() === 'year' ? { month: 'short' } : { day: 'numeric', month: 'short' });
+  }
+
+  protected exportCsv(): void {
+    const now = this.now();
+    if (!now) return;
+    const t = this.t;
+    const text = paymentsCsv(this.store.patients(), this.period(), now,
+      { date: t('reports.csv.date'), receipt: t('reports.csv.receipt'), patient: t('reports.csv.patient'), method: t('reports.csv.method'), amount: t('reports.csv.amount') },
+      (m) => t(this.methodKey[m as PaymentMethod]));
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `payments-${this.period()}-${now.toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
   }
 
   protected percent(rate: number | null): string {

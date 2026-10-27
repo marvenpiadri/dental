@@ -285,6 +285,12 @@ const D = {
   'dc.report.none': ['Nothing recorded.', 'Rien d’enregistré.'],
   'dc.report.patient': ['Patient', 'Patient'],
   'dc.report.date': ['Date', 'Date'],
+  'reports.export': ['Export payments (CSV)', 'Exporter les paiements (CSV)'],
+  'reports.csv.date': ['Date', 'Date'],
+  'reports.csv.receipt': ['Receipt', 'Reçu'],
+  'reports.csv.patient': ['Patient', 'Patient'],
+  'reports.csv.method': ['Method', 'Mode'],
+  'reports.csv.amount': ['Amount', 'Montant'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
