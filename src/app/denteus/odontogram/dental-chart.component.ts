@@ -7,6 +7,8 @@ import { compareExaminations, makeExamination, suggestedDiagnoses, type Examinat
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
 import { defaultState } from './engine/vendor/state/payload';
 import { label } from './labels';
+import { findingRows, planRows, reportHtml } from './chart-report';
+import { indexSummary, perioSummary } from './engine/perio';
 import { NUMBERING_SYSTEMS, formatTooth, type NumberingSystem } from './engine/numbering';
 import { patchCaseMeta, type CaseMeta } from './engine/perio';
 import { PerioSummaryComponent } from './perio-summary.component';
@@ -41,6 +43,9 @@ export class DentalChartComponent {
   readonly patientId = input.required<string>();
   /** Stored chart payload for this patient (undefined = never charted). */
   readonly raw = input<unknown>(undefined);
+  /** For the printed report only. */
+  readonly patientName = input('');
+  readonly clinicName = input('');
   readonly examinations = input<readonly Examination[]>([]);
   readonly save = output<ChartPayload>();
   readonly examSave = output<Examination>();
@@ -150,6 +155,26 @@ export class DentalChartComponent {
     const a = document.createElement('a');
     a.href = url; a.download = `dental-chart-${this.patientId()}.${kind === 'json' ? 'json' : 'fhir.json'}`; a.click();
     URL.revokeObjectURL(url);
+  }
+  protected printReport(): void {
+    const t = this.t, c = this.shown(), lang = this.i18n.lang();
+    const ps = perioSummary(c), ix = indexSummary(c);
+    const summary = [
+      ps.chartedSites ? `${t('dc.ps.sites', { n: ps.chartedSites })}` : '', ps.chartedSites ? `BOP ${ps.bopPercent}%` : '',
+      ps.maxPd !== null ? t('dc.ps.maxPd', { n: ps.maxPd }) : '', ix.olearyPercent ? t('dc.ps.oleary', { n: ix.olearyPercent }) : '',
+      ix.meanPi !== null ? t('dc.ps.pi', { n: ix.meanPi }) : '', ix.meanGi !== null ? t('dc.ps.gi', { n: ix.meanGi }) : '',
+    ].filter(Boolean);
+    const html = reportHtml({
+      clinic: this.clinicName() || 'Dentaleus', patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
+      findings: findingRows(c, lang, undefined, (n) => this.num(n)), planned: this.viewing() ? [] : planRows(c, lang, (n) => this.num(n)),
+      suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`), summary,
+      labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'),
+        suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), summary: t('dc.report.summary'), none: t('dc.report.none') },
+    });
+    const win = window.open('', '_blank');
+    if (!win) return; // blocked pop-up: the browser shows its own notice
+    win.document.write(html);
+    win.document.close();
   }
   protected async pickFile(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;

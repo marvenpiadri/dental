@@ -80,7 +80,7 @@
           <div class="card-body">
             @defer (on viewport) {
               @for (key of [p.id]; track key) {
-                <den-dental-chart [patientId]="p.id" [raw]="p.odontogram" [examinations]="p.examinations ?? []" (save)="store.setOdontogram(p.id, $event)" (examSave)="store.addExamination(p.id, $event)" />
+                <den-dental-chart [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" (save)="store.setOdontogram(p.id, $event)" (examSave)="store.addExamination(p.id, $event)" />
               }
             } @placeholder {
               <span class="skeleton"></span>

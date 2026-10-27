@@ -274,6 +274,17 @@ const D = {
   'dc.ps.pi': ['PI {n}', 'IP {n}'],
   'dc.ps.gi': ['GI {n}', 'IG {n}'],
   'dc.idx.hint': ['Grades are recorded per surface; an unscored surface counts as 0 in the averages of scored teeth.', 'Les grades sont notés par face ; une face non notée compte 0 dans la moyenne des dents notées.'],
+  'dc.report.print': ['Print report', 'Imprimer le rapport'],
+  'dc.report.title': ['Dental chart', 'Schéma dentaire'],
+  'dc.report.findings': ['Findings', 'Constats'],
+  'dc.report.planned': ['Planned treatment', 'Traitement prévu'],
+  'dc.report.plannedNote': ['Planned, not performed.', 'Prévu, non réalisé.'],
+  'dc.report.suggested': ['Suggested diagnoses', 'Diagnostics suggérés'],
+  'dc.report.suggestedNote': ['Derived from the findings. Not confirmed by the clinician.', 'Déduits des constats. Non confirmés par le praticien.'],
+  'dc.report.summary': ['Periodontal summary', 'Résumé parodontal'],
+  'dc.report.none': ['Nothing recorded.', 'Rien d’enregistré.'],
+  'dc.report.patient': ['Patient', 'Patient'],
+  'dc.report.date': ['Date', 'Date'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
