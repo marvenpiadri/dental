@@ -1,4 +1,4 @@
-import { ALL_TEETH, newChart, readChart, writeChart, type Chart } from './chart';
+import { ALL_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart } from './chart';
 import { editChart, plannedTeeth, planChanges, setEdentulous, type EditOutcome } from './plan';
 import { applyEdit } from './edits';
 import { indexSummary } from './perio';
@@ -212,6 +212,16 @@ describe('tooth note', () => {
     expect(readChart(writeChart(c)).chart!.status.get(11)!.note).toBe('watch the mesial');
     const o = editChart(c, 'status', [11], { kind: 'note', value: 'x'.repeat(501) });
     expect(o.kind === 'applied' && o.rejected.length).toBe(1);
+  });
+});
+
+describe('blank teeth', () => {
+  it('is blank until something is recorded, in findings or plan', () => {
+    let c = newChart();
+    expect(isBlankTooth(c, 18)).toBe(true);
+    c = applied(editChart(c, 'plan', [18], { kind: 'restoration', value: 'crown|emax' }));
+    expect(isBlankTooth(c, 18)).toBe(false);
+    expect(isBlankTooth(c, 28)).toBe(true);
   });
 });
 

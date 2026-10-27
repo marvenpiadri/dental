@@ -325,6 +325,10 @@ const D = {
   'setup.dentist.opens': ['{name}: starts at', '{name} : début'],
   'setup.dentist.closes': ['{name}: ends at', '{name} : fin'],
   'setup.dentist.hoursHint': ['Own working hours. Leave empty to use the clinic hours.', 'Horaires propres. Laisser vide pour utiliser ceux du cabinet.'],
+  'dc.opt.title': ['Display', 'Affichage'],
+  'dc.opt.wisdom': ['Wisdom teeth', 'Dents de sagesse'],
+  'dc.opt.pulp': ['Healthy pulp', 'Pulpe saine'],
+  'dc.opt.base': ['Gum base', 'Base gingivale'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

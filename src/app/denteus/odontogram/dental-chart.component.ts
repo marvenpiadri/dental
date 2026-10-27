@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { I18n, type Key } from '../../core/i18n/i18n.service';
-import { ALL_TEETH, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
+import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
 import { exportFhir, exportJson, importFhir, importJson } from './engine/io';
 import { compareExaminations, makeExamination, suggestedDiagnoses, type Examination, type SuggestedDiagnosis } from './engine/exam';
@@ -87,6 +87,17 @@ export class DentalChartComponent {
     return v ? (readChart(v.chart).chart ?? this.chart()) : this.chart();
   });
   protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null);
+  /** Wisdom teeth can be hidden for a cleaner chart, but never when something is recorded on them. */
+  protected hiddenTooth(n: number): boolean {
+    const c = this.chart();
+    return !c.globals.wisdomVisible && WISDOM_TEETH.includes(n) && isBlankTooth(c, n);
+  }
+  protected setGlobal(key: 'wisdomVisible' | 'showHealthyPulp' | 'showBase', on: boolean): void {
+    if (this.readOnly()) return;
+    const next = { ...this.chart(), globals: { ...this.chart().globals, [key]: on } };
+    this.chart.set(next);
+    this.save.emit(writeChart(next));
+  }
   protected readonly planned = computed(() => plannedTeeth(this.chart()));
   protected readonly firstSelected = computed(() => this.selected()[0] ?? null);
   protected readonly firstState = computed<ToothRecord | null>(() => {

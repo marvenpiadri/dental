@@ -123,6 +123,14 @@ export function readChart(raw: unknown): ReadResult {
   };
 }
 
+/** True when nothing is recorded for the tooth, in the findings or the plan. Used so a tooth with data is never hidden. */
+export function isBlankTooth(c: Chart, n: number): boolean {
+  const blank = JSON.stringify(serializeState(defaultState()));
+  return [c.status, c.plan].every((m) => !m || !m.has(n) || JSON.stringify(serializeState(m.get(n)!)) === blank);
+}
+
+export const WISDOM_TEETH: readonly number[] = [18, 28, 38, 48];
+
 function writeTeeth(m: TeethMap): Record<string, SerializedTooth> {
   const out: Record<string, SerializedTooth> = {};
   for (const n of ALL_TEETH) out[n] = serializeState(m.get(n) ?? defaultState());

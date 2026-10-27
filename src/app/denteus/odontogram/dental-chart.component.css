@@ -35,3 +35,6 @@
 code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--app-hover); }
 .xfer { flex-wrap: wrap; }
 .btn.disabled { opacity: .5; pointer-events: none; }
+
+.opts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--app-muted); }
+.opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
