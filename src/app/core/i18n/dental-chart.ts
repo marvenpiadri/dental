@@ -291,6 +291,9 @@ const D = {
   'reports.csv.patient': ['Patient', 'Patient'],
   'reports.csv.method': ['Method', 'Mode'],
   'reports.csv.amount': ['Amount', 'Montant'],
+  'ap.find': ['Find a free slot', 'Trouver un créneau libre'],
+  'ap.findNone': ['No free slot in the next two weeks for this dentist.', 'Aucun créneau libre dans les deux prochaines semaines pour ce dentiste.'],
+  'ap.findList': ['Free slots', 'Créneaux libres'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

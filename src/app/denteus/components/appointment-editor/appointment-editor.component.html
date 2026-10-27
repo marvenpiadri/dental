@@ -54,6 +54,19 @@
     }
   </div>
 
+  @if (!scheduleLocked()) {
+    <div class="slots">
+      <button type="button" class="link-btn" [disabled]="!dentistId()" (click)="findSlots()">{{ t('ap.find') }}</button>
+      @if (slots(); as list) {
+        @if (list.length) {
+          <ul class="slot-list" [attr.aria-label]="t('ap.findList')">
+            @for (s of list; track s.start.getTime()) { <li><button type="button" class="chip-btn" (click)="useSlot(s)">{{ slotLabel(s) }}</button></li> }
+          </ul>
+        } @else { <p class="hint">{{ t('ap.findNone') }}</p> }
+      }
+    </div>
+  }
+
   <div class="grid2">
     <div>
       <label class="label" for="ap-dentist">{{ t('ap.dentist') }}</label>
