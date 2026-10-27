@@ -5,7 +5,7 @@ export const PRACTICE_KEYS = ['expenses', 'stock', 'lab', 'tasks', 'implants', '
 export type PracticeData = Record<(typeof PRACTICE_KEYS)[number], unknown[]>;
 
 /** A patient file (X-ray, scan) as it travels in a backup: the bytes are a data URL. */
-export interface BackupDocument { id: string; patientId: string; name: string; type: string; size: number; addedAt: string; data: string }
+export interface BackupDocument { id: string; patientId: string; name: string; type: string; size: number; addedAt: string; tooth?: string; data: string }
 
 export interface ClinicData {
   locations: ClinicLocation[];
