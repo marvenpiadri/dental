@@ -11,6 +11,7 @@ import { findingRows, planRows, reportHtml } from './chart-report';
 import { indexSummary, perioSummary } from './engine/perio';
 import { NUMBERING_SYSTEMS, formatTooth, primaryOf, type NumberingSystem } from './engine/numbering';
 import { patchCaseMeta, type CaseMeta } from './engine/perio';
+import { PerioGraphComponent } from './perio-graph.component';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
@@ -32,7 +33,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [ToothFilesComponent, ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
+  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',

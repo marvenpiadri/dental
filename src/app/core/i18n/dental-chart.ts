@@ -320,6 +320,8 @@ const D = {
   'docs.all': ['All files', 'Tous les fichiers'],
   'docs.tag': ['Tooth for {name}', 'Dent pour {name}'],
   'dc.files': ['Files for tooth {n}', 'Fichiers de la dent {n}'],
+  'dc.graph.aria': ['Probing depths for every probed site, buccal above and lingual below', 'Profondeurs de sondage de chaque site sondé, vestibulaire au-dessus et lingual en dessous'],
+  'dc.graph.bop': ['Bleeding', 'Saignement'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
