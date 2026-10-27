@@ -30,3 +30,15 @@ Licence notice: `src/app/denteus/odontogram/engine/vendor/LICENSE.odontogram`. T
 - Caries on a filled surface is a *recurrent* (CARS) score, never primary ICDAS; hydrate infers CARS 3 only for legacy (<2.3) payloads.
 - Derived diagnoses are suggestions (`dx` overrides add/suppress); never stored as confirmed.
 - Unknown enum values fall back to defaults in `hydrateState` silently — the CRM wrapper reports them as import issues instead.
+
+## Additions on top of the source behaviour (CRM-side, not in the library)
+- **Planned** is derived (plan ≠ status per tooth), not a runtime-only "plan-edited" set, so plan protection survives a reload. Deviation from the source.
+- `engine/numbering.ts`: FDI / Universal / Palmer are display only; stored data is always FDI. Primary teeth keep their permanent *position* (as in the source) and are labelled 51–85 on screen.
+- `engine/perio.ts` `indexSummary`: O'Leary %, mean Silness-Löe PI and Löe-Silness GI (mean over teeth with at least one graded surface; the format cannot tell "scored 0" from "not scored").
+- `chart-report.ts`: printable report; findings, plan ("planned, not performed") and suggested diagnoses ("not confirmed") are separate sections.
+- `perio-graph.component.ts`: read-only probing picture; only charted sites get bars.
+- Display options write `globals` (wisdom teeth, healthy pulp, base). A wisdom tooth with anything recorded is never hidden (`isBlankTooth`).
+- Files tagged to a tooth (`PatientDocument.tooth`) are shown read-only in the tooth editor.
+
+## Not done
+- Occlusal view / `occlusalVisible` has no UI. Measured anatomy (4 MB of art) is not vendored. Parity tests from the original repo are not ported (its tests are not in this repo). Real charts saved by the old shell have not been loaded; only a sparse older-format payload is tested.
