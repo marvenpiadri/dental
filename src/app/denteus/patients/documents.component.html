@@ -1,0 +1,42 @@
+<div class="top">
+  <label class="btn btn--primary"><i class="fa-solid fa-upload" aria-hidden="true"></i>{{ t('docs.add') }}
+    <input class="sr-only" type="file" multiple [accept]="accept" (change)="choose($any($event.target))" />
+  </label>
+  <span class="hint muted">{{ t('docs.hint') }}</span>
+</div>
+
+@if (problem(); as p) {
+  <p class="error-text" role="alert">{{ t(p === 'type' ? 'docs.error.type' : p === 'size' ? 'docs.error.size' : 'docs.error.storage') }}</p>
+}
+
+@if (taggedTeeth().length) {
+  <label class="filter">{{ t('docs.filter') }}
+    <select class="input" (change)="filter.set($any($event.target).value)">
+      <option value="" [selected]="!filter()">{{ t('docs.all') }}</option>
+      @for (n of taggedTeeth(); track n) { <option [value]="n" [selected]="filter() === n">{{ t('docs.tooth') }} {{ n }}</option> }
+    </select>
+  </label>
+}
+
+@if (shown().length) {
+  <ul class="grid">
+    @for (item of visible(); track item.doc.id) {
+      <li>
+        <a class="thumb" [href]="item.url" target="_blank" rel="noopener" [attr.aria-label]="t('docs.open', { name: item.doc.name })">
+          @if (item.image) { <img [src]="item.url" alt="" loading="lazy" /> } @else { <i class="fa-regular fa-file-pdf" aria-hidden="true"></i> }
+        </a>
+        <div class="meta">
+          <span class="name" [attr.title]="item.doc.name">{{ item.doc.name }}</span>
+          <span class="muted">{{ day(item.doc.addedAt) }} · {{ formatSize(item.doc.size) }}</span>
+          <select class="input tag" [attr.aria-label]="t('docs.tag', { name: item.doc.name })" (change)="tag(item, $any($event.target).value)">
+            <option value="" [selected]="!item.doc.tooth">{{ t('docs.noTooth') }}</option>
+            @for (n of teeth; track n) { <option [value]="n" [selected]="item.doc.tooth === n">{{ t('docs.tooth') }} {{ n }}</option> }
+          </select>
+        </div>
+        <button type="button" class="btn btn--icon" [attr.aria-label]="t('docs.remove', { name: item.doc.name })" (click)="remove(item)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </li>
+    }
+  </ul>
+} @else if (!loading()) {
+  <p class="empty-note">{{ t('docs.empty') }}</p>
+}

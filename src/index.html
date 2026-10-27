@@ -2,10 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Denteus · Appointments</title>
+  <title>Dentaleus</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script>
+    // Sets the theme before first paint (saved choice, else system preference) so nothing flashes.
+    try {
+      var m = document.cookie.match(/(?:^|;\s*)dtl-theme=(light|dark)/);
+      document.documentElement.setAttribute('data-theme', m ? m[1] : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <app-root></app-root>

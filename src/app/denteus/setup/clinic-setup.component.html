@@ -1,0 +1,141 @@
+<header class="ds-head">
+  <div class="ds-head-main"><h1 class="ds-title">{{ t('nav.setup') }}</h1></div>
+</header>
+
+<div class="ds-body canvas">
+  <div class="stack narrow">
+    @if (failed()) {
+      <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t('setup.error') }}</p>
+    }
+    @if (blocked(); as name) {
+      <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t('setup.blocked', { name }) }}</p>
+    }
+
+    @if (!store.loaded()) {
+      <span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span>
+    } @else {
+      <section class="card" aria-labelledby="dentists-title">
+        <header class="card-head">
+          <h2 class="card-title" id="dentists-title"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>{{ t('setup.dentists') }}</h2>
+          <button type="button" class="btn" (click)="addDentist()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.dentist.add') }}</button>
+        </header>
+        @for (d of store.dentists(); track d.id) {
+          <div class="row">
+            <input class="swatch" type="color" [value]="d.color" [attr.aria-label]="t('setup.color')" (change)="editDentist(d, { color: $any($event.target).value })" />
+            <input class="input" [value]="d.name" [attr.aria-label]="t('setup.name')" (change)="editDentist(d, { name: $any($event.target).value.trim() })" />
+            <input class="input" [value]="d.specialty" [attr.aria-label]="t('setup.specialty')" [placeholder]="t('setup.specialty')" (change)="editDentist(d, { specialty: $any($event.target).value.trim() })" />
+            <input class="input time" type="time" [value]="d.hours?.open ?? ''" [attr.aria-label]="t('setup.dentist.opens', { name: d.name })" [title]="t('setup.dentist.hoursHint')" (change)="dentistHoursChange(d, { open: $any($event.target).value })" />
+            <input class="input time" type="time" [value]="d.hours?.close ?? ''" [attr.aria-label]="t('setup.dentist.closes', { name: d.name })" [title]="t('setup.dentist.hoursHint')" (change)="dentistHoursChange(d, { close: $any($event.target).value })" />
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: d.name })" (click)="removeDentist(d)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        } @empty {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i></span>
+            <h2>{{ t('setup.dentists.empty.title') }}</h2>
+            <p>{{ t('setup.dentists.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="hours-title">
+          <header class="card-head"><h2 class="card-title" id="hours-title"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ t('setup.hours') }}</h2></header>
+          <div class="row">
+            <label class="hours-field">{{ t('setup.hours.open') }}<input class="input" type="time" [value]="hoursText().open" (change)="setHours({ open: $any($event.target).value })" /></label>
+            <label class="hours-field">{{ t('setup.hours.close') }}<input class="input" type="time" [value]="hoursText().close" (change)="setHours({ close: $any($event.target).value })" /></label>
+          </div>
+          <div class="row" role="group" [attr.aria-label]="t('setup.hours.days')">
+            @for (d of weekdays; track d) {
+              <button type="button" class="btn" [attr.aria-pressed]="store.hours().days.includes(d)" [class.btn--primary]="store.hours().days.includes(d)" (click)="toggleDay(d)">{{ t(weekdayKey(d)) }}</button>
+            }
+          </div>
+          <p class="row hint">{{ t('setup.hours.hint') }}</p>
+      </section>
+
+      <section class="card" aria-labelledby="chairs-title">
+        <header class="card-head">
+          <h2 class="card-title" id="chairs-title"><i class="fa-solid fa-chair" aria-hidden="true"></i>{{ t('setup.chairs') }}</h2>
+          <button type="button" class="btn" (click)="addChair()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.chair.add') }}</button>
+        </header>
+        @for (c of store.chairs(); track c.id) {
+          <div class="row">
+            <input class="input" [value]="c.name" [attr.aria-label]="t('setup.name')" (change)="editChair(c, $any($event.target).value.trim())" />
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: c.name })" (click)="removeChair(c)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        } @empty {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-chair" aria-hidden="true"></i></span>
+            <h2>{{ t('setup.chairs.empty.title') }}</h2>
+            <p>{{ t('setup.chairs.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="acts-title">
+        <header class="card-head">
+          <h2 class="card-title" id="acts-title"><i class="fa-solid fa-tags" aria-hidden="true"></i>{{ t('setup.acts') }}</h2>
+          <button type="button" class="btn" (click)="addAct()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.act.add') }}</button>
+        </header>
+        @for (a of store.catalog(); track a.id) {
+          <div class="row">
+            <input class="input" [value]="nameOf(a.id, a.name)" [attr.aria-label]="t('setup.name')" (change)="renameAct(a, $any($event.target).value.trim())" />
+            <input class="input price" inputmode="numeric" [value]="a.price" [attr.aria-label]="t('plan.price')" (change)="repriceAct(a, $any($event.target))" />
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: nameOf(a.id, a.name) })" (click)="removeAct(a)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        } @empty {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-tags" aria-hidden="true"></i></span>
+            <h2>{{ t('setup.acts.empty.title') }}</h2>
+            <p>{{ t('setup.acts.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="team-title">
+        <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
+        <p class="muted intro">{{ t('team.intro') }}</p>
+        @for (m of auth.staff(); track m.id) {
+          <div class="row">
+            <span class="avatar" style="--size: 32px" aria-hidden="true">{{ m.name.slice(0, 2) }}</span>
+            <strong class="grow">{{ m.name }}</strong>
+            <span class="chip" data-tone="neutral">{{ t(roleKey[m.role]) }}</span>
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: m.name })" (click)="removeMember(m.id)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        }
+        <form class="row" (submit)="$event.preventDefault(); addMember(name.value, role.value, pin.value); name.value = ''; pin.value = ''">
+          <input class="input" #name [attr.aria-label]="t('team.name')" [placeholder]="t('team.name')" />
+          <select class="input role" #role [attr.aria-label]="t('team.role.owner')">
+            @for (r of roles; track r) { <option [value]="r">{{ t(roleKey[r]) }}</option> }
+          </select>
+          <input class="input pin" #pin type="password" inputmode="numeric" maxlength="8" autocomplete="off" [attr.aria-label]="t('team.pin')" [placeholder]="t('team.pin')" />
+          <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('team.add') }}</button>
+        </form>
+        @if (teamProblem()) { <p class="error-text intro" role="alert">{{ t(teamProblem()!) }}</p> }
+      </section>
+
+      <section class="card" aria-labelledby="backup-title">
+        <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
+        <div class="card-body backup">
+          <p class="muted">{{ t('setup.backup.intro') }}</p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" (click)="exportBackup()"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ t('setup.backup.export') }}</button>
+            <label class="btn"><i class="fa-solid fa-upload" aria-hidden="true"></i>{{ t('setup.backup.import') }}
+              <input class="sr-only" type="file" accept="application/json,.json" (change)="chooseBackup($any($event.target))" />
+            </label>
+          </div>
+          @if (importProblem(); as key) { <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t($any(key)) }}</p> }
+          @if (restored()) { <p class="ok" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>{{ t('setup.backup.done') }}</p> }
+          @if (pending(); as backup) {
+            <div class="confirm" role="alertdialog" aria-labelledby="confirm-title">
+              <strong id="confirm-title">{{ t('setup.backup.confirm.title') }}</strong>
+              <p>{{ t('setup.backup.confirm.body', { patients: i18n.tn('backup.patients', backup.data.patients.length), appointments: i18n.tn('backup.appointments', backup.data.appointments.length) }) }}</p>
+              <div class="actions">
+                <button type="button" class="btn btn--primary" (click)="confirmRestore()">{{ t('setup.backup.confirm.yes') }}</button>
+                <button type="button" class="btn" (click)="pending.set(null)">{{ t('common.cancel') }}</button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  </div>
+</div>

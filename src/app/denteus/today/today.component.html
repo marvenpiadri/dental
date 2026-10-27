@@ -1,0 +1,231 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <h1 class="ds-title">{{ t('nav.today') }}</h1>
+    <p class="ds-sub">{{ dateLabel() }}</p>
+  </div>
+  <div class="ds-actions">
+    <a class="btn" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newPatient') }}</span></a>
+    <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ book: 1 }"><i class="fa-solid fa-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newAppointment') }}</span></a>
+  </div>
+</header>
+
+<div class="ds-body canvas">
+  @if (store.loadFailed()) {
+    <div class="card empty stack">
+      <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+      <h2>{{ t('storage.error.title') }}</h2>
+      <p>{{ t('storage.error.body') }}</p>
+    </div>
+  } @else if (!store.loaded() || !now()) {
+    <div class="stack" aria-busy="true" [attr.aria-label]="t('common.loading')">
+      <div class="grid-kpi"><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>
+      <div class="grid-2"><span class="skeleton tall"></span><span class="skeleton tall"></span></div>
+    </div>
+  } @else {
+    <div class="stack">
+      <section class="grid-kpi">
+        <article class="card kpi">
+          <span class="icon-tile"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+          <div><p class="eyebrow">{{ t('today.kpi.booked') }}</p><strong class="value">{{ counts().booked }}</strong></div>
+        </article>
+        <article class="card kpi">
+          <span class="icon-tile warn"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>
+          <div><p class="eyebrow">{{ t('today.kpi.waiting') }}</p><strong class="value">{{ counts().waiting }}</strong></div>
+        </article>
+        <article class="card kpi">
+          <span class="icon-tile ok"><i class="fa-solid fa-tooth" aria-hidden="true"></i></span>
+          <div><p class="eyebrow">{{ t('today.kpi.inTreatment') }}</p><strong class="value">{{ counts().inTreatment }}</strong></div>
+        </article>
+        <article class="card kpi">
+          <span class="icon-tile"><i class="fa-regular fa-circle-check" aria-hidden="true"></i></span>
+          <div><p class="eyebrow">{{ t('today.kpi.completed') }}</p><strong class="value">{{ counts().completed }}</strong></div>
+        </article>
+      </section>
+
+      <div class="grid-2">
+        <section class="card" aria-labelledby="waiting-title">
+          <header class="card-head">
+            <h2 class="card-title" id="waiting-title"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>{{ t('today.waiting.title') }}</h2>
+            <span class="chip" data-tone="warn">{{ waiting().length }}</span>
+          </header>
+          @if (waiting().length) {
+            <ul class="list">
+              @for (a of waiting(); track a.id) {
+                <li>
+                  <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a.start), appointment: a.id }">
+                    <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(patientName(a)) }}</span>
+                    <span class="who">
+                      <span class="name">{{ patientName(a) }}</span>
+                      <span class="sub muted">{{ t(typeKey(a.type)) }} · {{ dentistOf(a)?.name }}</span>
+                    </span>
+                    <span class="meta">
+                      <span class="time">{{ i18n.time(a.start) }}</span>
+                      @if (wait(a) !== null) { <span class="sub warn-text">{{ t('today.waiting.since', { n: wait(a)! }) }}</span> }
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="empty">
+              <span class="icon-tile"><i class="fa-solid fa-couch" aria-hidden="true"></i></span>
+              <h2>{{ t('today.waiting.empty.title') }}</h2>
+              <p>{{ t('today.waiting.empty.body') }}</p>
+            </div>
+          }
+        </section>
+
+        <section class="card" aria-labelledby="next-title">
+          <header class="card-head">
+            <h2 class="card-title" id="next-title"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ t('today.next.title') }}</h2>
+            <span class="chip" data-tone="neutral">{{ upcoming().length }}</span>
+          </header>
+          @if (upcoming().length) {
+            <ul class="list">
+              @for (a of upcoming(); track a.id) {
+                <li>
+                  <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a.start), appointment: a.id }">
+                    <span class="time-col">{{ i18n.time(a.start) }}</span>
+                    <span class="who">
+                      <span class="name">{{ patientName(a) }}</span>
+                      <span class="sub muted">{{ t(typeKey(a.type)) }} · {{ dentistOf(a)?.name }}</span>
+                    </span>
+                    <span class="chip" [attr.data-tone]="STATUS_TONE[a.status]">{{ t(STATUS_KEY[a.status]) }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="empty">
+              <span class="icon-tile"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
+              <h2>{{ t('today.next.empty.title') }}</h2>
+              <p>{{ t('today.next.empty.body') }}</p>
+              <a class="btn" routerLink="/calendar">{{ t('today.openCalendar') }}</a>
+            </div>
+          }
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="remind-title">
+        <header class="card-head">
+          <h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.title') }}</h2>
+          <span class="chip" data-tone="neutral">{{ tomorrow().length }}</span>
+        </header>
+        @if (tomorrow().length) {
+          <ul class="list">
+            @for (row of tomorrow(); track row.appointment.id) {
+              <li class="row static">
+                <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient?.fullName ?? '') }}</span>
+                <span class="who">
+                  <span class="name">{{ row.patient?.fullName ?? '—' }}</span>
+                  <span class="sub muted">{{ i18n.time(row.appointment.start) }} · {{ t(typeKey(row.appointment.type)) }}</span>
+                </span>
+                @if (row.appointment.remindedAt) { <span class="chip" data-tone="ok">{{ t('today.remind.sent') }}</span> }
+                @if (row.link) {
+                  <a class="btn" [href]="row.link" target="_blank" rel="noopener" (click)="store.markReminded(row.appointment.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t(row.appointment.remindedAt ? 'today.remind.again' : 'today.remind.send') }}</a>
+                } @else {
+                  <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
+            <h2>{{ t('today.remind.empty.title') }}</h2>
+            <p>{{ t('today.remind.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="recall-title">
+        <header class="card-head">
+          <h2 class="card-title" id="recall-title"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i>{{ t('today.recall.title') }}</h2>
+          <span class="chip" data-tone="neutral">{{ recall().count }}</span>
+        </header>
+        @if (recall().rows.length) {
+          <ul class="list">
+            @for (row of recall().rows; track row.patient.id) {
+              <li class="row static">
+                <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient.fullName) }}</span>
+                <span class="who">
+                  <span class="name">{{ row.patient.fullName }}</span>
+                  <span class="sub muted">{{ t('today.recall.last', { date: i18n.date(row.lastVisit, { day: 'numeric', month: 'short', year: 'numeric' }) }) }}</span>
+                </span>
+                @if (row.link) { <a class="btn" [href]="row.link" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }
+                @else { <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span> }
+              </li>
+            }
+          </ul>
+          @if (recall().count > recall().rows.length) { <p class="more muted">{{ t('today.owing.more', { n: recall().count - recall().rows.length }) }}</p> }
+        } @else {
+          <div class="empty">
+            <span class="icon-tile ok"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+            <h2>{{ t('today.recall.empty.title') }}</h2>
+            <p>{{ t('today.recall.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="owing-title">
+        <header class="card-head">
+          <h2 class="card-title" id="owing-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('today.owing.title') }}</h2>
+          @if (owing().count) { <span class="chip" data-tone="danger">{{ i18n.money(owing().total) }}</span> }
+        </header>
+        @if (owing().rows.length) {
+          <ul class="list">
+            @for (row of owing().rows; track row.patient.id) {
+              <li>
+                <a class="row" [routerLink]="['/patients', row.patient.id]">
+                  <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(row.patient.fullName) }}</span>
+                  <span class="who"><span class="name">{{ row.patient.fullName }}</span></span>
+                  <span class="name">{{ i18n.money(row.due) }}</span>
+                  <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
+                </a>
+              </li>
+            }
+          </ul>
+          @if (owing().count > owing().rows.length) {
+            <p class="more muted">{{ t('today.owing.more', { n: owing().count - owing().rows.length }) }}</p>
+          }
+        } @else {
+          <div class="empty">
+            <span class="icon-tile ok"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+            <h2>{{ t('today.owing.empty.title') }}</h2>
+            <p>{{ t('today.owing.empty.body') }}</p>
+          </div>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="dentists-title">
+        <header class="card-head">
+          <h2 class="card-title" id="dentists-title"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>{{ t('today.dentists.title') }}</h2>
+        </header>
+        @if (dentists().length) {
+          <ul class="list">
+            @for (d of dentists(); track d.dentist.id) {
+              <li class="row static">
+                <span class="dot" [style.background]="d.dentist.color" aria-hidden="true"></span>
+                <span class="who">
+                  <span class="name">{{ d.dentist.name }}</span>
+                  <span class="sub muted">{{ d.dentist.specialty }}</span>
+                </span>
+                <span class="meta">
+                  <span class="name">{{ d.visits ? i18n.tn('today.dentists.visits', d.visits) : t('today.dentists.none') }}</span>
+                  @if (d.next) { <span class="sub muted">{{ t('today.dentists.next', { time: i18n.time(d.next) }) }}</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i></span>
+            <h2>{{ t('today.dentists.empty.title') }}</h2>
+            <p>{{ t('today.dentists.empty.body') }}</p>
+            <a class="btn" routerLink="/setup"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.dentist.add') }}</a>
+          </div>
+        }
+      </section>
+    </div>
+  }
+</div>

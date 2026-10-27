@@ -1,0 +1,17 @@
+:host { display: block; padding: 16px; }
+.sums { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 16px; }
+.sums div { display: flex; flex-direction: column; gap: 2px; }
+.sums dt { font-size: 12px; color: var(--app-muted); font-weight: 600; }
+.sums dd { margin: 0; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.due dd { color: var(--app-danger); }
+.due.settled dd { color: var(--app-ok); }
+.add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.price { width: 140px; }
+.label { font-size: 12px; color: var(--app-muted); font-weight: 600; }
+.error-text { margin: 8px 0 0; color: var(--app-danger); font-size: 13px; }
+.items { margin: 16px 0 0; padding: 0; list-style: none; }
+.items li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--app-line); }
+.when { flex: 1; color: var(--app-muted); }
+.amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+.empty-note { margin: 14px 0 0; color: var(--app-muted); }

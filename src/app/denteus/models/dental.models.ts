@@ -1,3 +1,5 @@
+import type { OpeningHours } from '../rules/opening-hours';
+import type { Examination } from '../odontogram/engine/exam';
 import type { IconName } from '../../calendar/components/cal-icon/cal-icon.component';
 import type { EventTone } from '../../calendar/models/calendar.models';
 
@@ -9,13 +11,98 @@ export interface ClinicLocation {
   address?: string;
   timezone: string;
   active: boolean;
+  /** Opening hours the slot finder uses; unset means the defaults. */
+  hours?: OpeningHours;
 }
 
 export interface Patient {
   id: string;
   fullName: string;
   phone: string;
+  email?: string;
+  /** ISO date, `YYYY-MM-DD`. Stored as a string so there is no time zone to get wrong. */
+  birthDate?: string;
+  sex?: 'female' | 'male';
+  city?: string;
+  /** Health insurer as the clinic writes it (CNSS, CNOPS, a private insurer…) and the patient's member number. Free text on purpose. */
+  insurer?: string;
+  insuranceNumber?: string;
+  /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
+  alert?: string;
+  notes?: string;
+  /** ISO timestamp. Absent on records created before this field existed. */
+  createdAt?: string;
+  /** The working dental chart (CRM engine payload: findings, plan, case data). Validated on read, never trusted. */
+  odontogram?: unknown;
+  /** Dated, frozen snapshots of the chart, one per examination. */
+  examinations?: Examination[];
+  /** Treatment plan: what was proposed and what has been done, with prices. */
+  plan?: TreatmentItem[];
+  /** Money received from the patient. What they owe is the done work in `plan` minus these. */
+  payments?: Payment[];
+  /** What was found and done at each visit, newest last. */
+  visits?: VisitNote[];
 }
+
+export interface PrescriptionLine {
+  drug: string;
+  /** Free text ("1 g, 3 times a day"): the dentist decides, the app never suggests doses. */
+  dosage: string;
+  duration: string;
+}
+
+export interface VisitNote {
+  id: string;
+  /** ISO timestamp the note was written. */
+  at: string;
+  appointmentId?: string;
+  dentistId?: string;
+  complaint?: string;
+  findings?: string;
+  care?: string;
+  prescription?: PrescriptionLine[];
+}
+
+export const PAYMENT_METHODS = ['cash', 'card', 'transfer'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export interface Payment {
+  id: string;
+  /** Whole units of the clinic's currency, more than zero. */
+  amount: number;
+  method: PaymentMethod;
+  /** ISO timestamp. */
+  at: string;
+}
+
+export const PROCEDURES = ['filling', 'cleaning', 'extraction', 'root-canal', 'crown', 'implant', 'xray', 'other'] as const;
+export type ProcedureId = (typeof PROCEDURES)[number];
+
+/** One act the clinic offers, with its usual price. Built-in acts have no `name`: they are translated. */
+export interface CatalogEntry {
+  id: string;
+  name?: string;
+  price: number;
+}
+
+export interface TreatmentItem {
+  id: string;
+  /** FDI tooth number, absent for work that isn't about one tooth (a cleaning). */
+  tooth?: string;
+  /** A catalog entry's id: one of `PROCEDURES` for the built-ins, otherwise generated. */
+  procedure: string;
+  /** The act's name when the item was added, so renaming or removing a catalog entry never rewrites old plans. */
+  name?: string;
+  /** In the clinic's currency, whole units. */
+  price: number;
+  status: 'planned' | 'done';
+  /** ISO timestamp the item was marked done. */
+  doneAt?: string;
+}
+
+
+/** What the patient form edits. Everything but the name is optional. */
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'visits'>;
 
 export interface Dentist {
   id: string;
@@ -24,6 +111,8 @@ export interface Dentist {
   specialty: string;
   /** Colour of this dentist's appointments in every view. */
   color: string;
+  /** Own working times (the clinic's open days still apply). Unset means the clinic's hours. */
+  hours?: { open?: string; close?: string };
 }
 
 export interface Chair {
@@ -119,6 +208,8 @@ export interface Appointment {
   reason?: string;
   note?: string;
   encounterId?: string;
+  /** ISO time the WhatsApp reminder was opened for this visit. */
+  remindedAt?: string;
   createdAt: Date;
   createdBy: string;
   history: StatusChange[];
@@ -148,3 +239,18 @@ export type ApiResult<T> =
       /** One line per problem, e.g. which resource is taken and when. */
       details: string[];
     };
+
+/** A file attached to a patient (X-ray, photo, report). Kept in IndexedDB only, outside the backup file. */
+export interface PatientDocument {
+  id: string;
+  patientId: string;
+  name: string;
+  /** MIME type. */
+  type: string;
+  size: number;
+  /** ISO timestamp. */
+  addedAt: string;
+  /** FDI number of the tooth this image is about, when it is about one. */
+  tooth?: string;
+  blob: Blob;
+}

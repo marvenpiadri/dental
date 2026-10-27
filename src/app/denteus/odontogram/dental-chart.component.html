@@ -1,0 +1,163 @@
+<div class="chart-root">
+  @if (locked()) {
+    <p class="banner danger" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ t('dc.locked') }}</p>
+  }
+  @if (issues().length) {
+    <div class="banner warn" role="status">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <span>{{ t('dc.issues', { n: issues().length }) }}</span>
+      <button type="button" class="link" (click)="issuesOpen.set(!issuesOpen())">{{ issuesOpen() ? t('dc.hide') : t('dc.show') }}</button>
+    </div>
+    @if (issuesOpen()) { <ul class="issues">@for (i of issues(); track i.path) { <li><code>{{ i.path }}</code> {{ i.message }}</li> }</ul> }
+  }
+
+  <div class="bar">
+    <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
+      <button type="button" [class.on]="mode() === 'status'" [attr.aria-pressed]="mode() === 'status'" (click)="mode.set('status')"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i>{{ t('dc.mode.status') }}</button>
+      <button type="button" [class.on]="mode() === 'plan'" [attr.aria-pressed]="mode() === 'plan'" (click)="mode.set('plan')"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('dc.mode.plan') }}
+        @if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
+    </div>
+    <div class="actions">
+      <select class="btn" [attr.aria-label]="t('dc.numbering')" (change)="setNumbering($any($event.target).value)">
+        @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }
+      </select>
+      <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
+      <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
+      <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>
+      <button type="button" class="btn btn--primary" [disabled]="locked() || viewing() !== null" (click)="openSave()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>{{ t('dc.saveExam') }}</button>
+    </div>
+  </div>
+
+  @if (viewing(); as v) {
+    <p class="banner info" role="status"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>{{ t('dc.viewing', { d: v.date }) }}
+      <button type="button" class="link" (click)="view(null)">{{ t('dc.backToWorking') }}</button></p>
+  } @else if (mode() === 'plan') {
+    <p class="banner info" role="status"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('dc.planBanner') }}</p>
+  }
+
+  @if (saving()) {
+    <form class="examform" (submit)="$event.preventDefault(); saveExam()">
+      <label class="field"><span class="label">{{ t('dc.exam.date') }}</span><input class="input" type="date" required [value]="examDate()" (input)="examDate.set(inputValue($event))" /></label>
+      <label class="field"><span class="label">{{ t('dc.exam.examiner') }}</span><input class="input" type="text" [value]="examExaminer()" (input)="examExaminer.set(inputValue($event))" /></label>
+      <label class="field wide"><span class="label">{{ t('dc.exam.note') }}</span><input class="input" type="text" [value]="examNote()" (input)="examNote.set(inputValue($event))" /></label>
+      <div class="row"><button type="submit" class="btn btn--primary">{{ t('dc.exam.save') }}</button><button type="button" class="btn" (click)="saving.set(false)">{{ t('dc.cancel') }}</button></div>
+    </form>
+  }
+
+  @if (pending(); as p) {
+    <div class="banner warn" role="alertdialog" aria-live="assertive">
+      <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
+      <span>{{ t('dc.confirm', { teeth: p.diverging.join(', ') }) }}</span>
+      <button type="button" class="btn btn--primary" (click)="confirmPending()">{{ t('dc.confirm.apply') }}</button>
+      <button type="button" class="btn" (click)="pending.set(null)">{{ t('dc.cancel') }}</button>
+    </div>
+  }
+  @if (notice()) { <p class="banner warn" role="status"><i class="fa-solid fa-ban" aria-hidden="true"></i>{{ notice() }}</p> }
+
+  <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
+    <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
+    <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
+    <label><input type="checkbox" [checked]="occlusalView()" (change)="occlusalView.set($any($event.target).checked)" /> {{ t('dc.opt.occlusal') }}</label>
+    <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showBase" (change)="setGlobal('showBase', $any($event.target).checked)" /> {{ t('dc.opt.base') }}</label>
+  </div>
+
+  <div class="arches" role="group" [attr.aria-label]="t('dc.chart')">
+    @for (arch of [upper, lower]; track $index) {
+      <div class="arch" [class.lower]="$index === 1">
+        @for (n of arch; track n) {
+          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
+            [occlusal]="occlusalView()" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
+            [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          }
+        }
+      </div>
+    }
+  </div>
+
+  <div class="tabs" role="tablist">
+    @for (k of tabs; track k.id) {
+      <button type="button" role="tab" [attr.aria-selected]="tab() === k.id" [class.on]="tab() === k.id" (click)="tab.set(k.id)">{{ t(k.key) }}</button>
+    }
+  </div>
+
+  @switch (tab()) {
+    @case ('tooth') {
+      @if (firstState(); as st) {
+        <p class="hint">{{ selected().length > 1 ? t('dc.editing.many', { n: selected().length }) : t('dc.editing.one', { n: num(firstSelected()!) }) }}</p>
+        <den-tooth-editor [state]="st" [teeth]="selected()" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event)" />
+        <den-tooth-files [patientId]="patientId()" [tooth]="firstSelected()!" />
+      } @else { <p class="hint">{{ t('dc.pickTooth') }}</p> }
+    }
+    @case ('perio') {
+      <den-perio-graph [chart]="shown()" />
+      <den-perio-summary [chart]="shown()" [disabled]="readOnly()" (patch)="patchMeta($event)" />
+      @if (firstState(); as st) {
+        <den-perio-editor [no]="firstSelected()!" [state]="st" [disabled]="readOnly() || mode() === 'plan'" (edit)="apply($event, false, [firstSelected()!])" />
+        @if (mode() === 'plan') { <p class="hint">{{ t('dc.perio.statusOnly') }}</p> }
+      } @else { <p class="hint">{{ t('dc.pickTooth') }}</p> }
+    }
+    @case ('findings') {
+      <p class="hint">{{ t('dc.dx.hint') }}</p>
+      @if (!diagnoses().length) { <p class="hint">{{ t('dc.dx.none') }}</p> }
+      <ul class="dx">
+        @for (d of diagnoses(); track d.tooth + d.key) {
+          <li>
+            <span class="tooth">{{ d.tooth }}</span>
+            <span class="what">{{ d.display }} @if (d.icd10) { <code>{{ d.icd10 }}</code> }</span>
+            <span class="chip" [attr.data-tone]="isConfirmed(d) ? 'ok' : 'warn'">{{ isConfirmed(d) ? t('dc.dx.confirmed') : t('dc.dx.suggested') }}</span>
+            @if (!readOnly()) {
+              @if (!isConfirmed(d)) { <button type="button" class="btn" (click)="setDx({ tooth: d.tooth, key: d.key }, 'add')">{{ t('dc.dx.confirm') }}</button> }
+              <button type="button" class="btn" (click)="setDx({ tooth: d.tooth, key: d.key }, 'suppress')">{{ t('dc.dx.dismiss') }}</button>
+            }
+          </li>
+        }
+      </ul>
+      @if (dismissed().length) {
+        <h3 class="sub">{{ t('dc.dx.dismissed') }}</h3>
+        <ul class="dx">
+          @for (d of dismissed(); track d.tooth + d.key) {
+            <li><span class="tooth">{{ d.tooth }}</span><span class="what">{{ d.key }}</span>
+              @if (!readOnly()) { <button type="button" class="btn" (click)="setDx(d, null)">{{ t('dc.dx.restore') }}</button> }</li>
+          }
+        </ul>
+      }
+    }
+    @case ('history') {
+      <div class="row xfer">
+        <button type="button" class="btn" (click)="printReport()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('dc.report.print') }}</button>
+        <button type="button" class="btn" (click)="download('json')"><i class="fa-solid fa-file-code" aria-hidden="true"></i>{{ t('dc.export.json') }}</button>
+        <button type="button" class="btn" (click)="download('fhir')"><i class="fa-solid fa-file-medical" aria-hidden="true"></i>{{ t('dc.export.fhir') }}</button>
+        <label class="btn" [class.disabled]="readOnly()"><i class="fa-solid fa-file-import" aria-hidden="true"></i>{{ t('dc.import') }}<input type="file" accept=".json,application/json" class="sr-only" [disabled]="readOnly()" (change)="pickFile($event)" /></label>
+      </div>
+      @if (incoming(); as inc) {
+        <div class="banner warn" role="alertdialog"><i class="fa-solid fa-file-import" aria-hidden="true"></i><span>{{ t('dc.import.ready', { n: inc.issues }) }}</span>
+          <button type="button" class="btn btn--primary" (click)="applyImport()">{{ t('dc.import.replace') }}</button><button type="button" class="btn" (click)="incoming.set(null)">{{ t('dc.cancel') }}</button></div>
+      }
+      @if (!examinations().length) { <p class="hint">{{ t('dc.history.none') }}</p> }
+      <ul class="dx">
+        @for (e of examinations(); track e.id) {
+          <li>
+            <span class="what"><strong>{{ e.date }}</strong>@if (e.examiner) { · {{ e.examiner }} }@if (e.note) { — {{ e.note }} }</span>
+            <button type="button" class="btn" [attr.aria-pressed]="viewing()?.id === e.id" (click)="view(viewing()?.id === e.id ? null : e)">{{ t('dc.history.view') }}</button>
+            <button type="button" class="btn" [attr.aria-pressed]="comparing()?.id === e.id" (click)="comparing.set(comparing()?.id === e.id ? null : e)">{{ t('dc.history.compare') }}</button>
+          </li>
+        }
+      </ul>
+      @if (diff(); as d) {
+        <h3 class="sub">{{ t('dc.history.changes', { d: comparing()!.date }) }}</h3>
+        @if (!d.teeth.length) { <p class="hint">{{ t('dc.history.same') }}</p> }
+        <ul class="dx">
+          @for (c of d.teeth; track c.tooth) {
+            <li><span class="tooth">{{ c.tooth }}</span>
+              <span class="what">@for (f of c.fields; track f.field) { <span class="chg">{{ f.field }}: {{ fieldDiff(f.from) }} → {{ fieldDiff(f.to) }}</span> }</span></li>
+          }
+        </ul>
+        @if (d.perio.changed.length) {
+          <p class="hint">{{ t('dc.history.perio', { loss: d.perio.attachmentLoss.length, gain: d.perio.attachmentGain.length, deep: d.perio.deepened.length }) }}</p>
+        }
+      }
+    }
+  }
+</div>

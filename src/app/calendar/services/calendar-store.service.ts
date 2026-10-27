@@ -31,6 +31,9 @@ export class CalendarStore {
   readonly theme = signal<CalendarTheme>('light');
   readonly search = signal('');
 
+  /** Minute of the day the time grid should scroll into view (set when a page links to a specific visit). */
+  readonly revealMinute = signal<number | null>(null);
+
   readonly categories = signal<CalendarCategory[]>([]);
   readonly events = signal<CalendarEvent[]>([]);
 

@@ -1,0 +1,44 @@
+.tabs { display: flex; gap: 6px; }
+.pill { min-height: 32px; padding: 0 14px; border: 1px solid var(--app-line); border-radius: 999px; background: transparent; color: var(--app-muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pill:hover { color: var(--app-text); background: var(--app-hover); }
+.pill.on { border-color: var(--app-text); background: var(--app-text); color: var(--app-bg); }
+.tall { min-height: 260px; }
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 180px; padding: 20px 20px 0; }
+.bar { flex: 1; min-width: 2px; border-radius: 3px 3px 0 0; background: var(--app-text); }
+.bar.zero { background: var(--app-line); height: 2px !important; }
+.axis { display: flex; justify-content: space-between; padding: 8px 20px 14px; color: var(--app-muted); font-size: 12px; }
+.meter-list { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 16px 20px; list-style: none; }
+.meter-list li { display: grid; grid-template-columns: minmax(90px, 140px) 1fr auto; align-items: center; gap: 12px; }
+.meter-label { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.meter { height: 8px; border-radius: 999px; background: var(--app-hover); overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 999px; background: var(--app-text); }
+.meter-value { font-variant-numeric: tabular-nums; font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.note { margin: 0; padding: 0 20px 16px; }
+@media (max-width: 700px) { .tabs { gap: 4px; } .pill { min-height: 30px; padding: 0 9px; font-size: 12px; } }
+.kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+}
+
+.kpi .eyebrow {
+  margin-bottom: 2px;
+}
+
+.kpi > div { min-width: 0; }
+
+.value {
+  display: block;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.1;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+/* status colour only tints the icon, never the card */
+.icon-tile.warn { color: var(--app-warn); }
+.icon-tile.ok { color: var(--app-ok); }
+.warn-text { color: var(--app-warn); font-weight: 600; }
+

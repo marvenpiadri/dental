@@ -9,6 +9,10 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
+import { dentistHours } from '../../rules/opening-hours';
+import { findFreeSlots, type Slot } from '../../rules/slot-finder';
+import { I18n } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
 import { DateTimeFieldComponent } from '../../../calendar/components/datetime-field/datetime-field.component';
 import { formatDateTimeInput, formatTime, addMinutes } from '../../../calendar/utils/date.utils';
@@ -43,6 +47,8 @@ const DURATIONS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15); // 15 min 
   host: { '(keydown.escape)': 'cancel.emit()' },
 })
 export class AppointmentEditorComponent implements OnInit {
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
   readonly draft = input.required<AppointmentDraft>();
   readonly mode = input<'create' | 'edit'>('create');
   /** Set by the parent when the server refused the last save. */
@@ -56,9 +62,12 @@ export class AppointmentEditorComponent implements OnInit {
 
   protected readonly types = APPOINTMENT_TYPES;
   protected readonly statusMeta = STATUS_META;
+  protected readonly statusLabel = STATUS_LABEL;
+  protected readonly typeKey = typeKey;
   protected readonly createStatuses: AppointmentStatus[] = ['scheduled', 'confirmed'];
 
   protected readonly patientId = signal<string | null>(null);
+  protected readonly patientAlert = computed(() => this.store.patientMap().get(this.patientId() ?? '')?.alert ?? null);
   protected readonly start = signal(new Date());
   protected readonly duration = signal(30);
   protected readonly dentistId = signal('');
@@ -88,6 +97,22 @@ export class AppointmentEditorComponent implements OnInit {
       end: addMinutes(this.start(), this.duration()),
     });
   });
+
+  protected readonly slots = signal<Slot[] | null>(null);
+  protected findSlots(): void {
+    this.slots.set(findFreeSlots(
+      { dentistId: this.dentistId(), chairIds: this.store.chairs().map((c) => c.id), patientId: this.patientId() ?? '', durationMin: this.duration(), after: new Date(), excludeId: this.draft().id, hours: dentistHours(this.store.hours(), this.store.dentistMap().get(this.dentistId())?.hours) },
+      this.store.appointments(),
+    ));
+  }
+  protected useSlot(s: Slot): void {
+    this.start.set(s.start);
+    this.chairId.set(s.chairId);
+    this.slots.set(null);
+  }
+  protected slotLabel(s: Slot): string {
+    return `${this.i18n.date(s.start, { weekday: 'short', day: 'numeric', month: 'short' })} ${formatTime(s.start)}`;
+  }
 
   protected readonly canSave = computed(() => !!this.patientId() && !!this.dentistId() && !!this.chairId() && !this.saving());
 

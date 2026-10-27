@@ -1,0 +1,185 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <a class="btn btn--icon" routerLink="/patients" [attr.aria-label]="t('profile.back')"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>
+    <h1 class="ds-title">{{ patient()?.fullName ?? t('nav.patients') }}</h1>
+  </div>
+  @if (patient(); as p) {
+    <div class="ds-actions">
+      <a class="btn" [routerLink]="['/patients', p.id, 'edit']"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></a>
+      <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a>
+    </div>
+  }
+</header>
+
+<div class="ds-body canvas">
+  @if (store.loadFailed()) {
+    <div class="card empty narrow">
+      <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+      <h2>{{ t('storage.error.title') }}</h2>
+      <p>{{ t('storage.error.body') }}</p>
+    </div>
+  } @else if (missing()) {
+    <div class="card empty narrow">
+      <span class="icon-tile"><i class="fa-solid fa-user-slash" aria-hidden="true"></i></span>
+      <h2>{{ t('profile.notFound.title') }}</h2>
+      <p>{{ t('profile.notFound.body') }}</p>
+      <a class="btn" routerLink="/patients">{{ t('profile.notFound.cta') }}</a>
+    </div>
+  } @else if (patient(); as p) {
+    <div class="stack">
+      <section class="card hero">
+        <span class="avatar" style="--size: 64px" aria-hidden="true">{{ initials(p.fullName) }}</span>
+        <div class="hero-main">
+          <h2 class="hero-name">{{ p.fullName }}</h2>
+          <ul class="facts">
+            @if (age() !== null) { <li><i class="fa-solid fa-cake-candles" aria-hidden="true"></i>{{ i18n.tn('profile.age', age()!) }}</li> }
+            @if (p.sex) { <li><i class="fa-solid" [class.fa-venus]="p.sex === 'female'" [class.fa-mars]="p.sex === 'male'" aria-hidden="true"></i>{{ t(p.sex === 'female' ? 'form.sex.female' : 'form.sex.male') }}</li> }
+            @if (p.phone) { <li><i class="fa-solid fa-phone" aria-hidden="true"></i><a [href]="'tel:' + p.phone">{{ p.phone }}</a></li> }
+            @if (p.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + p.email">{{ p.email }}</a></li> }
+            @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
+          </ul>
+        </div>
+      </section>
+
+      @if (p.alert) {
+        <section class="card alert" role="note" aria-labelledby="alert-title">
+          <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+          <div>
+            <h2 class="card-title" id="alert-title">{{ t('profile.alert.title') }}</h2>
+            <p class="alert-text">{{ p.alert }}</p>
+          </div>
+        </section>
+      }
+
+      @if (store.loaded()) {
+        <section class="grid-kpi">
+          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.visits') }}</p><strong class="value">{{ stats().visits }}</strong></article>
+          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.upcoming') }}</p><strong class="value">{{ stats().upcoming }}</strong></article>
+          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.noShows') }}</p><strong class="value">{{ stats().noShows }}</strong></article>
+          <article class="card kpi">
+            <p class="eyebrow">{{ t('profile.stat.last') }}</p>
+            <strong class="value small">{{ stats().last ? day(stats().last!) : t('common.notProvided') }}</strong>
+          </article>
+        </section>
+      }
+
+      @if (store.loaded()) {
+        <div class="tabs sections" role="group" [attr.aria-label]="t('profile.sections')">
+          @for (item of sections(); track item) {
+            <button type="button" class="pill" [class.on]="section() === item" [attr.aria-pressed]="section() === item" (click)="section.set(item)">
+              {{ t(sectionKey[item]) }}@if (item === 'billing' && due() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ i18n.money(due()) }})</span> }
+            </button>
+          }
+        </div>
+      }
+
+      @if (store.loaded()) {
+        <div class="pane" [hidden]="section() !== 'clinical'">
+        <section class="card" aria-labelledby="teeth-title">
+          <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
+          <div class="card-body">
+            @defer (on viewport) {
+              @for (key of [p.id]; track key) {
+                <den-dental-chart [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" (save)="store.setOdontogram(p.id, $event)" (examSave)="store.addExamination(p.id, $event)" />
+              }
+            } @placeholder {
+              <span class="skeleton"></span>
+            }
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="visits-title">
+          <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
+          <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
+        </section>
+
+        <section class="card" aria-labelledby="docs-title">
+          <header class="card-head"><h2 class="card-title" id="docs-title"><i class="fa-solid fa-x-ray" aria-hidden="true"></i>{{ t('profile.documents') }}</h2></header>
+          <den-documents [patientId]="p.id" />
+        </section>
+
+        <section class="card" aria-labelledby="plan-title">
+          <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
+          <den-treatment-plan [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+        </section>
+        </div>
+
+        <div class="pane" [hidden]="section() !== 'billing'">
+        <section class="card" aria-labelledby="bill-title">
+          <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
+          <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" (edit)="store.changePayments(p.id, $event)" />
+        </section>
+        </div>
+      }
+
+      <div class="pane" [hidden]="section() !== 'overview'">
+      <div class="columns">
+        <section class="card" aria-labelledby="appts-title">
+          <header class="card-head">
+            <h2 class="card-title" id="appts-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.appointments') }}</h2>
+            <div class="tabs" role="group">
+              <button type="button" class="pill" [class.on]="tab() === 'upcoming'" [attr.aria-pressed]="tab() === 'upcoming'" (click)="tab.set('upcoming')">{{ t('profile.tab.upcoming') }} ({{ upcoming().length }})</button>
+              <button type="button" class="pill" [class.on]="tab() === 'history'" [attr.aria-pressed]="tab() === 'history'" (click)="tab.set('history')">{{ t('profile.tab.history') }} ({{ history().length }})</button>
+            </div>
+          </header>
+
+          @if (rows().length) {
+            <ul class="list">
+              @for (a of rows(); track a.id) {
+                <li>
+                  <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a), appointment: a.id }" [attr.aria-label]="t('profile.openInCalendar')">
+                    <span class="date" aria-hidden="true"><strong>{{ a.start.getDate() }}</strong><span>{{ month(a) }}</span></span>
+                    <span class="who">
+                      <span class="name">{{ t(typeKey(a.type)) }}</span>
+                      <span class="sub muted">
+                        {{ day(a) }} · {{ i18n.time(a.start) }}–{{ i18n.time(a.end) }}
+                        @if (dentist(a); as d) { · <span class="dot" [style.background]="d.color" aria-hidden="true"></span>{{ d.name }} }
+                      </span>
+                    </span>
+                    <span class="chip" [attr.data-tone]="STATUS_TONE[a.status]">{{ t(STATUS_KEY[a.status]) }}</span>
+                    <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="empty">
+              <span class="icon-tile"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
+              @if (tab() === 'upcoming') {
+                <h2>{{ t('profile.upcoming.empty.title') }}</h2>
+                <p>{{ t('profile.upcoming.empty.body') }}</p>
+                <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>{{ t('profile.book') }}</a>
+              } @else {
+                <h2>{{ t('profile.history.empty.title') }}</h2>
+                <p>{{ t('profile.history.empty.body') }}</p>
+              }
+            </div>
+          }
+        </section>
+
+        <div class="side">
+          <section class="card" aria-labelledby="details-title">
+            <header class="card-head"><h2 class="card-title" id="details-title"><i class="fa-regular fa-id-card" aria-hidden="true"></i>{{ t('profile.details') }}</h2></header>
+            <dl class="details">
+              <div><dt>{{ t('profile.birthDate') }}</dt><dd>{{ dateOnly(p.birthDate) || t('common.notProvided') }}</dd></div>
+              <div><dt>{{ t('form.phone') }}</dt><dd>{{ p.phone || t('common.notProvided') }}</dd></div>
+              <div><dt>{{ t('form.email') }}</dt><dd>{{ p.email || t('common.notProvided') }}</dd></div>
+              <div><dt>{{ t('form.city') }}</dt><dd>{{ p.city || t('common.notProvided') }}</dd></div>
+            </dl>
+            @if (p.createdAt) { <p class="since muted">{{ t('profile.since', { date: since() }) }}</p> }
+          </section>
+
+          <section class="card" aria-labelledby="notes-title">
+            <header class="card-head"><h2 class="card-title" id="notes-title"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i>{{ t('profile.notes') }}</h2></header>
+            <div class="card-body">
+              @if (p.notes) { <p class="notes">{{ p.notes }}</p> } @else { <p class="muted">{{ t('profile.notes.empty') }}</p> }
+            </div>
+          </section>
+        </div>
+      </div>
+      </div>
+    </div>
+  } @else {
+    <div class="stack"><span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span></div>
+  }
+</div>

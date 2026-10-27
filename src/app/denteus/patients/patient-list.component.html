@@ -1,0 +1,110 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <h1 class="ds-title">{{ t('nav.patients') }}</h1>
+    @if (store.loaded()) { <span class="chip" data-tone="neutral">{{ i18n.tn('patients.count', store.patients().length) }}</span> }
+  </div>
+  <div class="ds-actions">
+    <a class="btn btn--primary" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('patients.new') }}</span></a>
+  </div>
+</header>
+
+<div class="ds-body canvas">
+  <div class="stack">
+    @if (store.loadFailed()) {
+      <div class="card empty">
+        <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+        <h2>{{ t('storage.error.title') }}</h2>
+        <p>{{ t('storage.error.body') }}</p>
+      </div>
+    } @else if (!store.loaded()) {
+      <span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span>
+    } @else if (store.patients().length === 0) {
+      <div class="card empty">
+        <span class="icon-tile"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+        <h2>{{ t('patients.empty.title') }}</h2>
+        <p>{{ t('patients.empty.body') }}</p>
+        <a class="btn btn--primary" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i>{{ t('patients.empty.cta') }}</a>
+      </div>
+    } @else {
+      <section class="card">
+        <div class="toolbar">
+          <label class="search">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span class="sr-only">{{ t('patients.search') }}</span>
+            <input class="input" type="search" autocomplete="off" [placeholder]="t('patients.search')" [value]="query()" (input)="setQuery($any($event.target).value)" />
+          </label>
+
+          <div class="filters" role="group" [attr.aria-label]="t('patients.filter.label')">
+            @for (f of filters; track f) {
+              <button type="button" class="pill" [class.on]="filter() === f" [attr.aria-pressed]="filter() === f" (click)="setFilter(f)">
+                @if (f === 'alert') { <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> }
+                {{ t(f === 'all' ? 'patients.filter.all' : f === 'today' ? 'patients.filter.today' : 'patients.filter.alert') }}
+              </button>
+            }
+          </div>
+
+          <label class="sort">
+            <span class="muted">{{ t('patients.sort.label') }}</span>
+            <select class="input" [value]="sort()" (change)="sort.set($any($event.target).value)">
+              <option value="name">{{ t('patients.sort.name') }}</option>
+              <option value="recent">{{ t('patients.sort.recent') }}</option>
+            </select>
+          </label>
+        </div>
+
+        @if (visible().length) {
+          <div class="head" aria-hidden="true">
+            <span>{{ t('patients.col.patient') }}</span>
+            <span>{{ t('patients.col.phone') }}</span>
+            <span>{{ t('patients.col.next') }}</span>
+            <span>{{ t('patients.col.last') }}</span>
+            <span></span>
+          </div>
+          <ul class="rows">
+            @for (row of visible(); track row.patient.id) {
+              <li>
+                <a class="row" [routerLink]="['/patients', row.patient.id]">
+                  <span class="cell identity">
+                    <span class="avatar" style="--size: 38px" aria-hidden="true">{{ initials(row.patient.fullName) }}</span>
+                    <span class="who">
+                      <span class="name">
+                        {{ row.patient.fullName }}
+                        @if (row.patient.alert) { <i class="fa-solid fa-triangle-exclamation alert-icon" aria-hidden="true" [attr.title]="row.patient.alert"></i><span class="sr-only">{{ t('profile.alert.title') }}</span> }
+                      </span>
+                      <span class="sub muted">{{ age(row.patient) }}{{ age(row.patient) && row.patient.city ? ' · ' : '' }}{{ row.patient.city }}</span>
+                    </span>
+                    @if (row.live === 'arrived') { <span class="chip" data-tone="warn">{{ t('patients.chip.waiting') }}</span> }
+                    @if (row.live === 'in-progress') { <span class="chip" data-tone="ok">{{ t('patients.chip.inTreatment') }}</span> }
+                  </span>
+                  <span class="cell muted"><span class="mobile-label">{{ t('patients.col.phone') }}</span>{{ row.patient.phone || t('common.notProvided') }}</span>
+                  <span class="cell"><span class="mobile-label muted">{{ t('patients.col.next') }}</span>{{ visit(row.next) }}</span>
+                  <span class="cell muted"><span class="mobile-label">{{ t('patients.col.last') }}</span>{{ visit(row.last) }}</span>
+                  <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
+                </a>
+              </li>
+            }
+          </ul>
+          @if (total() > visible().length) {
+            <div class="more">
+              <span class="muted">{{ t('patients.showing', { shown: visible().length, total: total() }) }}</span>
+              <button class="btn" type="button" (click)="showMore()">{{ t('patients.showMore') }}</button>
+            </div>
+          }
+        } @else if (query().trim()) {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+            <h2>{{ t('patients.noMatch.title', { q: query().trim() }) }}</h2>
+            <p>{{ t('patients.noMatch.body') }}</p>
+          </div>
+        } @else {
+          <div class="empty">
+            <span class="icon-tile"><i class="fa-solid fa-filter" aria-hidden="true"></i></span>
+            <h2>{{ t('patients.noFilterMatch.title') }}</h2>
+            <p>{{ t('patients.noFilterMatch.body') }}</p>
+            <button class="btn" type="button" (click)="setFilter('all')">{{ t('patients.filter.all') }}</button>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</div>

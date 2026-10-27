@@ -1,3 +1,4 @@
+import { I18n } from '../../../core/i18n/i18n.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -50,6 +51,7 @@ interface PickerDay {
   },
 })
 export class DateTimeFieldComponent {
+  protected readonly t = inject(I18n).t;
   readonly value = model.required<Date>();
   readonly dateOnly = input(false);
   readonly label = input('Date');

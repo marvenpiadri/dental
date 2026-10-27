@@ -1,0 +1,200 @@
+@let s = state();
+@let off = disabled();
+<div class="grid">
+  <section class="grp">
+    <h3>{{ t('dc.group.tooth') }}</h3>
+    <label class="field"><span class="label">{{ t('dc.state') }}</span>
+      <select class="input" [disabled]="off" [value]="sel()" (change)="edit.emit({ kind: 'selection', value: value($event) })">
+        @for (o of selection; track o) { <option [value]="o" [selected]="o === sel()">{{ name(o) }}</option> }
+      </select></label>
+    @if (natural()) {
+      <label class="field"><span class="label">{{ t('dc.substrate') }}</span>
+        <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'substrate', value: value($event) })">
+          @for (o of substrates; track o) { <option [value]="o" [selected]="o === field('toothSubstrate')">{{ name(o) }}</option> }
+        </select></label>
+    }
+  </section>
+
+  @if (sel() !== 'no-tooth-after-extraction') {
+    <section class="grp">
+      <h3>{{ t('dc.group.prosthetic') }}</h3>
+      <div class="two">
+        <label class="field"><span class="label">{{ t('dc.restoration') }}</span>
+          <select class="input" [disabled]="off" (change)="setType($event)">
+            <option value="none" [selected]="restType() === 'none'">{{ name('none') }}</option>
+            @for (o of restorationTypes; track o) { <option [value]="o" [selected]="o === restType()">{{ name(o) }}</option> }
+          </select></label>
+        <label class="field"><span class="label">{{ t('dc.material') }}</span>
+          <select class="input" [disabled]="off || restType() === 'none'" (change)="setMaterial($event)">
+            @for (o of restMaterials(); track o) { <option [value]="o" [selected]="o === field('restorationMaterial')">{{ name(o) }}</option> }
+          </select></label>
+      </div>
+      <label class="field"><span class="label">{{ t('dc.prosthesis') }}</span>
+        <select class="input" [disabled]="off" (change)="setProsthesis($event)">
+          <option value="none" [selected]="field('prosthesis') === 'none'">{{ name('none') }}</option>
+          @for (o of prostheses; track o) { <option [value]="o" [selected]="o === field('prosthesis')">{{ name(o) }}</option> }
+        </select></label>
+      @if (restType() !== 'none') {
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('crownLeakage')" (change)="setFlag('crownLeakage', $event)" />{{ t('dc.flag.crownLeakage') }}</label>
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('bridgePillar')" (change)="setFlag('bridgePillar', $event)" />{{ t('dc.flag.bridgePillar') }}</label>
+      }
+    </section>
+  }
+
+  @if (natural()) {
+    <section class="grp">
+      <h3>{{ t('dc.group.caries') }}</h3>
+      <div class="cross" role="group" [attr.aria-label]="t('dc.caries.surfaces')">
+        @for (sf of surfaces; track sf) {
+          <button type="button" class="cell" [class.on]="cariesOn(sf)" [style.grid-area]="sf" [disabled]="off" [attr.aria-pressed]="cariesOn(sf)" (click)="edit.emit({ kind: 'caries', surface: sf, on: !cariesOn(sf) })">{{ name(sf).slice(0, 3) }}</button>
+        }
+      </div>
+      <p class="hint">{{ t('dc.caries.hint') }}</p>
+      @for (sf of surfaces; track sf) {
+        @if (cariesOn(sf)) {
+          <label class="field inline"><span class="label">{{ filledWith(sf) ? t('dc.cars', { s: name(sf) }) : t('dc.icdas', { s: name(sf) }) }}</span>
+            <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'cariesSeverity', surface: sf, value: +value($event) })">
+              @for (n of [1,2,3,4,5,6]; track n) { <option [value]="n" [selected]="n === severity(sf)">{{ n }}</option> }
+            </select></label>
+        }
+      }
+      <label class="field"><span class="label">{{ t('dc.rootCaries') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('rootCaries', $event)">
+          @for (o of rootCaries; track o) { <option [value]="o" [selected]="o === field('rootCaries')">{{ name(o) }}</option> }
+        </select></label>
+    </section>
+
+    <section class="grp">
+      <h3>{{ t('dc.group.fillings') }}</h3>
+      <label class="field"><span class="label">{{ t('dc.material') }}</span>
+        <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'fillingMaterial', value: value($event) })">
+          <option value="none" [selected]="field('fillingMaterial') === 'none'">{{ name('none') }}</option>
+          @for (o of fillingMaterials; track o) { <option [value]="o" [selected]="o === field('fillingMaterial')">{{ name(o) }}</option> }
+        </select></label>
+      <div class="cross" role="group" [attr.aria-label]="t('dc.fillings.surfaces')">
+        @for (sf of surfaces; track sf) {
+          <button type="button" class="cell fill" [class.on]="!!filledWith(sf)" [style.grid-area]="sf" [disabled]="off || (field('fillingMaterial') === 'none' && !filledWith(sf))" [attr.aria-pressed]="!!filledWith(sf)" (click)="edit.emit({ kind: 'fillingSurface', surface: sf, on: !filledWith(sf) })">{{ name(sf).slice(0, 3) }}</button>
+        }
+      </div>
+      @for (sf of surfaces; track sf) {
+        @if (filledWith(sf)) {
+          <label class="field inline"><span class="label">{{ t('dc.defect', { s: name(sf) }) }}</span>
+            <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'fillingDefect', surface: sf, value: value($event) })">
+              @for (o of defects; track o) { <option [value]="o" [selected]="o === defect(sf)">{{ name(o) }}</option> }
+            </select></label>
+        }
+      }
+      @if (mode() === 'status') {
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('fissureSealing')" (change)="setFlag('fissureSealing', $event)" />{{ t('dc.flag.fissureSealing') }}</label>
+      }
+    </section>
+
+    <section class="grp">
+      <h3>{{ t('dc.group.pulp') }}</h3>
+      <label class="field"><span class="label">{{ t('dc.pulp') }}</span>
+        <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'pulp', value: value($event) })">
+          @for (o of pulp; track o) { <option [value]="o" [selected]="o === field('pulpDx')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="field"><span class="label">{{ t('dc.endo') }}</span>
+        <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'endo', value: value($event) })">
+          @for (o of endo; track o) { <option [value]="o" [selected]="o === field('endo')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="field"><span class="label">{{ t('dc.apical') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('apicalDx', $event)">
+          @for (o of apical; track o) { <option [value]="o" [selected]="o === field('apicalDx')">{{ name(o) }}</option> }
+        </select></label>
+      @if (field('apicalDx').includes('apical-periodontitis')) {
+        <label class="field"><span class="label">{{ t('dc.lesion') }}</span>
+          <select class="input" [disabled]="off" (change)="setEnum('periapicalType', $event)">
+            @for (o of lesion; track o) { <option [value]="o" [selected]="o === field('periapicalType')">{{ name(o) }}</option> }
+          </select></label>
+      }
+      <label class="field"><span class="label">{{ t('dc.resorption') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('resorptionType', $event)">
+          @for (o of resorption; track o) { <option [value]="o" [selected]="o === field('resorptionType')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('endoResection')" (change)="setFlag('endoResection', $event)" />{{ t('dc.flag.endoResection') }}</label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('parapulpalPin')" (change)="setFlag('parapulpalPin', $event)" />{{ t('dc.flag.parapulpalPin') }}</label>
+    </section>
+
+    <section class="grp">
+      <h3>{{ t('dc.group.periodontium') }}</h3>
+      <label class="field"><span class="label">{{ t('dc.mobility') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('mobility', $event)">
+          @for (o of mobility; track o) { <option [value]="o" [selected]="o === field('mobility')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('calculus')" (change)="setFlag('calculus', $event)" />{{ t('dc.flag.calculus') }}</label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="has(s['mods'], 'parodontal')" (change)="edit.emit({ kind: 'mod', id: 'parodontal', on: checked($event) })" />{{ name('parodontal') }}</label>
+    </section>
+
+    <section class="grp">
+      <h3>{{ t('dc.group.wear') }}</h3>
+      <div class="two">
+        <label class="field"><span class="label">{{ t('dc.wearEdge') }}</span>
+          <select class="input" [disabled]="off" (change)="setEnum('wearEdge', $event)">
+            @for (o of wearEdge; track o) { <option [value]="o" [selected]="o === field('wearEdge')">{{ name(o) }}</option> }
+          </select></label>
+        <label class="field"><span class="label">{{ t('dc.wearCervical') }}</span>
+          <select class="input" [disabled]="off" (change)="setEnum('wearCervical', $event)">
+            @for (o of wearCervical; track o) { <option [value]="o" [selected]="o === field('wearCervical')">{{ name(o) }}</option> }
+          </select></label>
+      </div>
+      <label class="field"><span class="label">{{ t('dc.discoloration') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('discoloration', $event)">
+          @for (o of discoloration; track o) { <option [value]="o" [selected]="o === field('discoloration')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('brokenMesial')" (change)="setFlag('brokenMesial', $event)" />{{ t('dc.flag.brokenMesial') }}</label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('brokenIncisal')" (change)="setFlag('brokenIncisal', $event)" />{{ t('dc.flag.brokenIncisal') }}</label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('brokenDistal')" (change)="setFlag('brokenDistal', $event)" />{{ t('dc.flag.brokenDistal') }}</label>
+    </section>
+
+    <section class="grp">
+      <h3>{{ t('dc.group.ortho') }}</h3>
+      <div class="two">
+        <label class="field"><span class="label">{{ t('dc.orthoAppliance') }}</span>
+          <select class="input" [disabled]="off" (change)="setEnum('orthoAppliance', $event)">
+            @for (o of orthoAppliance; track o) { <option [value]="o" [selected]="o === field('orthoAppliance')">{{ name(o) }}</option> }
+          </select></label>
+        <label class="field"><span class="label">{{ t('dc.orthoDrift') }}</span>
+          <select class="input" [disabled]="off" (change)="setEnum('orthoDrift', $event)">
+            @for (o of orthoDrift; track o) { <option [value]="o" [selected]="o === field('orthoDrift')">{{ name(o) }}</option> }
+          </select></label>
+      </div>
+      <label class="field"><span class="label">{{ t('dc.orthoVertical') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('orthoVertical', $event)">
+          @for (o of orthoVertical; track o) { <option [value]="o" [selected]="o === field('orthoVertical')">{{ name(o) }}</option> }
+        </select></label>
+      <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('orthoRotation')" (change)="setFlag('orthoRotation', $event)" />{{ t('dc.flag.orthoRotation') }}</label>
+    </section>
+  }
+
+  @if (sel() === 'implant') {
+    <section class="grp">
+      <h3>{{ t('dc.group.implant') }}</h3>
+      <label class="field"><span class="label">{{ t('dc.periImplant') }}</span>
+        <select class="input" [disabled]="off" (change)="setEnum('periImplant', $event)">
+          @for (o of periImplant; track o) { <option [value]="o" [selected]="o === field('periImplant')">{{ name(o) }}</option> }
+        </select></label>
+    </section>
+  }
+
+  @if (present() || sel() === 'none') {
+    <section class="grp">
+      <h3>{{ t('dc.group.planning') }}</h3>
+      @if (present()) {
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('extractionPlan')" (change)="setFlag('extractionPlan', $event)" />{{ t('dc.flag.extractionPlan') }}</label>
+      }
+      @if (natural()) {
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('crownNeeded')" (change)="setFlag('crownNeeded', $event)" />{{ t('dc.flag.crownNeeded') }}</label>
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('crownReplace')" (change)="setFlag('crownReplace', $event)" />{{ t('dc.flag.crownReplace') }}</label>
+      }
+      @if (sel() === 'none') {
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('extractionWound')" (change)="setFlag('extractionWound', $event)" />{{ t('dc.flag.extractionWound') }}</label>
+        <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('missingClosed')" (change)="setFlag('missingClosed', $event)" />{{ t('dc.flag.missingClosed') }}</label>
+      }
+    </section>
+  }
+</div>
+<label class="field"><span class="label">{{ t('dc.note') }}</span>
+  <textarea class="input" rows="2" maxlength="500" [disabled]="off || teeth().length > 1" [value]="field('note') === 'undefined' ? '' : field('note')" (change)="edit.emit({ kind: 'note', value: value($event) })"></textarea></label>
+<button type="button" class="btn" [disabled]="off" (click)="edit.emit({ kind: 'reset' })"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>{{ t('dc.reset') }}</button>

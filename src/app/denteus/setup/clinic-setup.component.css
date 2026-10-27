@@ -1,0 +1,21 @@
+.row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--app-line); }
+.row .input { flex: 1; min-width: 0; }
+.swatch { width: 36px; height: 36px; padding: 2px; border: 1px solid var(--app-line); border-radius: var(--radius-control); background: none; cursor: pointer; }
+@media (max-width: 700px) { .row { flex-wrap: wrap; } }
+.banner { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 16px; border: 1px solid var(--app-danger); border-radius: var(--radius-control); background: var(--app-panel); color: var(--app-danger); }
+.backup { display: flex; flex-direction: column; gap: 12px; }
+.backup p { margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.confirm { padding: 14px 16px; border: 1px solid var(--app-warn); border-radius: var(--radius-control); background: var(--app-subtle); }
+.confirm strong { display: block; margin-bottom: 4px; }
+.ok { display: flex; align-items: center; gap: 8px; color: var(--app-ok); }
+.row .input.price { flex: none; width: 120px; }
+.intro { margin: 0; padding: 14px 18px 0; }
+.grow { flex: 1; }
+.row .input.role { flex: none; width: 140px; }
+.row .input.pin { flex: none; width: 170px; }
+
+.hours-field { display: grid; gap: 4px; font-size: 12px; color: var(--app-muted); }
+.hint { color: var(--app-muted); font-size: 13px; margin: 0; }
+
+.row .input.time { flex: none; width: 104px; }

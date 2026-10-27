@@ -1,11 +1,11 @@
 <div class="shell" [class.sidebar-open]="sidebarOpen()">
-  <aside class="sidebar" aria-label="Dentists and waiting room">
-    <cal-sidebar brand="Denteus" heading="Dentists">
+  <aside class="sidebar" [attr.aria-label]="t('dcal.sidebar')">
+    <cal-sidebar brand="" [heading]="t('dcal.dentists')">
       <den-waiting-room [appointments]="waiting()" [inTreatment]="inTreatment()" (select)="openFromWaiting($event)" />
 
       <label class="filter">
         <input type="checkbox" [checked]="showCancelled()" (change)="showCancelled.set($any($event.target).checked)" />
-        Show cancelled appointments
+        {{ t('dcal.showCancelled') }}
       </label>
     </cal-sidebar>
   </aside>
@@ -15,19 +15,18 @@
 
   <section class="main">
     <cal-toolbar
-      searchPlaceholder="Search patients"
-      newLabel="New appointment"
+      [searchPlaceholder]="t('dcal.search')"
+      [newLabel]="t('dcal.new')"
       (newEvent)="openCreate()"
       (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"
-      (toggleTheme)="toggleTheme()"
     >
       @if (cal.view() === 'day') {
-        <div class="group" role="group" aria-label="Show columns for">
+        <div class="group" role="group" [attr.aria-label]="t('dcal.columns')">
           <button type="button" [class.on]="groupBy() === 'chair'" [attr.aria-pressed]="groupBy() === 'chair'" (click)="groupBy.set('chair')">
-            Chairs
+            {{ t('dcal.chairs') }}
           </button>
           <button type="button" [class.on]="groupBy() === 'dentist'" [attr.aria-pressed]="groupBy() === 'dentist'" (click)="groupBy.set('dentist')">
-            Dentists
+            {{ t('dcal.dentists') }}
           </button>
         </div>
       }

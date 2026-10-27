@@ -1,37 +1,46 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { CalendarTheme } from './calendar/models/calendar.models';
-import { DentalCalendarComponent } from './denteus/dental-calendar.component';
-import { PatientWorkspaceComponent } from './denteus/patients/patient-workspace.component';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth/auth.service';
+import { SignInComponent } from './core/auth/sign-in.component';
+import { I18n, LANGS, Lang } from './core/i18n/i18n.service';
+import { ThemeService } from './core/theme.service';
 import { DentalStore } from './denteus/services/dental-store.service';
-
-type WorkspacePage = 'calendar' | 'patients';
 
 @Component({
   selector: 'app-root',
-  imports: [DentalCalendarComponent, PatientWorkspaceComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SignInComponent],
   providers: [DentalStore],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {
-  protected readonly dark = signal(false);
-  protected readonly page = signal<WorkspacePage>('calendar');
+export class App implements OnInit {
+  protected readonly themeService = inject(ThemeService);
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
+  private readonly store = inject(DentalStore);
 
-  protected navigate(page: WorkspacePage): void {
-    this.page.set(page);
+  /** The next language in the list: with two languages the button flips between them. */
+  protected nextLang(): Lang {
+    const codes = LANGS.map((l) => l.code);
+    return codes[(codes.indexOf(this.i18n.lang()) + 1) % codes.length];
   }
 
-  protected onTheme(theme: CalendarTheme): void {
-    this.dark.set(theme === 'dark');
+  protected nextLangLabel(): string {
+    return LANGS.find((l) => l.code === this.nextLang())!.label;
   }
 
-  protected onOpenPatient(patientId: string): void {
-    this.navigate('patients');
-    console.info('open patient file', patientId);
+  protected nextLangShort(): string {
+    return LANGS.find((l) => l.code === this.nextLang())!.short;
   }
 
-  protected onOpenEncounter(appointmentId: string): void {
-    console.info('open clinical encounter for appointment', appointmentId);
+  protected readonly auth = inject(AuthService);
+  /** Appointment history shows who did what: the signed-in person, or the front desk while the app is open. */
+  private readonly actor = effect(() => this.store.actor.set(this.auth.user()?.name ?? 'Front desk'));
+
+  ngOnInit(): void {
+    this.auth.init();
+    // Load the clinic's records once for every page; failures show as store.loadFailed().
+    this.store.init().catch(() => undefined);
   }
 }

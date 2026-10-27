@@ -1,3 +1,4 @@
+import { I18n } from '../../../core/i18n/i18n.service';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { CalendarStore } from '../../services/calendar-store.service';
 import {
@@ -33,6 +34,7 @@ interface MiniDay {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MiniCalendarComponent {
+  protected readonly t = inject(I18n).t;
   protected readonly store = inject(CalendarStore);
 
   /** Month shown by the mini calendar; follows the main calendar, but can be browsed freely. */

@@ -1,0 +1,147 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <h1 class="ds-title">{{ t('practice.title') }}</h1>
+    <p class="ds-sub">{{ t('practice.sub') }}</p>
+  </div>
+</header>
+<div class="ds-body canvas">
+  <div class="stack">
+    <div class="tabs" role="group" [attr.aria-label]="t('practice.title')">
+      @for (item of tabs; track item) {
+        <button type="button" class="pill" [class.on]="tab() === item" [attr.aria-pressed]="tab() === item" (click)="tab.set(item); invalid.set(false)">
+          {{ t(tabKey[item]) }}@if (item === 'tasks' && openTasks() > 0) { <span class="chip count">{{ openTasks() }}</span> }@if (item === 'stock' && lowCount() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ lowCount() }})</span> }
+        </button>
+      }
+    </div>
+
+    @if (!practice.loaded()) {
+      <span class="skeleton"></span>
+    } @else {
+      @switch (tab()) {
+        @case ('tasks') {
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i>{{ t('practice.tab.tasks') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addTask(text.value); text.value = ''">
+              <input class="input" #text [attr.aria-label]="t('practice.task')" [placeholder]="t('practice.task')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (x of taskList(); track x.id) {
+              <div class="row">
+                <label class="grow check"><input type="checkbox" [checked]="x.done" (change)="toggleTask(x.id)" /><span [class.done]="x.done">{{ x.text }}</span></label>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeTasks(l => l.filter(y => y.id !== x.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.tasks.empty') }}</p> }
+          </section>
+        }
+        @case ('trace') {
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('practice.trace.implants') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addImplant(who.value, tooth.value, brand.value, ilot.value); tooth.value = ''; brand.value = ''; ilot.value = ''">
+              <select class="input" #who [attr.aria-label]="t('practice.lab.patient')">
+                <option value="">{{ t('practice.lab.patient') }}</option>
+                @for (p of store.patients(); track p.id) { <option [value]="p.id">{{ p.fullName }}</option> }
+              </select>
+              <input class="input num" #tooth [attr.aria-label]="t('plan.tooth')" [placeholder]="t('plan.tooth')" />
+              <input class="input" #brand [attr.aria-label]="t('practice.trace.brand')" [placeholder]="t('practice.trace.brand')" />
+              <input class="input" #ilot [attr.aria-label]="t('practice.trace.lot')" [placeholder]="t('practice.trace.lot')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            <div class="row">
+              <input class="input" [attr.aria-label]="t('practice.trace.search')" [placeholder]="t('practice.trace.search')" (input)="lot.set($any($event.target).value)" />
+              @if (lot().trim()) { <span class="chip" data-tone="neutral">{{ lotMatches().length }}</span> }
+            </div>
+            @for (r of (lot().trim() ? lotMatches() : implantList()); track r.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ patientName(r.patientId) }}</strong> <span class="muted">· {{ t('plan.tooth') }} {{ r.tooth || '—' }} · {{ r.brand }} · {{ r.lot }} · {{ r.day }}</span></span>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeImplants(l => l.filter(y => y.id !== r.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.trace.empty') }}</p> }
+          </section>
+
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-temperature-high" aria-hidden="true"></i>{{ t('practice.trace.cycles') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addCycle(device.value, clot.value, op.value); clot.value = ''">
+              <input class="input" #device [attr.aria-label]="t('practice.trace.device')" [placeholder]="t('practice.trace.device')" />
+              <input class="input" #clot [attr.aria-label]="t('practice.trace.lot')" [placeholder]="t('practice.trace.lot')" />
+              <input class="input" #op [attr.aria-label]="t('practice.trace.operator')" [placeholder]="t('practice.trace.operator')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (c of cycleList(); track c.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ c.device }}</strong> <span class="muted">· {{ c.day }}@if (c.lot) { · {{ c.lot }} }@if (c.operator) { · {{ c.operator }} }</span></span>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeCycles(l => l.filter(y => y.id !== c.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.trace.cycles.empty') }}</p> }
+          </section>
+        }
+        @case ('expenses') {
+          <section class="card">
+            <header class="card-head">
+              <h2 class="card-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i>{{ t('practice.tab.expenses') }}</h2>
+              <span class="chip" data-tone="neutral">{{ t('practice.expenses.month') }} · {{ i18n.money(monthSpent()) }}</span>
+            </header>
+            <form class="row" (submit)="$event.preventDefault(); addExpense(label.value, amount.value); label.value = ''; amount.value = ''">
+              <input class="input" #label [attr.aria-label]="t('practice.label')" [placeholder]="t('practice.label')" />
+              <input class="input num" #amount inputmode="numeric" [attr.aria-label]="t('practice.amount')" [placeholder]="t('practice.amount')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (e of newestFirst(); track e.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ e.label }}</strong> <span class="muted">· {{ e.day }}</span></span>
+                <strong>{{ i18n.money(e.amount) }}</strong>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeExpenses(l => l.filter(x => x.id !== e.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.expenses.empty') }}</p> }
+          </section>
+        }
+        @case ('stock') {
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>{{ t('practice.tab.stock') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addStock(name.value, qty.value, min.value); name.value = ''; qty.value = ''; min.value = ''">
+              <input class="input" #name [attr.aria-label]="t('practice.stock.name')" [placeholder]="t('practice.stock.name')" />
+              <input class="input num" #qty inputmode="numeric" [attr.aria-label]="t('practice.stock.qty')" [placeholder]="t('practice.stock.qty')" />
+              <input class="input num" #min inputmode="numeric" [attr.aria-label]="t('practice.stock.min')" [placeholder]="t('practice.stock.min')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (s of practice.stock(); track s.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ s.name }}</strong> <span class="muted">· {{ t('practice.stock.min') }} {{ s.min }}</span></span>
+                @if (isLow(s)) { <span class="chip" data-tone="danger">{{ t('practice.stock.low') }}</span> }
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.less')" (click)="nudge(s.id, -1)"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+                <strong class="qty">{{ s.qty }}</strong>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.more')" (click)="nudge(s.id, 1)"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeStock(l => l.filter(x => x.id !== s.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.stock.empty') }}</p> }
+          </section>
+        }
+        @case ('lab') {
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-flask" aria-hidden="true"></i>{{ t('practice.tab.lab') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addOrder(who.value, work.value, lab.value, due.value); work.value = ''; lab.value = ''">
+              <select class="input" #who [attr.aria-label]="t('practice.lab.patient')">
+                <option value="">{{ t('practice.lab.patient') }}</option>
+                @for (p of store.patients(); track p.id) { <option [value]="p.id">{{ p.fullName }}</option> }
+              </select>
+              <input class="input" #work [attr.aria-label]="t('practice.lab.work')" [placeholder]="t('practice.lab.work')" />
+              <input class="input" #lab [attr.aria-label]="t('practice.lab.lab')" [placeholder]="t('practice.lab.lab')" />
+              <input class="input date" #due type="date" [attr.aria-label]="t('practice.lab.due')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (o of orders(); track o.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ patientName(o.patientId) }}</strong> <span class="muted">· {{ o.work }}@if (o.lab) { · {{ o.lab }} }@if (o.due) { · {{ o.due }} }</span></span>
+                @if (late(o)) { <span class="chip" data-tone="danger">{{ t('practice.lab.late') }}</span> }
+                <select class="input status" [attr.aria-label]="t('practice.lab.status')" (change)="setStatus(o.id, $any($event.target).value)">
+                  @for (s of statuses; track s) { <option [value]="s" [selected]="o.status === s">{{ t(statusKey[s]) }}</option> }
+                </select>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeLab(l => l.filter(x => x.id !== o.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.lab.empty') }}</p> }
+          </section>
+        }
+      }
+      @if (invalid()) { <p class="error-text" role="alert">{{ t('practice.invalid') }}</p> }
+    }
+  </div>
+</div>

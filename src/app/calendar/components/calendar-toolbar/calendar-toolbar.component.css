@@ -3,14 +3,48 @@
   flex: none;
 }
 
+/* three columns: new button | view switch | tools. The switch can never overlap the tools. */
 .bar {
-  position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   height: 52px;
   padding: 0 16px 0 12px;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--cal-accent);
+  background: var(--cal-accent);
+  color: var(--cal-accent-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.new-btn:hover {
+  opacity: 0.86;
+}
+
+@media (max-width: 1180px) {
+  .new-label {
+    display: none;
+  }
+
+  .new-btn {
+    padding: 0 8px;
+  }
 }
 
 .left,
@@ -44,9 +78,6 @@
 
 /* ---- segmented control ----------------------------------------------------------- */
 .segmented {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   padding: 3px;
   border-radius: 10px;
@@ -168,11 +199,6 @@
 
   .search {
     width: 150px;
-  }
-
-  .segmented {
-    position: static;
-    transform: none;
   }
 
   .seg {

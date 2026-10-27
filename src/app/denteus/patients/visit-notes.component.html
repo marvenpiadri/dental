@@ -1,0 +1,72 @@
+@if (!open()) {
+  <div class="top"><button type="button" class="btn btn--primary" (click)="begin()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('visit.new') }}</button></div>
+} @else {
+  <form class="form" novalidate (submit)="$event.preventDefault(); save()">
+    <div class="pair">
+      <label class="field">
+        <span class="label">{{ t('visit.appointment') }}</span>
+        <select class="input" (change)="pickAppointment($any($event.target).value)">
+          <option value="" [selected]="!appointmentId()">{{ t('visit.appointment.none') }}</option>
+          @for (a of recentAppointments(); track a.id) { <option [value]="a.id" [selected]="appointmentId() === a.id">{{ appointmentLabel(a) }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">{{ t('visit.dentist') }}</span>
+        <select class="input" (change)="dentistId.set($any($event.target).value)">
+          @for (d of dentists(); track d.id) { <option [value]="d.id" [selected]="dentistId() === d.id">{{ d.name }}</option> }
+        </select>
+      </label>
+    </div>
+    <label class="field"><span class="label">{{ t('visit.complaint') }}</span><textarea class="input" rows="2" [value]="complaint()" (input)="complaint.set($any($event.target).value)"></textarea></label>
+    <label class="field"><span class="label">{{ t('visit.findings') }}</span><textarea class="input" rows="2" [value]="findings()" (input)="findings.set($any($event.target).value)"></textarea></label>
+    <label class="field"><span class="label">{{ t('visit.care') }}</span><textarea class="input" rows="2" [value]="care()" (input)="care.set($any($event.target).value)"></textarea></label>
+
+    <fieldset class="rx">
+      <legend class="label">{{ t('visit.rx') }}</legend>
+      @for (line of lines(); track $index) {
+        <div class="line">
+          <input class="input drug" list="meds" [value]="line.drug" [placeholder]="t('visit.rx.drug')" [attr.aria-label]="t('visit.rx.drug')" (input)="setLine($index, 'drug', $any($event.target).value)" />
+          <input class="input" [value]="line.dosage" [placeholder]="t('visit.rx.dosage')" [attr.aria-label]="t('visit.rx.dosage')" (input)="setLine($index, 'dosage', $any($event.target).value)" />
+          <input class="input short" [value]="line.duration" [placeholder]="t('visit.rx.duration')" [attr.aria-label]="t('visit.rx.duration')" (input)="setLine($index, 'duration', $any($event.target).value)" />
+          <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.rx.remove')" (click)="removeLine($index)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        </div>
+      }
+      <datalist id="meds">@for (m of medications; track m) { <option [value]="m"></option> }</datalist>
+      <button type="button" class="btn" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('visit.rx.add') }}</button>
+    </fieldset>
+
+    @if (empty()) { <p class="error-text" role="alert">{{ t('visit.error.empty') }}</p> }
+    <div class="actions">
+      <button type="submit" class="btn btn--primary"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('visit.save') }}</button>
+      <button type="button" class="btn" (click)="reset()">{{ t('common.cancel') }}</button>
+    </div>
+  </form>
+}
+
+@if (newestFirst().length) {
+  <ul class="notes">
+    @for (n of newestFirst(); track n.id) {
+      <li>
+        <header>
+          <strong>{{ day(n.at) }}</strong>
+          @if (dentistName(n)) { <span class="muted">{{ dentistName(n) }}</span> }
+          @if (appointmentOf(n); as a) { <span class="chip" data-tone="neutral">{{ t(typeKey(a.type)) }}</span> }
+          <span class="spacer"></span>
+          @if (n.prescription?.length) { <button type="button" class="btn" (click)="print(n)"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('rx.print') }}</button> }
+          <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.edit')" (click)="correct(n)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.remove')" (click)="remove(n)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        </header>
+        <dl>
+          @if (n.complaint) { <div><dt>{{ t('visit.complaint') }}</dt><dd>{{ n.complaint }}</dd></div> }
+          @if (n.findings) { <div><dt>{{ t('visit.findings') }}</dt><dd>{{ n.findings }}</dd></div> }
+          @if (n.care) { <div><dt>{{ t('visit.care') }}</dt><dd>{{ n.care }}</dd></div> }
+          @if (n.prescription?.length) {
+            <div><dt>{{ t('visit.rx') }}</dt><dd><ul class="rx-list">@for (l of n.prescription; track $index) { <li><strong>{{ l.drug }}</strong>@if (l.dosage) { · {{ l.dosage }} }@if (l.duration) { · {{ l.duration }} }</li> }</ul></dd></div>
+          }
+        </dl>
+      </li>
+    }
+  </ul>
+} @else if (!open()) {
+  <p class="empty-note">{{ t('visit.empty') }}</p>
+}

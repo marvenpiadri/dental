@@ -10,7 +10,7 @@
 
 | Area | Status |
 |---|---|
-| Scheduling rules (`denteus/rules/scheduling-rules.ts`): overlap across dentist, chair and patient, 15 min to 8 h, status transition table, movable statuses | Real, pure functions, 28 unit tests |
+| Scheduling rules (`denteus/rules/scheduling-rules.ts`): overlap across dentist, chair and patient, 15 min to 8 h, status transition table, movable statuses | Real, pure functions. **No unit tests yet** (the earlier note claiming 28 did not match the repository) |
 | UI: lane day view (by chair or by dentist), week, month, drag/resize with 15-min snap, rollback with explanation, editor, panel, waiting room, light/dark | Real, driven end-to-end in Chromium (30 checks) |
 | `DentalStore` (`denteus/services/dental-store.service.ts`) | **Stand-in.** In-memory + localStorage. Replace with HTTP calls to the Denteus API. |
 | Seed data (`denteus/data/dental-seed.ts`) | **Demo only.** Use `<den-calendar [seed]="false">` in production. |

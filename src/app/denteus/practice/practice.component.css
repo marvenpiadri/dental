@@ -1,0 +1,18 @@
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border: 1px solid var(--app-line); border-radius: 999px; background: var(--app-panel); color: var(--app-text); font: inherit; font-weight: 600; cursor: pointer; }
+.pill.on { background: var(--app-text); border-color: var(--app-text); color: var(--app-bg); }
+.due-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--app-danger); }
+.row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--app-line); }
+.card-head + .row { border-top: 0; }
+.row .input { flex: 1; min-width: 0; }
+.row .input.num { flex: none; width: 120px; }
+.row .input.date { flex: none; width: 150px; }
+.row .input.status { flex: none; width: 120px; }
+.grow { flex: 1; min-width: 0; }
+.qty { min-width: 28px; text-align: center; }
+.empty-note { margin: 0; padding: 24px 16px; text-align: center; color: var(--app-muted); border-top: 1px solid var(--app-line); }
+@media (max-width: 700px) { .row { flex-wrap: wrap; } .row .input.num, .row .input.date { width: 100%; flex: 1 1 100%; } }
+.check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--app-text); }
+.done { text-decoration: line-through; color: var(--app-muted); }
+.chip.count::before { display: none; }

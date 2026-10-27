@@ -1,0 +1,49 @@
+<form class="add" novalidate (submit)="$event.preventDefault(); add()">
+  <label class="field">
+    <span class="label">{{ t('plan.tooth') }}</span>
+    <select class="input" [value]="draftTooth()" (change)="draftTooth.set($any($event.target).value)">
+      <option value="">{{ t('plan.tooth.none') }}</option>
+      @for (n of teeth; track n) { <option [value]="n" [selected]="draftTooth() === n">{{ n }}</option> }
+    </select>
+  </label>
+  <label class="field grow">
+    <span class="label">{{ t('plan.procedure') }}</span>
+    <select class="input" (change)="setProcedure($any($event.target).value)">
+      @for (entry of catalog(); track entry.id) { <option [value]="entry.id" [selected]="draftProcedure() === entry.id">{{ nameOf(entry.id, entry.name) }}</option> }
+    </select>
+  </label>
+  <label class="field price">
+    <span class="label">{{ t('plan.price') }}</span>
+    <input class="input" inputmode="numeric" [value]="draftPrice()" (input)="draftPrice.set($any($event.target).value)"
+      [attr.aria-invalid]="priceInvalid() ? 'true' : null" aria-describedby="price-error" />
+  </label>
+  <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('plan.add') }}</button>
+</form>
+@if (totals().planned > 0) {
+  <div class="quote"><button type="button" class="btn" (click)="printQuote()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('quote.print') }}</button></div>
+}
+@if (!catalog().length) { <p class="error-text" role="alert">{{ t('plan.catalog.empty') }} <a routerLink="/setup">{{ t('nav.setup') }}</a></p> }
+@if (priceInvalid()) { <p class="error-text" id="price-error" role="alert">{{ t('plan.price.error') }}</p> }
+
+@if (sorted().length) {
+  <ul class="items">
+    @for (item of sorted(); track item.id) {
+      <li [class.done]="item.status === 'done'">
+        <button type="button" class="check" [attr.aria-pressed]="item.status === 'done'" [attr.aria-label]="t(item.status === 'done' ? 'plan.reopen' : 'plan.markDone')" (click)="toggle(item)">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+        </button>
+        <span class="chip" data-tone="neutral">{{ item.tooth ?? '—' }}</span>
+        <span class="name">{{ nameOf(item.procedure, item.name) }}</span>
+        <span class="amount">{{ i18n.money(item.price) }}</span>
+        <button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="remove(item)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </li>
+    }
+  </ul>
+  <dl class="totals">
+    <div><dt>{{ t('plan.planned') }}</dt><dd>{{ i18n.money(totals().planned) }}</dd></div>
+    <div><dt>{{ t('plan.done') }}</dt><dd>{{ i18n.money(totals().done) }}</dd></div>
+    <div class="sum"><dt>{{ t('plan.total') }}</dt><dd>{{ i18n.money(totals().total) }}</dd></div>
+  </dl>
+} @else {
+  <p class="empty-note">{{ t('plan.empty') }}</p>
+}

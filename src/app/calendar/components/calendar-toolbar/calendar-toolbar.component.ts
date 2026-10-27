@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { I18n, type Key } from '../../../core/i18n/i18n.service';
 import { CalendarViewType } from '../../models/calendar.models';
 import { CalendarStore } from '../../services/calendar-store.service';
 import { CalIconComponent } from '../cal-icon/cal-icon.component';
@@ -12,18 +13,18 @@ import { CalIconComponent } from '../cal-icon/cal-icon.component';
 })
 export class CalendarToolbarComponent {
   protected readonly store = inject(CalendarStore);
+  protected readonly t = inject(I18n).t;
 
   readonly searchPlaceholder = input('Search');
   readonly newLabel = input('New event');
   readonly newEvent = output<void>();
   readonly toggleSidebar = output<void>();
-  readonly toggleTheme = output<void>();
 
-  protected readonly views: { id: CalendarViewType; label: string }[] = [
-    { id: 'day', label: 'Day' },
-    { id: 'week', label: 'Week' },
-    { id: 'month', label: 'Month' },
-    { id: 'year', label: 'Year' },
+  protected readonly views: { id: CalendarViewType; key: Key }[] = [
+    { id: 'day', key: 'cal.day' },
+    { id: 'week', key: 'cal.week' },
+    { id: 'month', key: 'cal.month' },
+    { id: 'year', key: 'cal.year' },
   ];
 
   protected onSearch(event: Event): void {

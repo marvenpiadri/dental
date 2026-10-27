@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Appointment, Chair, Dentist, Patient } from '../models/dental.models';
+import { Appointment, Chair, Dentist, Patient, PatientDocument } from '../models/dental.models';
 
 const DATABASE_NAME = 'dental-clinic';
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 interface StoredRecord {
   id: string;
@@ -45,7 +45,10 @@ export class ClinicDatabase {
           store.createIndex('status', 'status', { unique: false });
         }
         if (!db.objectStoreNames.contains('clinicalRecords')) db.createObjectStore('clinicalRecords', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('documents')) db.createObjectStore('documents', { keyPath: 'id' });
+        const documents = db.objectStoreNames.contains('documents')
+          ? request.transaction!.objectStore('documents')
+          : db.createObjectStore('documents', { keyPath: 'id' });
+        if (!documents.indexNames.contains('patientId')) documents.createIndex('patientId', 'patientId', { unique: false }); // added in v3
         if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('auditEvents')) db.createObjectStore('auditEvents', { keyPath: 'id' });
       };
@@ -164,6 +167,64 @@ export class ClinicDatabase {
     const chairs = await requestResult<Chair[]>(transaction.objectStore('chairs').getAll());
     await transactionComplete;
     return { dentists, chairs };
+  }
+
+  async addDocument(doc: PatientDocument): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readwrite');
+    transaction.objectStore('documents').put(doc);
+    await transactionDone(transaction);
+  }
+
+  async listDocuments(patientId: string): Promise<PatientDocument[]> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readonly');
+    const done = transactionDone(transaction);
+    const docs = await requestResult<PatientDocument[]>(transaction.objectStore('documents').index('patientId').getAll(patientId));
+    await done;
+    return docs.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+  }
+
+  async allDocuments(): Promise<PatientDocument[]> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readonly');
+    const done = transactionDone(transaction);
+    const docs = await requestResult<PatientDocument[]>(transaction.objectStore('documents').getAll());
+    await done;
+    return docs;
+  }
+
+  /** One transaction: a failure leaves the old documents in place. */
+  async replaceDocuments(docs: PatientDocument[]): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readwrite');
+    transaction.objectStore('documents').clear();
+    for (const doc of docs) transaction.objectStore('documents').put(doc);
+    await transactionDone(transaction);
+  }
+
+  async deleteDocument(id: string): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('documents', 'readwrite');
+    transaction.objectStore('documents').delete(id);
+    await transactionDone(transaction);
+  }
+
+  /** Small clinic-wide values (the act catalog) live in the `settings` store as `{ id, value }`. */
+  async loadSetting<T>(id: string): Promise<T | undefined> {
+    const db = await this.open();
+    const transaction = db.transaction('settings', 'readonly');
+    const done = transactionDone(transaction);
+    const row = await requestResult<{ value: T } | undefined>(transaction.objectStore('settings').get(id));
+    await done;
+    return row?.value;
+  }
+
+  async saveSetting(id: string, value: unknown): Promise<void> {
+    const db = await this.open();
+    const transaction = db.transaction('settings', 'readwrite');
+    transaction.objectStore('settings').put({ id, value });
+    await transactionDone(transaction);
   }
 
   async clearSchedulingData(): Promise<void> {
