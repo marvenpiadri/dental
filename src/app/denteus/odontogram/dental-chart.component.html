@@ -57,6 +57,7 @@
   <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
+    <label><input type="checkbox" [checked]="occlusalView()" (change)="occlusalView.set($any($event.target).checked)" /> {{ t('dc.opt.occlusal') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showBase" (change)="setGlobal('showBase', $any($event.target).checked)" /> {{ t('dc.opt.base') }}</label>
   </div>
 
@@ -67,7 +68,7 @@
           @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
           @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
           <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
-            [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
+            [occlusal]="occlusalView()" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
             [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }

@@ -329,6 +329,7 @@ const D = {
   'dc.opt.wisdom': ['Wisdom teeth', 'Dents de sagesse'],
   'dc.opt.pulp': ['Healthy pulp', 'Pulpe saine'],
   'dc.opt.base': ['Gum base', 'Base gingivale'],
+  'dc.opt.occlusal': ['Top view (premolars, molars)', 'Vue occlusale (prémolaires, molaires)'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

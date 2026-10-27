@@ -88,6 +88,9 @@ export class DentalChartComponent {
   });
   protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null);
   /** Wisdom teeth can be hidden for a cleaner chart, but never when something is recorded on them. */
+  /** Display only, per browser: not part of the chart. */
+  protected readonly occlusalView = signal(false);
+
   protected hiddenTooth(n: number): boolean {
     const c = this.chart();
     return !c.globals.wisdomVisible && WISDOM_TEETH.includes(n) && isBlankTooth(c, n);

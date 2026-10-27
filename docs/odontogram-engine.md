@@ -41,4 +41,4 @@ Licence notice: `src/app/denteus/odontogram/engine/vendor/LICENSE.odontogram`. T
 - Files tagged to a tooth (`PatientDocument.tooth`) are shown read-only in the tooth editor.
 
 ## Not done
-- Occlusal view / `occlusalVisible` has no UI. Measured anatomy (4 MB of art) is not vendored. Parity tests from the original repo are not ported (its tests are not in this repo). Real charts saved by the old shell have not been loaded; only a sparse older-format payload is tested.
+- The top view (premolars and molars; front teeth have no top drawing and keep the front one) is a per-browser display toggle, not the source's `occlusalVisible` global. Measured anatomy (4 MB of art) is not vendored. Parity tests from the original repo are not ported (its tests are not in this repo). Real charts saved by the old shell have not been loaded; only a sparse older-format payload is tested.

@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import type { ToothRecord } from './engine/chart';
 import { TOOTH_TEMPLATE, isUpperTooth } from './engine/vendor/anatomy/profiles';
 import { markProposed, paintTooth, prepareArt } from './engine/render';
-import { ToothArt, type Template } from './tooth-art.service';
+import { ToothArt, artKey, type Template } from './tooth-art.service';
 
 /** One tooth: the real anatomy SVG painted from its record. Draws state; owns none. */
 @Component({
@@ -38,6 +38,8 @@ export class ToothTileComponent {
   /** When drawing the plan: the findings, so proposed work can be told apart from existing work. */
   readonly findings = input<ToothRecord | null>(null);
   readonly selected = input(false);
+  /** Top-down drawing for premolars and molars (front teeth keep the front drawing). */
+  readonly occlusal = input(false);
   readonly showBase = input(true);
   readonly showHealthyPulp = input(true);
   readonly label = input('');
@@ -47,13 +49,14 @@ export class ToothTileComponent {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('art');
   private svg: SVGElement | null = null;
-  private tplOfSvg: Template | null = null;
+  private keyOfSvg: string | null = null;
 
   protected readonly meta = computed(() => TOOTH_TEMPLATE.get(this.no()) ?? { tpl: 11 as Template, rot: 0, mirror: false });
+  protected readonly drawnOcclusal = computed(() => this.occlusal() && artKey(this.meta().tpl as Template, true).endsWith('_occl'));
   protected readonly upper = computed(() => isUpperTooth(this.no()));
   protected readonly transform = computed(() => {
     const m = this.meta();
-    const sy = m.rot === 180 ? -1 : 1;
+    const sy = m.rot === 180 && !this.drawnOcclusal() ? -1 : 1; // seen from above, the lower arch is not turned upside down
     return `scale(${sy * (m.mirror ? -1 : 1)}, ${sy})`;
   });
 
@@ -61,16 +64,16 @@ export class ToothTileComponent {
     this.art.load();
     effect(() => {
       if (!this.browser) return;
-      const tpl = this.meta().tpl as Template;
-      const text = this.art.texts()[tpl];
+      const key = artKey(this.meta().tpl as Template, this.occlusal());
+      const text = this.art.texts()[key];
       const state = this.state(), findings = this.findings();
       const opts = { showBase: this.showBase(), showHealthyPulp: this.showHealthyPulp() };
       if (!text) return;
       const host = this.host().nativeElement;
-      if (!this.svg || this.tplOfSvg !== tpl) {
+      if (!this.svg || this.keyOfSvg !== key) {
         this.svg = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement as unknown as SVGElement;
         prepareArt(this.svg);
-        this.tplOfSvg = tpl;
+        this.keyOfSvg = key;
         host.replaceChildren(this.svg);
       }
       const ids = paintTooth(this.svg, this.no(), state, opts);
