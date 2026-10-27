@@ -5,6 +5,12 @@ export const NUMBERING_SYSTEMS: readonly NumberingSystem[] = ['fdi', 'universal'
 const QUADRANT_LABEL = ['', 'UR', 'UL', 'LL', 'LR'] as const;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRST';
 
+/** The chart keeps a primary tooth at its permanent position (11 → 51); this is the number it is called by. Positions 6–8 have no primary tooth. */
+export function primaryOf(position: number): number {
+  const q = Math.floor(position / 10), p = position % 10;
+  return q >= 1 && q <= 4 && p >= 1 && p <= 5 ? (q + 4) * 10 + p : position;
+}
+
 /** Universal: permanent 1-32 from upper right, primary A-T. Unknown numbers come back as-is. */
 export function formatTooth(fdi: number, system: NumberingSystem): string {
   const q = Math.floor(fdi / 10);

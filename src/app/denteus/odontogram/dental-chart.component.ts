@@ -9,7 +9,7 @@ import { defaultState } from './engine/vendor/state/payload';
 import { label } from './labels';
 import { findingRows, planRows, reportHtml } from './chart-report';
 import { indexSummary, perioSummary } from './engine/perio';
-import { NUMBERING_SYSTEMS, formatTooth, type NumberingSystem } from './engine/numbering';
+import { NUMBERING_SYSTEMS, formatTooth, primaryOf, type NumberingSystem } from './engine/numbering';
 import { patchCaseMeta, type CaseMeta } from './engine/perio';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
@@ -63,7 +63,7 @@ export class DentalChartComponent {
     this.numbering.set(s);
     try { localStorage.setItem(NUMBERING_KEY, s); } catch { /* preference only; private mode just forgets it */ }
   }
-  protected num(n: number): string { return formatTooth(n, this.numbering()); }
+  protected num(n: number): string { return formatTooth(String(this.shown().status.get(n)?.toothSelection) === 'milktooth' ? primaryOf(n) : n, this.numbering()); }
   protected numLabel(s: NumberingSystem): Key { return `dc.num.${s}`; }
   protected readonly selected = signal<readonly number[]>([]);
   protected readonly tab = signal<Tab>('tooth');

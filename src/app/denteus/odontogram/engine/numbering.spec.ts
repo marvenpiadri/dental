@@ -1,4 +1,4 @@
-import { formatTooth } from './numbering';
+import { formatTooth, primaryOf } from './numbering';
 
 describe('formatTooth', () => {
   it('keeps FDI as is', () => expect(formatTooth(26, 'fdi')).toBe('26'));
@@ -13,4 +13,12 @@ describe('formatTooth', () => {
     expect(formatTooth(52, 'palmer')).toBe('URB');
   });
   it('leaves unknown numbers untouched', () => expect(formatTooth(99, 'universal')).toBe('99'));
+});
+
+describe('primaryOf', () => {
+  it('names a primary tooth by its own number', () => {
+    expect([11, 15, 21, 35, 41].map(primaryOf)).toEqual([51, 55, 61, 75, 81]);
+    expect(formatTooth(primaryOf(14), 'universal')).toBe('B');
+  });
+  it('leaves positions without a primary tooth alone', () => expect(primaryOf(16)).toBe(16));
 });
