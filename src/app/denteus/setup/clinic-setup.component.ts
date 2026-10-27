@@ -4,6 +4,7 @@ import { ROLES, Role } from '../../core/auth/auth-rules';
 import { ROLE_KEY } from '../../core/auth/sign-in.component';
 import { Key } from '../../core/i18n/i18n.service';
 import { I18n } from '../../core/i18n/i18n.service';
+import { fromMin, type OpeningHours } from '../rules/opening-hours';
 import { CatalogEntry, Chair, Dentist } from '../models/dental.models';
 import { parsePrice, procedureName } from '../patients/treatment-rules';
 import { PracticeStore } from '../practice/practice-store.service';
@@ -164,6 +165,29 @@ export class ClinicSetupComponent {
   private refuse(id: string, name: string): boolean {
     this.blocked.set(this.used().has(id) ? name : null);
     return this.used().has(id);
+  }
+
+  protected readonly weekdays = [1, 2, 3, 4, 5, 6, 0];
+  protected weekdayKey(d: number): Key { return `wd.${d}` as Key; }
+  protected readonly hoursText = computed(() => ({ open: fromMin(this.store.hours().startMin), close: fromMin(this.store.hours().endMin) }));
+
+  /** Invalid input (a cleared time, closing before opening, no open day) is ignored: the stored hours stay as they were. */
+  protected async setHours(patch: Partial<OpeningHours>): Promise<void> {
+    // A new clinic has no location yet: the first hours change creates the default one.
+    const loc = this.store.locations()[0] ?? { id: crypto.randomUUID(), name: 'Dentaleus', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
+    const cur = { open: this.hoursText().open, close: this.hoursText().close, days: [...this.store.hours().days] };
+    const next = { ...cur, ...patch };
+    if (next.open >= next.close || next.days.length === 0 || !/^\d\d:\d\d$/.test(next.open) || !/^\d\d:\d\d$/.test(next.close)) return;
+    this.failed.set(false);
+    try {
+      await this.store.saveLocations(this.store.locations().length ? this.store.locations().map((l) => (l === loc ? { ...l, hours: next } : l)) : [{ ...loc, hours: next }]);
+    } catch {
+      this.failed.set(true);
+    }
+  }
+  protected toggleDay(d: number): void {
+    const days = this.store.hours().days;
+    void this.setHours({ days: days.includes(d) ? days.filter((x) => x !== d) : [...days, d] });
   }
 
   private async save(dentists: Dentist[], chairs: Chair[]): Promise<void> {

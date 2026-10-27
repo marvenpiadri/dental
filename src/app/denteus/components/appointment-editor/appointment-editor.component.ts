@@ -100,7 +100,7 @@ export class AppointmentEditorComponent implements OnInit {
   protected readonly slots = signal<Slot[] | null>(null);
   protected findSlots(): void {
     this.slots.set(findFreeSlots(
-      { dentistId: this.dentistId(), chairIds: this.store.chairs().map((c) => c.id), patientId: this.patientId() ?? '', durationMin: this.duration(), after: new Date(), excludeId: this.draft().id },
+      { dentistId: this.dentistId(), chairIds: this.store.chairs().map((c) => c.id), patientId: this.patientId() ?? '', durationMin: this.duration(), after: new Date(), excludeId: this.draft().id, hours: this.store.hours() },
       this.store.appointments(),
     ));
   }

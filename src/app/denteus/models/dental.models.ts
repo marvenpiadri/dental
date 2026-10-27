@@ -1,3 +1,4 @@
+import type { OpeningHours } from '../rules/opening-hours';
 import type { Examination } from '../odontogram/engine/exam';
 import type { IconName } from '../../calendar/components/cal-icon/cal-icon.component';
 import type { EventTone } from '../../calendar/models/calendar.models';
@@ -10,6 +11,8 @@ export interface ClinicLocation {
   address?: string;
   timezone: string;
   active: boolean;
+  /** Opening hours the slot finder uses; unset means the defaults. */
+  hours?: OpeningHours;
 }
 
 export interface Patient {

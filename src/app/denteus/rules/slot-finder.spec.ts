@@ -20,6 +20,11 @@ describe('findFreeSlots', () => {
     expect(findFreeSlots(q, [appt({ status: 'cancelled' })], 1)[0]!.start).toEqual(at(26, 9));
     expect(findFreeSlots({ ...q, excludeId: 'x' }, [appt({})], 1)[0]!.start).toEqual(at(26, 9));
   });
+  it('follows the clinic hours', () => {
+    const hours = { startMin: 14 * 60, endMin: 16 * 60, days: [2] }; // Tuesdays 14:00–16:00
+    const s = findFreeSlots({ ...q, hours }, [], 2);
+    expect(s.map((x) => x.start)).toEqual([at(27, 14), at(27, 14, 30)]);
+  });
   it('never offers a past time or a Sunday, nor one that runs past closing', () => {
     const late = findFreeSlots({ ...q, after: at(31, 17, 40) }, [], 1)[0]!; // Sat evening → next is Monday
     expect(late.start).toEqual(new Date(2026, 10, 2, 9));

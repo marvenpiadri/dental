@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicData } from './backup';
+import { parseHours } from '../rules/opening-hours';
 import { I18n } from '../../core/i18n/i18n.service';
 import { STATUS_LABEL } from '../utils/domain-keys';
 import { ClinicDatabase } from './clinic-database.service';
@@ -67,6 +68,7 @@ const fail = (code: 'conflict' | 'invalid' | 'forbidden' | 'not-found', message:
 @Injectable()
 export class DentalStore {
   readonly locations = signal<ClinicLocation[]>([]);
+  readonly hours = computed(() => parseHours(this.locations()[0]?.hours));
   readonly patients = signal<Patient[]>([]);
   readonly dentists = signal<Dentist[]>([]);
   readonly chairs = signal<Chair[]>([]);

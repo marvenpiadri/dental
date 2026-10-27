@@ -35,6 +35,20 @@
         }
       </section>
 
+      <section class="card" aria-labelledby="hours-title">
+          <header class="card-head"><h2 class="card-title" id="hours-title"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ t('setup.hours') }}</h2></header>
+          <div class="row">
+            <label class="hours-field">{{ t('setup.hours.open') }}<input class="input" type="time" [value]="hoursText().open" (change)="setHours({ open: $any($event.target).value })" /></label>
+            <label class="hours-field">{{ t('setup.hours.close') }}<input class="input" type="time" [value]="hoursText().close" (change)="setHours({ close: $any($event.target).value })" /></label>
+          </div>
+          <div class="row" role="group" [attr.aria-label]="t('setup.hours.days')">
+            @for (d of weekdays; track d) {
+              <button type="button" class="btn" [attr.aria-pressed]="store.hours().days.includes(d)" [class.btn--primary]="store.hours().days.includes(d)" (click)="toggleDay(d)">{{ t(weekdayKey(d)) }}</button>
+            }
+          </div>
+          <p class="row hint">{{ t('setup.hours.hint') }}</p>
+      </section>
+
       <section class="card" aria-labelledby="chairs-title">
         <header class="card-head">
           <h2 class="card-title" id="chairs-title"><i class="fa-solid fa-chair" aria-hidden="true"></i>{{ t('setup.chairs') }}</h2>

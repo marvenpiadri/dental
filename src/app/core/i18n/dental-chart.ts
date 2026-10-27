@@ -294,6 +294,18 @@ const D = {
   'ap.find': ['Find a free slot', 'Trouver un créneau libre'],
   'ap.findNone': ['No free slot in the next two weeks for this dentist.', 'Aucun créneau libre dans les deux prochaines semaines pour ce dentiste.'],
   'ap.findList': ['Free slots', 'Créneaux libres'],
+  'setup.hours': ['Opening hours', 'Heures d’ouverture'],
+  'setup.hours.open': ['Opens', 'Ouverture'],
+  'setup.hours.close': ['Closes', 'Fermeture'],
+  'setup.hours.days': ['Open days', 'Jours d’ouverture'],
+  'setup.hours.hint': ['Used to suggest free slots. The calendar itself still shows every hour.', 'Sert à proposer des créneaux libres. Le calendrier affiche toujours toutes les heures.'],
+  'wd.0': ['Sun', 'Dim'],
+  'wd.1': ['Mon', 'Lun'],
+  'wd.2': ['Tue', 'Mar'],
+  'wd.3': ['Wed', 'Mer'],
+  'wd.4': ['Thu', 'Jeu'],
+  'wd.5': ['Fri', 'Ven'],
+  'wd.6': ['Sat', 'Sam'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
