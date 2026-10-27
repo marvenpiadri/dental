@@ -17,3 +17,9 @@ export function parseHours(raw: Partial<OpeningHours> | undefined): Hours {
   if (start === null || end === null || end <= start || !days?.length) return DEFAULT_HOURS;
   return { startMin: start, endMin: end, days };
 }
+
+/** A dentist's own start and end times on the clinic's open days. Anything unusable means "same as the clinic". */
+export function dentistHours(clinic: Hours, own: { open?: string; close?: string } | undefined): Hours {
+  const start = toMin(own?.open), end = toMin(own?.close);
+  return start === null || end === null || end <= start ? clinic : { ...clinic, startMin: start, endMin: end };
+}

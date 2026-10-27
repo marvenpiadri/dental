@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
+import { dentistHours } from '../../rules/opening-hours';
 import { findFreeSlots, type Slot } from '../../rules/slot-finder';
 import { I18n } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
@@ -100,7 +101,7 @@ export class AppointmentEditorComponent implements OnInit {
   protected readonly slots = signal<Slot[] | null>(null);
   protected findSlots(): void {
     this.slots.set(findFreeSlots(
-      { dentistId: this.dentistId(), chairIds: this.store.chairs().map((c) => c.id), patientId: this.patientId() ?? '', durationMin: this.duration(), after: new Date(), excludeId: this.draft().id, hours: this.store.hours() },
+      { dentistId: this.dentistId(), chairIds: this.store.chairs().map((c) => c.id), patientId: this.patientId() ?? '', durationMin: this.duration(), after: new Date(), excludeId: this.draft().id, hours: dentistHours(this.store.hours(), this.store.dentistMap().get(this.dentistId())?.hours) },
       this.store.appointments(),
     ));
   }

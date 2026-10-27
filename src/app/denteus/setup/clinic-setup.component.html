@@ -24,6 +24,8 @@
             <input class="swatch" type="color" [value]="d.color" [attr.aria-label]="t('setup.color')" (change)="editDentist(d, { color: $any($event.target).value })" />
             <input class="input" [value]="d.name" [attr.aria-label]="t('setup.name')" (change)="editDentist(d, { name: $any($event.target).value.trim() })" />
             <input class="input" [value]="d.specialty" [attr.aria-label]="t('setup.specialty')" [placeholder]="t('setup.specialty')" (change)="editDentist(d, { specialty: $any($event.target).value.trim() })" />
+            <input class="input time" type="time" [value]="d.hours?.open ?? ''" [attr.aria-label]="t('setup.dentist.opens', { name: d.name })" [title]="t('setup.dentist.hoursHint')" (change)="dentistHoursChange(d, { open: $any($event.target).value })" />
+            <input class="input time" type="time" [value]="d.hours?.close ?? ''" [attr.aria-label]="t('setup.dentist.closes', { name: d.name })" [title]="t('setup.dentist.hoursHint')" (change)="dentistHoursChange(d, { close: $any($event.target).value })" />
             <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: d.name })" (click)="removeDentist(d)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </div>
         } @empty {

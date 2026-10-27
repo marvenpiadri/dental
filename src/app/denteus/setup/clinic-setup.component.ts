@@ -108,6 +108,13 @@ export class ClinicSetupComponent {
     void this.save(this.store.dentists().map((x) => (x.id === d.id ? next : x)), this.store.chairs());
   }
 
+  /** Both times set means own hours; clearing either goes back to the clinic's. Invalid pairs are not stored. */
+  protected dentistHoursChange(d: Dentist, patch: { open?: string; close?: string }): void {
+    const next = { ...d.hours, ...patch };
+    if (!next.open || !next.close) this.editDentist({ ...d, hours: undefined }, { hours: next.open || next.close ? next : undefined });
+    else if (next.open < next.close) this.editDentist(d, { hours: next });
+  }
+
   protected editChair(c: Chair, name: string): void {
     if (!name.trim()) return;
     void this.save(this.store.dentists(), this.store.chairs().map((x) => (x.id === c.id ? { ...c, name } : x)));

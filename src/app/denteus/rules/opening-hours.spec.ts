@@ -8,3 +8,15 @@ describe('parseHours', () => {
     }
   });
 });
+
+import { dentistHours } from './opening-hours';
+
+describe('dentistHours', () => {
+  it('overrides the times but keeps the clinic days', () => {
+    expect(dentistHours(DEFAULT_HOURS, { open: '10:00', close: '14:00' })).toEqual({ startMin: 600, endMin: 840, days: DEFAULT_HOURS.days });
+  });
+  it('falls back to the clinic when unset or invalid', () => {
+    expect(dentistHours(DEFAULT_HOURS, undefined)).toBe(DEFAULT_HOURS);
+    expect(dentistHours(DEFAULT_HOURS, { open: '15:00', close: '10:00' })).toBe(DEFAULT_HOURS);
+  });
+});

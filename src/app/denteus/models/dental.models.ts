@@ -111,6 +111,8 @@ export interface Dentist {
   specialty: string;
   /** Colour of this dentist's appointments in every view. */
   color: string;
+  /** Own working times (the clinic's open days still apply). Unset means the clinic's hours. */
+  hours?: { open?: string; close?: string };
 }
 
 export interface Chair {

@@ -322,6 +322,9 @@ const D = {
   'dc.files': ['Files for tooth {n}', 'Fichiers de la dent {n}'],
   'dc.graph.aria': ['Probing depths for every probed site, buccal above and lingual below', 'Profondeurs de sondage de chaque site sondé, vestibulaire au-dessus et lingual en dessous'],
   'dc.graph.bop': ['Bleeding', 'Saignement'],
+  'setup.dentist.opens': ['{name}: starts at', '{name} : début'],
+  'setup.dentist.closes': ['{name}: ends at', '{name} : fin'],
+  'setup.dentist.hoursHint': ['Own working hours. Leave empty to use the clinic hours.', 'Horaires propres. Laisser vide pour utiliser ceux du cabinet.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

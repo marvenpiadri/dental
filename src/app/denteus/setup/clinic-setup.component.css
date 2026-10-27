@@ -17,3 +17,5 @@
 
 .hours-field { display: grid; gap: 4px; font-size: 12px; color: var(--app-muted); }
 .hint { color: var(--app-muted); font-size: 13px; margin: 0; }
+
+.row .input.time { flex: none; width: 104px; }
