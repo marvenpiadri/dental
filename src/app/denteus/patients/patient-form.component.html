@@ -77,6 +77,15 @@
             <span class="label">{{ t('form.city') }}</span>
             <input class="input" name="city" autocomplete="address-level2" [value]="values().city" (input)="set('city', $any($event.target).value)" />
           </label>
+          <label class="field">
+            <span class="label">{{ t('form.insurer') }}</span>
+            <input class="input" name="insurer" list="insurers" autocomplete="off" [value]="values().insurer" (input)="set('insurer', $any($event.target).value)" />
+            <datalist id="insurers"><option value="CNSS"></option><option value="CNOPS"></option><option value="AMO"></option></datalist>
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.insuranceNumber') }}</span>
+            <input class="input" name="insuranceNumber" autocomplete="off" [value]="values().insuranceNumber" (input)="set('insuranceNumber', $any($event.target).value)" />
+          </label>
         </div>
       </section>
 

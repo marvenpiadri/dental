@@ -24,6 +24,9 @@ export interface Patient {
   birthDate?: string;
   sex?: 'female' | 'male';
   city?: string;
+  /** Health insurer as the clinic writes it (CNSS, CNOPS, a private insurer…) and the patient's member number. Free text on purpose. */
+  insurer?: string;
+  insuranceNumber?: string;
   /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
   alert?: string;
   notes?: string;

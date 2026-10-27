@@ -5,10 +5,10 @@ import { PatientInput } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { PatientProblem, validatePatient } from './patient-rules';
 
-type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'city' | 'alert' | 'notes', string>;
+type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'city' | 'insurer' | 'insuranceNumber' | 'alert' | 'notes', string>;
 type Field = keyof Values;
 
-const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', city: '', alert: '', notes: '' };
+const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', city: '', insurer: '', insuranceNumber: '', alert: '', notes: '' };
 
 /** Creates a patient, or edits one when the route carries an `id` (bound from the URL). */
 @Component({
@@ -59,6 +59,8 @@ export class PatientFormComponent {
           birthDate: patient.birthDate ?? '',
           sex: patient.sex ?? '',
           city: patient.city ?? '',
+          insurer: patient.insurer ?? '',
+          insuranceNumber: patient.insuranceNumber ?? '',
           alert: patient.alert ?? '',
           notes: patient.notes ?? '',
         });
@@ -112,6 +114,8 @@ export class PatientFormComponent {
       birthDate: v.birthDate,
       sex: v.sex === 'female' || v.sex === 'male' ? v.sex : undefined,
       city: v.city,
+      insurer: v.insurer,
+      insuranceNumber: v.insuranceNumber,
       alert: v.alert,
       notes: v.notes,
     };

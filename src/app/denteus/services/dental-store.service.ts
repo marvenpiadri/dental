@@ -43,7 +43,7 @@ export interface RescheduleChange {
 /** Trims every text field and drops the empty optional ones, so "" never gets stored as a value. */
 function tidy(input: PatientInput): PatientInput {
   const out: PatientInput = { fullName: input.fullName.trim(), phone: input.phone.trim() };
-  for (const key of ['email', 'birthDate', 'sex', 'city', 'alert', 'notes'] as const) {
+  for (const key of ['email', 'birthDate', 'sex', 'city', 'insurer', 'insuranceNumber', 'alert', 'notes'] as const) {
     const value = input[key]?.trim();
     if (value) (out as Record<string, string>)[key] = value;
   }

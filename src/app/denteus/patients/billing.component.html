@@ -19,6 +19,7 @@
       @for (m of methods; track m) { <option [value]="m" [selected]="method() === m">{{ t(methodKey[m]) }}</option> }
     </select>
   </label>
+  <button class="btn" type="button" [disabled]="!doneLines().length" [title]="doneLines().length ? '' : t('stmt.none')" (click)="printStatement()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('stmt.print') }}</button>
   @if (sums().due > 0) { <button class="btn" type="button" (click)="fillDue()">{{ t('bill.fillDue', { amount: i18n.money(sums().due) }) }}</button> }
   <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('bill.record') }}</button>
 </form>
