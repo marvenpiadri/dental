@@ -40,5 +40,9 @@ Licence notice: `src/app/denteus/odontogram/engine/vendor/LICENSE.odontogram`. T
 - Display options write `globals` (wisdom teeth, healthy pulp, base). A wisdom tooth with anything recorded is never hidden (`isBlankTooth`).
 - Files tagged to a tooth (`PatientDocument.tooth`) are shown read-only in the tooth editor.
 
+## Tests and old data
+- 22 pure-logic test files were ported from the original library (`engine/vendor/**/__tests__`, MIT, `@ts-nocheck` as in the source). UI/DOM tests of the original shell were not ported: that shell is not used.
+- Charts saved by the old embedded shell are `getStatusChart()` payloads (`{version, globals, teeth, case?, plan?}`); a spec builds that exact shape and checks it loads without issues and writes back identical teeth, plan, case data and globals. A chart from a real browser has not been loaded by hand.
+
 ## Not done
-- The top view (premolars and molars; front teeth have no top drawing and keep the front one) is a per-browser display toggle, not the source's `occlusalVisible` global. Measured anatomy (4 MB of art) is not vendored. Parity tests from the original repo are not ported (its tests are not in this repo). Real charts saved by the old shell have not been loaded; only a sparse older-format payload is tested.
+- The top view (premolars and molars; front teeth have no top drawing and keep the front one) is a per-browser display toggle, not the source's `occlusalVisible` global. Measured anatomy (4 MB of art) is not vendored.

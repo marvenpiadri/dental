@@ -2,7 +2,7 @@ import { ALL_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart } 
 import { editChart, plannedTeeth, planChanges, setEdentulous, type EditOutcome } from './plan';
 import { applyEdit } from './edits';
 import { indexSummary } from './perio';
-import { defaultState } from './vendor/state/payload';
+import { defaultState, serializeState } from './vendor/state/payload';
 
 const applied = (o: EditOutcome): Chart => { if (o.kind !== 'applied') throw new Error('confirm'); return o.chart; };
 
@@ -212,6 +212,35 @@ describe('tooth note', () => {
     expect(readChart(writeChart(c)).chart!.status.get(11)!.note).toBe('watch the mesial');
     const o = editChart(c, 'status', [11], { kind: 'note', value: 'x'.repeat(501) });
     expect(o.kind === 'applied' && o.rejected.length).toBe(1);
+  });
+});
+
+describe('charts saved by the old embedded shell', () => {
+  // The shell stored getStatusChart(): { version, globals, teeth (all 32, serializeState), case?, plan? }.
+  const legacy = () => {
+    const teeth: Record<string, unknown> = {};
+    for (const n of ALL_TEETH) teeth[n] = serializeState(defaultState());
+    const crown = defaultState();
+    crown.restorationType = 'crown'; crown.restorationMaterial = 'emax';
+    const plan = { ...teeth, 26: serializeState(crown) };
+    return { version: '2.22', globals: { wisdomVisible: false, showBase: true, occlusalVisible: true, showHealthyPulp: true, edentulous: false }, teeth, case: { age: 54, smokingStatus: 'former' }, plan };
+  };
+  it('loads without issues and keeps globals, case data and the plan', () => {
+    const out = readChart(JSON.parse(JSON.stringify(legacy())));
+    expect(out.issues).toEqual([]);
+    expect(out.chart!.globals.wisdomVisible).toBe(false);
+    expect(out.chart!.globals.showBase).toBe(true);
+    expect(out.chart!.caseMeta).toEqual({ age: 54, smokingStatus: 'former' });
+    expect(plannedTeeth(out.chart!)).toEqual([26]);
+    expect(out.chart!.status.get(26)!.restorationType).toBe('none');
+  });
+  it('writes back the same teeth, plan and case data, so nothing is lost on the first save', () => {
+    const src = JSON.parse(JSON.stringify(legacy()));
+    const back = JSON.parse(JSON.stringify(writeChart(readChart(src).chart!)));
+    expect(back.teeth).toEqual(src.teeth);
+    expect(back.plan).toEqual(src.plan);
+    expect(back.case).toEqual(src.case);
+    expect(back.globals).toEqual(src.globals);
   });
 });
 
