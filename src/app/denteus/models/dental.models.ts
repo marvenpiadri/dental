@@ -248,5 +248,7 @@ export interface PatientDocument {
   size: number;
   /** ISO timestamp. */
   addedAt: string;
+  /** FDI number of the tooth this image is about, when it is about one. */
+  tooth?: string;
   blob: Blob;
 }

@@ -314,6 +314,11 @@ const D = {
   'stmt.note': ['This is a statement of care given and fees charged. It is not an official claim form; reimbursement is decided by the insurer.', 'Relevé des soins réalisés et des honoraires facturés. Ce n’est pas un formulaire officiel de remboursement ; le remboursement est décidé par l’assureur.'],
   'stmt.print': ['Print care statement', 'Imprimer le relevé de soins'],
   'stmt.none': ['Mark treatments as done to print a statement.', 'Marquez des soins comme réalisés pour imprimer un relevé.'],
+  'docs.tooth': ['Tooth', 'Dent'],
+  'docs.noTooth': ['No tooth', 'Aucune dent'],
+  'docs.filter': ['Show', 'Afficher'],
+  'docs.all': ['All files', 'Tous les fichiers'],
+  'docs.tag': ['Tooth for {name}', 'Dent pour {name}'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

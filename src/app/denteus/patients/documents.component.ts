@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
 import { PatientDocument } from '../models/dental.models';
 import { ClinicDatabase } from '../services/clinic-database.service';
+import { CHILD_LOWER, CHILD_UPPER, LOWER, UPPER } from './tooth-numbers';
 import { ACCEPTED, fileProblem, formatSize } from './document-rules';
 
 interface Shown { doc: PatientDocument; url: string; image: boolean }
@@ -22,7 +23,23 @@ export class DocumentsComponent {
   protected readonly accept = ACCEPTED;
   protected readonly formatSize = formatSize;
 
+  protected readonly teeth = [...UPPER, ...LOWER, ...CHILD_UPPER, ...CHILD_LOWER];
   protected readonly shown = signal<Shown[]>([]);
+  protected readonly filter = signal('');
+  protected readonly visible = computed(() => (this.filter() ? this.shown().filter((x) => x.doc.tooth === this.filter()) : this.shown()));
+  /** Teeth that have at least one file, for the filter. */
+  protected readonly taggedTeeth = computed(() => this.teeth.filter((n) => this.shown().some((x) => x.doc.tooth === n)));
+
+  protected async tag(item: Shown, tooth: string): Promise<void> {
+    const doc: PatientDocument = { ...item.doc, tooth: tooth || undefined };
+    try {
+      await this.db.addDocument(doc); // same id: replaces the stored record
+      this.shown.update((list) => list.map((x) => (x === item ? { ...x, doc } : x)));
+      if (this.filter() && !this.taggedTeeth().includes(this.filter())) this.filter.set('');
+    } catch {
+      this.problem.set('storage');
+    }
+  }
   protected readonly loading = signal(true);
   protected readonly problem = signal<'type' | 'size' | 'storage' | null>(null);
 

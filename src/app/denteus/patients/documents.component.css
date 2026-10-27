@@ -11,3 +11,6 @@
 .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 13px; }
 .grid .btn--icon { position: absolute; right: 6px; bottom: 6px; }
 .empty-note { margin: 14px 0 0; color: var(--app-muted); }
+
+.filter { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13px; color: var(--app-muted); }
+.tag { min-height: 30px; margin-top: 4px; font-size: 12px; }
