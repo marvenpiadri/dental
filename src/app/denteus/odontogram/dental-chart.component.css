@@ -45,3 +45,10 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .body.split .panel { max-height: 72vh; overflow-y: auto; padding-inline-end: 4px; }
 .body.split .arch { min-width: 520px; }
 @media (max-width: 1100px) { .body.split { grid-template-columns: minmax(0, 1fr); } .body.split .panel { max-height: none; } }
+.dentisto { gap: 2px; padding: 14px 10px; }
+.dentisto .arch { align-items: center; }
+.dentisto .arch.lower { align-items: center; }
+.num { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); }
+.nums { min-height: 20px; }
+.incisal { justify-self: center; width: 22px; height: 12px; border-radius: 50%; border: 1px solid var(--app-line); background: var(--app-subtle); }
+.surf { padding-block: 4px; }

@@ -11,10 +11,10 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.upper]': 'upper()' },
   template: `
-    <button type="button" class="tile" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="pick.emit($event)">
-      @if (upper()) { <span class="no">{{ shown() }}</span> }
+    <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="pick.emit($event)">
+      @if (upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
       <span class="art" #art [style.transform]="transform()"></span>
-      @if (!upper()) { <span class="no">{{ shown() }}</span> }
+      @if (!upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
     </button>
   `,
   styles: `
@@ -25,6 +25,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     .tile:focus-visible { outline: 2px solid var(--app-text); outline-offset: 1px; }
     .art { display: block; width: 100%; max-width: 64px; aspect-ratio: 39 / 72; }
     .art :is(svg) { width: 100%; height: 100%; display: block; }
+    .tile.compact .art { max-width: 34px; aspect-ratio: 1; }
     .no { font-size: 11px; font-weight: 600; color: var(--app-muted); }
     :host-context(.dark) .art { filter: brightness(0.92); }
   `,
@@ -38,6 +39,10 @@ export class ToothTileComponent {
   /** When drawing the plan: the findings, so proposed work can be told apart from existing work. */
   readonly findings = input<ToothRecord | null>(null);
   readonly selected = input(false);
+  /** The chart draws the number itself (read-only layout), so the tile leaves it out. */
+  readonly hideNumber = input(false);
+  /** Small square drawing for the top-view row. */
+  readonly compact = input(false);
   /** Top-down drawing for premolars and molars (front teeth keep the front drawing). */
   readonly occlusal = input(false);
   readonly showBase = input(true);

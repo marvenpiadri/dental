@@ -58,12 +58,7 @@
 
   <div class="body" [class.split]="layout() === 'split'">
   <div class="left">
-  @if (readonlyView()) {
-  <div class="seg" role="group" [attr.aria-label]="t('dc.view')">
-    <button type="button" [class.on]="!occlusalView()" [attr.aria-pressed]="!occlusalView()" (click)="occlusalView.set(false)">{{ t('dc.view.sides') }}</button>
-    <button type="button" [class.on]="occlusalView()" [attr.aria-pressed]="occlusalView()" (click)="occlusalView.set(true)">{{ t('dc.view.surfaces') }}</button>
-  </div>
-  } @else {
+  @if (!readonlyView()) {
   <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
@@ -72,6 +67,62 @@
   </div>
   }
 
+  @if (readonlyView()) {
+  <div class="arches dentisto" role="group" [attr.aria-label]="t('dc.chart')">
+    <div class="arch upper-side">
+      @for (n of upper; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+        }
+      }
+    </div>
+    <div class="arch surf">
+      @for (n of upper; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
+            <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          }
+        }
+      }
+    </div>
+    <div class="arch nums">
+      @for (n of upper; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          <span class="num">{{ num(n) }}</span>
+        }
+      }
+    </div>
+    <div class="arch nums">
+      @for (n of lower; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          <span class="num">{{ num(n) }}</span>
+        }
+      }
+    </div>
+    <div class="arch surf">
+      @for (n of lower; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
+            <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          }
+        }
+      }
+    </div>
+    <div class="arch lower-side lower">
+      @for (n of lower; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+        }
+      }
+    </div>
+  </div>
+  } @else {
   @for (top of views(); track top) {
   <div class="arches" role="group" [attr.aria-label]="t(top ? 'dc.opt.occlusal' : 'dc.chart')">
     @for (arch of [upper, lower]; track $index) {
@@ -87,6 +138,7 @@
       </div>
     }
   </div>
+  }
   }
   </div>
 
