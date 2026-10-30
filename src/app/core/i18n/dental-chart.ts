@@ -361,6 +361,9 @@ const D = {
   'profile.created': ['Created on', 'Créé le'],
   'dc.mode.initial': ['Initial', 'Initial'],
   'dc.mode.current': ['Current', 'Actuel'],
+  'profile.feed': ['Activity', 'Activité'],
+  'profile.feed.empty': ['Nothing yet: acts, payments, notes and appointments appear here.', 'Rien pour l’instant : actes, paiements, notes et rendez-vous apparaîtront ici.'],
+  'profile.feed.payment': ['Payment received', 'Paiement reçu'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

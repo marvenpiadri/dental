@@ -11,7 +11,7 @@
   }
 </header>
 
-<div class="ds-body canvas">
+<div class="ds-body canvas flush">
   @if (store.loadFailed()) {
     <div class="card empty narrow">
       <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
@@ -27,40 +27,46 @@
     </div>
   } @else if (patient(); as p) {
     <div class="stack">
-      <section class="card hero">
-        <div class="photo">
-          @if (p.photo) { <img class="photo-img" [src]="p.photo" [alt]="t('profile.photo.of', { name: p.fullName })" /> }
-          @else { <span class="avatar" style="--size: 88px" aria-hidden="true">{{ initials(p.fullName) }}</span> }
-          <label class="photo-btn btn btn--icon" [attr.title]="t(p.photo ? 'profile.photo.change' : 'profile.photo.add')">
-            <i class="fa-solid fa-camera" aria-hidden="true"></i><span class="sr-only">{{ t(p.photo ? 'profile.photo.change' : 'profile.photo.add') }}</span>
-            <input type="file" accept="image/*" class="sr-only" (change)="pickPhoto($event, p.id)" />
-          </label>
-        </div>
-        <div class="hero-main">
-          <h2 class="hero-name">{{ p.fullName }}</h2>
-          <ul class="facts">
-            @if (age() !== null) { <li><i class="fa-solid fa-cake-candles" aria-hidden="true"></i>{{ i18n.tn('profile.age', age()!) }}</li> }
-            @if (p.sex) { <li><i class="fa-solid" [class.fa-venus]="p.sex === 'female'" [class.fa-mars]="p.sex === 'male'" aria-hidden="true"></i>{{ t(p.sex === 'female' ? 'form.sex.female' : 'form.sex.male') }}</li> }
-            @if (p.phone) { <li><i class="fa-solid fa-phone" aria-hidden="true"></i><a [href]="'tel:' + p.phone">{{ p.phone }}</a></li> }
-            @if (p.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + p.email">{{ p.email }}</a></li> }
-            @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
-          </ul>
-          <div class="tags">
-            @if (p.insurer) { <span class="chip" data-tone="info"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i>{{ p.insurer }}@if (p.insuranceNumber) { · {{ p.insuranceNumber }} }</span> }
-            @if (store.loaded() && due() > 0) { <span class="chip" data-tone="warn">{{ t('profile.balance') }} {{ i18n.money(due()) }}</span> }
-            @if (store.loaded() && stats().upcoming) { <span class="chip" data-tone="ok">{{ t('profile.stat.upcoming') }}: {{ stats().upcoming }}</span> }
+      <section class="cover-wrap">
+        <div class="cover" aria-hidden="true"></div>
+        <div class="idrow">
+          <div class="photo">
+            @if (p.photo) { <img class="photo-img" [src]="p.photo" [alt]="t('profile.photo.of', { name: p.fullName })" /> }
+            @else { <span class="avatar" style="--size: 104px" aria-hidden="true">{{ initials(p.fullName) }}</span> }
+            <label class="photo-btn btn btn--icon" [attr.title]="t(p.photo ? 'profile.photo.change' : 'profile.photo.add')">
+              <i class="fa-solid fa-camera" aria-hidden="true"></i><span class="sr-only">{{ t(p.photo ? 'profile.photo.change' : 'profile.photo.add') }}</span>
+              <input type="file" accept="image/*" class="sr-only" (change)="pickPhoto($event, p.id)" />
+            </label>
+          </div>
+          <div class="hero-main">
+            <h2 class="hero-name">{{ p.fullName }}</h2>
+            <ul class="facts">
+              @if (age() !== null) { <li><i class="fa-solid fa-cake-candles" aria-hidden="true"></i>{{ i18n.tn('profile.age', age()!) }}</li> }
+              @if (p.sex) { <li><i class="fa-solid" [class.fa-venus]="p.sex === 'female'" [class.fa-mars]="p.sex === 'male'" aria-hidden="true"></i>{{ t(p.sex === 'female' ? 'form.sex.female' : 'form.sex.male') }}</li> }
+              @if (p.phone) { <li><i class="fa-solid fa-phone" aria-hidden="true"></i><a [href]="'tel:' + p.phone">{{ p.phone }}</a></li> }
+              @if (p.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + p.email">{{ p.email }}</a></li> }
+              @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
+            </ul>
+            <div class="tags">
+              @if (p.insurer) { <span class="chip" data-tone="info"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i>{{ p.insurer }}@if (p.insuranceNumber) { · {{ p.insuranceNumber }} }</span> }
+              @if (p.createdAt) { <span class="chip" data-tone="neutral">{{ t('profile.since', { date: since() }) }}</span> }
+            </div>
+          </div>
+          <div class="quick">
+            @if (wa(p.phone); as link) { <a class="btn btn--icon" [href]="link" target="_blank" rel="noopener" [attr.aria-label]="'WhatsApp'" title="WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a> }
+            @if (p.photo) { <button type="button" class="btn" (click)="store.setPhoto(p.id, undefined)">{{ t('profile.photo.remove') }}</button> }
           </div>
         </div>
         @if (store.loaded()) {
-          <dl class="totals-box">
-            @if (p.createdAt) { <div><dt>{{ t('profile.created') }}</dt><dd>{{ since() }}</dd></div> }
+          <dl class="stats">
             <div><dt>{{ t('profile.total.topay') }}</dt><dd>{{ i18n.money(money().charged) }}</dd></div>
             <div><dt>{{ t('profile.total.received') }}</dt><dd>{{ i18n.money(money().paid) }}</dd></div>
             <div><dt>{{ t('profile.total.remaining') }}</dt><dd [class.owed]="money().due > 0">{{ i18n.money(money().due) }}</dd></div>
+            <div><dt>{{ t('profile.stat.visits') }}</dt><dd>{{ stats().visits }}</dd></div>
+            <div><dt>{{ t('profile.stat.upcoming') }}</dt><dd>{{ stats().upcoming }}</dd></div>
             <div><dt>{{ t('profile.stat.last') }}</dt><dd>{{ stats().last ? day(stats().last!) : '—' }}</dd></div>
           </dl>
         }
-        @if (p.photo) { <button type="button" class="btn photo-remove" (click)="store.setPhoto(p.id, undefined)">{{ t('profile.photo.remove') }}</button> }
       </section>
 
       @if (p.alert) {
@@ -85,34 +91,31 @@
           <div class="stack page-body">
             @switch (section()) {
               @case ('overview') {
-      @if (store.loaded()) {
-        <section class="grid-kpi">
-          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.visits') }}</p><strong class="value">{{ stats().visits }}</strong></article>
-          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.upcoming') }}</p><strong class="value">{{ stats().upcoming }}</strong></article>
-          <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.noShows') }}</p><strong class="value">{{ stats().noShows }}</strong></article>
-          <article class="card kpi">
-            <p class="eyebrow">{{ t('profile.stat.last') }}</p>
-            <strong class="value small">{{ stats().last ? day(stats().last!) : t('common.notProvided') }}</strong>
-          </article>
+
+
+      <div class="feedgrid">
+        <section class="card feedcard" aria-labelledby="feed-title">
+          <header class="card-head"><h2 class="card-title" id="feed-title"><i class="fa-solid fa-timeline" aria-hidden="true"></i>{{ t('profile.feed') }}</h2></header>
+          @if (feed().length) {
+            <ol class="feed">
+              @for (f of feed(); track f.key) {
+                <li>
+                  <span class="feed-icon" [attr.data-tone]="f.tone"><i [class]="'fa-solid ' + f.icon" aria-hidden="true"></i></span>
+                  <span class="feed-body"><strong>{{ f.title }}</strong>@if (f.sub) { <span class="muted">{{ f.sub }}</span> }</span>
+                  @if (f.amount) { <span class="feed-amount">{{ i18n.money(f.amount) }}</span> }
+                  <time class="muted" [attr.datetime]="f.at.toISOString()">{{ i18n.date(f.at, { day: 'numeric', month: 'short', year: 'numeric' }) }}</time>
+                </li>
+              }
+            </ol>
+          } @else { <p class="card-body muted">{{ t('profile.feed.empty') }}</p> }
         </section>
-      }
-
-
-      <div class="grid3">
+        <div class="rail-col">
         <section class="card" aria-labelledby="next-title">
           <header class="card-head"><h2 class="card-title" id="next-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.next') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'appointments']">{{ t('profile.all') }}</a></header>
           <div class="card-body">
             @if (upcoming()[0]; as a) { <p class="big">{{ day(a) }} · {{ i18n.time(a.start) }}</p><p class="muted">{{ t(typeKey(a.type)) }}@if (dentist(a); as d) { · {{ d.name }} }</p> }
             @else { <p class="muted">{{ t('profile.upcoming.empty.title') }}</p><a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }">{{ t('profile.book') }}</a> }
           </div>
-        </section>
-        <section class="card" aria-labelledby="money-title">
-          <header class="card-head"><h2 class="card-title" id="money-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.section.billing') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'billing']">{{ t('profile.all') }}</a></header>
-          <dl class="details">
-            <div><dt>{{ t('profile.total.topay') }}</dt><dd>{{ i18n.money(money().charged) }}</dd></div>
-            <div><dt>{{ t('profile.total.received') }}</dt><dd>{{ i18n.money(money().paid) }}</dd></div>
-            <div><dt>{{ t('profile.total.remaining') }}</dt><dd [class.owed]="money().due > 0">{{ i18n.money(money().due) }}</dd></div>
-          </dl>
         </section>
         <div class="side">
           <section class="card" aria-labelledby="details-title">
@@ -132,6 +135,7 @@
               @if (p.notes) { <p class="notes">{{ p.notes }}</p> } @else { <p class="muted">{{ t('profile.notes.empty') }}</p> }
             </div>
           </section>
+        </div>
         </div>
       </div>
               }

@@ -6,7 +6,8 @@ import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
-import { balance } from './treatment-rules';
+import { balance, procedureName } from './treatment-rules';
+import { whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
@@ -53,6 +54,20 @@ export class PatientProfileComponent {
     return this.sections().includes(want) ? want : 'overview';
   });
   protected readonly adding = signal(false);
+  protected wa(phone: string): string | null { const n = whatsappNumber(phone); return n ? `https://wa.me/${n}` : null; }
+  /** Everything that happened to this patient, newest first: acts done, payments, visit notes and appointments. */
+  protected readonly feed = computed(() => {
+    const p = this.patient();
+    if (!p) return [];
+    const t = this.t;
+    type Item = { key: string; at: Date; icon: string; tone: string; title: string; sub?: string; amount?: number };
+    const out: Item[] = [];
+    for (const i of p.plan ?? []) if (i.status === 'done') out.push({ key: 'a' + i.id, at: new Date(i.doneAt ?? `${i.date ?? '1970-01-01'}T12:00:00`), icon: 'fa-tooth', tone: 'ok', title: procedureName(t, i.procedure, i.name), sub: i.tooth ? `${t('plan.tooth')} ${i.tooth}` : undefined, amount: i.price });
+    for (const x of p.payments ?? []) out.push({ key: 'p' + x.id, at: new Date(x.at), icon: 'fa-wallet', tone: 'info', title: t('profile.feed.payment'), sub: x.method, amount: x.amount });
+    for (const v of p.visits ?? []) out.push({ key: 'v' + v.id, at: new Date(v.at), icon: 'fa-notes-medical', tone: 'neutral', title: t('profile.visits'), sub: v.complaint || v.findings || v.care });
+    for (const a of this.appointments()) out.push({ key: 'c' + a.id, at: a.start, icon: 'fa-calendar-check', tone: 'neutral', title: t(typeKey(a.type)), sub: t(STATUS_KEY[a.status]) });
+    return out.sort((x, y) => y.at.getTime() - x.at.getTime()).slice(0, 40);
+  });
   protected readonly money = computed(() => { const p = this.patient(); return balance(p?.plan ?? [], p?.payments ?? []); });
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
