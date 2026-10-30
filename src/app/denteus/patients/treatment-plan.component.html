@@ -28,19 +28,24 @@
 @if (priceInvalid()) { <p class="error-text" id="price-error" role="alert">{{ t('plan.price.error') }}</p> }
 
 @if (sorted().length) {
-  <ul class="items">
+  <div class="table" role="table" [attr.aria-label]="t('act.list')">
+    <div class="tr th" role="row">
+      <span role="columnheader">{{ t('act.date') }}</span><span role="columnheader">{{ t('plan.tooth') }}</span><span role="columnheader">{{ t('plan.procedure') }}</span>
+      <span class="num" role="columnheader">{{ t('plan.price') }}</span><span class="num" role="columnheader">{{ t('act.received') }}</span><span class="num" role="columnheader">{{ t('act.remaining') }}</span><span role="columnheader">{{ t('act.status') }}</span><span></span>
+    </div>
     @for (item of sorted(); track item.id) {
-      <li [class.done]="item.status === 'done'">
-        <button type="button" class="check" [attr.aria-pressed]="item.status === 'done'" [attr.aria-label]="t(item.status === 'done' ? 'plan.reopen' : 'plan.markDone')" (click)="toggle(item)">
-          <i class="fa-solid fa-check" aria-hidden="true"></i>
-        </button>
-        <span class="chip" data-tone="neutral">{{ item.tooth ?? '—' }}</span>
-        <span class="name">{{ nameOf(item.procedure, item.name) }}</span>
-        <span class="amount">{{ i18n.money(item.price) }}</span>
-        <button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="remove(item)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
-      </li>
+      <div class="tr" role="row" [class.done]="item.status === 'done'">
+        <span class="muted" role="cell">{{ dayOf(item) }}</span>
+        <span role="cell"><span class="chip" data-tone="neutral">{{ item.tooth ?? '—' }}</span></span>
+        <span class="name" role="cell">{{ nameOf(item.procedure, item.name) }}</span>
+        <span class="num" role="cell">{{ i18n.money(item.price) }}</span>
+        <span class="num" role="cell">{{ item.status === 'done' ? i18n.money(paid(item).received) : '–' }}</span>
+        <span class="num" role="cell" [class.owed]="item.status === 'done' && paid(item).remaining > 0">{{ item.status === 'done' ? i18n.money(paid(item).remaining) : '–' }}</span>
+        <span role="cell"><button type="button" class="chip stat" [attr.data-tone]="item.status === 'done' ? 'ok' : 'warn'" [attr.aria-label]="t(item.status === 'done' ? 'plan.reopen' : 'plan.markDone')" (click)="toggle(item)">{{ t(item.status === 'done' ? 'plan.done' : 'plan.planned') }}</button></span>
+        <span role="cell"><button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="remove(item)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></span>
+      </div>
     }
-  </ul>
+  </div>
   <dl class="totals">
     <div><dt>{{ t('plan.planned') }}</dt><dd>{{ i18n.money(totals().planned) }}</dd></div>
     <div><dt>{{ t('plan.done') }}</dt><dd>{{ i18n.money(totals().done) }}</dd></div>

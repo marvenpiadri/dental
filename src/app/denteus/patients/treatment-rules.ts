@@ -44,3 +44,19 @@ export function balance(plan: readonly TreatmentItem[], payments: readonly Payme
   const paid = payments.reduce((n, p) => n + p.amount, 0);
   return { charged, paid, due: charged - paid };
 }
+
+/**
+ * What each done act has received. Payments are not tied to acts, so they are applied oldest act first.
+ * shortcut: first-in first-out allocation, upgrade to per-act payments if the clinic needs to settle acts out of order.
+ */
+export function allocate(plan: readonly TreatmentItem[], payments: readonly Payment[]): Map<string, { received: number; remaining: number }> {
+  let pool = payments.reduce((n, p) => n + p.amount, 0);
+  const out = new Map<string, { received: number; remaining: number }>();
+  const when = (i: TreatmentItem) => i.date ?? i.doneAt?.slice(0, 10) ?? '';
+  for (const item of plan.filter((i) => i.status === 'done').sort((a, b) => when(a).localeCompare(when(b)))) {
+    const received = Math.max(0, Math.min(pool, item.price));
+    pool -= received;
+    out.set(item.id, { received, remaining: item.price - received });
+  }
+  return out;
+}

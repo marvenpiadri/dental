@@ -229,6 +229,12 @@ export class DentalChartComponent {
     this.examSave.emit(makeExamination(this.patientId(), this.chart(), { id: crypto.randomUUID(), date, examiner: this.examExaminer().trim() || undefined, note: this.examNote().trim() || undefined }));
     this.saving.set(false); this.examNote.set('');
   }
+  /** Read-only chart modes: the first saved examination, the chart as it is now, or the planned work. */
+  protected setView(k: 'initial' | 'current' | 'plan'): void {
+    if (k === 'initial') { const first = this.examinations()[0]; if (first) this.view(first); return; }
+    this.view(null);
+    this.mode.set(k === 'plan' ? 'plan' : 'status');
+  }
   protected view(e: Examination | null): void { this.viewing.set(e); this.selected.set([]); this.pending.set(null); }
   protected inputValue(e: Event): string { return (e.target as HTMLInputElement).value; }
   protected fieldDiff(v: unknown): string { const s = JSON.stringify(v); return s === undefined ? '–' : s.length > 40 ? s.slice(0, 37) + '…' : s; }

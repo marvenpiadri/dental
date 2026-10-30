@@ -1,5 +1,5 @@
 import { TreatmentItem } from '../models/dental.models';
-import { balance, defaultCatalog, parsePrice, planTotals, procedureName } from './treatment-rules';
+import { allocate, balance, defaultCatalog, parsePrice, planTotals, procedureName } from './treatment-rules';
 
 const item = (price: number, status: TreatmentItem['status']): TreatmentItem => ({ id: String(price) + status, procedure: 'filling', price, status });
 
@@ -44,5 +44,15 @@ describe('catalog', () => {
     expect(procedureName(t, 'crown', 'Zirconia crown')).toBe('Zirconia crown');
     expect(procedureName(t, 'crown')).toBe('[proc.crown]');
     expect(procedureName(t, 'custom-id')).toBe('custom-id');
+  });
+});
+
+describe('allocate', () => {
+  const act = (id: string, price: number, date: string): TreatmentItem => ({ id, procedure: 'x', price, status: 'done', date });
+  it('applies payments to the oldest act first and leaves the rest owing', () => {
+    const m = allocate([act('b', 300, '2026-02-01'), act('a', 200, '2026-01-01'), { id: 'p', procedure: 'x', price: 99, status: 'planned' }], [{ id: '1', at: '', amount: 250 } as never]);
+    expect(m.get('a')).toEqual({ received: 200, remaining: 0 });
+    expect(m.get('b')).toEqual({ received: 50, remaining: 250 });
+    expect(m.has('p')).toBe(false);
   });
 });

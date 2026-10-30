@@ -279,3 +279,13 @@
 .page-link:focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }
 .page-body { min-width: 0; width: 100%; margin-inline: 0; }
 @media (max-width: 800px) { .hero { flex-wrap: wrap; } }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.grid3 .side { display: contents; }
+.big { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+.owed { color: var(--app-danger); font-weight: 700; }
+.totals-box { display: grid; gap: 4px; margin: 0 0 0 auto; min-width: 240px; font-size: 14px; }
+.totals-box div { display: flex; justify-content: space-between; gap: 18px; }
+.totals-box dt { color: var(--app-muted); }
+.totals-box dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.photo-remove { margin-inline-start: 0; }
+@media (max-width: 800px) { .totals-box { margin: 0; width: 100%; } }

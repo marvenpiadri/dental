@@ -333,7 +333,7 @@ const D = {
   'act.add': ['Add act', 'Ajouter un acte'],
   'act.date': ['Date', 'Date'],
   'act.priceEach': ['Price per tooth', 'Prix par dent'],
-  'act.status': ['Act status', 'État de l’acte'],
+  'act.status': ['Status', 'Statut'],
   'act.invalid': ['Choose an act, a date and a valid price.', 'Choisissez un acte, une date et un prix valide.'],
   'act.hint': ['Select teeth on the chart and record their conditions on the right. Nothing is saved until you save the act.', 'Sélectionnez les dents sur le schéma et notez leur état à droite. Rien n’est enregistré avant la validation de l’acte.'],
   'act.teeth': ['{n} teeth: {list}', '{n} dents : {list}'],
@@ -350,6 +350,17 @@ const D = {
   'dc.view': ['Chart view', 'Vue du schéma'],
   'dc.view.sides': ['Sides', 'Profil'],
   'dc.view.surfaces': ['Surfaces', 'Surfaces'],
+  'act.received': ['Received', 'Reçu'],
+  'act.remaining': ['Remaining', 'Reste'],
+  'page.payments': ['Payments & invoices', 'Paiements et factures'],
+  'profile.next': ['Next appointment', 'Prochain rendez-vous'],
+  'profile.all': ['See all', 'Tout voir'],
+  'profile.total.topay': ['Total to pay', 'Total à payer'],
+  'profile.total.received': ['Total received', 'Total reçu'],
+  'profile.total.remaining': ['Remaining', 'Reste à payer'],
+  'profile.created': ['Created on', 'Créé le'],
+  'dc.mode.initial': ['Initial', 'Initial'],
+  'dc.mode.current': ['Current', 'Actuel'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

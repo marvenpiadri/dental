@@ -3,7 +3,7 @@ import { I18n } from '../../core/i18n/i18n.service';
 import { Patient, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
-import { readChart } from '../odontogram/engine/chart';
+import { newChart, readChart } from '../odontogram/engine/chart';
 import { makeExamination } from '../odontogram/engine/exam';
 import { parsePrice, procedureName } from './treatment-rules';
 
@@ -56,14 +56,14 @@ export class ActEditorComponent {
     if (!entry || price === null || !/^\d{4}-\d{2}-\d{2}$/.test(this.date())) { this.invalid.set(true); return; }
     const name = this.nameOf(entry.id, entry.name);
     const at = new Date(`${this.date()}T12:00:00`).toISOString();
-    const make = (tooth?: string): TreatmentItem => ({ id: crypto.randomUUID(), procedure: entry.id, name, price, status: this.done() ? 'done' : 'planned', ...(tooth ? { tooth } : {}), ...(this.done() ? { doneAt: at } : {}) });
+    const make = (tooth?: string): TreatmentItem => ({ id: crypto.randomUUID(), procedure: entry.id, name, price, status: this.done() ? 'done' : 'planned', date: this.date(), ...(tooth ? { tooth } : {}), ...(this.done() ? { doneAt: at } : {}) });
     const items = this.teeth().length ? this.teeth().map((n) => make(String(n))) : [make()];
     const id = this.patient().id;
     this.store.changePlan(id, (plan) => [...plan, ...items]);
-    const payload = this.draft();
-    const chart = payload === undefined ? null : readChart(payload).chart;
+    const payload = this.draft() ?? this.patient().odontogram;
+    const chart = payload == null ? newChart() : readChart(payload).chart; // an unreadable stored chart is never overwritten or snapshotted
     if (chart) {
-      this.store.setOdontogram(id, payload);
+      if (this.draft() !== undefined) this.store.setOdontogram(id, this.draft());
       this.store.addExamination(id, makeExamination(id, chart, { id: crypto.randomUUID(), date: this.date(), note: name }));
     }
     this.closed.emit();

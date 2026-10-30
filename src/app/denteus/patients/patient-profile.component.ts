@@ -15,7 +15,7 @@ import { TreatmentPlanComponent } from './treatment-plan.component';
 import { ActEditorComponent } from './act-editor.component';
 
 type Tab = 'upcoming' | 'history';
-type Section = 'overview' | 'acts' | 'visits' | 'documents' | 'billing';
+type Section = 'overview' | 'acts' | 'appointments' | 'billing' | 'visits' | 'documents';
 const CLINICAL: Section[] = ['acts', 'visits', 'documents'];
 
 @Component({
@@ -45,14 +45,15 @@ export class PatientProfileComponent {
   protected readonly tab = signal<Tab>('upcoming');
   private readonly auth = inject(AuthService);
   /** Dentists don't see billing, reception doesn't see clinical records. */
-  protected readonly sections = computed(() => (['overview', 'acts', 'visits', 'documents', 'billing'] as Section[]).filter((x) => x === 'overview' || this.auth.can(CLINICAL.includes(x) ? 'clinical' : 'billing')));
-  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', acts: 'page.acts', visits: 'profile.visits', documents: 'page.imaging', billing: 'profile.section.billing' };
-  protected readonly pageIcon: Record<Section, string> = { overview: 'fa-house', acts: 'fa-tooth', visits: 'fa-notes-medical', documents: 'fa-x-ray', billing: 'fa-wallet' };
+  protected readonly sections = computed(() => (['overview', 'acts', 'appointments', 'billing', 'visits', 'documents'] as Section[]).filter((x) => x === 'overview' || (x === 'appointments' || this.auth.can(CLINICAL.includes(x) ? 'clinical' : 'billing'))));
+  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', acts: 'page.acts', visits: 'profile.visits', documents: 'page.imaging', billing: 'page.payments', appointments: 'profile.appointments' };
+  protected readonly pageIcon: Record<Section, string> = { overview: 'fa-house', acts: 'fa-tooth', visits: 'fa-notes-medical', documents: 'fa-x-ray', billing: 'fa-wallet', appointments: 'fa-calendar-days' };
   protected readonly section = computed<Section>(() => {
     const want = (this.page() ?? (this.note() ? 'visits' : 'overview')) as Section; // a link from the calendar lands on the notes
     return this.sections().includes(want) ? want : 'overview';
   });
   protected readonly adding = signal(false);
+  protected readonly money = computed(() => { const p = this.patient(); return balance(p?.plan ?? [], p?.payments ?? []); });
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
     const p = this.patient();

@@ -1,10 +1,10 @@
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
-import { TreatmentItem } from '../models/dental.models';
+import { Payment, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { quoteHtml } from './quote-html';
-import { parsePrice, planTotals, procedureName } from './treatment-rules';
+import { allocate, parsePrice, planTotals, procedureName } from './treatment-rules';
 import { CHILD_LOWER, CHILD_UPPER, LOWER, UPPER } from './tooth-numbers';
 
 /** The patient's treatment plan: add work (optionally on a tooth), mark it done, see what is left to pay. */
@@ -20,6 +20,7 @@ export class TreatmentPlanComponent {
   /** A tooth picked in the chart: preselected in the add form. */
   readonly tooth = input<string | null>(null);
   readonly patientName = input('');
+  readonly payments = input<Payment[]>([]);
   /** Hides the add form: new acts are written in the act editor, with the chart. */
   readonly readonlyAdd = input(false);
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
@@ -36,6 +37,12 @@ export class TreatmentPlanComponent {
   protected readonly draftPrice = signal('');
   protected readonly priceInvalid = signal(false);
 
+  private readonly alloc = computed(() => allocate(this.plan(), this.payments()));
+  protected paid(i: TreatmentItem) { return this.alloc().get(i.id) ?? { received: 0, remaining: i.price }; }
+  protected dayOf(i: TreatmentItem): string {
+    const d = i.date ?? i.doneAt?.slice(0, 10);
+    return d ? this.i18n.date(new Date(`${d}T12:00:00`), { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  }
   protected readonly totals = computed(() => planTotals(this.plan()));
   protected readonly sorted = computed(() =>
     [...this.plan()].sort((a, b) => (a.status === b.status ? +(a.tooth ?? 99) - +(b.tooth ?? 99) : a.status === 'planned' ? -1 : 1)));

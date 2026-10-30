@@ -51,6 +51,15 @@
             @if (store.loaded() && stats().upcoming) { <span class="chip" data-tone="ok">{{ t('profile.stat.upcoming') }}: {{ stats().upcoming }}</span> }
           </div>
         </div>
+        @if (store.loaded()) {
+          <dl class="totals-box">
+            @if (p.createdAt) { <div><dt>{{ t('profile.created') }}</dt><dd>{{ since() }}</dd></div> }
+            <div><dt>{{ t('profile.total.topay') }}</dt><dd>{{ i18n.money(money().charged) }}</dd></div>
+            <div><dt>{{ t('profile.total.received') }}</dt><dd>{{ i18n.money(money().paid) }}</dd></div>
+            <div><dt>{{ t('profile.total.remaining') }}</dt><dd [class.owed]="money().due > 0">{{ i18n.money(money().due) }}</dd></div>
+            <div><dt>{{ t('profile.stat.last') }}</dt><dd>{{ stats().last ? day(stats().last!) : '—' }}</dd></div>
+          </dl>
+        }
         @if (p.photo) { <button type="button" class="btn photo-remove" (click)="store.setPhoto(p.id, undefined)">{{ t('profile.photo.remove') }}</button> }
       </section>
 
@@ -89,50 +98,22 @@
       }
 
 
-      <div class="columns">
-        <section class="card" aria-labelledby="appts-title">
-          <header class="card-head">
-            <h2 class="card-title" id="appts-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.appointments') }}</h2>
-            <div class="tabs" role="group">
-              <button type="button" class="pill" [class.on]="tab() === 'upcoming'" [attr.aria-pressed]="tab() === 'upcoming'" (click)="tab.set('upcoming')">{{ t('profile.tab.upcoming') }} ({{ upcoming().length }})</button>
-              <button type="button" class="pill" [class.on]="tab() === 'history'" [attr.aria-pressed]="tab() === 'history'" (click)="tab.set('history')">{{ t('profile.tab.history') }} ({{ history().length }})</button>
-            </div>
-          </header>
-
-          @if (rows().length) {
-            <ul class="list">
-              @for (a of rows(); track a.id) {
-                <li>
-                  <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a), appointment: a.id }" [attr.aria-label]="t('profile.openInCalendar')">
-                    <span class="date" aria-hidden="true"><strong>{{ a.start.getDate() }}</strong><span>{{ month(a) }}</span></span>
-                    <span class="who">
-                      <span class="name">{{ t(typeKey(a.type)) }}</span>
-                      <span class="sub muted">
-                        {{ day(a) }} · {{ i18n.time(a.start) }}–{{ i18n.time(a.end) }}
-                        @if (dentist(a); as d) { · <span class="dot" [style.background]="d.color" aria-hidden="true"></span>{{ d.name }} }
-                      </span>
-                    </span>
-                    <span class="chip" [attr.data-tone]="STATUS_TONE[a.status]">{{ t(STATUS_KEY[a.status]) }}</span>
-                    <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
-                  </a>
-                </li>
-              }
-            </ul>
-          } @else {
-            <div class="empty">
-              <span class="icon-tile"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
-              @if (tab() === 'upcoming') {
-                <h2>{{ t('profile.upcoming.empty.title') }}</h2>
-                <p>{{ t('profile.upcoming.empty.body') }}</p>
-                <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>{{ t('profile.book') }}</a>
-              } @else {
-                <h2>{{ t('profile.history.empty.title') }}</h2>
-                <p>{{ t('profile.history.empty.body') }}</p>
-              }
-            </div>
-          }
+      <div class="grid3">
+        <section class="card" aria-labelledby="next-title">
+          <header class="card-head"><h2 class="card-title" id="next-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.next') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'appointments']">{{ t('profile.all') }}</a></header>
+          <div class="card-body">
+            @if (upcoming()[0]; as a) { <p class="big">{{ day(a) }} · {{ i18n.time(a.start) }}</p><p class="muted">{{ t(typeKey(a.type)) }}@if (dentist(a); as d) { · {{ d.name }} }</p> }
+            @else { <p class="muted">{{ t('profile.upcoming.empty.title') }}</p><a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }">{{ t('profile.book') }}</a> }
+          </div>
         </section>
-
+        <section class="card" aria-labelledby="money-title">
+          <header class="card-head"><h2 class="card-title" id="money-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.section.billing') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'billing']">{{ t('profile.all') }}</a></header>
+          <dl class="details">
+            <div><dt>{{ t('profile.total.topay') }}</dt><dd>{{ i18n.money(money().charged) }}</dd></div>
+            <div><dt>{{ t('profile.total.received') }}</dt><dd>{{ i18n.money(money().paid) }}</dd></div>
+            <div><dt>{{ t('profile.total.remaining') }}</dt><dd [class.owed]="money().due > 0">{{ i18n.money(money().due) }}</dd></div>
+          </dl>
+        </section>
         <div class="side">
           <section class="card" aria-labelledby="details-title">
             <header class="card-head"><h2 class="card-title" id="details-title"><i class="fa-regular fa-id-card" aria-hidden="true"></i>{{ t('profile.details') }}</h2></header>
@@ -178,9 +159,54 @@
                   </section>
                   <section class="card" aria-labelledby="plan-title">
                     <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('act.list') }}</h2></header>
-                    <den-treatment-plan [readonlyAdd]="true" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                    <den-treatment-plan [readonlyAdd]="true" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
                   </section>
                 }
+              }
+              @case ('appointments') {
+                <section class="card" aria-labelledby="appts-title">
+          <header class="card-head">
+            <h2 class="card-title" id="appts-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.appointments') }}</h2>
+            <div class="tabs" role="group">
+              <button type="button" class="pill" [class.on]="tab() === 'upcoming'" [attr.aria-pressed]="tab() === 'upcoming'" (click)="tab.set('upcoming')">{{ t('profile.tab.upcoming') }} ({{ upcoming().length }})</button>
+              <button type="button" class="pill" [class.on]="tab() === 'history'" [attr.aria-pressed]="tab() === 'history'" (click)="tab.set('history')">{{ t('profile.tab.history') }} ({{ history().length }})</button>
+            </div>
+          </header>
+
+          @if (rows().length) {
+            <ul class="list">
+              @for (a of rows(); track a.id) {
+                <li>
+                  <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a), appointment: a.id }" [attr.aria-label]="t('profile.openInCalendar')">
+                    <span class="date" aria-hidden="true"><strong>{{ a.start.getDate() }}</strong><span>{{ month(a) }}</span></span>
+                    <span class="who">
+                      <span class="name">{{ t(typeKey(a.type)) }}</span>
+                      <span class="sub muted">
+                        {{ day(a) }} · {{ i18n.time(a.start) }}–{{ i18n.time(a.end) }}
+                        @if (dentist(a); as d) { · <span class="dot" [style.background]="d.color" aria-hidden="true"></span>{{ d.name }} }
+                      </span>
+                    </span>
+                    <span class="chip" [attr.data-tone]="STATUS_TONE[a.status]">{{ t(STATUS_KEY[a.status]) }}</span>
+                    <i class="fa-solid fa-chevron-right chevron" aria-hidden="true"></i>
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="empty">
+              <span class="icon-tile"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
+              @if (tab() === 'upcoming') {
+                <h2>{{ t('profile.upcoming.empty.title') }}</h2>
+                <p>{{ t('profile.upcoming.empty.body') }}</p>
+                <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>{{ t('profile.book') }}</a>
+              } @else {
+                <h2>{{ t('profile.history.empty.title') }}</h2>
+                <p>{{ t('profile.history.empty.body') }}</p>
+              }
+            </div>
+          }
+        </section>
+
               }
               @case ('visits') {
                 <section class="card" aria-labelledby="visits-title">

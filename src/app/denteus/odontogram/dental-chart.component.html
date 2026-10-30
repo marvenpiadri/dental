@@ -12,11 +12,19 @@
   }
 
   <div class="bar">
+    @if (readonlyView()) {
+      <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
+        <button type="button" [disabled]="!examinations().length" [class.on]="viewing() !== null && viewing()?.id === examinations()[0]?.id" (click)="setView('initial')">{{ t('dc.mode.initial') }}</button>
+        <button type="button" [class.on]="viewing() === null && mode() === 'status'" (click)="setView('current')">{{ t('dc.mode.current') }}</button>
+        <button type="button" [class.on]="viewing() === null && mode() === 'plan'" (click)="setView('plan')">{{ t('dc.mode.plan') }}@if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
+      </div>
+    } @else {
     <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
       <button type="button" [class.on]="mode() === 'status'" [attr.aria-pressed]="mode() === 'status'" (click)="mode.set('status')"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i>{{ t('dc.mode.status') }}</button>
       <button type="button" [class.on]="mode() === 'plan'" [attr.aria-pressed]="mode() === 'plan'" (click)="mode.set('plan')"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('dc.mode.plan') }}
         @if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
     </div>
+    }
     <div class="actions">
       <select class="btn" [attr.aria-label]="t('dc.numbering')" (change)="setNumbering($any($event.target).value)">
         @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }

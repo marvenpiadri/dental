@@ -98,6 +98,8 @@ export interface TreatmentItem {
   /** In the clinic's currency, whole units. */
   price: number;
   status: 'planned' | 'done';
+  /** Day (`YYYY-MM-DD`) the act was recorded, set by the act editor. */
+  date?: string;
   /** ISO timestamp the item was marked done. */
   doneAt?: string;
 }
