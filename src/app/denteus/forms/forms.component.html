@@ -1,0 +1,79 @@
+@if (message(); as m) { <p class="msg" [attr.data-tone]="m.tone" role="status">{{ t(m.key, { n: m.n ?? 0 }) }}</p> }
+
+@if (mode() === 'list') {
+  <div class="cells">
+    <label class="cell upload" [class.busy]="busy()">
+      <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+      <strong>{{ t('forms.upload') }}</strong>
+      <span class="muted">{{ t('forms.upload.hint') }}</span>
+      <input type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg" [disabled]="busy()" (change)="upload($event)" />
+    </label>
+    @for (f of templates(); track f.id) {
+      <article class="cell">
+        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+        <strong>{{ f.name }}</strong>
+        <span class="muted">{{ t('forms.count', { n: f.fields.length, p: f.pages.length }) }}</span>
+        <div class="row">
+          <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="open(f, 'fill')">{{ t('forms.fill') }}</button>
+          <button type="button" class="btn" [disabled]="busy()" (click)="open(f, 'design')">{{ t('forms.design') }}</button>
+          <button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="remove(f)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        </div>
+      </article>
+    }
+  </div>
+  @if (!templates().length) { <p class="hint">{{ t('forms.empty') }}</p> }
+} @else if (current(); as cur) {
+  <div class="bar">
+    <button type="button" class="btn" (click)="back()"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i>{{ t('forms.back') }}</button>
+    @if (mode() === 'design') { <input class="input name" [value]="cur.name" [attr.aria-label]="t('forms.name')" (change)="rename($any($event.target).value)" /> } @else { <strong>{{ cur.name }}</strong> }
+    @if (images().length > 1) {
+      <div class="seg" role="group">
+        @for (p of images(); track $index) { <button type="button" [class.on]="pageNo() === $index" [attr.aria-pressed]="pageNo() === $index" (click)="pageNo.set($index)">{{ t('forms.page', { n: $index + 1 }) }}</button> }
+      </div>
+    }
+    <span class="spacer"></span>
+    @if (mode() === 'design') {
+      <button type="button" class="btn" (click)="detect()"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>{{ t('forms.detect') }}</button>
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="open(cur, 'fill')">{{ t('forms.fill') }}</button>
+    } @else {
+      <button type="button" class="btn" (click)="reset()">{{ t('forms.reset') }}</button>
+      <button type="button" class="btn" [disabled]="busy()" (click)="print()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('forms.print') }}</button>
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="download()"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i>{{ t('forms.download') }}</button>
+    }
+  </div>
+  <p class="hint">{{ t(mode() === 'design' ? 'forms.drawHint' : 'forms.fillHint') }}</p>
+
+  <div class="work" [class.with-panel]="mode() === 'design'">
+    <div class="stage">
+      @if (img(); as im) {
+        <div #sheet class="sheet" [class.design]="mode() === 'design'" [style.--pw]="size().w" [style.aspect-ratio]="im.width + ' / ' + im.height"
+          (pointerdown)="down($event, sheet)" (pointermove)="move($event, sheet)" (pointerup)="up()" (pointercancel)="up()">
+          <img [src]="im.url" alt="" draggable="false" />
+          @for (f of pageFields(); track f.id) {
+            @if (mode() === 'design') {
+              <button type="button" class="box" [class.sel]="selected() === f.id" [style.left.%]="f.x * 100" [style.top.%]="f.y * 100" [style.width.%]="f.w * 100" [style.height.%]="f.h * 100"
+                (pointerdown)="$event.stopPropagation(); selected.set(f.id)">{{ f.label }}</button>
+            } @else {
+              <input class="fld" [style.left.%]="f.x * 100" [style.top.%]="f.y * 100" [style.width.%]="f.w * 100" [style.height.%]="f.h * 100" [style.--pt]="ptOf(f)"
+                [value]="values()[f.id] ?? ''" [attr.aria-label]="f.label" (input)="setValue(f.id, $any($event.target).value)" />
+            }
+          }
+          @if (draft(); as d) { <span class="box draft" [style.left.%]="d.x * 100" [style.top.%]="d.y * 100" [style.width.%]="d.w * 100" [style.height.%]="d.h * 100"></span> }
+        </div>
+      }
+    </div>
+    @if (mode() === 'design') {
+      <aside class="panel" [attr.aria-label]="t('forms.fields')">
+        @for (f of pageFields(); track f.id) {
+          <div class="frow" [class.sel]="selected() === f.id" (click)="selected.set(f.id)">
+            <input class="input" [value]="f.label" [attr.aria-label]="t('forms.label')" (change)="patchField(f.id, { label: $any($event.target).value })" />
+            <select class="input" [attr.aria-label]="t('forms.source')" (change)="patchField(f.id, { source: $any($event.target).value })">
+              @for (s of sources; track s) { <option [value]="s" [selected]="f.source === s">{{ t(sourceKey(s)) }}</option> }
+            </select>
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('plan.remove')" (click)="removeField(f.id)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        } @empty { <p class="hint pad">{{ t('forms.noneHere') }}</p> }
+      </aside>
+    }
+  </div>
+}

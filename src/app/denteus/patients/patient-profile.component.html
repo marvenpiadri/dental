@@ -224,6 +224,12 @@
                   <den-documents [patientId]="p.id" />
                 </section>
               }
+              @case ('forms') {
+                <section class="card" aria-labelledby="forms-title">
+                  <header class="card-head"><h2 class="card-title" id="forms-title"><i class="fa-solid fa-file-pen" aria-hidden="true"></i>{{ t('forms.title') }}</h2></header>
+                  <den-forms [patient]="p" />
+                </section>
+              }
               @case ('billing') {
                 <section class="card" aria-labelledby="bill-title">
                   <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
