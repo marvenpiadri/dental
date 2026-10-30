@@ -58,7 +58,12 @@
 
   <div class="body" [class.split]="layout() === 'split'">
   <div class="left">
-  @if (!readonlyView()) {
+  @if (readonlyView()) {
+  <div class="seg" role="group" [attr.aria-label]="t('dc.view')">
+    <button type="button" [class.on]="!occlusalView()" [attr.aria-pressed]="!occlusalView()" (click)="occlusalView.set(false)">{{ t('dc.view.sides') }}</button>
+    <button type="button" [class.on]="occlusalView()" [attr.aria-pressed]="occlusalView()" (click)="occlusalView.set(true)">{{ t('dc.view.surfaces') }}</button>
+  </div>
+  } @else {
   <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>

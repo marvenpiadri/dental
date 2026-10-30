@@ -86,7 +86,7 @@ export class DentalChartComponent {
 
   protected readonly tabs: { id: Tab; key: Key }[] = [{ id: 'tooth', key: 'dc.tab.tooth' }, { id: 'perio', key: 'dc.tab.perio' }, { id: 'findings', key: 'dc.tab.findings' }, { id: 'history', key: 'dc.tab.history' }];
   protected readonly tabList = computed(() => (this.readonlyView() ? this.tabs.filter((k) => k.id !== 'tooth') : this.tabs));
-  protected readonly views = computed(() => (this.readonlyView() ? [false, true] : [this.occlusalView()]));
+  protected readonly views = computed(() => [this.occlusalView()]);
   protected readonly upper = ALL_TEETH.slice(0, 16);
   protected readonly lower = ALL_TEETH.slice(16);
   /** What is drawn: a saved examination (read-only) or the working chart. */

@@ -347,6 +347,9 @@ const D = {
   'profile.photo.remove': ['Remove photo', 'Retirer la photo'],
   'profile.photo.of': ['Photo of {name}', 'Photo de {name}'],
   'profile.balance': ['Balance due', 'Reste à payer'],
+  'dc.view': ['Chart view', 'Vue du schéma'],
+  'dc.view.sides': ['Sides', 'Profil'],
+  'dc.view.surfaces': ['Surfaces', 'Surfaces'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
