@@ -268,7 +268,7 @@
 .flush { padding: 0; }
 .flush .stack { max-width: none; gap: 0; }
 .flush .card { border-radius: 0; border-width: 0 1px 1px 0; }
-.cover { height: 120px; background: linear-gradient(120deg, var(--app-text) 0%, color-mix(in srgb, var(--app-text) 55%, var(--app-info)) 100%); }
+.cover { height: 120px; background: linear-gradient(120deg, #0f172a 0%, #1d4ed8 100%); }
 .cover-wrap { background: var(--app-panel); border-bottom: 1px solid var(--app-line); }
 .idrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; padding: 0 24px 16px; margin-top: -52px; }
 .photo { position: relative; flex: 0 0 auto; }

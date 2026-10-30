@@ -21,6 +21,8 @@ export class TreatmentPlanComponent {
   readonly tooth = input<string | null>(null);
   readonly patientName = input('');
   readonly payments = input<Payment[]>([]);
+  /** Quotes page: show only the planned work. */
+  readonly only = input<'planned' | null>(null);
   /** Hides the add form: new acts are written in the act editor, with the chart. */
   readonly readonlyAdd = input(false);
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
@@ -45,7 +47,7 @@ export class TreatmentPlanComponent {
   }
   protected readonly totals = computed(() => planTotals(this.plan()));
   protected readonly sorted = computed(() =>
-    [...this.plan()].sort((a, b) => (a.status === b.status ? +(a.tooth ?? 99) - +(b.tooth ?? 99) : a.status === 'planned' ? -1 : 1)));
+    this.plan().filter((i) => !this.only() || i.status === this.only()).sort((a, b) => (a.status === b.status ? +(a.tooth ?? 99) - +(b.tooth ?? 99) : a.status === 'planned' ? -1 : 1)));
 
   constructor() {
     // preselect the first act once the catalog has loaded

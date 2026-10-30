@@ -19,3 +19,6 @@
 .hint { color: var(--app-muted); font-size: 13px; margin: 0; }
 
 .row .input.time { flex: none; width: 104px; }
+.pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.page-opt { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--app-line); border-inline-end: 1px solid var(--app-line); cursor: pointer; }
+.page-opt i { color: var(--app-muted); width: 18px; text-align: center; }

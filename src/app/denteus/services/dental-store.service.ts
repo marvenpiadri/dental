@@ -74,6 +74,8 @@ export class DentalStore {
   readonly chairs = signal<Chair[]>([]);
   /** The acts the clinic offers and their usual prices. */
   readonly catalog = signal<CatalogEntry[]>(defaultCatalog());
+  /** Patient-file pages this clinic switched off (Setup). */
+  readonly hiddenPages = signal<string[]>([]);
   readonly appointments = signal<Appointment[]>([]);
 
   /** Recorded on every change. In the real app this is the signed-in user. */
@@ -132,11 +134,18 @@ export class DentalStore {
     this.chairs.set(resources.chairs);
     this.catalog.set((await this.database.loadSetting<CatalogEntry[]>('catalog')) ?? defaultCatalog());
 
+    this.hiddenPages.set((await this.database.loadSetting<string[]>('hiddenPages')) ?? []);
+
     const saved = await this.database.loadSchedulingSnapshot();
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
     this.loaded.set(true);
+  }
+
+  async saveHiddenPages(ids: string[]): Promise<void> {
+    await this.database.saveSetting('hiddenPages', ids);
+    this.hiddenPages.set(ids);
   }
 
   async saveCatalog(entries: CatalogEntry[]): Promise<void> {

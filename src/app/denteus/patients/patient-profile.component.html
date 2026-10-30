@@ -230,6 +230,12 @@
                   <den-forms [patient]="p" />
                 </section>
               }
+              @case ('quotes') {
+                <section class="card" aria-labelledby="quote-title">
+                  <header class="card-head"><h2 class="card-title" id="quote-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i>{{ t('page.quotes') }}</h2></header>
+                  <den-treatment-plan [readonlyAdd]="true" only="planned" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                </section>
+              }
               @case ('billing') {
                 <section class="card" aria-labelledby="bill-title">
                   <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>

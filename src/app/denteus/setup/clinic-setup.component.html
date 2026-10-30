@@ -90,6 +90,16 @@
         }
       </section>
 
+      <section class="card" aria-labelledby="pages-title">
+        <header class="card-head"><h2 class="card-title" id="pages-title"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>{{ t('setup.pages') }}</h2></header>
+        <p class="muted intro">{{ t('setup.pages.intro') }}</p>
+        <div class="pages-grid">
+          @for (pg of pages; track pg.id) {
+            <label class="page-opt"><input type="checkbox" [disabled]="pg.id === 'overview'" [checked]="!store.hiddenPages().includes(pg.id)" (change)="togglePage(pg.id, $any($event.target).checked)" /><i [class]="'fa-solid ' + pg.icon" aria-hidden="true"></i>{{ t(pg.key) }}</label>
+          }
+        </div>
+      </section>
+
       <section class="card" aria-labelledby="team-title">
         <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
         <p class="muted intro">{{ t('team.intro') }}</p>

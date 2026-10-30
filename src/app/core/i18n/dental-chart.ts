@@ -402,6 +402,9 @@ const D = {
   'fs.total.done': ['Total of acts done', 'Total des actes réalisés'],
   'fs.acts.list': ['Acts done', 'Actes réalisés'],
   'fs.text': ['Type by hand', 'Saisie manuelle'],
+  'page.quotes': ['Quotes', 'Devis'],
+  'setup.pages': ['Patient file pages', 'Pages du dossier patient'],
+  'setup.pages.intro': ['Choose which pages every patient file shows. Hidden pages keep their data.', 'Choisissez les pages affichées dans chaque dossier patient. Les pages masquées conservent leurs données.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

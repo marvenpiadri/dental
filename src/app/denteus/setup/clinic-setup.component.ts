@@ -10,6 +10,7 @@ import { parsePrice, procedureName } from '../patients/treatment-rules';
 import { PracticeStore } from '../practice/practice-store.service';
 import { ClinicDatabase } from '../services/clinic-database.service';
 import { BackupDocument, BackupResult, makeBackup, parseBackup } from '../services/backup';
+import { PROFILE_PAGES } from '../patients/profile-pages';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 
@@ -32,6 +33,11 @@ const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4
 })
 export class ClinicSetupComponent {
   protected readonly store = inject(DentalStore);
+  protected readonly pages = PROFILE_PAGES;
+  protected togglePage(id: string, shown: boolean): void {
+    const hidden = this.store.hiddenPages().filter((x) => x !== id);
+    void this.store.saveHiddenPages(shown ? hidden : [...hidden, id]);
+  }
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
 

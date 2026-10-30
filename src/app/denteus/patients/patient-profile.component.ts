@@ -13,12 +13,11 @@ import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
+import { PROFILE_PAGES, Section } from './profile-pages';
 import { ActEditorComponent } from './act-editor.component';
 import { FormsComponent } from '../forms/forms.component';
 
 type Tab = 'upcoming' | 'history';
-type Section = 'overview' | 'acts' | 'appointments' | 'billing' | 'visits' | 'documents' | 'forms';
-const CLINICAL: Section[] = ['acts', 'visits', 'documents', 'forms'];
 
 @Component({
   selector: 'den-patient-profile',
@@ -46,10 +45,10 @@ export class PatientProfileComponent {
 
   protected readonly tab = signal<Tab>('upcoming');
   private readonly auth = inject(AuthService);
-  /** Dentists don't see billing, reception doesn't see clinical records. */
-  protected readonly sections = computed(() => (['overview', 'acts', 'appointments', 'billing', 'visits', 'documents', 'forms'] as Section[]).filter((x) => x === 'overview' || (x === 'appointments' || this.auth.can(CLINICAL.includes(x) ? 'clinical' : 'billing'))));
-  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', acts: 'page.acts', visits: 'profile.visits', documents: 'page.imaging', billing: 'page.payments', appointments: 'profile.appointments', forms: 'forms.title' };
-  protected readonly pageIcon: Record<Section, string> = { overview: 'fa-house', acts: 'fa-tooth', visits: 'fa-notes-medical', documents: 'fa-x-ray', billing: 'fa-wallet', appointments: 'fa-calendar-days', forms: 'fa-file-pen' };
+  /** Dentists don't see billing, reception doesn't see clinical records, and the clinic can hide pages in Setup. */
+  protected readonly sections = computed(() => PROFILE_PAGES.filter((x) => x.id === 'overview' || (!this.store.hiddenPages().includes(x.id) && (x.id === 'appointments' || this.auth.can(x.clinical ? 'clinical' : 'billing')))).map((x) => x.id as Section));
+  protected readonly sectionKey = Object.fromEntries(PROFILE_PAGES.map((x) => [x.id, x.key])) as Record<Section, Key>;
+  protected readonly pageIcon = Object.fromEntries(PROFILE_PAGES.map((x) => [x.id, x.icon])) as Record<Section, string>;
   protected readonly section = computed<Section>(() => {
     const want = (this.page() ?? (this.note() ? 'visits' : 'overview')) as Section; // a link from the calendar lands on the notes
     return this.sections().includes(want) ? want : 'overview';
