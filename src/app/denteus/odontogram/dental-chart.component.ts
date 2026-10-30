@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { I18n, type Key } from '../../core/i18n/i18n.service';
 import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
@@ -49,6 +49,11 @@ export class DentalChartComponent {
   readonly patientName = input('');
   readonly clinicName = input('');
   readonly examinations = input<readonly Examination[]>([]);
+  /** History view: nothing can be edited, side and top views are shown together. Editing lives in the act editor. */
+  readonly readonlyView = input(false);
+  readonly layout = input<'stack' | 'split'>('stack');
+  readonly hideSaveExam = input(false);
+  readonly selection = output<readonly number[]>();
   readonly save = output<ChartPayload>();
   readonly examSave = output<Examination>();
 
@@ -67,7 +72,8 @@ export class DentalChartComponent {
   protected num(n: number): string { return formatTooth(String(this.shown().status.get(n)?.toothSelection) === 'milktooth' ? primaryOf(n) : n, this.numbering()); }
   protected numLabel(s: NumberingSystem): Key { return `dc.num.${s}`; }
   protected readonly selected = signal<readonly number[]>([]);
-  protected readonly tab = signal<Tab>('tooth');
+  private readonly emitSelection = effect(() => this.selection.emit(this.selected()));
+  protected readonly tab = linkedSignal<Tab>(() => (this.readonlyView() ? 'findings' : 'tooth'));
   protected readonly pending = signal<Pending | null>(null);
   protected readonly notice = signal('');
   protected readonly viewing = signal<Examination | null>(null);
@@ -79,6 +85,8 @@ export class DentalChartComponent {
   protected readonly examNote = signal('');
 
   protected readonly tabs: { id: Tab; key: Key }[] = [{ id: 'tooth', key: 'dc.tab.tooth' }, { id: 'perio', key: 'dc.tab.perio' }, { id: 'findings', key: 'dc.tab.findings' }, { id: 'history', key: 'dc.tab.history' }];
+  protected readonly tabList = computed(() => (this.readonlyView() ? this.tabs.filter((k) => k.id !== 'tooth') : this.tabs));
+  protected readonly views = computed(() => (this.readonlyView() ? [false, true] : [this.occlusalView()]));
   protected readonly upper = ALL_TEETH.slice(0, 16);
   protected readonly lower = ALL_TEETH.slice(16);
   /** What is drawn: a saved examination (read-only) or the working chart. */
@@ -86,7 +94,7 @@ export class DentalChartComponent {
     const v = this.viewing();
     return v ? (readChart(v.chart).chart ?? this.chart()) : this.chart();
   });
-  protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null);
+  protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null || this.readonlyView());
   /** Wisdom teeth can be hidden for a cleaner chart, but never when something is recorded on them. */
   /** Display only, per browser: not part of the chart. */
   protected readonly occlusalView = signal(false);

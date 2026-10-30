@@ -12,13 +12,15 @@ import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
+import { ActEditorComponent } from './act-editor.component';
 
 type Tab = 'upcoming' | 'history';
-type Section = 'overview' | 'clinical' | 'billing';
+type Section = 'overview' | 'acts' | 'visits' | 'documents' | 'billing';
+const CLINICAL: Section[] = ['acts', 'visits', 'documents'];
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
+  imports: [RouterLink, ActEditorComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +31,8 @@ export class PatientProfileComponent {
   readonly id = input.required<string>();
   /** Appointment to write a visit note for (`/patients/:id?note=<appointment id>`, from the calendar). */
   readonly note = input<string>();
+  /** Which page of the file is open (`/patients/:id/:page`). Unknown or forbidden pages fall back to the overview. */
+  readonly page = input<string>();
 
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
@@ -41,15 +45,19 @@ export class PatientProfileComponent {
   protected readonly tab = signal<Tab>('upcoming');
   private readonly auth = inject(AuthService);
   /** Dentists don't see billing, reception doesn't see clinical records. */
-  protected readonly sections = computed(() => (['overview', 'clinical', 'billing'] as Section[]).filter((x) => x === 'overview' || this.auth.can(x)));
-  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', clinical: 'profile.section.clinical', billing: 'profile.section.billing' };
-  protected readonly section = signal<Section>('overview');
+  protected readonly sections = computed(() => (['overview', 'acts', 'visits', 'documents', 'billing'] as Section[]).filter((x) => x === 'overview' || this.auth.can(CLINICAL.includes(x) ? 'clinical' : 'billing')));
+  protected readonly sectionKey: Record<Section, Key> = { overview: 'profile.section.overview', acts: 'page.acts', visits: 'profile.visits', documents: 'page.imaging', billing: 'profile.section.billing' };
+  protected readonly pageIcon: Record<Section, string> = { overview: 'fa-house', acts: 'fa-tooth', visits: 'fa-notes-medical', documents: 'fa-x-ray', billing: 'fa-wallet' };
+  protected readonly section = computed<Section>(() => {
+    const want = (this.page() ?? (this.note() ? 'visits' : 'overview')) as Section; // a link from the calendar lands on the notes
+    return this.sections().includes(want) ? want : 'overview';
+  });
+  protected readonly adding = signal(false);
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
     const p = this.patient();
     return p ? balance(p.plan ?? [], p.payments ?? []).due : 0;
   });
-  private readonly openNoteTab = effect(() => { if (this.note() && this.auth.can('clinical')) this.section.set('clinical'); }); // a link from the calendar lands on the notes
   /** Tooth chosen in the chart for the next plan item. */
   // Only read once the store has loaded, which only happens in the browser.
   private readonly now = new Date();
@@ -113,5 +121,21 @@ export class PatientProfileComponent {
 
   protected isoDay(a: Appointment): string {
     return localIsoDay(a.start);
+  }
+
+  /** Shrinks the chosen picture to a 256px JPEG so a photo costs a few KB, not a few MB. */
+  protected async pickPhoto(e: Event, id: string): Promise<void> {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file?.type.startsWith('image/')) return;
+    try {
+      const bmp = await createImageBitmap(file);
+      const side = Math.min(bmp.width, bmp.height), size = Math.min(256, side);
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      canvas.getContext('2d')!.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size); // centred square crop
+      this.store.setPhoto(id, canvas.toDataURL('image/jpeg', 0.85));
+    } catch { /* not a readable image: keep the current photo */ }
   }
 }

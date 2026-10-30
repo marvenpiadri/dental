@@ -330,6 +330,23 @@ const D = {
   'dc.opt.pulp': ['Healthy pulp', 'Pulpe saine'],
   'dc.opt.base': ['Gum base', 'Base gingivale'],
   'dc.opt.occlusal': ['Top view (premolars, molars)', 'Vue occlusale (prémolaires, molaires)'],
+  'act.add': ['Add act', 'Ajouter un acte'],
+  'act.date': ['Date', 'Date'],
+  'act.priceEach': ['Price per tooth', 'Prix par dent'],
+  'act.status': ['Act status', 'État de l’acte'],
+  'act.invalid': ['Choose an act, a date and a valid price.', 'Choisissez un acte, une date et un prix valide.'],
+  'act.hint': ['Select teeth on the chart and record their conditions on the right. Nothing is saved until you save the act.', 'Sélectionnez les dents sur le schéma et notez leur état à droite. Rien n’est enregistré avant la validation de l’acte.'],
+  'act.teeth': ['{n} teeth: {list}', '{n} dents : {list}'],
+  'act.noTeeth': ['No tooth selected (act not tied to a tooth)', 'Aucune dent sélectionnée (acte non lié à une dent)'],
+  'act.save': ['Save act', 'Enregistrer l’acte'],
+  'act.list': ['Acts', 'Actes'],
+  'page.acts': ['Acts & chart', 'Actes et schéma'],
+  'page.imaging': ['Imaging & files', 'Imagerie et fichiers'],
+  'profile.photo.add': ['Add a photo', 'Ajouter une photo'],
+  'profile.photo.change': ['Change photo', 'Changer la photo'],
+  'profile.photo.remove': ['Remove photo', 'Retirer la photo'],
+  'profile.photo.of': ['Photo of {name}', 'Photo de {name}'],
+  'profile.balance': ['Balance due', 'Reste à payer'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

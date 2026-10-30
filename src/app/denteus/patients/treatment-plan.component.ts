@@ -20,6 +20,8 @@ export class TreatmentPlanComponent {
   /** A tooth picked in the chart: preselected in the add form. */
   readonly tooth = input<string | null>(null);
   readonly patientName = input('');
+  /** Hides the add form: new acts are written in the act editor, with the chart. */
+  readonly readonlyAdd = input(false);
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
 
   protected readonly i18n = inject(I18n);

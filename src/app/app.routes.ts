@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'new', loadComponent: () => import('./denteus/patients/patient-form.component').then((m) => m.PatientFormComponent) },
       { path: ':id', loadComponent: () => import('./denteus/patients/patient-profile.component').then((m) => m.PatientProfileComponent) },
       { path: ':id/edit', loadComponent: () => import('./denteus/patients/patient-form.component').then((m) => m.PatientFormComponent) },
+      { path: ':id/:page', loadComponent: () => import('./denteus/patients/patient-profile.component').then((m) => m.PatientProfileComponent) },
     ],
   },
   {

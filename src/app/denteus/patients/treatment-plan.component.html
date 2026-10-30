@@ -1,3 +1,4 @@
+@if (!readonlyAdd()) {
 <form class="add" novalidate (submit)="$event.preventDefault(); add()">
   <label class="field">
     <span class="label">{{ t('plan.tooth') }}</span>
@@ -19,6 +20,7 @@
   </label>
   <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('plan.add') }}</button>
 </form>
+}
 @if (totals().planned > 0) {
   <div class="quote"><button type="button" class="btn" (click)="printQuote()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('quote.print') }}</button></div>
 }

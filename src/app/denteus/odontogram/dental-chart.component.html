@@ -21,10 +21,12 @@
       <select class="btn" [attr.aria-label]="t('dc.numbering')" (change)="setNumbering($any($event.target).value)">
         @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }
       </select>
-      <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
-      <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
-      <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>
-      <button type="button" class="btn btn--primary" [disabled]="locked() || viewing() !== null" (click)="openSave()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>{{ t('dc.saveExam') }}</button>
+      @if (!readonlyView()) {
+        <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
+        <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
+        <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>
+        @if (!hideSaveExam()) { <button type="button" class="btn btn--primary" [disabled]="locked() || viewing() !== null" (click)="openSave()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>{{ t('dc.saveExam') }}</button> }
+      }
     </div>
   </div>
 
@@ -54,34 +56,43 @@
   }
   @if (notice()) { <p class="banner warn" role="status"><i class="fa-solid fa-ban" aria-hidden="true"></i>{{ notice() }}</p> }
 
+  <div class="body" [class.split]="layout() === 'split'">
+  <div class="left">
+  @if (!readonlyView()) {
   <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
     <label><input type="checkbox" [checked]="occlusalView()" (change)="occlusalView.set($any($event.target).checked)" /> {{ t('dc.opt.occlusal') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showBase" (change)="setGlobal('showBase', $any($event.target).checked)" /> {{ t('dc.opt.base') }}</label>
   </div>
+  }
 
-  <div class="arches" role="group" [attr.aria-label]="t('dc.chart')">
+  @for (top of views(); track top) {
+  <div class="arches" role="group" [attr.aria-label]="t(top ? 'dc.opt.occlusal' : 'dc.chart')">
     @for (arch of [upper, lower]; track $index) {
       <div class="arch" [class.lower]="$index === 1">
         @for (n of arch; track n) {
           @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
           @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
           <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
-            [occlusal]="occlusalView()" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
+            [occlusal]="top" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
             [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }
       </div>
     }
   </div>
+  }
+  </div>
 
+  <div class="panel">
   <div class="tabs" role="tablist">
-    @for (k of tabs; track k.id) {
+    @for (k of tabList(); track k.id) {
       <button type="button" role="tab" [attr.aria-selected]="tab() === k.id" [class.on]="tab() === k.id" (click)="tab.set(k.id)">{{ t(k.key) }}</button>
     }
   </div>
 
+  @if (readonlyView() && firstSelected() !== null) { <p class="hint">{{ t('dc.editing.one', { n: num(firstSelected()!) }) }}</p><den-tooth-files [patientId]="patientId()" [tooth]="firstSelected()!" /> }
   @switch (tab()) {
     @case ('tooth') {
       @if (firstState(); as st) {
@@ -160,4 +171,6 @@
       }
     }
   }
+  </div>
+  </div>
 </div>

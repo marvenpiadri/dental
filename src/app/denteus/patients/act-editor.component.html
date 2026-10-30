@@ -1,0 +1,25 @@
+<form class="head" novalidate (submit)="$event.preventDefault(); save()">
+  <label class="field"><span class="label">{{ t('act.date') }}</span><input class="input" type="date" required [value]="date()" (input)="date.set($any($event.target).value)" /></label>
+  <label class="field grow"><span class="label">{{ t('plan.procedure') }}</span>
+    <select class="input" (change)="setProcedure($any($event.target).value)">
+      @for (entry of catalog(); track entry.id) { <option [value]="entry.id" [selected]="procedure() === entry.id">{{ nameOf(entry.id, entry.name) }}</option> }
+    </select>
+  </label>
+  <label class="field price"><span class="label">{{ t('act.priceEach') }}</span><input class="input" inputmode="numeric" [value]="price()" (input)="price.set($any($event.target).value); invalid.set(false)" [attr.aria-invalid]="invalid() ? 'true' : null" /></label>
+  <div class="seg" role="group" [attr.aria-label]="t('act.status')">
+    <button type="button" [class.on]="done()" [attr.aria-pressed]="done()" (click)="done.set(true)">{{ t('plan.done') }}</button>
+    <button type="button" [class.on]="!done()" [attr.aria-pressed]="!done()" (click)="done.set(false)">{{ t('plan.planned') }}</button>
+  </div>
+</form>
+@if (!catalog().length) { <p class="error-text" role="alert">{{ t('plan.catalog.empty') }}</p> }
+@if (invalid()) { <p class="error-text" role="alert">{{ t('act.invalid') }}</p> }
+<p class="hint">{{ t('act.hint') }}</p>
+
+<den-dental-chart layout="split" [hideSaveExam]="true" [patientId]="patient().id" [patientName]="patient().fullName" [clinicName]="clinic()"
+  [raw]="patient().odontogram" [examinations]="patient().examinations ?? []" (save)="draft.set($event)" (selection)="teeth.set($event)" />
+
+<footer class="foot">
+  <p class="sum">{{ teeth().length ? t('act.teeth', { n: teeth().length, list: teeth().join(', ') }) : t('act.noTeeth') }}</p>
+  <button type="button" class="btn" (click)="closed.emit()">{{ t('dc.cancel') }}</button>
+  <button type="button" class="btn btn--primary" [disabled]="!catalog().length" (click)="save()"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('act.save') }}</button>
+</footer>

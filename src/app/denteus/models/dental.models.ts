@@ -42,6 +42,8 @@ export interface Patient {
   payments?: Payment[];
   /** What was found and done at each visit, newest last. */
   visits?: VisitNote[];
+  /** Small JPEG data URL (see the profile's photo picker). Optional, added whenever the clinic likes. */
+  photo?: string;
 }
 
 export interface PrescriptionLine {

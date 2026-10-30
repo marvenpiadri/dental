@@ -1,0 +1,14 @@
+:host { display: grid; gap: 14px; padding: 16px; }
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.grow { flex: 1; min-width: 180px; }
+.field.price { width: 120px; }
+.label { font-size: 12px; color: var(--app-muted); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--app-line); border-radius: 999px; padding: 3px; background: var(--app-subtle); }
+.seg button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; color: var(--app-muted); }
+.seg button.on { background: var(--app-text); color: var(--app-bg); }
+.seg button:focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }
+.hint, .sum { margin: 0; font-size: 13px; color: var(--app-muted); }
+.error-text { margin: 0; color: var(--app-danger); font-size: 13px; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; padding: 10px 0; background: var(--app-panel, var(--app-bg)); border-top: 1px solid var(--app-line); }
+.sum { margin-inline-end: auto; }

@@ -28,7 +28,14 @@
   } @else if (patient(); as p) {
     <div class="stack">
       <section class="card hero">
-        <span class="avatar" style="--size: 64px" aria-hidden="true">{{ initials(p.fullName) }}</span>
+        <div class="photo">
+          @if (p.photo) { <img class="photo-img" [src]="p.photo" [alt]="t('profile.photo.of', { name: p.fullName })" /> }
+          @else { <span class="avatar" style="--size: 88px" aria-hidden="true">{{ initials(p.fullName) }}</span> }
+          <label class="photo-btn btn btn--icon" [attr.title]="t(p.photo ? 'profile.photo.change' : 'profile.photo.add')">
+            <i class="fa-solid fa-camera" aria-hidden="true"></i><span class="sr-only">{{ t(p.photo ? 'profile.photo.change' : 'profile.photo.add') }}</span>
+            <input type="file" accept="image/*" class="sr-only" (change)="pickPhoto($event, p.id)" />
+          </label>
+        </div>
         <div class="hero-main">
           <h2 class="hero-name">{{ p.fullName }}</h2>
           <ul class="facts">
@@ -38,7 +45,13 @@
             @if (p.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + p.email">{{ p.email }}</a></li> }
             @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
           </ul>
+          <div class="tags">
+            @if (p.insurer) { <span class="chip" data-tone="info"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i>{{ p.insurer }}@if (p.insuranceNumber) { · {{ p.insuranceNumber }} }</span> }
+            @if (store.loaded() && due() > 0) { <span class="chip" data-tone="warn">{{ t('profile.balance') }} {{ i18n.money(due()) }}</span> }
+            @if (store.loaded() && stats().upcoming) { <span class="chip" data-tone="ok">{{ t('profile.stat.upcoming') }}: {{ stats().upcoming }}</span> }
+          </div>
         </div>
+        @if (p.photo) { <button type="button" class="btn photo-remove" (click)="store.setPhoto(p.id, undefined)">{{ t('profile.photo.remove') }}</button> }
       </section>
 
       @if (p.alert) {
@@ -52,6 +65,18 @@
       }
 
       @if (store.loaded()) {
+        <div class="file">
+          <nav class="pages" [attr.aria-label]="t('profile.sections')">
+            @for (item of sections(); track item) {
+              <a class="page-link" [routerLink]="['/patients', p.id, item]" [class.on]="section() === item" [attr.aria-current]="section() === item ? 'page' : null">
+                <i [class]="'fa-solid ' + pageIcon[item]" aria-hidden="true"></i><span>{{ t(sectionKey[item]) }}</span>@if (item === 'billing' && due() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ i18n.money(due()) }})</span> }
+              </a>
+            }
+          </nav>
+          <div class="stack page-body">
+            @switch (section()) {
+              @case ('overview') {
+      @if (store.loaded()) {
         <section class="grid-kpi">
           <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.visits') }}</p><strong class="value">{{ stats().visits }}</strong></article>
           <article class="card kpi"><p class="eyebrow">{{ t('profile.stat.upcoming') }}</p><strong class="value">{{ stats().upcoming }}</strong></article>
@@ -63,56 +88,7 @@
         </section>
       }
 
-      @if (store.loaded()) {
-        <div class="tabs sections" role="group" [attr.aria-label]="t('profile.sections')">
-          @for (item of sections(); track item) {
-            <button type="button" class="pill" [class.on]="section() === item" [attr.aria-pressed]="section() === item" (click)="section.set(item)">
-              {{ t(sectionKey[item]) }}@if (item === 'billing' && due() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ i18n.money(due()) }})</span> }
-            </button>
-          }
-        </div>
-      }
 
-      @if (store.loaded()) {
-        <div class="pane" [hidden]="section() !== 'clinical'">
-        <section class="card" aria-labelledby="teeth-title">
-          <header class="card-head"><h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2></header>
-          <div class="card-body">
-            @defer (on viewport) {
-              @for (key of [p.id]; track key) {
-                <den-dental-chart [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" (save)="store.setOdontogram(p.id, $event)" (examSave)="store.addExamination(p.id, $event)" />
-              }
-            } @placeholder {
-              <span class="skeleton"></span>
-            }
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="visits-title">
-          <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
-          <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
-        </section>
-
-        <section class="card" aria-labelledby="docs-title">
-          <header class="card-head"><h2 class="card-title" id="docs-title"><i class="fa-solid fa-x-ray" aria-hidden="true"></i>{{ t('profile.documents') }}</h2></header>
-          <den-documents [patientId]="p.id" />
-        </section>
-
-        <section class="card" aria-labelledby="plan-title">
-          <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('profile.plan') }}</h2></header>
-          <den-treatment-plan [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
-        </section>
-        </div>
-
-        <div class="pane" [hidden]="section() !== 'billing'">
-        <section class="card" aria-labelledby="bill-title">
-          <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
-          <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" (edit)="store.changePayments(p.id, $event)" />
-        </section>
-        </div>
-      }
-
-      <div class="pane" [hidden]="section() !== 'overview'">
       <div class="columns">
         <section class="card" aria-labelledby="appts-title">
           <header class="card-head">
@@ -177,7 +153,57 @@
           </section>
         </div>
       </div>
-      </div>
+              }
+              @case ('acts') {
+                @if (adding()) {
+                  <section class="card" aria-labelledby="act-title">
+                    <header class="card-head"><h2 class="card-title" id="act-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('act.add') }}</h2></header>
+                    <den-act-editor [patient]="p" (closed)="adding.set(false)" />
+                  </section>
+                } @else {
+                  <section class="card" aria-labelledby="teeth-title">
+                    <header class="card-head">
+                      <h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2>
+                      <button type="button" class="btn btn--primary" (click)="adding.set(true)"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('act.add') }}</button>
+                    </header>
+                    <div class="card-body">
+                      @defer (on viewport) {
+                        @for (key of [p.id]; track key) {
+                          <den-dental-chart [readonlyView]="true" [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" />
+                        }
+                      } @placeholder {
+                        <span class="skeleton"></span>
+                      }
+                    </div>
+                  </section>
+                  <section class="card" aria-labelledby="plan-title">
+                    <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('act.list') }}</h2></header>
+                    <den-treatment-plan [readonlyAdd]="true" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                  </section>
+                }
+              }
+              @case ('visits') {
+                <section class="card" aria-labelledby="visits-title">
+                  <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
+                  <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
+                </section>
+              }
+              @case ('documents') {
+                <section class="card" aria-labelledby="docs-title">
+                  <header class="card-head"><h2 class="card-title" id="docs-title"><i class="fa-solid fa-x-ray" aria-hidden="true"></i>{{ t('profile.documents') }}</h2></header>
+                  <den-documents [patientId]="p.id" />
+                </section>
+              }
+              @case ('billing') {
+                <section class="card" aria-labelledby="bill-title">
+                  <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
+                  <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" (edit)="store.changePayments(p.id, $event)" />
+                </section>
+              }
+            }
+          </div>
+        </div>
+      }
     </div>
   } @else {
     <div class="stack"><span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span></div>

@@ -191,7 +191,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, visits: current.visits }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -200,6 +200,11 @@ export class DentalStore {
   /** Saves the working chart's payload on the patient. */
   setOdontogram(patientId: string, odontogram: unknown): void {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, odontogram } : p)));
+  }
+
+  /** Sets (or clears, with `undefined`) the patient's photo, a small JPEG data URL kept locally with the record. */
+  setPhoto(patientId: string, photo: string | undefined): void {
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, photo } : p)));
   }
 
   /** Edits a patient's treatment plan: `change` receives the current list and returns the new one. */

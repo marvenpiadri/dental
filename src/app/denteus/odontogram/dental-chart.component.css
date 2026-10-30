@@ -38,3 +38,10 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 
 .opts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--app-muted); }
 .opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.body { display: grid; gap: 14px; }
+.left, .panel { display: grid; gap: 14px; min-width: 0; align-content: start; }
+.body.split { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); align-items: start; }
+.body.split .panel { max-height: 72vh; overflow-y: auto; padding-inline-end: 4px; }
+.body.split .arch { min-width: 520px; }
+@media (max-width: 1100px) { .body.split { grid-template-columns: minmax(0, 1fr); } .body.split .panel { max-height: none; } }
