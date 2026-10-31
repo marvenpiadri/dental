@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { balance, procedureName } from './treatment-rules';
-import { whatsappNumber } from './reminder-rules';
+import { reminderLink, whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
@@ -54,6 +54,22 @@ export class PatientProfileComponent {
     return this.sections().includes(want) ? want : 'overview';
   });
   protected readonly adding = signal(false);
+  /** WhatsApp messages ready to send (the clinic presses send): next visit, balance due, check-up invitation. */
+  protected readonly reminders = computed(() => {
+    const p = this.patient();
+    if (!p) return null;
+    const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
+    const next = this.upcoming().find((a) => a.status === 'scheduled' || a.status === 'confirmed') ?? null;
+    const due = this.money().due;
+    const link = (m: string) => reminderLink(p.phone, m);
+    return {
+      next,
+      appointment: next ? link(this.t('reminder.message', { name: p.fullName, clinic, day: this.i18n.date(next.start, { weekday: 'long', day: 'numeric', month: 'long' }), time: this.i18n.time(next.start) })) : null,
+      balance: due > 0 ? link(this.t('reminder.balance', { name: p.fullName, clinic, amount: this.i18n.money(due) })) : null,
+      recall: link(this.t('recall.message', { name: p.fullName, clinic })),
+      hasNumber: link('x') !== null,
+    };
+  });
   protected wa(phone: string): string | null { const n = whatsappNumber(phone); return n ? `https://wa.me/${n}` : null; }
   /** Everything that happened to this patient, newest first: acts done, payments, visit notes and appointments. */
   protected readonly feed = computed(() => {

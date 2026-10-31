@@ -19,7 +19,7 @@ Every page follows the same recipe, set once in `src/styles.css` so new pages in
 - **Panel title** 16px bold (`.card-title`), no rule under it. The page title lives in the 64px header, not in a panel.
 - **Forms**: bold 13px label above a 44px field (`.field`, `.label`, `.input`), one column, full width, two columns only for short pairs. Border `--app-field`.
 - **Tables**: grey header row, zebra rows, no vertical lines (`.zebra` on any grid of rows).
-- **One accent** (`--app-accent`, indigo) for primary actions and the active state. Change the variable and the whole app follows. Everything else stays neutral.
+- **One accent** (`--app-accent`, green) for primary actions and the active state. Change the variable and the whole app follows. Everything else stays neutral.
 - Patient file: social-style cover, stats strip and edge-to-edge bordered cells (strict-style grid) for the page body.
 
 Colour: otherwise monochrome. The status colours (`--app-ok/warn/info/danger`) tint small things only (dots, icons, chips, one alert border), never a surface, and a status is never colour alone: it always has a text label.

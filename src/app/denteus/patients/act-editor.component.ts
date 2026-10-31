@@ -3,7 +3,9 @@ import { I18n } from '../../core/i18n/i18n.service';
 import { Patient, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
-import { newChart, readChart } from '../odontogram/engine/chart';
+import { newChart, readChart, writeChart } from '../odontogram/engine/chart';
+import { editChart } from '../odontogram/engine/plan';
+import { ACT_CHART } from './act-chart';
 import { makeExamination } from '../odontogram/engine/exam';
 import { parsePrice, procedureName } from './treatment-rules';
 
@@ -35,6 +37,8 @@ export class ActEditorComponent {
   protected readonly teeth = signal<readonly number[]>([]);
   protected readonly draft = signal<unknown>(undefined);
   protected readonly invalid = signal(false);
+  protected readonly drawable = computed(() => ACT_CHART[this.procedure()] ?? null);
+  protected readonly draw = signal(true);
   protected readonly clinic = computed(() => this.store.locations()[0]?.name ?? '');
 
   constructor() {
@@ -61,9 +65,15 @@ export class ActEditorComponent {
     const id = this.patient().id;
     this.store.changePlan(id, (plan) => [...plan, ...items]);
     const payload = this.draft() ?? this.patient().odontogram;
-    const chart = payload == null ? newChart() : readChart(payload).chart; // an unreadable stored chart is never overwritten or snapshotted
+    let chart = payload == null ? newChart() : readChart(payload).chart; // an unreadable stored chart is never overwritten or snapshotted
+    let changed = this.draft() !== undefined;
+    const edit = this.drawable();
+    if (chart && edit && this.draw() && this.teeth().length) { // the act is drawn on its teeth: done work as a finding, planned work in the plan
+      const out = editChart(chart, this.done() ? 'status' : 'plan', this.teeth(), edit, { confirmed: true });
+      if (out.kind !== 'confirm' && out.changed.length) { chart = out.chart; changed = true; }
+    }
     if (chart) {
-      if (this.draft() !== undefined) this.store.setOdontogram(id, this.draft());
+      if (changed) this.store.setOdontogram(id, writeChart(chart));
       this.store.addExamination(id, makeExamination(id, chart, { id: crypto.randomUUID(), date: this.date(), note: name }));
     }
     this.closed.emit();

@@ -25,7 +25,7 @@
   --app-line: #dcdcdf;
   --app-field: #d3d9e4;
   /* the one accent: primary actions and the active page. Change it here and the whole app follows. */
-  --app-accent: #5457d6;
+  --app-accent: #15803d;
   --app-accent-text: #fff;
   --app-zebra: #f3f5f9;
   --app-th: #dfe4ee;
@@ -51,8 +51,8 @@
   --app-muted: #a1a1a8;
   --app-line: #2a2a2e;
   --app-field: #34343a;
-  --app-accent: #7d81f2;
-  --app-accent-text: #0a0a0a;
+  --app-accent: #4ade80;
+  --app-accent-text: #052e16;
   --app-zebra: #111114;
   --app-th: #1d1d22;
 

@@ -14,6 +14,7 @@
 @if (!catalog().length) { <p class="error-text" role="alert">{{ t('plan.catalog.empty') }}</p> }
 @if (invalid()) { <p class="error-text" role="alert">{{ t('act.invalid') }}</p> }
 <p class="hint">{{ t('act.hint') }}</p>
+@if (drawable()) { <label class="draw"><input type="checkbox" [checked]="draw()" (change)="draw.set($any($event.target).checked)" /> {{ t('act.draw') }}</label> }
 
 <den-dental-chart layout="split" [hideSaveExam]="true" [patientId]="patient().id" [patientName]="patient().fullName" [clinicName]="clinic()"
   [raw]="patient().odontogram" [examinations]="patient().examinations ?? []" (save)="draft.set($event)" (selection)="teeth.set($event)" />

@@ -53,7 +53,7 @@
             </div>
           </div>
           <div class="quick">
-            @if (wa(p.phone); as link) { <a class="btn btn--icon" [href]="link" target="_blank" rel="noopener" [attr.aria-label]="'WhatsApp'" title="WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a> }
+            @if ((reminders()?.appointment ?? wa(p.phone)); as link) { <a class="btn btn--icon" [href]="link" target="_blank" rel="noopener" [attr.aria-label]="'WhatsApp'" title="WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a> }
             @if (p.photo) { <button type="button" class="btn" (click)="store.setPhoto(p.id, undefined)">{{ t('profile.photo.remove') }}</button> }
           </div>
         </div>
@@ -110,6 +110,21 @@
           } @else { <p class="card-body muted">{{ t('profile.feed.empty') }}</p> }
         </section>
         <div class="rail-col">
+        <section class="card" aria-labelledby="remind-title">
+          <header class="card-head"><h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('profile.remind') }}</h2></header>
+          @if (reminders(); as r) {
+            @if (!r.hasNumber) { <p class="card-body muted">{{ t('profile.remind.nonumber') }}</p> } @else {
+              <ul class="remind">
+                <li><span>{{ t('profile.remind.appt') }}@if (r.next?.remindedAt) { <span class="chip" data-tone="ok">{{ t('today.remind.sent') }}</span> }</span>
+                  @if (r.appointment) { <a class="btn" [href]="r.appointment" target="_blank" rel="noopener" (click)="store.markReminded(r.next!.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
+                <li><span>{{ t('profile.remind.balance') }}</span>
+                  @if (r.balance) { <a class="btn" [href]="r.balance" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
+                <li><span>{{ t('profile.remind.recall') }}</span>
+                  @if (r.recall) { <a class="btn" [href]="r.recall" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }</li>
+              </ul>
+            }
+          }
+        </section>
         <section class="card" aria-labelledby="next-title">
           <header class="card-head"><h2 class="card-title" id="next-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.next') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'appointments']">{{ t('profile.all') }}</a></header>
           <div class="card-body">

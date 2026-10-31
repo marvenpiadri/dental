@@ -407,6 +407,14 @@ const D = {
   'setup.pages.intro': ['Choose which pages every patient file shows. Hidden pages keep their data.', 'Choisissez les pages affichées dans chaque dossier patient. Les pages masquées conservent leurs données.'],
   'fs.check.female': ['Tick if female','Cocher si femme'],
   'fs.check.male': ['Tick if male','Cocher si homme'],
+  'act.draw': ['Also draw this act on the selected teeth', 'Dessiner aussi cet acte sur les dents sélectionnées'],
+  'profile.remind': ['WhatsApp reminders', 'Rappels WhatsApp'],
+  'profile.remind.appt': ['Next appointment', 'Prochain rendez-vous'],
+  'profile.remind.balance': ['Balance due', 'Reste à payer'],
+  'profile.remind.recall': ['Check-up invitation', 'Invitation au contrôle'],
+  'profile.remind.none': ['Nothing to send', 'Rien à envoyer'],
+  'profile.remind.nonumber': ['Add a valid mobile number to this patient to send WhatsApp messages.', 'Ajoutez un numéro mobile valide à ce patient pour envoyer des messages WhatsApp.'],
+  'reminder.balance': ['Hello {name}, a balance of {amount} remains on your file at {clinic}. Thank you for settling it at your next visit.', 'Bonjour {name}, un solde de {amount} reste à régler sur votre dossier chez {clinic}. Merci de le régler lors de votre prochaine visite.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

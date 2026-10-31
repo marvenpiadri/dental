@@ -268,7 +268,7 @@
 .flush { padding: 0; }
 .flush .stack { max-width: none; gap: 0; }
 .flush .card { border-radius: 0; border-width: 0 1px 1px 0; }
-.cover { height: 120px; background: linear-gradient(120deg, #0f172a 0%, #1d4ed8 100%); }
+.cover { height: 120px; background: linear-gradient(120deg, #052e16 0%, #15803d 100%); }
 .cover-wrap { background: var(--app-panel); border-bottom: 1px solid var(--app-line); }
 .idrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; padding: 0 24px 16px; margin-top: -52px; }
 .photo { position: relative; flex: 0 0 auto; }
@@ -307,3 +307,6 @@
 .flush { background: var(--app-panel); }
 .feedgrid { align-items: stretch; }
 .rail-col .side { gap: 0; }
+.remind { list-style: none; margin: 0; padding: 0; }
+.remind li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 20px; border-top: 1px solid var(--app-line); }
+.remind .chip { margin-inline-start: 8px; }
