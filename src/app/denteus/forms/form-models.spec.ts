@@ -15,6 +15,10 @@ describe('form sources', () => {
     expect(sourceValue('total.done', ctx)).toBe('500');
     expect(sourceValue('acts.list', ctx)).toBe('crown 14');
   });
+  it('ticks the box that matches the sex', () => {
+    const c = { ...ctx, patient: { ...patient, sex: 'female' as const } };
+    expect([sourceValue('check.female', c), sourceValue('check.male', c)]).toEqual(['X', '']);
+  });
   it('leaves hand-typed blanks empty', () => expect(sourceValue('text', ctx)).toBe(''));
 });
 

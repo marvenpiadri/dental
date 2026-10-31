@@ -76,7 +76,7 @@ export async function acroFields(file: Blob): Promise<FormField[]> {
       const r = wdg.getRectangle();
       const idx = Math.max(0, pages.findIndex((p) => p.ref === wdg.P()));
       const { width: pw, height: ph } = pages[idx].getSize();
-      out.push({ id: crypto.randomUUID(), label: f.getName(), page: idx, source: guessSource(f.getName()), x: r.x / pw, w: r.width / pw, y: 1 - (r.y + r.height) / ph, h: r.height / ph });
+      out.push({ id: crypto.randomUUID(), acro: f.getName(), label: f.getName(), page: idx, source: guessSource(f.getName()), x: r.x / pw, w: r.width / pw, y: 1 - (r.y + r.height) / ph, h: r.height / ph });
     }
   }
   return out;
@@ -98,14 +98,19 @@ export async function exportFilled(t: FormTemplate, values: Record<string, strin
   }
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const pages = pdf.getPages();
+  const form = t.kind === 'pdf' ? pdf.getForm() : null;
   for (const f of t.fields) {
     const text = win(values[f.id] ?? '');
     const page = pages[f.page];
+    if (f.acro && form) { // a real form field: fill it, the PDF stays a fillable form
+      try { form.getTextField(f.acro).setText(text || undefined); continue; } catch { /* not a text field any more: write over the page instead */ }
+    }
     if (!text || !page) continue;
     const { width: pw, height: ph } = page.getSize();
     const size = f.size ?? Math.min(11, Math.max(6, f.h * ph * 0.7));
     page.drawText(text, { x: f.x * pw + 2, y: ph - (f.y + f.h) * ph + (f.h * ph - size) / 2 + 1, size, font, color: rgb(0, 0, 0), maxWidth: f.w * pw - 4 });
   }
+  form?.updateFieldAppearances(font);
   return new Blob([await pdf.save() as BlobPart], { type: 'application/pdf' });
 }
 

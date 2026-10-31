@@ -17,12 +17,18 @@
   color-scheme: light;
   --app-bg: #fff;
   --app-panel: #fff;
-  --app-canvas: #f6f6f7;
+  --app-canvas: #eef1f6;
   --app-subtle: #fafafa;
   --app-hover: #f1f1f2;
   --app-text: #0a0a0a;
   --app-muted: #6b6b70;
   --app-line: #dcdcdf;
+  --app-field: #d3d9e4;
+  /* the one accent: primary actions and the active page. Change it here and the whole app follows. */
+  --app-accent: #5457d6;
+  --app-accent-text: #fff;
+  --app-zebra: #f3f5f9;
+  --app-th: #dfe4ee;
 
   /* status colours: used only for small dots, icons and chips, never for large surfaces */
   --app-ok: #15803d;
@@ -30,7 +36,7 @@
   --app-info: #1d4ed8;
   --app-danger: #b91c1c;
 
-  --radius-card: 14px;
+  --radius-card: 10px;
   --radius-control: 8px;
 }
 
@@ -44,6 +50,11 @@
   --app-text: #fafafa;
   --app-muted: #a1a1a8;
   --app-line: #2a2a2e;
+  --app-field: #34343a;
+  --app-accent: #7d81f2;
+  --app-accent-text: #0a0a0a;
+  --app-zebra: #111114;
+  --app-th: #1d1d22;
 
   --app-ok: #4ade80;
   --app-warn: #fbbf24;
@@ -159,18 +170,20 @@ den-calendar *::after {
 
 .card {
   min-width: 0;
-  border: 1px solid var(--app-line);
+  border: 1px solid transparent;
   border-radius: var(--radius-card);
   background: var(--app-panel);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
 }
+
+:root[data-theme='dark'] .card { border-color: var(--app-line); box-shadow: none; }
 
 .card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--app-line);
+  padding: 16px 20px 8px;
 }
 
 .card-title {
@@ -178,8 +191,8 @@ den-calendar *::after {
   align-items: center;
   gap: 10px;
   margin: 0;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .card-title i {
@@ -293,14 +306,14 @@ den-calendar *::after {
 }
 
 .btn--primary {
-  border-color: var(--app-text);
-  background: var(--app-text);
-  color: var(--app-bg);
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: var(--app-accent-text);
 }
 
 .btn--primary:hover {
-  background: var(--app-text);
-  opacity: 0.86;
+  background: var(--app-accent);
+  opacity: 0.88;
 }
 
 .btn--icon {
@@ -320,16 +333,16 @@ den-calendar *::after {
 }
 
 .label {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .input {
   width: 100%;
   min-width: 0;
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--app-line);
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--app-field);
   border-radius: var(--radius-control);
   background: var(--app-bg);
   color: var(--app-text);
@@ -343,7 +356,7 @@ textarea.input {
 }
 
 .input:focus {
-  border-color: var(--app-text);
+  border-color: var(--app-accent);
 }
 
 .input:focus-visible {
@@ -455,3 +468,8 @@ body.cal-dragging * {
 
 /* components set display on their own wrappers, which would otherwise beat the hidden attribute */
 [hidden] { display: none !important; }
+
+/* ---- Standard table: grey header row, zebra rows, no vertical lines (any grid of rows can wear it) ---- */
+.zebra .th { background: var(--app-th); font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--app-text); padding-inline: 12px; }
+.zebra .tr { border-top: 0; padding-inline: 12px; }
+.zebra .tr:not(.th):nth-child(even) { background: var(--app-zebra); }

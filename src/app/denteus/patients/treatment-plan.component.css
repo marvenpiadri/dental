@@ -6,8 +6,8 @@
 .label { font-size: 12px; color: var(--app-muted); font-weight: 600; }
 .error-text { margin: 8px 0 0; color: var(--app-danger); font-size: 13px; }
 .table { margin-top: 16px; overflow-x: auto; }
-.tr { display: grid; grid-template-columns: 110px 70px minmax(160px, 1fr) 90px 90px 90px 90px 40px; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--app-line); min-width: 780px; }
-.th { border-top: 0; font-size: 12px; font-weight: 700; color: var(--app-muted); text-transform: uppercase; letter-spacing: .04em; }
+.tr { display: grid; grid-template-columns: 110px 70px minmax(160px, 1fr) 90px 90px 90px 90px 40px; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--app-line); min-width: 780px; }
+.th { font-size: 13px; }
 .num { text-align: end; font-variant-numeric: tabular-nums; }
 .muted { color: var(--app-muted); font-size: 13px; }
 .owed { color: var(--app-danger); font-weight: 700; }

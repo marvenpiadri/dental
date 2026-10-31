@@ -28,7 +28,7 @@
 @if (priceInvalid()) { <p class="error-text" id="price-error" role="alert">{{ t('plan.price.error') }}</p> }
 
 @if (sorted().length) {
-  <div class="table" role="table" [attr.aria-label]="t('act.list')">
+  <div class="table zebra" role="table" [attr.aria-label]="t('act.list')">
     <div class="tr th" role="row">
       <span role="columnheader">{{ t('act.date') }}</span><span role="columnheader">{{ t('plan.tooth') }}</span><span role="columnheader">{{ t('plan.procedure') }}</span>
       <span class="num" role="columnheader">{{ t('plan.price') }}</span><span class="num" role="columnheader">{{ t('act.received') }}</span><span class="num" role="columnheader">{{ t('act.remaining') }}</span><span role="columnheader">{{ t('act.status') }}</span><span></span>
