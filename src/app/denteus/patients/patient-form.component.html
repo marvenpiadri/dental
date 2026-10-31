@@ -20,7 +20,7 @@
       <a class="btn" routerLink="/patients">{{ t('profile.notFound.cta') }}</a>
     </div>
   } @else {
-    <form id="patient-form" class="stack narrow" novalidate (submit)="$event.preventDefault(); submit()">
+    <form id="patient-form" class="grid-2 form-grid" novalidate (submit)="$event.preventDefault(); submit()">
       @if (submitted() && hasProblems()) {
         <p class="banner" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>{{ t('form.error.summary') }}</p>
       }

@@ -15,7 +15,7 @@ The calendar is the exception inside the exception: it stays strict even though 
 
 Every page follows the same recipe, set once in `src/styles.css` so new pages inherit it:
 
-- **Canvas** light blue-grey (`--app-canvas`), content in white **panels** (`.card`): 10px radius, soft shadow, no outline (dark mode keeps a 1px line instead of a shadow).
+- **Grid, not floating cards**: pages have no outer padding and no gaps. Panels (`.card`) sit edge to edge, separated only by 1px lines, square corners. Wide pages use `.grid-wide` (two columns) or `.grid-2`/`.grid-kpi`; tab strips are edge to edge with an underline on the open tab.
 - **Panel title** 16px bold (`.card-title`), no rule under it. The page title lives in the 64px header, not in a panel.
 - **Forms**: bold 13px label above a 44px field (`.field`, `.label`, `.input`), one column, full width, two columns only for short pairs. Border `--app-field`.
 - **Tables**: grey header row, zebra rows, no vertical lines (`.zebra` on any grid of rows).

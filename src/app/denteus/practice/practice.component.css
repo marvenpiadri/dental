@@ -1,6 +1,8 @@
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border: 1px solid var(--app-line); border-radius: 999px; background: var(--app-panel); color: var(--app-text); font: inherit; font-weight: 600; cursor: pointer; }
-.pill.on { background: var(--app-text); border-color: var(--app-text); color: var(--app-bg); }
+/* Standard tab strip: edge to edge, underline marks the open tab. */
+.tabs { display: flex; overflow-x: auto; padding: 0 12px; border-bottom: 1px solid var(--app-line); background: var(--app-panel); }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 46px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; background: transparent; color: var(--app-muted); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.pill:hover { color: var(--app-text); background: var(--app-hover); }
+.pill.on { color: var(--app-text); border-bottom-color: var(--app-text); }
 .due-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--app-danger); }
 .row { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--app-line); }
 .card-head + .row { border-top: 0; }

@@ -1,7 +1,8 @@
-.tabs { display: flex; gap: 6px; }
-.pill { min-height: 32px; padding: 0 14px; border: 1px solid var(--app-line); border-radius: 999px; background: transparent; color: var(--app-muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+/* Standard tab strip: edge to edge, underline marks the open tab. */
+.tabs { display: flex; overflow-x: auto; padding: 0 12px; border-bottom: 1px solid var(--app-line); background: var(--app-panel); }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 46px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; background: transparent; color: var(--app-muted); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .pill:hover { color: var(--app-text); background: var(--app-hover); }
-.pill.on { border-color: var(--app-text); background: var(--app-text); color: var(--app-bg); }
+.pill.on { color: var(--app-text); border-bottom-color: var(--app-text); }
 .tall { min-height: 260px; }
 .bars { display: flex; align-items: flex-end; gap: 3px; height: 180px; padding: 20px 20px 0; }
 .bar { flex: 1; min-width: 2px; border-radius: 3px 3px 0 0; background: var(--app-text); }
@@ -15,7 +16,6 @@
 .meter-value { font-variant-numeric: tabular-nums; font-weight: 600; }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .note { margin: 0; padding: 0 20px 16px; }
-@media (max-width: 700px) { .tabs { gap: 4px; } .pill { min-height: 30px; padding: 0 9px; font-size: 12px; } }
 .kpi {
   display: flex;
   align-items: center;
@@ -42,3 +42,5 @@
 .icon-tile.ok { color: var(--app-ok); }
 .warn-text { color: var(--app-warn); font-weight: 600; }
 
+.tabs { border-bottom: 0; padding: 0; background: transparent; }
+.pill { min-height: 63px; }
