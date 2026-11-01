@@ -64,3 +64,4 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .ov-h { margin: 6px 0 0; font-size: 13px; }
 .ov-row { margin: 0; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--app-line); }
 @media (max-width: 800px) { .ov-body { grid-template-columns: 1fr; overflow-y: auto; } .ov-3d { height: 45vh; } }
+.ov-pulp { position: absolute; inset-inline-end: 12px; inset-block-start: 10px; font-size: 13px; display: flex; gap: 6px; align-items: center; }

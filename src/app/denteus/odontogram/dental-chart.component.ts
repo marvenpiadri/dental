@@ -147,6 +147,7 @@ export class DentalChartComponent {
   }
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
   protected readonly open3d = signal<number | null>(null);
+  protected readonly pulp3d = signal(false);
   /** Dated findings for the overlay's tooth, newest first. */
   protected readonly toothHistory = computed(() => {
     const n = this.open3d();

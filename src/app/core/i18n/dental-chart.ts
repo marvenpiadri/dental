@@ -422,6 +422,7 @@ const D = {
   'dc.3d.fillings': ['fillings', 'obturations'],
   'dc.3d.clean': ['clean', 'saine'],
   'dc.3d.none': ['No saved exams yet.', 'Aucun examen enregistré.'],
+  'dc.3d.pulp': ['Show pulp', 'Afficher la pulpe'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;
