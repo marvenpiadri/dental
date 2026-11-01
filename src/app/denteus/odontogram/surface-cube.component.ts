@@ -9,7 +9,7 @@ export type CubeSurface = 'buccal' | 'mesial' | 'occlusal' | 'distal' | 'lingual
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @for (f of faces(); track f.key) {
-      <button type="button" class="f" [class.caries]="f.state === 'caries'" [class.fill]="f.state === 'fill'" [style.grid-area]="f.area"
+      <button type="button" class="f" [class.caries]="f.state === 'caries'" [class.fill]="f.state === 'fill'" [class.sel]="marked().includes(f.key)" [style.grid-area]="f.area"
         [disabled]="readonly()" [attr.aria-label]="f.key + ' ' + f.state" (click)="pick.emit(f.key)"></button>
     }
   `,
@@ -19,6 +19,7 @@ export type CubeSurface = 'buccal' | 'mesial' | 'occlusal' | 'distal' | 'lingual
     .f:disabled { cursor: default; }
     .f:not(:disabled):hover { border-color: var(--app-text); }
     .f.caries { background: #dc2626; border-color: #dc2626; }
+    .f.sel { outline: 2px solid #16a34a; outline-offset: 0; z-index: 1; }
     .f.fill { background: #2563eb; border-color: #2563eb; }
   `,
 })
@@ -26,6 +27,8 @@ export class SurfaceCubeComponent {
   readonly state = input.required<ToothRecord>();
   readonly no = input.required<number>();
   readonly readonly = input(false);
+  /** Surfaces currently selected in the 3D view. */
+  readonly marked = input<readonly string[]>([]);
   readonly pick = output<CubeSurface>();
 
   protected readonly faces = computed(() => {

@@ -146,10 +146,35 @@ export class DentalChartComponent {
     if (ev.ctrlKey || ev.metaKey || ev.shiftKey) this.selected.set(cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]);
     else this.selected.set(cur.length === 1 && cur[0] === n ? [] : [n]);
     this.open3d.set(this.store.view3d() && this.selected().length === 1 ? this.selected()[0] : null);
+    this.areas.set([]);
   }
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
   protected readonly open3d = signal<number | null>(null);
   protected readonly pulp3d = signal(false);
+  /** Areas picked in the 3D view: crown surfaces and thirds of the root. */
+  protected readonly areas = signal<readonly string[]>([]);
+  protected readonly hovered3d = signal<string | null>(null);
+  protected pickArea(id: string, additive: boolean): void {
+    const cur = this.areas();
+    this.areas.set(additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : cur.length === 1 && cur[0] === id ? [] : [id]);
+  }
+  protected readonly areaSurfaces = computed(() => this.areas().filter((a) => !a.startsWith('root-')));
+  protected readonly areaRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')));
+  /** Applies a condition to every selected area of the open tooth. */
+  protected applyAreas(what: 'caries' | 'filling' | 'clean'): void {
+    const n = this.open3d(); if (n === null) return;
+    const t = this.stateOf(n);
+    const to = (e: ToothEdit) => this.apply(e, false, [n]);
+    for (const s of this.areaSurfaces()) {
+      if (what === 'caries') { if (t.fillingSurfaces.has(s)) to({ kind: 'fillingSurface', surface: s, on: false }); to({ kind: 'caries', surface: s, on: true }); }
+      else if (what === 'filling') {
+        if (this.stateOf(n).fillingMaterial === 'none') to({ kind: 'fillingMaterial', value: 'composite' });
+        to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: true });
+      } else { to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: false }); }
+    }
+    // The record keeps root caries for the whole root, so any selected third sets or clears it.
+    if (this.areaRoots().length) to({ kind: 'enum', field: 'rootCaries', value: what === 'caries' ? 'active' : what === 'clean' ? 'none' : this.stateOf(n).rootCaries });
+  }
   /** Dated findings for the overlay's tooth, newest first. */
   protected readonly toothHistory = computed(() => {
     const n = this.open3d();
