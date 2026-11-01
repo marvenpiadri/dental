@@ -16,6 +16,7 @@ import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
+import { DentalStore } from '../services/dental-store.service';
 import { Tooth3dComponent } from './tooth-3d.component';
 import { SurfaceCubeComponent, type CubeSurface } from './surface-cube.component';
 import { ToothTileComponent } from './tooth-tile.component';
@@ -42,6 +43,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
 })
 export class DentalChartComponent {
   private readonly i18n = inject(I18n);
+  private readonly store = inject(DentalStore);
   protected readonly t = this.i18n.t;
 
   readonly patientId = input.required<string>();
@@ -143,7 +145,7 @@ export class DentalChartComponent {
     const cur = this.selected();
     if (ev.ctrlKey || ev.metaKey || ev.shiftKey) this.selected.set(cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]);
     else this.selected.set(cur.length === 1 && cur[0] === n ? [] : [n]);
-    this.open3d.set(this.selected().length === 1 ? this.selected()[0] : null);
+    this.open3d.set(this.store.view3d() && this.selected().length === 1 ? this.selected()[0] : null);
   }
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
   protected readonly open3d = signal<number | null>(null);

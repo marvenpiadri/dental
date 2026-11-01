@@ -16,6 +16,8 @@ export class Tooth3dComponent implements OnDestroy {
   readonly state = input.required<ToothRecord>();
   /** Show the pulp chamber and canals through the tooth. */
   readonly showPulp = input(false);
+  /** Shown instead of the view when WebGL or the meshes cannot load. */
+  readonly unavailable = input('');
   /** A click on the crown, resolved to one of the five surfaces from the hit face's local normal. */
   readonly surface = output<CubeSurface>();
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -28,7 +30,7 @@ export class Tooth3dComponent implements OnDestroy {
       const t = this.state(), no = this.no(), pulp = this.showPulp();
       if (!this.browser) return;
       if (this.ctx) { this.ctx.apply(t, no, pulp); return; }
-      if (!this.starting) { this.starting = true; void this.start().then(() => this.ctx?.apply(this.state(), this.no(), this.showPulp())); }
+      if (!this.starting) { this.starting = true; void this.start().then(() => this.ctx?.apply(this.state(), this.no(), this.showPulp())).catch(() => { this.host().nativeElement.textContent = this.unavailable(); }); }
     });
   }
 
@@ -51,7 +53,7 @@ export class Tooth3dComponent implements OnDestroy {
     let down: [number, number] | null = null;
     renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
     renderer.domElement.addEventListener('pointerup', (e) => {
-      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4 || !s.tooth.visible) return;
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4 || !s.tooth.visible || s.tooth.userData['ghost']) return;
       const r = renderer.domElement.getBoundingClientRect();
       ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(ndc, s.camera);

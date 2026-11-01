@@ -262,7 +262,7 @@
   <div class="ov" role="dialog" aria-modal="true" [attr.aria-label]="t('dc.3d.title', { n: num(n3) })" (keydown.escape)="open3d.set(null)">
     <div class="ov-head"><strong>{{ t('dc.3d.title', { n: num(n3) }) }}</strong><button type="button" class="btn" (click)="open3d.set(null)">{{ t('dc.3d.close') }}</button></div>
     <div class="ov-body">
-      <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" [showPulp]="pulp3d()" (surface)="cube(n3, $event)" /><label class="ov-pulp"><input type="checkbox" [checked]="pulp3d()" (change)="pulp3d.set($any($event.target).checked)" /> {{ t('dc.3d.pulp') }}</label><den-surface-cube class="ov-cube" [no]="n3" [state]="stateOf(n3)" [readonly]="readOnly()" (pick)="cube(n3, $event)" /></div>
+      <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" [showPulp]="pulp3d()" [unavailable]="t('dc.3d.unavailable')" (surface)="cube(n3, $event)" /><label class="ov-pulp"><input type="checkbox" [checked]="pulp3d()" (change)="pulp3d.set($any($event.target).checked)" /> {{ t('dc.3d.pulp') }}</label><den-surface-cube class="ov-cube" [no]="n3" [state]="stateOf(n3)" [readonly]="readOnly()" (pick)="cube(n3, $event)" /></div>
       <div class="ov-side">
         <den-tooth-editor [state]="stateOf(n3)" [teeth]="[n3]" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event, false, [n3])" />
         <h4 class="ov-h">{{ t('dc.3d.history') }}</h4>

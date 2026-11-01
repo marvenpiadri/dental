@@ -100,6 +100,12 @@
         </div>
       </section>
 
+      <section class="card" aria-labelledby="v3d-title">
+        <header class="card-head"><h2 class="card-title" id="v3d-title"><i class="fa-solid fa-cube" aria-hidden="true"></i>{{ t('dc.3d.setting') }}</h2></header>
+        <p class="muted intro">{{ t('dc.3d.setting.intro') }}</p>
+        <label class="page-opt"><input type="checkbox" [checked]="store.view3d()" (change)="store.saveView3d($any($event.target).checked)" />{{ t('dc.3d.setting') }}</label>
+      </section>
+
       <section class="card" aria-labelledby="team-title">
         <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
         <p class="muted intro">{{ t('team.intro') }}</p>

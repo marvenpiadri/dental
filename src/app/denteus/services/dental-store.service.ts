@@ -76,6 +76,8 @@ export class DentalStore {
   readonly catalog = signal<CatalogEntry[]>(defaultCatalog());
   /** Patient-file pages this clinic switched off (Setup). */
   readonly hiddenPages = signal<string[]>([]);
+  /** The 3D tooth overlay; turning it off leaves the flat chart exactly as before. */
+  readonly view3d = signal(true);
   readonly appointments = signal<Appointment[]>([]);
 
   /** Recorded on every change. In the real app this is the signed-in user. */
@@ -135,12 +137,18 @@ export class DentalStore {
     this.catalog.set((await this.database.loadSetting<CatalogEntry[]>('catalog')) ?? defaultCatalog());
 
     this.hiddenPages.set((await this.database.loadSetting<string[]>('hiddenPages')) ?? []);
+    this.view3d.set((await this.database.loadSetting<boolean>('view3d')) ?? true);
 
     const saved = await this.database.loadSchedulingSnapshot();
     this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
     this.loaded.set(true);
+  }
+
+  async saveView3d(on: boolean): Promise<void> {
+    await this.database.saveSetting('view3d', on);
+    this.view3d.set(on);
   }
 
   async saveHiddenPages(ids: string[]): Promise<void> {

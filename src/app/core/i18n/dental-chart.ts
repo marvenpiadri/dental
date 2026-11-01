@@ -423,6 +423,9 @@ const D = {
   'dc.3d.clean': ['clean', 'saine'],
   'dc.3d.none': ['No saved exams yet.', 'Aucun examen enregistré.'],
   'dc.3d.pulp': ['Show pulp', 'Afficher la pulpe'],
+  'dc.3d.setting': ['3D tooth view', 'Vue 3D des dents'],
+  'dc.3d.setting.intro': ['Clicking a tooth in the chart opens it in 3D. Turn this off to keep only the flat chart.', 'Un clic sur une dent du schéma l\'ouvre en 3D. Désactivez pour ne garder que le schéma plat.'],
+  'dc.3d.unavailable': ['3D is not available on this device. You can still edit the tooth here.', 'La 3D n\'est pas disponible sur cet appareil. Vous pouvez quand même modifier la dent ici.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

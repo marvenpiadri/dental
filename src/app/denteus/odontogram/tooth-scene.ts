@@ -116,7 +116,8 @@ export function makeToothScene(T: Three, data: TfData, renderer: import('three')
     const screw = new T.Mesh(new T.CylinderGeometry(0.3, 0.2, 1.9, 24), steel); screw.position.y = -1.3;
     const abut = new T.Mesh(new T.CylinderGeometry(0.22, 0.3, 0.4, 24), steel); abut.position.y = -0.1;
     hardware.add(screw, abut);
-    const socket = new T.Mesh(new T.TorusGeometry(0.7, 0.05, 8, 32), new T.MeshBasicMaterial({ color: 0x888888 }));
+    const socket = new T.Mesh(new T.TorusGeometry(1.1, 0.09, 12, 48), new T.MeshBasicMaterial({ color: 0x777777 }));
+    socket.add(new T.Mesh(new T.CircleGeometry(1.1, 40), new T.MeshBasicMaterial({ color: 0x2a2a2a, transparent: true, opacity: 0.45, side: T.DoubleSide })));
     socket.rotation.x = Math.PI / 2;
     const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
     const bracket = new T.Mesh(new T.BoxGeometry(0.5, 0.35, 0.18), steel);
@@ -175,7 +176,7 @@ export function makeToothScene(T: Three, data: TfData, renderer: import('three')
       // Pulp: shows its diagnosis, or the root filling when the canal is treated.
       const endo = str('endo'), dx = str('pulpDx');
       const treated = endo !== 'none';
-      pulpMat.color.set(treated ? (endo === 'endo-metal-pin' ? 0x555a60 : endo === 'endo-medical-filling' ? 0xb48ac8 : 0xe9e4d6)
+      pulpMat.color.set(treated ? (endo === 'endo-metal-pin' ? 0x444a50 : endo === 'endo-medical-filling' ? 0xb48ac8 : endo === 'endo-glass-pin' ? 0x9fd8d0 : 0xe49aa6)
         : dx === 'necrosis' ? 0x3a3a3a : dx === 'irreversible-pulpitis' ? 0xa1101f : dx === 'reversible-pulpitis' ? 0xe8505b : 0xd9626b);
       const pulpOn = showPulp || treated || dx !== 'normal';
       // Apical lesion at the root tip.
@@ -191,14 +192,16 @@ export function makeToothScene(T: Three, data: TfData, renderer: import('three')
       // Presence: natural, extracted, implant (with or without a crown on it).
       const crownOnImplant = implant && rt !== 'none' && rt !== '';
       uniforms.uRootCut.value = crownOnImplant ? 1 : 0;
-      uniforms.uAlpha.value = pulpOn && !crownOnImplant ? 0.35 : 1; mat.depthWrite = !(pulpOn && !crownOnImplant); pulp.renderOrder = 1;
-      tooth.visible = !gone && (!implant || crownOnImplant);
-      pulp.visible = tooth.visible && pulpOn && !crownOnImplant;
+      const ghost = gone && !implant; // an extracted tooth stays as a faint outline so the gap is still readable and clickable around
+      tooth.userData['ghost'] = ghost;
+      uniforms.uAlpha.value = ghost ? 0.14 : pulpOn && !crownOnImplant ? 0.35 : 1; mat.depthWrite = !(ghost || (pulpOn && !crownOnImplant)); pulp.renderOrder = 1;
+      tooth.visible = ghost || !gone && (!implant || crownOnImplant);
+      pulp.visible = tooth.visible && !ghost && pulpOn && !crownOnImplant;
       hardware.visible = implant;
       hardware.position.y = yMax - uniforms.uCrown.value - mid(yMin, yMax);
       hardware.scale.setScalar(1 / scale);
       abut.visible = implant && (str('prosthesis') !== 'none' || crownOnImplant || true);
-      socket.visible = gone || R['extractionWound'] === true;
+      socket.visible = false; // the ghost outline replaces the old ring
       render();
     };
     return { scene, camera, group, tooth, uniforms, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
