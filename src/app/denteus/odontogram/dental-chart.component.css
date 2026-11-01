@@ -52,3 +52,4 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .nums { min-height: 20px; }
 .incisal { justify-self: center; width: 22px; height: 12px; border-radius: 50%; border: 1px solid var(--app-line); background: var(--app-subtle); }
 .surf { padding-block: 4px; }
+.cubes { padding-block: 0; }

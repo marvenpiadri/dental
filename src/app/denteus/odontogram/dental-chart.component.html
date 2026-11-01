@@ -103,6 +103,18 @@
         }
       }
     </div>
+    <div class="arch cubes">
+      @for (n of upper; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-surface-cube [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" (pick)="cube(n, $event)" /> }
+      }
+    </div>
+    <div class="arch cubes">
+      @for (n of lower; track n) {
+        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-surface-cube [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" (pick)="cube(n, $event)" /> }
+      }
+    </div>
     <div class="arch nums">
       @for (n of lower; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
@@ -144,6 +156,14 @@
           }
         }
       </div>
+      @if (!top) {
+      <div class="arch cubes">
+        @for (n of arch; track n) {
+          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-surface-cube [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" (pick)="cube(n, $event)" /> }
+        }
+      </div>
+      }
     }
   </div>
   }

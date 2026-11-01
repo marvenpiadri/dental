@@ -16,6 +16,7 @@ import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
+import { SurfaceCubeComponent, type CubeSurface } from './surface-cube.component';
 import { ToothTileComponent } from './tooth-tile.component';
 
 const NUMBERING_KEY = 'dentaleus.numbering';
@@ -33,7 +34,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
+  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, SurfaceCubeComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -141,6 +142,17 @@ export class DentalChartComponent {
     const cur = this.selected();
     if (ev.ctrlKey || ev.metaKey || ev.shiftKey) this.selected.set(cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]);
     else this.selected.set(cur.length === 1 && cur[0] === n ? [] : [n]);
+  }
+  /** Click a face: clean → caries → filling → clean. */
+  protected cube(n: number, s: CubeSurface): void {
+    const t = this.stateOf(n);
+    const to = (e: ToothEdit) => this.apply(e, false, [n]);
+    if (t.fillingSurfaces.has(s)) to({ kind: 'fillingSurface', surface: s, on: false });
+    else if (t.caries.has('caries-' + s)) {
+      if (t.fillingMaterial === 'none') to({ kind: 'fillingMaterial', value: 'composite' });
+      to({ kind: 'caries', surface: s, on: false });
+      to({ kind: 'fillingSurface', surface: s, on: true });
+    } else to({ kind: 'caries', surface: s, on: true });
   }
   protected selectArch(teeth: readonly number[]): void { this.selected.set(teeth); }
 
