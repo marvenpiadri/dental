@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, PLATFORM_ID,
 import { isPlatformBrowser } from '@angular/common';
 import type { ToothRecord } from './engine/chart';
 import type { CubeSurface } from './surface-cube.component';
-import { loadTf, makeToothScene, type Three } from './tooth-scene';
+import { loadLib, makeToothScene, type Three } from './tooth-scene';
 
 /** One tooth from the ToothFairy3 scan (case F_026), stood on its own long axis. Surfaces are painted by shader from the chart record. */
 @Component({
@@ -37,7 +37,7 @@ export class Tooth3dComponent implements OnDestroy {
   ngOnDestroy(): void { this.ctx?.dispose(); this.ctx = null; }
 
   private async start(): Promise<void> {
-    const [T, { OrbitControls }, data] = await Promise.all([import('three') as Promise<Three>, import('three/examples/jsm/controls/OrbitControls.js'), loadTf()]);
+    const [T, { OrbitControls }, data] = await Promise.all([import('three') as Promise<Three>, import('three/examples/jsm/controls/OrbitControls.js'), loadLib()]);
     const el = this.host().nativeElement;
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -60,10 +60,8 @@ export class Tooth3dComponent implements OnDestroy {
       const hit = ray.intersectObject(s.tooth, false)[0];
       if (!hit?.face) return;
       const p = s.tooth.worldToLocal(hit.point.clone());
-      const u = s.uniforms;
-      if (u.uTop.value - p.y > u.uCrown.value) return; // roots are not surfaces
       const n = hit.face.normal; // already in the tooth's own frame: +y toward the bite, +z toward the lip or cheek
-      const z: CubeSurface = n.y > 0.7 ? 'occlusal' : n.z > 0.5 ? 'buccal' : n.z < -0.5 ? 'lingual' : p.x * u.uMesial.value > 0 ? 'mesial' : 'distal';
+      const z: CubeSurface = n.y > 0.7 ? 'occlusal' : n.z > 0.5 ? 'buccal' : n.z < -0.5 ? 'lingual' : p.x * s.mesial() > 0 ? 'mesial' : 'distal';
       this.surface.emit(z);
     });
     this.ctx = { apply: s.apply, dispose: () => { ro.disconnect(); controls?.dispose(); renderer.dispose(); renderer.domElement.remove(); s.dispose(); } };
