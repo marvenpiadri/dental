@@ -16,6 +16,7 @@ import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioEditorComponent } from './perio-editor.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
+import { Tooth3dComponent } from './tooth-3d.component';
 import { SurfaceCubeComponent, type CubeSurface } from './surface-cube.component';
 import { ToothTileComponent } from './tooth-tile.component';
 
@@ -34,7 +35,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, SurfaceCubeComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
+  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, SurfaceCubeComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -142,7 +143,21 @@ export class DentalChartComponent {
     const cur = this.selected();
     if (ev.ctrlKey || ev.metaKey || ev.shiftKey) this.selected.set(cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]);
     else this.selected.set(cur.length === 1 && cur[0] === n ? [] : [n]);
+    this.open3d.set(this.selected().length === 1 ? this.selected()[0] : null);
   }
+  /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
+  protected readonly open3d = signal<number | null>(null);
+  /** Dated findings for the overlay's tooth, newest first. */
+  protected readonly toothHistory = computed(() => {
+    const n = this.open3d();
+    if (n === null) return [];
+    return [...this.examinations()].reverse().map((e) => {
+      const r = readChart(e.chart).chart?.status.get(n);
+      const f = r ? [...r.caries].map((c) => String(c).replace('caries-', '')) : [];
+      const fl = r ? [...r.fillingSurfaces].map(String) : [];
+      return { id: e.id, date: e.date, caries: f, fillings: fl, note: e.note ?? '' };
+    });
+  });
   /** Click a face: clean → caries → filling → clean. */
   protected cube(n: number, s: CubeSurface): void {
     const t = this.stateOf(n);

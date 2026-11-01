@@ -415,6 +415,13 @@ const D = {
   'profile.remind.none': ['Nothing to send', 'Rien à envoyer'],
   'profile.remind.nonumber': ['Add a valid mobile number to this patient to send WhatsApp messages.', 'Ajoutez un numéro mobile valide à ce patient pour envoyer des messages WhatsApp.'],
   'reminder.balance': ['Hello {name}, a balance of {amount} remains on your file at {clinic}. Thank you for settling it at your next visit.', 'Bonjour {name}, un solde de {amount} reste à régler sur votre dossier chez {clinic}. Merci de le régler lors de votre prochaine visite.'],
+  'dc.3d.title': ['Tooth {n} · 3D', 'Dent {n} · 3D'],
+  'dc.3d.close': ['Close', 'Fermer'],
+  'dc.3d.history': ['History', 'Historique'],
+  'dc.3d.caries': ['caries', 'carie'],
+  'dc.3d.fillings': ['fillings', 'obturations'],
+  'dc.3d.clean': ['clean', 'saine'],
+  'dc.3d.none': ['No saved exams yet.', 'Aucun examen enregistré.'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 type DKey = keyof typeof D;

@@ -258,4 +258,20 @@
   }
   </div>
   </div>
+  @if (open3d(); as n3) {
+  <div class="ov" role="dialog" aria-modal="true" [attr.aria-label]="t('dc.3d.title', { n: num(n3) })" (keydown.escape)="open3d.set(null)">
+    <div class="ov-head"><strong>{{ t('dc.3d.title', { n: num(n3) }) }}</strong><button type="button" class="btn" (click)="open3d.set(null)">{{ t('dc.3d.close') }}</button></div>
+    <div class="ov-body">
+      <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" /><den-surface-cube class="ov-cube" [no]="n3" [state]="stateOf(n3)" [readonly]="readOnly()" (pick)="cube(n3, $event)" /></div>
+      <div class="ov-side">
+        <den-tooth-editor [state]="stateOf(n3)" [teeth]="[n3]" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event, false, [n3])" />
+        <h4 class="ov-h">{{ t('dc.3d.history') }}</h4>
+        @for (h of toothHistory(); track h.id) {
+          <p class="ov-row"><b>{{ h.date }}</b> {{ h.caries.length ? t('dc.3d.caries') + ' ' + h.caries.join(', ') : '' }} {{ h.fillings.length ? t('dc.3d.fillings') + ' ' + h.fillings.join(', ') : '' }} {{ !h.caries.length && !h.fillings.length ? t('dc.3d.clean') : '' }}</p>
+        } @empty { <p class="ov-row">{{ t('dc.3d.none') }}</p> }
+        <den-tooth-files [patientId]="patientId()" [tooth]="n3" />
+      </div>
+    </div>
+  </div>
+  }
 </div>
