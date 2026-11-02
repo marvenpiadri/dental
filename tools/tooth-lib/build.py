@@ -3,7 +3,7 @@
   python3 build.py            -> ../../public/models/teeth/teeth.bin + teeth.json
   python3 build.py --glb      -> also teeth-preview.glb, openable in Blender
 
-Per tooth: crown and root cut at the neck (capped, watertight), the pulp, a restoration shell that follows the real
+Per tooth: crown and root cut at the neck (capped, watertight), the root split into its individual roots (up to three, each with a fractured variant) plus the trunk above the furcation, the pulp, a restoration shell that follows the real
 crown, a prepared-tooth stump, and soft per-vertex surface weights. Plus procedural hardware. Units are mm, origin at the
 neck, +y toward the bite, +z toward the lip or cheek; `mesial` says which side of x faces the midline.
 """
@@ -14,6 +14,7 @@ import trimesh
 from pathlib import Path
 from frames import load, mesh_of, frames
 from geom import vertex_normals, smoothstep, hardware, flat
+import roots as rootsplit
 
 OUT = Path(__file__).resolve().parents[2] / 'public' / 'models' / 'teeth'
 SHELL_MM, PREP_MM = 0.35, 0.9
@@ -90,8 +91,13 @@ def build():
         cn = vertex_normals(up.vertices, up.faces)
         za, zb = zone_weights(cn, up.vertices[:, 1], 0.0, fm['mesial'])
         add(f'crown-{f}', 'crown', f, up.vertices, cn, up.faces, dict(zoneA=za, zoneB=zb), **meta)
-        rn = vertex_normals(down.vertices, down.faces)
-        add(f'root-{f}', 'root', f, down.vertices, rn, down.faces, **meta)
+        trunk, rs, _ = rootsplit.split(down, f, fm['mesial'])
+        if trunk is not None:
+            add(f'trunk-{f}', 'trunk', f, trunk[0], trunk[1], trunk[2], **meta)
+        for r in rs:
+            k = r['slot']
+            add(f'root-{f}-{k}', 'root', f, r['pos'], r['nrm'], r['idx'], slot=k, key=r['key'], tip=[round(v, 3) for v in r['tip']], broken=f'rootbrk-{f}-{k}', **meta)
+            add(f'rootbrk-{f}-{k}', 'rootbroken', f, r['bpos'], r['bnrm'], r['bidx'], slot=k, **meta)
         # Restoration shell: same surface pushed out, open at the neck, tapering to nothing there so it seats on the tooth.
         sv = open_up.vertices; sn = vertex_normals(sv, open_up.faces)
         taper = smoothstep(0.0, 1.5, sv[:, 1])[:, None]

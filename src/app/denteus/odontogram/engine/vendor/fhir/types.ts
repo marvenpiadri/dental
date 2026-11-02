@@ -46,6 +46,9 @@ export interface ToothRecord {
   brokenMesial?: boolean;
   brokenIncisal?: boolean;
   brokenDistal?: boolean;
+  brokenRoot1?: boolean;
+  brokenRoot2?: boolean;
+  brokenRoot3?: boolean;
   extractionWound?: boolean;
   extractionPlan?: boolean;
   parapulpalPin?: boolean;

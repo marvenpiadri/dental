@@ -154,12 +154,37 @@ export class DentalChartComponent {
   /** Areas picked in the 3D view: crown surfaces and thirds of the root. */
   protected readonly areas = signal<readonly string[]>([]);
   protected readonly hovered3d = signal<string | null>(null);
+  /** The roots of the open tooth, reported by the 3D view (a molar has up to three). */
+  protected readonly roots3d = signal<{ slot: number; key: string }[]>([]);
   protected pickArea(id: string, additive: boolean): void {
     const cur = this.areas();
     this.areas.set(additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : cur.length === 1 && cur[0] === id ? [] : [id]);
   }
-  protected readonly areaSurfaces = computed(() => this.areas().filter((a) => !a.startsWith('root-')));
-  protected readonly areaRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')));
+  /** Dental names for this tooth: front teeth have an incisal edge and a labial face, upper teeth a palatal face. */
+  protected readonly areaNames = computed<Record<string, string>>(() => {
+    const n = this.open3d() ?? 0, front = n % 10 <= 3, upper = n < 30, t = this.t;
+    const names: Record<string, string> = {
+      occlusal: t(front ? 'dc.a.incisal' : 'dc.a.occlusal'), buccal: t(front ? 'dc.a.labial' : 'dc.a.buccal'), lingual: t(upper ? 'dc.a.palatal' : 'dc.a.lingual'),
+      mesial: t('dc.a.mesial'), distal: t('dc.a.distal'), cervical: t('dc.a.cervical'), apical: t('dc.a.apical'),
+    };
+    const many = this.roots3d().length > 1;
+    for (const r of this.roots3d()) names[`root-${r.slot}`] = many ? t((`dc.root.${r.key}`) as 'dc.root.p') : t('dc.a.radicular');
+    return names;
+  });
+  protected readonly areaText = computed(() => this.areas().map((a) => this.areaNames()[a] ?? a).join(' · '));
+  protected selectCoronal(): void { this.areas.set(['occlusal', 'buccal', 'lingual', 'mesial', 'distal']); }
+  protected selectRadicular(): void { this.areas.set(['cervical', 'apical', ...this.roots3d().map((r) => `root-${r.slot}`)]); }
+  protected readonly areaSurfaces = computed(() => this.areas().filter((a) => ['occlusal', 'buccal', 'lingual', 'mesial', 'distal'].includes(a)));
+  protected readonly areaRoots = computed(() => this.areas().filter((a) => a.startsWith('root-') || a === 'apical'));
+  /** Selected roots that are fractured / not (a fracture belongs to one root, so only whole roots are toggled). */
+  protected readonly pickedRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')).map((a) => Number(a.slice(5))));
+  protected rootBroken(k: number): boolean { const n = this.open3d(); return n !== null && !!(this.stateOf(n) as unknown as Record<string, boolean>)[`brokenRoot${k}`]; }
+  protected allBroken(): boolean { const ks = this.pickedRoots(); return ks.length > 0 && ks.every((k) => this.rootBroken(k)); }
+  protected toggleBroken(): void {
+    const n = this.open3d(); if (n === null) return;
+    const ks = this.pickedRoots(), on = !this.allBroken();
+    for (const k of ks) this.apply({ kind: 'flag', field: `brokenRoot${k}`, on } as ToothEdit, false, [n]);
+  }
   /** Applies a condition to every selected area of the open tooth. */
   protected applyAreas(what: 'caries' | 'filling' | 'clean'): void {
     const n = this.open3d(); if (n === null) return;

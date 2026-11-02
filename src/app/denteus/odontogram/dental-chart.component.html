@@ -262,14 +262,17 @@
   <div class="ov" role="dialog" aria-modal="true" [attr.aria-label]="t('dc.3d.title', { n: num(n3) })" (keydown.escape)="open3d.set(null)">
     <div class="ov-head"><strong>{{ t('dc.3d.title', { n: num(n3) }) }}</strong><button type="button" class="btn" (click)="open3d.set(null)">{{ t('dc.3d.close') }}</button></div>
     <div class="ov-body">
-      <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" [showPulp]="pulp3d()" [unavailable]="t('dc.3d.unavailable')" [selected]="areas()" (hover)="hovered3d.set($event)" (area)="pickArea($event.id, $event.additive)" /><label class="ov-pulp"><input type="checkbox" [checked]="pulp3d()" (change)="pulp3d.set($any($event.target).checked)" /> {{ t('dc.3d.pulp') }}</label><den-surface-cube class="ov-cube" [no]="n3" [state]="stateOf(n3)" [marked]="areas()" (pick)="pickArea($event, false)" /></div>
+      <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" [showPulp]="pulp3d()" [unavailable]="t('dc.3d.unavailable')" (roots)="roots3d.set($event)" [selected]="areas()" [labels]="areaNames()" (hover)="hovered3d.set($event)" (area)="pickArea($event.id, $event.additive)" /><label class="ov-pulp"><input type="checkbox" [checked]="pulp3d()" (change)="pulp3d.set($any($event.target).checked)" /> {{ t('dc.3d.pulp') }}</label><den-surface-cube class="ov-cube" [no]="n3" [state]="stateOf(n3)" [marked]="areas()" (pick)="pickArea($event, false)" /></div>
       <div class="ov-side">
         <div class="ov-areas" role="group" [attr.aria-label]="t('dc.3d.areas')">
-          <span class="ov-sel">{{ areas().length ? areas().join(', ') : (hovered3d() ?? t('dc.3d.pickHint')) }}</span>
+          <span class="ov-sel">{{ areas().length ? areaText() : (hovered3d() ? areaNames()[hovered3d()!] : t('dc.3d.pickHint')) }}</span>
           <button type="button" class="btn" [disabled]="readOnly() || !areas().length" (click)="applyAreas('caries')">{{ t('dc.3d.act.caries') }}</button>
           <button type="button" class="btn" [disabled]="readOnly() || !areaSurfaces().length" (click)="applyAreas('filling')">{{ t('dc.3d.act.filling') }}</button>
           <button type="button" class="btn" [disabled]="readOnly() || !areas().length" (click)="applyAreas('clean')">{{ t('dc.3d.act.clean') }}</button>
           <button type="button" class="btn" [disabled]="!areas().length" (click)="areas.set([])">{{ t('dc.3d.act.clear') }}</button>
+          <button type="button" class="btn" [disabled]="readOnly() || !pickedRoots().length" [attr.aria-pressed]="allBroken()" (click)="toggleBroken()">{{ t('dc.3d.act.broken') }}</button>
+          <button type="button" class="btn" (click)="selectCoronal()">{{ t('dc.a.coronal') }}</button>
+          <button type="button" class="btn" (click)="selectRadicular()">{{ t('dc.a.radicularAll') }}</button>
         </div>
         <den-tooth-editor [state]="stateOf(n3)" [teeth]="[n3]" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event, false, [n3])" />
         <h4 class="ov-h">{{ t('dc.3d.history') }}</h4>

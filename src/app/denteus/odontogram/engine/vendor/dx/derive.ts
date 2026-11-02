@@ -176,7 +176,7 @@ export function deriveDentalDiagnoses(payload: unknown): DerivedDiagnosis[] {
         if (apical) add(apical);
       }
       // Fracture (K/S02.5) — same broken-crown predicate as fractureSummaryLabel
-      if (rec['brokenMesial'] || rec['brokenIncisal'] || rec['brokenDistal']) add("toothFracture");
+      if (rec['brokenMesial'] || rec['brokenIncisal'] || rec['brokenDistal'] || rec['brokenRoot1'] || rec['brokenRoot2'] || rec['brokenRoot3']) add("toothFracture");
     }
     applyDxOverrides(keys, rec['dxOverrides'] as Record<string, unknown> | undefined, natural);
     for (const key of keys) {

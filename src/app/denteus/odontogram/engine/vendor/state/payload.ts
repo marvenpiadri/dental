@@ -80,6 +80,9 @@ export function defaultState(){
     brokenMesial: false,
     brokenIncisal: false,
     brokenDistal: false,
+    brokenRoot1: false, // up to three roots can be fractured; which root a slot means comes from the tooth library
+    brokenRoot2: false,
+    brokenRoot3: false,
     extractionWound: false,
     extractionPlan: false,
     parapulpalPin: false,
@@ -215,6 +218,9 @@ export function serializeState(s: Any){
     brokenMesial: !!s.brokenMesial,
     brokenIncisal: !!s.brokenIncisal,
     brokenDistal: !!s.brokenDistal,
+    brokenRoot1: !!s.brokenRoot1,
+    brokenRoot2: !!s.brokenRoot2,
+    brokenRoot3: !!s.brokenRoot3,
     extractionWound: !!s.extractionWound,
     extractionPlan: !!s.extractionPlan,
     parapulpalPin: !!s.parapulpalPin,
@@ -736,6 +742,9 @@ export function hydrateState(raw: Any, inferLegacySecondaryCaries = true){
   s.brokenMesial = !!raw.brokenMesial;
   s.brokenIncisal = !!raw.brokenIncisal;
   s.brokenDistal = !!raw.brokenDistal;
+  s.brokenRoot1 = !!raw.brokenRoot1;
+  s.brokenRoot2 = !!raw.brokenRoot2;
+  s.brokenRoot3 = !!raw.brokenRoot3;
   s.extractionWound = !!raw.extractionWound;
   s.extractionPlan = !!raw.extractionPlan;
   s.parapulpalPin = !!raw.parapulpalPin;
