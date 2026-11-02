@@ -69,7 +69,7 @@ def split(down, f, mesial):
             if not forced and _count(down, ymin * t) >= n:
                 yf = ymin * t; break
         yf -= 0.6
-        trunk_mask = tri_c[:, 1] > yf
+        trunk_mask = np.zeros(len(idx), bool)  # no shared trunk: every horn runs from the neck to its tip so it selects whole
         d = np.linalg.norm(tri_c[:, None, [0, 2]] - cen2[None], axis=2)
         owner = d.argmin(1)
         groups = [(~trunk_mask) & (owner == k) for k in range(n)]
