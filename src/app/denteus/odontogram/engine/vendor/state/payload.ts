@@ -83,6 +83,12 @@ export function defaultState(){
     brokenRoot1: false, // up to three roots can be fractured; which root a slot means comes from the tooth library
     brokenRoot2: false,
     brokenRoot3: false,
+    rootWork1: false, // a root worked on / decayed, marked on its own
+    rootWork2: false,
+    rootWork3: false,
+    rootDecay1: false, // a root worked on / decayed, marked on its own
+    rootDecay2: false,
+    rootDecay3: false,
     extractionWound: false,
     extractionPlan: false,
     parapulpalPin: false,
@@ -221,6 +227,12 @@ export function serializeState(s: Any){
     brokenRoot1: !!s.brokenRoot1,
     brokenRoot2: !!s.brokenRoot2,
     brokenRoot3: !!s.brokenRoot3,
+    rootWork1: !!s.rootWork1,
+    rootWork2: !!s.rootWork2,
+    rootWork3: !!s.rootWork3,
+    rootDecay1: !!s.rootDecay1,
+    rootDecay2: !!s.rootDecay2,
+    rootDecay3: !!s.rootDecay3,
     extractionWound: !!s.extractionWound,
     extractionPlan: !!s.extractionPlan,
     parapulpalPin: !!s.parapulpalPin,
@@ -745,6 +757,12 @@ export function hydrateState(raw: Any, inferLegacySecondaryCaries = true){
   s.brokenRoot1 = !!raw.brokenRoot1;
   s.brokenRoot2 = !!raw.brokenRoot2;
   s.brokenRoot3 = !!raw.brokenRoot3;
+  s.rootWork1 = !!raw.rootWork1;
+  s.rootWork2 = !!raw.rootWork2;
+  s.rootWork3 = !!raw.rootWork3;
+  s.rootDecay1 = !!raw.rootDecay1;
+  s.rootDecay2 = !!raw.rootDecay2;
+  s.rootDecay3 = !!raw.rootDecay3;
   s.extractionWound = !!raw.extractionWound;
   s.extractionPlan = !!raw.extractionPlan;
   s.parapulpalPin = !!raw.parapulpalPin;

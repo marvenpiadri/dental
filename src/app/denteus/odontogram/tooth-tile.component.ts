@@ -13,7 +13,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.upper]': 'upper()' },
   template: `
-    <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="click($event)">
+    <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [class.planned]="planned()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="click($event)">
       @if (upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
       <span class="art" #art [style.transform]="transform()" [hidden]="!!real()"></span>
       @if (real(); as src) { <img class="real" [src]="src" alt="" draggable="false" /> }
@@ -24,6 +24,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     :host { display: block; min-width: 0; }
     .tile { all: unset; box-sizing: border-box; display: grid; justify-items: center; gap: 2px; width: 100%; padding: 4px 2px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }
     .tile:hover { background: var(--app-hover); }
+    .tile.planned { border-color: #3b82f6; border-style: dashed; background: color-mix(in srgb, #3b82f6 8%, transparent); }
     .tile.selected { border-color: var(--app-text); background: var(--app-hover); }
     .tile:focus-visible { outline: 2px solid var(--app-text); outline-offset: 1px; }
     .art { display: block; width: 100%; max-width: 64px; aspect-ratio: 39 / 72; }
@@ -39,6 +40,8 @@ export class ToothTileComponent {
   readonly no = input.required<number>();
   /** Number as shown to the user (numbering system); defaults to the FDI number. */
   readonly display = input<string | null>(null);
+  /** Plan view: this tooth differs from what is already in the mouth. */
+  protected readonly planned = computed(() => { const f = this.findings(); const k = (r: unknown) => JSON.stringify(r, (_k, v) => (v instanceof Set ? [...v].sort() : v instanceof Map ? [...v] : v)); return !!f && k(f) !== k(this.state()); });
   protected readonly shown = computed(() => this.display() ?? String(this.no()));
   readonly state = input.required<ToothRecord>();
   /** When drawing the plan: the findings, so proposed work can be told apart from existing work. */
@@ -50,6 +53,8 @@ export class ToothTileComponent {
   readonly compact = input(false);
   /** Top-down drawing for premolars and molars (front teeth keep the front drawing). */
   readonly occlusal = input(false);
+  /** Areas picked in the 3D view for this tooth: shown lit on the picture. */
+  readonly marked = input<readonly string[]>([]);
   readonly showBase = input(true);
   readonly showHealthyPulp = input(true);
   readonly label = input('');
@@ -88,8 +93,8 @@ export class ToothTileComponent {
     effect(() => {
       if (!this.browser) return;
       if (this.store.view3d()) {
-        const no = this.no(), st = this.state(), pulp = this.showHealthyPulp() && !this.compact();
-        void this.snap.snap(no, st, pulp, this.compact()).then((u) => { if (no === this.no()) this.real.set(u); });
+        const mk = this.marked(), no = this.no(), st = this.state(), pulp = this.showHealthyPulp() && !this.compact();
+        void this.snap.snap(no, st, pulp, this.compact(), mk).then((u) => { if (no === this.no()) this.real.set(u); });
         return;
       }
       this.real.set(null);

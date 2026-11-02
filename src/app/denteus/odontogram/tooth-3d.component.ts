@@ -21,7 +21,7 @@ export class Tooth3dComponent implements OnDestroy {
   readonly showPulp = input(false);
   /** Shown instead of the view when WebGL or the meshes cannot load. */
   readonly unavailable = input('');
-  /** Areas the user has selected (surface names, cervical, apical or root). */
+  /** Areas the user has selected (surface names, cervical or root-1..3 = thirds of the root). */
   readonly selected = input<readonly string[]>([]);
   /** The dental name of each area for this tooth (incisal or occlusal, labial or buccal, palatal or lingual, ...). */
   readonly labels = input<Record<string, string>>({});
@@ -30,6 +30,9 @@ export class Tooth3dComponent implements OnDestroy {
   readonly roots = output<{ slot: number; key: string }[]>();
   /** A click on the tooth, resolved to an area. */
   readonly area = output<{ id: string; additive: boolean }>();
+  private lastRoots = '';
+  /** Tells the page which roots the shown tooth has, only when that changed (the page redraws its labels from it). */
+  private emitRoots(): void { const r = this.ctx?.roots() ?? [], k = r.map((x) => `${x.slot}${x.key}`).join(); if (k !== this.lastRoots) { this.lastRoots = k; this.roots.emit(r); } }
   private hovered: string | null = null;
   private relabel: (() => void) | null = null;
   private highlight: ((hover: string | null, selected: readonly string[]) => void) | null = null;
@@ -43,8 +46,8 @@ export class Tooth3dComponent implements OnDestroy {
       const t = this.state(), no = this.no(), pulp = this.showPulp();
       if (!this.browser) return;
       const sel = this.selected(); this.labels();
-      if (this.ctx) { this.ctx.apply(t, no, pulp); this.roots.emit(this.ctx.roots()); this.highlight?.(this.hovered, sel); this.relabel?.(); return; }
-      if (!this.starting) { this.starting = true; void this.start().then(() => { this.ctx?.apply(this.state(), this.no(), this.showPulp()); this.roots.emit(this.ctx?.roots() ?? []); this.highlight?.(this.hovered, this.selected()); }).catch(() => { this.host().nativeElement.textContent = this.unavailable(); }); }
+      if (this.ctx) { this.ctx.apply(t, no, pulp); this.emitRoots(); this.highlight?.(this.hovered, sel); this.relabel?.(); return; }
+      if (!this.starting) { this.starting = true; void this.start().then(() => { this.ctx?.apply(this.state(), this.no(), this.showPulp()); this.emitRoots(); this.highlight?.(this.hovered, this.selected()); }).catch(() => { this.host().nativeElement.textContent = this.unavailable(); }); }
     });
   }
 
@@ -58,7 +61,7 @@ export class Tooth3dComponent implements OnDestroy {
     el.appendChild(renderer.domElement);
     let controls: import('three/examples/jsm/controls/OrbitControls.js').OrbitControls | null = null;
     const layer = document.createElement('div'); layer.className = 'lbl-layer'; el.appendChild(layer);
-    const IDS = ['occlusal', 'buccal', 'lingual', 'mesial', 'distal', 'cervical', 'apical', 'root'];
+    const IDS = ['occlusal', 'buccal', 'lingual', 'mesial', 'distal', 'cervical', 'root-1', 'root-2', 'root-3'];
     const btns = new Map(IDS.map((id) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lbl'; b.addEventListener('click', (e) => this.area.emit({ id, additive: e.shiftKey || e.ctrlKey || e.metaKey })); b.addEventListener('pointerenter', () => { this.hovered = id; this.hover.emit(id); this.highlight?.(id, this.selected()); }); b.addEventListener('pointerleave', () => { this.hovered = null; this.hover.emit(null); this.highlight?.(null, this.selected()); }); layer.appendChild(b); return [id, b] as const; }));
     const place = () => {
       const w = el.clientWidth, hgt = el.clientHeight, names = this.labels(), sel = this.selected(), v = new T.Vector3();

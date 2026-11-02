@@ -69,7 +69,7 @@ describe("FHIR field mappings", () => {
       "toothSelection", "pulpDx", "pulpLatin", "apicalDx", "endoResection", "mods", "periapicalType", "endo", "caries",
       "cariesActiveDepth", "cariesDepths", "calculus", "resorptionType",
       "fillingMaterial", "fillingSurfaces", "fillingSurfaceMaterials", "fissureSealing", "contactMesial", "contactDistal",
-      "wearEdge", "wearCervical", "brokenMesial", "brokenIncisal", "brokenDistal", "brokenRoot1", "brokenRoot2", "brokenRoot3",
+      "wearEdge", "wearCervical", "brokenMesial", "brokenIncisal", "brokenDistal", "brokenRoot1", "brokenRoot2", "brokenRoot3", "rootWork1", "rootWork2", "rootWork3", "rootDecay1", "rootDecay2", "rootDecay3",
       "extractionWound", "extractionPlan", "parapulpalPin", "crownReplace", "crownNeeded",
       "missingClosed", "bridgePillar", "prosthesis", "mobility",
       "toothSubstrate", "restorationType", "restorationMaterial", "crownLeakage",

@@ -155,9 +155,16 @@ export class DentalChartComponent {
   protected readonly areas = signal<readonly string[]>([]);
   protected readonly hovered3d = signal<string | null>(null);
   /** The roots of the open tooth, reported by the 3D view (a molar has up to three). */
+  /** The colour key of the realistic chart; the shader uses the same values. */
+  protected readonly legend = [
+    ['#8c0d1a', 'caries'], ['#6b7890', 'amalgam'], ['#29b8d9', 'composite'], ['#9fd640', 'glass'], ['#f580ad', 'temporary'], ['#bfd9f2', 'sealant'],
+    ['#b3d1f7', 'crown'], ['#c29eeb', 'bridge'], ['#9eebe0', 'veneer'], ['#fac773', 'inlay'], ['#e63333', 'extraction'], ['#ff8c1a', 'replace'], ['#4080f2', 'needed'],
+    ['#e6739b', 'resorption'], ['#d9626b', 'pulp'], ['#a1101f', 'pulpitis'], ['#3a3a3a', 'necrosis'], ['#e49aa6', 'endo'],
+  ] as const;
+  protected legendName(k: string): string { return this.t(`dc.lg.${k}` as 'dc.lg.title'); }
   protected readonly roots3d = signal<{ slot: number; key: string }[]>([]);
-  /** A surface clicked on a top-view tile: select that tooth and open it in 3D with the surface picked. */
-  protected pickSurface(n: number, id: string): void { this.selected.set([n]); this.open3d.set(n); this.areas.set([id]); }
+  /** A zone clicked on a top-view tile: it cycles clean → caries → filling like the cube faces. */
+  protected pickSurface(n: number, id: string): void { this.selected.set([n]); this.cube(n, id as CubeSurface); }
   protected pickArea(id: string, additive: boolean): void {
     const cur = this.areas();
     this.areas.set(additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : cur.length === 1 && cur[0] === id ? [] : [id]);
@@ -167,18 +174,19 @@ export class DentalChartComponent {
     const n = this.open3d() ?? 0, front = n % 10 <= 3, upper = n < 30, t = this.t;
     const names: Record<string, string> = {
       occlusal: t(front ? 'dc.a.incisal' : 'dc.a.occlusal'), buccal: t(front ? 'dc.a.labial' : 'dc.a.buccal'), lingual: t(upper ? 'dc.a.palatal' : 'dc.a.lingual'),
-      mesial: t('dc.a.mesial'), distal: t('dc.a.distal'), cervical: t('dc.a.cervical'), apical: t('dc.a.apical'),
+      mesial: t('dc.a.mesial'), distal: t('dc.a.distal'), cervical: t('dc.a.cervical'),
     };
-    names['root'] = t('dc.a.radicular');
+    const many = this.roots3d().length > 1;
+    for (const r of this.roots3d()) names[`root-${r.slot}`] = many ? t(`dc.root.${r.key}` as 'dc.root.p') : t('dc.a.radicular');
     return names;
   });
   protected readonly areaText = computed(() => this.areas().map((a) => this.areaNames()[a] ?? a).join(' · '));
   protected selectCoronal(): void { this.areas.set(['occlusal', 'buccal', 'lingual', 'mesial', 'distal']); }
-  protected selectRadicular(): void { this.areas.set(['cervical', 'apical', 'root']); }
+  protected selectRadicular(): void { this.areas.set(this.roots3d().map((r) => `root-${r.slot}`)); }
   protected readonly areaSurfaces = computed(() => this.areas().filter((a) => ['occlusal', 'buccal', 'lingual', 'mesial', 'distal'].includes(a)));
-  protected readonly areaRoots = computed(() => this.areas().filter((a) => a === 'root' || a === 'apical' || a === 'cervical'));
+  protected readonly areaRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')));
   /** Selected roots that are fractured / not (a fracture belongs to one root, so only whole roots are toggled). */
-  protected readonly pickedRoots = computed(() => this.areas().includes('root') ? this.roots3d().map((r) => r.slot) : []);
+  protected readonly pickedRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')).map((a) => Number(a.slice(5))));
   protected rootBroken(k: number): boolean { const n = this.open3d(); return n !== null && !!(this.stateOf(n) as unknown as Record<string, boolean>)[`brokenRoot${k}`]; }
   protected allBroken(): boolean { const ks = this.pickedRoots(); return ks.length > 0 && ks.every((k) => this.rootBroken(k)); }
   protected toggleBroken(): void {
@@ -198,8 +206,11 @@ export class DentalChartComponent {
         to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: true });
       } else { to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: false }); }
     }
-    // The record keeps root caries for the whole root, so any selected third sets or clears it.
-    if (this.areaRoots().length) to({ kind: 'enum', field: 'rootCaries', value: what === 'caries' ? 'active' : what === 'clean' ? 'none' : this.stateOf(n).rootCaries });
+    // Each horn keeps its own marks: decay (black spots) or treated (green).
+    for (const k of this.pickedRoots()) {
+      to({ kind: 'flag', field: `rootDecay${k}`, on: what === 'caries' } as ToothEdit);
+      to({ kind: 'flag', field: `rootWork${k}`, on: what === 'filling' } as ToothEdit);
+    }
   }
   /** Dated findings for the overlay's tooth, newest first. */
   protected readonly toothHistory = computed(() => {

@@ -67,3 +67,9 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .ov-pulp { position: absolute; inset-inline-end: 12px; inset-block-start: 10px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
 .ov-areas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--app-line); }
 .ov-sel { flex: 1 1 100%; font-size: 13px; font-weight: 600; min-height: 18px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; list-style: none; margin: 8px 0; padding: 0; font-size: 11px; color: var(--app-muted); }
+.legend li { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgb(0 0 0 / .15); }
+.legend i.absent { background: transparent; border: 1px dashed var(--app-muted); }
+.legend i.plan { background: color-mix(in srgb, #3b82f6 15%, transparent); border: 1px dashed #3b82f6; }

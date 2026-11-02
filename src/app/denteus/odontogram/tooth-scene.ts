@@ -2,9 +2,9 @@ import type { ToothRecord } from './engine/chart';
 
 export type Three = typeof import('three');
 const ZONES = ['mesial', 'distal', 'buccal', 'lingual', 'occlusal'] as const;
-// 0 clean, 1 caries, 2 amalgam, 3 composite, 4 other restoration
+// 0 clean, 1 caries, 2 amalgam, 3 composite, 4 glass ionomer, 5 temporary
 const CODE = (t: ToothRecord, z: string): number => {
-  if (t.fillingSurfaces.has(z)) { const m = String(t.fillingSurfaceMaterials.get(z) ?? t.fillingMaterial); return m.includes('amalgam') ? 2 : m.includes('composite') ? 3 : 4; }
+  if (t.fillingSurfaces.has(z)) { const m = String(t.fillingSurfaceMaterials.get(z) ?? t.fillingMaterial); return m.includes('amalgam') ? 2 : m.includes('composite') ? 3 : m.includes('glass') ? 4 : 5; }
   return t.caries.has('caries-' + z) ? 1 : 0;
 };
 
@@ -20,9 +20,16 @@ export const loadLib = (): Promise<LibData> => (lib ??= Promise.all([fetch('/mod
 const VERT = `attribute vec4 zoneA; attribute vec4 zoneB; varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
 void main(){ vP = position; vN = normalize(normalMatrix * normal); vA = zoneA; vB = zoneB; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`;
 // The weights come baked into the mesh: caries fades across a surface boundary, fillings and restorations keep a crisp edge.
+const NOISE = `float h3(vec3 q){ return fract(sin(dot(q, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+float vn(vec3 q){ vec3 i = floor(q), f = fract(q); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
+float spots(vec3 q){ return smoothstep(0.58, 0.7, vn(q * 1.7) * 0.6 + vn(q * 4.3) * 0.4); }   // black decay spots
+`;
 const FRAG = `uniform float uCode[5]; uniform float uSev[5]; uniform float uAlpha; uniform float uCutY; uniform float uMode; uniform vec3 uRestCol; uniform float uRestSpec; uniform float uLeak;
 uniform vec4 uCase; uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
 varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
+${NOISE}
 float hash(vec2 q){ return fract(sin(dot(floor(q), vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
   vec3 p = vP;
@@ -43,10 +50,10 @@ void main(){
     if (uSeal > 0.5) { col = mix(col, vec3(0.75, 0.85, 0.95), 0.5 * w[4]); }
     for (int i = 0; i < 5; i++) {
       float c = uCode[i];
-      if (c == 1.0) { float a = (0.55 + 0.4 * uSev[i] / 6.0 - 0.15 * hash(p.xz * 6.0)) * smoothstep(0.1, 0.7, w[i]); col = mix(col, vec3(0.16, 0.08, 0.04), a); spec = mix(spec, 0.05, a); }
+      if (c == 1.0) { float a = (0.55 + 0.4 * uSev[i] / 6.0 - 0.15 * hash(p.xz * 6.0)) * smoothstep(0.1, 0.7, w[i]); col = mix(col, vec3(0.55, 0.05, 0.1), a); col = mix(col, vec3(0.02, 0.01, 0.01), spots(p) * smoothstep(0.1, 0.6, w[i]) * (0.55 + 0.45 * uSev[i] / 6.0)); spec = mix(spec, 0.05, a); }
       else if (c > 1.0) {
         float a = smoothstep(0.42, 0.58, w[i]);
-        vec3 fc = c == 2.0 ? vec3(0.55, 0.57, 0.6) : c == 3.0 ? vec3(0.96, 0.94, 0.86) : vec3(0.85, 0.7, 0.3);
+        vec3 fc = c == 2.0 ? vec3(0.42, 0.47, 0.56) : c == 3.0 ? vec3(0.16, 0.72, 0.85) : c == 4.0 ? vec3(0.62, 0.84, 0.25) : vec3(0.96, 0.5, 0.68);
         col = mix(col, fc, a); spec = mix(spec, c == 2.0 ? 1.0 : c == 3.0 ? 0.1 : 0.8, a); shin = mix(shin, c == 2.0 ? 90.0 : 12.0, a);
       }
     }
@@ -65,17 +72,17 @@ void main(){
   float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
   gl_FragColor = vec4(col * d + vec3(s), uAlpha);
 }`;
-const ROOT_FRAG = `uniform vec4 uCaseRoot; uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uHiSel; uniform float uHiCerv; uniform float uHiApical; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
+const ROOT_FRAG = `uniform float uWork; uniform float uDecay; uniform float uHiSel; uniform vec4 uCaseRoot; uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
+${NOISE}
 void main(){
   if (vP.y > -0.015) discard;
   vec3 col = vec3(0.85, 0.77, 0.62);
   if (uCalc > 0.5) col = mix(col, vec3(0.78, 0.66, 0.4), 0.8 * smoothstep(-2.4, -1.2, vP.y));
   if (uRootCar > 0.0) col = mix(col, uRootCar > 1.5 ? vec3(0.12, 0.07, 0.04) : vec3(0.42, 0.3, 0.15), 0.8 * smoothstep(-6.0, -4.5, vP.y));
   col = mix(col, uCaseRoot.rgb, uCaseRoot.a);
-  float neck = 1.0 - smoothstep(0.8, 2.4, -vP.y);
-  float tip = smoothstep(0.62, 0.78, vP.y / uRootLen);
-  float sel = max(step(0.9, uHiSel), max(step(0.9, uHiCerv) * neck, step(0.9, uHiApical) * tip));
-  float hov = max(step(0.4, uHiSel) * (1.0 - step(0.9, uHiSel)), max(step(0.4, uHiCerv) * (1.0 - step(0.9, uHiCerv)) * neck, step(0.4, uHiApical) * (1.0 - step(0.9, uHiApical)) * tip));
+  col = mix(col, vec3(0.12, 0.78, 0.42), uWork * 0.8);                                  // a root that was treated
+  if (uDecay > 0.5) col = mix(col, vec3(0.02, 0.01, 0.01), spots(vP * 1.3 + 3.0) * 0.95);         // a decayed root: black spots
+  float sel = step(0.9, uHiSel), hov = step(0.4, uHiSel) * (1.0 - sel);
   col = mix(col, vec3(0.13, 0.83, 0.93), hov * 0.55);
   col = mix(col, vec3(1.0, 0.62, 0.04), sel * 0.78);
   if (!gl_FrontFacing) col = uBroken > 0.5 ? vec3(0.75, 0.2, 0.15) : vec3(0.55, 0.45, 0.35); // a fractured root shows its raw, red inside
@@ -109,7 +116,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     return g;
   };
 
-  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uHiApical: { value: 0 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
+  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
   const U = () => ({ ...shared, uCode: { value: [0, 0, 0, 0, 0] }, uSev: { value: [0, 0, 0, 0, 0] }, uCutY: { value: 99 }, uMode: { value: 0 }, uRestCol: { value: new T.Vector3(1, 1, 1) }, uRestSpec: { value: 0.3 },
     uLeak: { value: 0 }, uCervical: { value: 0 }, uDisc: { value: 0 }, uSeal: { value: 0 }, uBase: { value: new T.Vector3(0.93, 0.91, 0.85) } });
   const crownU = U(), shellU = U(); shellU.uMode.value = 1;
@@ -118,11 +125,11 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const prep = new T.Mesh(undefined, mk(crownU));
   const shell = new T.Mesh(undefined, mk(shellU));
   const rootVert = 'varying vec3 vP; varying vec3 vN; void main(){ vP = position; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }';
-  const rootMat = (hi: { value: number }, broken: { value: number }) => new T.ShaderMaterial({ uniforms: { ...shared, uHiSel: hi, uBroken: broken }, vertexShader: rootVert, fragmentShader: ROOT_FRAG, transparent: true, side: T.DoubleSide });
+  const rootMat = (hi: { value: number }, broken: { value: number }, work: { value: number }, decay: { value: number }) => new T.ShaderMaterial({ uniforms: { ...shared, uHiSel: hi, uBroken: broken, uWork: work, uDecay: decay }, vertexShader: rootVert, fragmentShader: ROOT_FRAG, transparent: true, side: T.DoubleSide });
   const his = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];   // [0] the trunk (never selected on its own), [1..3] the three root slots
-  const brk = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];
-  const trunk = new T.Mesh(undefined, rootMat(his[0], brk[0]));
-  const rootMeshes = [1, 2, 3].map((k) => new T.Mesh(undefined, rootMat(his[k], brk[k])));
+  const brk = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }], work = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }], decay = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];
+  const trunk = new T.Mesh(undefined, rootMat(his[0], brk[0], work[0], decay[0]));
+  const rootMeshes = [1, 2, 3].map((k) => new T.Mesh(undefined, rootMat(his[k], brk[k], work[k], decay[k])));
   const rootParts = [trunk, ...rootMeshes];
   const empty = new T.BufferGeometry();
   const pulpMat = new T.MeshStandardMaterial({ color: 0xd9626b, roughness: 0.5, transparent: true, opacity: 0.9 });
@@ -218,7 +225,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       const r = roots.find((q) => q.slot === i + 1), br = !!r && !!R[`brokenRoot${i + 1}`] && !!data.parts.get(r.broken);
       m.visible = rootsOn && !!r;
       if (r) m.geometry = geometry(br ? r.broken : r.id)!;
-      brk[i + 1].value = br ? 1 : 0;
+      brk[i + 1].value = br ? 1 : 0; work[i + 1].value = R[`rootWork${i + 1}`] ? 1 : 0; decay[i + 1].value = R[`rootDecay${i + 1}`] ? 1 : 0;
     });
     pulp.visible = !implant && !gone && pulpOn;
     if (ghost) { crown.visible = true; shell.visible = false; }
@@ -251,9 +258,9 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const out: Record<string, import('three').Vector3 | null> = {
       occlusal: at(0, h + 0.8, 0, crownShown), buccal: at(0, h * 0.55, hi[2] + 1, crownShown), lingual: at(0, h * 0.55, lo[2] - 1, crownShown),
       mesial: at(near, h * 0.55, 0, crownShown), distal: at(far, h * 0.55, 0, crownShown),
-      cervical: at(far, 0, 0, rootShown || crownShown), apical: at(0, ymin - 0.9, 0, rootShown),
+      cervical: at(far, h * 0.05, 0, crownShown),
     };
-    out['root'] = at(near, ymin * 0.5, 0, rootShown);
+    for (const r of roots) out[`root-${r.slot}`] = at(r.tip[0], r.tip[1] * 0.55, r.tip[2], rootShown && rootParts[r.slot].visible);
     return out;
   };
   /** The roots of the shown tooth, in slot order, with their anatomical key (mb, db, p, m, d, b, l, single). */
@@ -267,8 +274,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     if (!hit?.face) return null;
     const p = hit.object.worldToLocal(hit.point.clone());
     const k = rootMeshes.findIndex((m) => m === hit.object);
-    if (hit.object === trunk) return 'root';
-    if (k >= 0) return p.y > -1.6 ? 'cervical' : p.y / ymin > 0.8 ? 'apical' : 'root';
+    if (hit.object === trunk) return null; // the shared trunk is not a horn
+    if (k >= 0) return `root-${k + 1}`;
     const n = hit.face.normal; // already in the tooth's own frame: +y toward the bite, +z toward the lip or cheek
     if (p.y < h * 0.12) return 'cervical';
     return n.y > 0.7 ? 'occlusal' : n.z > 0.5 ? 'buccal' : n.z < -0.5 ? 'lingual' : p.x * mesial > 0 ? 'mesial' : 'distal';
@@ -277,8 +284,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const setHighlight = (hover: string | null, selected: readonly string[]) => {
     const lv = (id: string) => (selected.includes(id) ? 1 : id === hover ? 0.5 : 0);
     shared.uHi.value = ZONES.map(lv);
-    shared.uHiCerv.value = lv('cervical'); shared.uHiApical.value = lv('apical');
-    for (const h of his) h.value = lv('root'); // all the roots are one area
+    shared.uHiCerv.value = lv('cervical');
+    for (let k = 1; k <= 3; k++) his[k].value = lv(`root-${k}`); // each horn is its own area
     render();
   };
   return { renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };

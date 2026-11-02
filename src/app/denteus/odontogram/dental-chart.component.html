@@ -75,13 +75,20 @@
   </div>
   }
 
+  @if (store.view3d()) {
+    <ul class="legend" [attr.aria-label]="t('dc.lg.title')">
+      @for (l of legend; track l[1]) { <li><i [style.background]="l[0]"></i>{{ legendName(l[1]) }}</li> }
+      <li><i class="absent"></i>{{ t('dc.lg.absent') }}</li><li><i class="plan"></i>{{ t('dc.lg.planned') }}</li>
+    </ul>
+  }
+
   @if (readonlyView()) {
   <div class="arches dentisto" role="group" [attr.aria-label]="t('dc.chart')">
     <div class="arch upper-side">
       @for (n of upper; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [marked]="open3d() === n ? areas() : []" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
         }
       }
     </div>
@@ -89,7 +96,7 @@
       @for (n of upper; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (n % 10 < 4 && !store.view3d()) { <span class="incisal" aria-hidden="true"></span> } @else {
+          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
             <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }
@@ -127,7 +134,7 @@
       @for (n of lower; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (n % 10 < 4 && !store.view3d()) { <span class="incisal" aria-hidden="true"></span> } @else {
+          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
             <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }
@@ -137,7 +144,7 @@
       @for (n of lower; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [marked]="open3d() === n ? areas() : []" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
         }
       }
     </div>
@@ -267,7 +274,7 @@
         <div class="ov-areas" role="group" [attr.aria-label]="t('dc.3d.areas')">
           <span class="ov-sel">{{ areas().length ? areaText() : (hovered3d() ? areaNames()[hovered3d()!] : t('dc.3d.pickHint')) }}</span>
           <button type="button" class="btn" [disabled]="readOnly() || !areas().length" (click)="applyAreas('caries')">{{ t('dc.3d.act.caries') }}</button>
-          <button type="button" class="btn" [disabled]="readOnly() || !areaSurfaces().length" (click)="applyAreas('filling')">{{ t('dc.3d.act.filling') }}</button>
+          <button type="button" class="btn" [disabled]="readOnly() || !areas().length" (click)="applyAreas('filling')">{{ t('dc.3d.act.filling') }}</button>
           <button type="button" class="btn" [disabled]="readOnly() || !areas().length" (click)="applyAreas('clean')">{{ t('dc.3d.act.clean') }}</button>
           <button type="button" class="btn" [disabled]="!areas().length" (click)="areas.set([])">{{ t('dc.3d.act.clear') }}</button>
           <button type="button" class="btn" [disabled]="readOnly() || !pickedRoots().length" [attr.aria-pressed]="allBroken()" (click)="toggleBroken()">{{ t('dc.3d.act.broken') }}</button>

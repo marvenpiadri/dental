@@ -45,15 +45,16 @@ export class ToothSnap {
   }
 
   /** The PNG (data URL) of tooth `no` in this state, or null when WebGL or the meshes are not available. */
-  snap(no: number, state: ToothRecord, pulp: boolean, top = false): Promise<string | null> {
+  snap(no: number, state: ToothRecord, pulp: boolean, top = false, marked: readonly string[] = []): Promise<string | null> {
     if (!this.browser) return Promise.resolve(null);
-    const key = `${top ? 'top' : 'front'}|${no}|${pulp}|${JSON.stringify(state, (_k, v) => (v instanceof Set ? [...v].sort() : v instanceof Map ? [...v] : v))}`;
+    const key = `${top ? 'top' : 'front'}|${no}|${pulp}|${marked.join(',')}|${JSON.stringify(state, (_k, v) => (v instanceof Set ? [...v].sort() : v instanceof Map ? [...v] : v))}`;
     const hit = this.cache.get(key);
     if (hit) return Promise.resolve(hit);
     const job = this.queue.then(async () => {
       const { scene, canvas } = await this.start();
       this.view(scene, canvas, no, top);
       scene.apply(state, no, pulp);
+      scene.setHighlight(null, marked);
       const url = canvas.toDataURL('image/png');
       this.cache.set(key, url);
       return url;
