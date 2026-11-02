@@ -86,9 +86,6 @@ export function defaultState(){
     rootWork1: false, // a root worked on / decayed, marked on its own
     rootWork2: false,
     rootWork3: false,
-    rootDecay1: false, // a root worked on / decayed, marked on its own
-    rootDecay2: false,
-    rootDecay3: false,
     extractionWound: false,
     extractionPlan: false,
     parapulpalPin: false,
@@ -230,9 +227,6 @@ export function serializeState(s: Any){
     rootWork1: !!s.rootWork1,
     rootWork2: !!s.rootWork2,
     rootWork3: !!s.rootWork3,
-    rootDecay1: !!s.rootDecay1,
-    rootDecay2: !!s.rootDecay2,
-    rootDecay3: !!s.rootDecay3,
     extractionWound: !!s.extractionWound,
     extractionPlan: !!s.extractionPlan,
     parapulpalPin: !!s.parapulpalPin,
@@ -760,9 +754,6 @@ export function hydrateState(raw: Any, inferLegacySecondaryCaries = true){
   s.rootWork1 = !!raw.rootWork1;
   s.rootWork2 = !!raw.rootWork2;
   s.rootWork3 = !!raw.rootWork3;
-  s.rootDecay1 = !!raw.rootDecay1;
-  s.rootDecay2 = !!raw.rootDecay2;
-  s.rootDecay3 = !!raw.rootDecay3;
   s.extractionWound = !!raw.extractionWound;
   s.extractionPlan = !!raw.extractionPlan;
   s.parapulpalPin = !!raw.parapulpalPin;

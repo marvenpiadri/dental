@@ -206,9 +206,8 @@ export class DentalChartComponent {
         to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: true });
       } else { to({ kind: 'caries', surface: s, on: false }); to({ kind: 'fillingSurface', surface: s, on: false }); }
     }
-    // Each horn keeps its own marks: decay (black spots) or treated (green).
+    // A horn is marked treated (green) or cleared; decay belongs to the crown surfaces.
     for (const k of this.pickedRoots()) {
-      to({ kind: 'flag', field: `rootDecay${k}`, on: what === 'caries' } as ToothEdit);
       to({ kind: 'flag', field: `rootWork${k}`, on: what === 'filling' } as ToothEdit);
     }
   }

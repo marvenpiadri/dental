@@ -47,20 +47,26 @@ def split(down, f, mesial):
     n = max([k for k in (1, 2, 3) if (counts >= k).sum() >= 3] or [1])
     if f % 10 <= 3:  # incisors and canines have one root; a stray second polygon is noise
         n = 1
+    # Anatomy asks for 3 horns on an upper molar, 2 on a lower molar and on a first upper premolar. Where the scan fused them,
+    # the root is sliced into that many parts around its own axis instead.
+    want = 3 if (f < 30 and f % 10 >= 6) else 2 if (f % 10 >= 6 or (f < 30 and f % 10 == 4)) else 1
+    forced = n < want
+    if forced:
+        n = want
     tri_c = pos[idx].mean(1)
     if n == 1:
         groups, trunk_mask, cents = [np.ones(len(idx), bool)], np.zeros(len(idx), bool), np.array([[pos[:, 0].mean(), 0, pos[:, 2].mean()]])
     else:
-        lv = levels[counts >= n]
-        low = pos[(pos[:, 1] <= ymin * lv.min()) & (pos[:, 1] >= ymin * lv.max())][:, [0, 2]]  # where the roots stand apart
+        lv = levels[counts >= n] if not forced else levels[:0]
+        low = pos[(pos[:, 1] <= ymin * lv.min()) & (pos[:, 1] >= ymin * lv.max())][:, [0, 2]] if len(lv) else pos[pos[:, 1] <= ymin * 0.3][:, [0, 2]]  # where the roots stand apart
         seeds = [low[np.argmax(low[:, 0])]]  # farthest-point seeds so the clusters are stable
         while len(seeds) < n:
             d = np.min([np.linalg.norm(low - s, axis=1) for s in seeds], axis=0); seeds.append(low[np.argmax(d)])
         cen2, _ = kmeans2(low, np.array(seeds), minit='matrix', iter=20)
         # furcation: the first level, walking down from the neck, where the section has fallen into n separate roots
-        yf = ymin * 0.35
+        yf = ymin * 0.3
         for t in np.linspace(0.05, 0.6, 45):
-            if _count(down, ymin * t) >= n:
+            if not forced and _count(down, ymin * t) >= n:
                 yf = ymin * t; break
         yf -= 0.6
         trunk_mask = tri_c[:, 1] > yf

@@ -23,7 +23,7 @@ const ENUM_FIELDS = {
 export type EnumField = keyof typeof ENUM_FIELDS;
 
 const FLAG_FIELDS = ['calculus', 'fissureSealing', 'extractionPlan', 'extractionWound', 'crownNeeded', 'crownReplace', 'crownLeakage',
-  'missingClosed', 'contactMesial', 'contactDistal', 'bridgePillar', 'brokenMesial', 'brokenIncisal', 'brokenDistal', 'brokenRoot1', 'brokenRoot2', 'brokenRoot3', 'rootWork1', 'rootWork2', 'rootWork3', 'rootDecay1', 'rootDecay2', 'rootDecay3',
+  'missingClosed', 'contactMesial', 'contactDistal', 'bridgePillar', 'brokenMesial', 'brokenIncisal', 'brokenDistal', 'brokenRoot1', 'brokenRoot2', 'brokenRoot3', 'rootWork1', 'rootWork2', 'rootWork3',
   'endoResection', 'parapulpalPin', 'orthoRotation'] as const;
 export type FlagField = (typeof FLAG_FIELDS)[number];
 

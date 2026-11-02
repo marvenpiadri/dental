@@ -72,16 +72,15 @@ void main(){
   float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
   gl_FragColor = vec4(col * d + vec3(s), uAlpha);
 }`;
-const ROOT_FRAG = `uniform float uWork; uniform float uDecay; uniform float uHiSel; uniform vec4 uCaseRoot; uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
+const ROOT_FRAG = `uniform float uWork; uniform float uHiSel; uniform vec4 uCaseRoot; uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
 ${NOISE}
 void main(){
   if (vP.y > -0.015) discard;
-  vec3 col = vec3(0.85, 0.77, 0.62);
+  vec3 col = vec3(0.94, 0.92, 0.86);
   if (uCalc > 0.5) col = mix(col, vec3(0.78, 0.66, 0.4), 0.8 * smoothstep(-2.4, -1.2, vP.y));
   if (uRootCar > 0.0) col = mix(col, uRootCar > 1.5 ? vec3(0.12, 0.07, 0.04) : vec3(0.42, 0.3, 0.15), 0.8 * smoothstep(-6.0, -4.5, vP.y));
   col = mix(col, uCaseRoot.rgb, uCaseRoot.a);
   col = mix(col, vec3(0.12, 0.78, 0.42), uWork * 0.8);                                  // a root that was treated
-  if (uDecay > 0.5) col = mix(col, vec3(0.02, 0.01, 0.01), spots(vP * 1.3 + 3.0) * 0.95);         // a decayed root: black spots
   float sel = step(0.9, uHiSel), hov = step(0.4, uHiSel) * (1.0 - sel);
   col = mix(col, vec3(0.13, 0.83, 0.93), hov * 0.55);
   col = mix(col, vec3(1.0, 0.62, 0.04), sel * 0.78);
@@ -125,11 +124,11 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const prep = new T.Mesh(undefined, mk(crownU));
   const shell = new T.Mesh(undefined, mk(shellU));
   const rootVert = 'varying vec3 vP; varying vec3 vN; void main(){ vP = position; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }';
-  const rootMat = (hi: { value: number }, broken: { value: number }, work: { value: number }, decay: { value: number }) => new T.ShaderMaterial({ uniforms: { ...shared, uHiSel: hi, uBroken: broken, uWork: work, uDecay: decay }, vertexShader: rootVert, fragmentShader: ROOT_FRAG, transparent: true, side: T.DoubleSide });
+  const rootMat = (hi: { value: number }, broken: { value: number }, work: { value: number }) => new T.ShaderMaterial({ uniforms: { ...shared, uHiSel: hi, uBroken: broken, uWork: work }, vertexShader: rootVert, fragmentShader: ROOT_FRAG, transparent: true, side: T.DoubleSide });
   const his = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];   // [0] the trunk (never selected on its own), [1..3] the three root slots
-  const brk = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }], work = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }], decay = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];
-  const trunk = new T.Mesh(undefined, rootMat(his[0], brk[0], work[0], decay[0]));
-  const rootMeshes = [1, 2, 3].map((k) => new T.Mesh(undefined, rootMat(his[k], brk[k], work[k], decay[k])));
+  const brk = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }], work = [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];
+  const trunk = new T.Mesh(undefined, rootMat(his[0], brk[0], work[0]));
+  const rootMeshes = [1, 2, 3].map((k) => new T.Mesh(undefined, rootMat(his[k], brk[k], work[k])));
   const rootParts = [trunk, ...rootMeshes];
   const empty = new T.BufferGeometry();
   const pulpMat = new T.MeshStandardMaterial({ color: 0xd9626b, roughness: 0.5, transparent: true, opacity: 0.9 });
@@ -225,7 +224,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       const r = roots.find((q) => q.slot === i + 1), br = !!r && !!R[`brokenRoot${i + 1}`] && !!data.parts.get(r.broken);
       m.visible = rootsOn && !!r;
       if (r) m.geometry = geometry(br ? r.broken : r.id)!;
-      brk[i + 1].value = br ? 1 : 0; work[i + 1].value = R[`rootWork${i + 1}`] ? 1 : 0; decay[i + 1].value = R[`rootDecay${i + 1}`] ? 1 : 0;
+      brk[i + 1].value = br ? 1 : 0; work[i + 1].value = R[`rootWork${i + 1}`] ? 1 : 0;
     });
     pulp.visible = !implant && !gone && pulpOn;
     if (ghost) { crown.visible = true; shell.visible = false; }
