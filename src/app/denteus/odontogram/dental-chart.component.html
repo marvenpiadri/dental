@@ -96,7 +96,7 @@
       @for (n of upper; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
+          @if (n % 10 < (store.view3d() ? 6 : 4)) { <span class="incisal" [style.visibility]="store.view3d() ? 'hidden' : null" aria-hidden="true"></span> } @else {
             <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }
@@ -134,7 +134,7 @@
       @for (n of lower; track n) {
         @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
         @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
+          @if (n % 10 < (store.view3d() ? 6 : 4)) { <span class="incisal" [style.visibility]="store.view3d() ? 'hidden' : null" aria-hidden="true"></span> } @else {
             <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
           }
         }
