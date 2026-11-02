@@ -13,7 +13,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.upper]': 'upper()' },
   template: `
-    <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="pick.emit($event)">
+    <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="click($event)">
       @if (upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
       <span class="art" #art [style.transform]="transform()" [hidden]="!!real()"></span>
       @if (real(); as src) { <img class="real" [src]="src" alt="" draggable="false" /> }
@@ -30,6 +30,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     .real { width: 100%; max-width: 64px; aspect-ratio: 180 / 330; object-fit: contain; display: block; }
     .art :is(svg) { width: 100%; height: 100%; display: block; }
     .tile.compact .art { max-width: 34px; aspect-ratio: 1; }
+    .tile.compact .real { max-width: 34px; aspect-ratio: 1; }
     .no { font-size: 11px; font-weight: 600; color: var(--app-muted); }
     :host-context(.dark) .art { filter: brightness(0.92); }
   `,
@@ -53,6 +54,15 @@ export class ToothTileComponent {
   readonly showHealthyPulp = input(true);
   readonly label = input('');
   readonly pick = output<MouseEvent>();
+  /** A click on the top-view picture, resolved to one of the five surfaces of the tooth. */
+  readonly surface = output<string>();
+
+  protected click(e: MouseEvent): void {
+    const img = (e.target as HTMLElement).closest('img.real') as HTMLImageElement | null;
+    if (!this.compact() || !img) { this.pick.emit(e); return; }
+    const r = img.getBoundingClientRect();
+    void this.snap.surfaceAt(this.no(), this.state(), this.showHealthyPulp(), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height).then((id) => (id && id !== 'cervical' && !id.startsWith('root') && id !== 'apical' ? this.surface.emit(id) : this.pick.emit(e)));
+  }
 
   private readonly art = inject(ToothArt);
   private readonly snap = inject(ToothSnap);
@@ -77,9 +87,9 @@ export class ToothTileComponent {
     this.art.load();
     effect(() => {
       if (!this.browser) return;
-      if (this.store.view3d() && !this.compact()) {
+      if (this.store.view3d()) {
         const no = this.no(), st = this.state(), pulp = this.showHealthyPulp();
-        void this.snap.snap(no, st, pulp).then((u) => { if (no === this.no()) this.real.set(u); });
+        void this.snap.snap(no, st, pulp, this.compact()).then((u) => { if (no === this.no()) this.real.set(u); });
         return;
       }
       this.real.set(null);

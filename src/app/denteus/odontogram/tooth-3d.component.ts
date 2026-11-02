@@ -21,7 +21,7 @@ export class Tooth3dComponent implements OnDestroy {
   readonly showPulp = input(false);
   /** Shown instead of the view when WebGL or the meshes cannot load. */
   readonly unavailable = input('');
-  /** Areas the user has selected (surface names, cervical, apical or root-1..3). */
+  /** Areas the user has selected (surface names, cervical, apical or root). */
   readonly selected = input<readonly string[]>([]);
   /** The dental name of each area for this tooth (incisal or occlusal, labial or buccal, palatal or lingual, ...). */
   readonly labels = input<Record<string, string>>({});
@@ -58,7 +58,7 @@ export class Tooth3dComponent implements OnDestroy {
     el.appendChild(renderer.domElement);
     let controls: import('three/examples/jsm/controls/OrbitControls.js').OrbitControls | null = null;
     const layer = document.createElement('div'); layer.className = 'lbl-layer'; el.appendChild(layer);
-    const IDS = ['occlusal', 'buccal', 'lingual', 'mesial', 'distal', 'cervical', 'apical', 'root-1', 'root-2', 'root-3'];
+    const IDS = ['occlusal', 'buccal', 'lingual', 'mesial', 'distal', 'cervical', 'apical', 'root'];
     const btns = new Map(IDS.map((id) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lbl'; b.addEventListener('click', (e) => this.area.emit({ id, additive: e.shiftKey || e.ctrlKey || e.metaKey })); b.addEventListener('pointerenter', () => { this.hovered = id; this.hover.emit(id); this.highlight?.(id, this.selected()); }); b.addEventListener('pointerleave', () => { this.hovered = null; this.hover.emit(null); this.highlight?.(null, this.selected()); }); layer.appendChild(b); return [id, b] as const; }));
     const place = () => {
       const w = el.clientWidth, hgt = el.clientHeight, names = this.labels(), sel = this.selected(), v = new T.Vector3();

@@ -21,7 +21,7 @@ const VERT = `attribute vec4 zoneA; attribute vec4 zoneB; varying vec3 vP; varyi
 void main(){ vP = position; vN = normalize(normalMatrix * normal); vA = zoneA; vB = zoneB; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`;
 // The weights come baked into the mesh: caries fades across a surface boundary, fillings and restorations keep a crisp edge.
 const FRAG = `uniform float uCode[5]; uniform float uSev[5]; uniform float uAlpha; uniform float uCutY; uniform float uMode; uniform vec3 uRestCol; uniform float uRestSpec; uniform float uLeak;
-uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
+uniform vec4 uCase; uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
 varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
 float hash(vec2 q){ return fract(sin(dot(floor(q), vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
@@ -53,6 +53,7 @@ void main(){
     if (uCervical > 0.5) col = mix(col, vec3(0.45, 0.38, 0.28), 0.6 * smoothstep(0.55, 0.9, vB.y));
     col = mix(col, vec3(0.78, 0.66, 0.4), uCalc * smoothstep(0.5, 0.85, vB.y) * 0.8);
   }
+  col = mix(col, uCase.rgb, uCase.a);                      // planned / needed work tints the whole crown
   float sel = 0.0, hov = 0.0;
   for (int i = 0; i < 5; i++) { sel += w[i] * step(0.9, uHi[i]); hov += w[i] * step(0.4, uHi[i]) * (1.0 - step(0.9, uHi[i])); }
   float neck = smoothstep(0.4, 0.9, vB.y);
@@ -64,12 +65,13 @@ void main(){
   float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
   gl_FragColor = vec4(col * d + vec3(s), uAlpha);
 }`;
-const ROOT_FRAG = `uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uHiSel; uniform float uHiCerv; uniform float uHiApical; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
+const ROOT_FRAG = `uniform vec4 uCaseRoot; uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uHiSel; uniform float uHiCerv; uniform float uHiApical; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
 void main(){
   if (vP.y > -0.015) discard;
   vec3 col = vec3(0.85, 0.77, 0.62);
   if (uCalc > 0.5) col = mix(col, vec3(0.78, 0.66, 0.4), 0.8 * smoothstep(-2.4, -1.2, vP.y));
   if (uRootCar > 0.0) col = mix(col, uRootCar > 1.5 ? vec3(0.12, 0.07, 0.04) : vec3(0.42, 0.3, 0.15), 0.8 * smoothstep(-6.0, -4.5, vP.y));
+  col = mix(col, uCaseRoot.rgb, uCaseRoot.a);
   float neck = 1.0 - smoothstep(0.8, 2.4, -vP.y);
   float tip = smoothstep(0.62, 0.78, vP.y / uRootLen);
   float sel = max(step(0.9, uHiSel), max(step(0.9, uHiCerv) * neck, step(0.9, uHiApical) * tip));
@@ -107,7 +109,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     return g;
   };
 
-  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uHiApical: { value: 0 }, uRootLen: { value: -12 } };
+  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uHiApical: { value: 0 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
   const U = () => ({ ...shared, uCode: { value: [0, 0, 0, 0, 0] }, uSev: { value: [0, 0, 0, 0, 0] }, uCutY: { value: 99 }, uMode: { value: 0 }, uRestCol: { value: new T.Vector3(1, 1, 1) }, uRestSpec: { value: 0.3 },
     uLeak: { value: 0 }, uCervical: { value: 0 }, uDisc: { value: 0 }, uSeal: { value: 0 }, uBase: { value: new T.Vector3(0.93, 0.91, 0.85) } });
   const crownU = U(), shellU = U(); shellU.uMode.value = 1;
@@ -176,11 +178,17 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     crownU.uCervical.value = str('wearCervical') !== 'none' ? 1 : 0;
     crownU.uDisc.value = Math.max(0, ['none', 'tetracycline', 'fluorosis', 'nonvital', 'extrinsic', 'other'].indexOf(str('discoloration')));
     crownU.uSeal.value = R['fissureSealing'] ? 1 : 0;
+    // Case colours (the same as the chart legend): the crown for planned or needed work, the root for resorption.
+    const flag = (k: string) => !!R[k];
+    shared.uCase.value.set(...(flag('extractionPlan') ? [0.9, 0.2, 0.2, 0.55] : flag('crownReplace') ? [1, 0.55, 0.1, 0.5] : flag('crownNeeded') ? [0.25, 0.5, 0.95, 0.45] : flag('bridgePillar') ? [0.6, 0.35, 0.85, 0.4] : [0, 0, 0, 0]) as [number, number, number, number]);
+    shared.uCaseRoot.value.set(...(str('resorptionType') !== 'none' && str('resorptionType') !== '' ? [0.9, 0.45, 0.6, 0.5] : flag('extractionPlan') ? [0.9, 0.2, 0.2, 0.4] : [0, 0, 0, 0]) as [number, number, number, number]);
     shared.uCalc.value = R['calculus'] ? 1 : 0;
     shared.uRootCar.value = ({ none: 0, arrested: 1, active: 2, 'active-cavitated': 2 } as Record<string, number>)[str('rootCaries')] ?? 0;
     // Restorations: a crown/bridge replaces the crown by the library's shell; veneer and inlay/onlay are patches of it.
     const rt = str('restorationType'), rm = str('restorationMaterial');
-    const m = MAT[rm] ?? MAT['none'];
+    // No material chosen yet: the type itself sets the colour (as in the chart legend), so every restoration reads at a glance.
+    const TYPE: Record<string, [number, number, number, number]> = { crown: [0.7, 0.82, 0.97, 0.5], bridge: [0.76, 0.62, 0.92, 0.5], veneer: [0.62, 0.92, 0.88, 0.4], inlay: [0.98, 0.78, 0.45, 0.6], onlay: [0.98, 0.78, 0.45, 0.6] };
+    const m = MAT[rm && rm !== 'none' ? rm : ''] ?? TYPE[rt] ?? MAT['none'];
     shellU.uRestCol.value.set(m[0], m[1], m[2]); shellU.uRestSpec.value = m[3];
     shellU.uLeak.value = R['crownLeakage'] ? 1 : 0;
     shellU.uMode.value = rt === 'veneer' ? 2 : rt === 'inlay' || rt === 'onlay' ? 3 : 1;
@@ -245,7 +253,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       mesial: at(near, h * 0.55, 0, crownShown), distal: at(far, h * 0.55, 0, crownShown),
       cervical: at(far, 0, 0, rootShown || crownShown), apical: at(0, ymin - 0.9, 0, rootShown),
     };
-    for (const r of roots) out[`root-${r.slot}`] = at(r.tip[0], r.tip[1] * 0.55, r.tip[2], rootShown && rootParts[r.slot].visible);
+    out['root'] = at(near, ymin * 0.5, 0, rootShown);
     return out;
   };
   /** The roots of the shown tooth, in slot order, with their anatomical key (mb, db, p, m, d, b, l, single). */
@@ -259,8 +267,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     if (!hit?.face) return null;
     const p = hit.object.worldToLocal(hit.point.clone());
     const k = rootMeshes.findIndex((m) => m === hit.object);
-    if (hit.object === trunk) return 'cervical';
-    if (k >= 0) return p.y > -1.6 ? 'cervical' : p.y / (roots.find((q) => q.slot === k + 1)?.tip[1] ?? ymin) > 0.8 ? 'apical' : `root-${k + 1}`;
+    if (hit.object === trunk) return 'root';
+    if (k >= 0) return p.y > -1.6 ? 'cervical' : p.y / ymin > 0.8 ? 'apical' : 'root';
     const n = hit.face.normal; // already in the tooth's own frame: +y toward the bite, +z toward the lip or cheek
     if (p.y < h * 0.12) return 'cervical';
     return n.y > 0.7 ? 'occlusal' : n.z > 0.5 ? 'buccal' : n.z < -0.5 ? 'lingual' : p.x * mesial > 0 ? 'mesial' : 'distal';
@@ -270,8 +278,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const lv = (id: string) => (selected.includes(id) ? 1 : id === hover ? 0.5 : 0);
     shared.uHi.value = ZONES.map(lv);
     shared.uHiCerv.value = lv('cervical'); shared.uHiApical.value = lv('apical');
-    for (let k = 1; k <= 3; k++) his[k].value = lv(`root-${k}`);
+    for (const h of his) h.value = lv('root'); // all the roots are one area
     render();
   };
-  return { scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
+  return { renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
 }

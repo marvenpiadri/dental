@@ -16,21 +16,43 @@ export class ToothSnap {
       const [T, data] = await Promise.all([import('three') as Promise<Three>, loadLib()]);
       const canvas = document.createElement('canvas');
       const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-      renderer.setPixelRatio(1); renderer.setSize(180, 330, false);
+      renderer.setPixelRatio(1);
       const scene = makeToothScene(T, data, renderer);
-      scene.camera.aspect = 180 / 330; scene.camera.position.set(0, 0, 9.6); scene.camera.lookAt(0, 0, 0); scene.camera.updateProjectionMatrix();
       return { T, scene, canvas };
     })());
   }
 
+  /** Front view (buccal side, roots out of the crown) or top view (looking onto the biting face). */
+  private view(s: ReturnType<typeof makeToothScene>, canvas: HTMLCanvasElement, no: number, top: boolean): void {
+    const size = top ? [180, 180] : [180, 330];
+    if (canvas.width !== size[0] || canvas.height !== size[1]) { canvas.width = size[0]; canvas.height = size[1]; s.renderer.setSize(size[0], size[1], false); }
+    s.camera.aspect = size[0] / size[1];
+    s.camera.up.set(0, 1, 0);
+    if (top) { const d = no < 30 ? -3.6 : 3.6; s.camera.position.set(0, d, 0.001); s.camera.up.set(0, 0, -1); } else s.camera.position.set(0, 0, 9.6);
+    s.camera.lookAt(0, 0, 0); s.camera.updateProjectionMatrix();
+  }
+
+  /** The surface under a click on the top-view picture (x, y in 0..1 across it), or null. */
+  surfaceAt(no: number, state: ToothRecord, pulp: boolean, x: number, y: number): Promise<string | null> {
+    const job = this.queue.then(async () => {
+      const { scene, canvas } = await this.start();
+      this.view(scene, canvas, no, true);
+      scene.apply(state, no, pulp);
+      return scene.areaAt(new (await import('three')).Vector2(x * 2 - 1, 1 - y * 2));
+    }).catch(() => null);
+    this.queue = job;
+    return job;
+  }
+
   /** The PNG (data URL) of tooth `no` in this state, or null when WebGL or the meshes are not available. */
-  snap(no: number, state: ToothRecord, pulp: boolean): Promise<string | null> {
+  snap(no: number, state: ToothRecord, pulp: boolean, top = false): Promise<string | null> {
     if (!this.browser) return Promise.resolve(null);
-    const key = `${no}|${pulp}|${JSON.stringify(state, (_k, v) => (v instanceof Set ? [...v].sort() : v instanceof Map ? [...v] : v))}`;
+    const key = `${top ? 'top' : 'front'}|${no}|${pulp}|${JSON.stringify(state, (_k, v) => (v instanceof Set ? [...v].sort() : v instanceof Map ? [...v] : v))}`;
     const hit = this.cache.get(key);
     if (hit) return Promise.resolve(hit);
     const job = this.queue.then(async () => {
       const { scene, canvas } = await this.start();
+      this.view(scene, canvas, no, top);
       scene.apply(state, no, pulp);
       const url = canvas.toDataURL('image/png');
       this.cache.set(key, url);

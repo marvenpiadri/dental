@@ -43,7 +43,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
 })
 export class DentalChartComponent {
   private readonly i18n = inject(I18n);
-  private readonly store = inject(DentalStore);
+  protected readonly store = inject(DentalStore);
   protected readonly t = this.i18n.t;
 
   readonly patientId = input.required<string>();
@@ -156,6 +156,8 @@ export class DentalChartComponent {
   protected readonly hovered3d = signal<string | null>(null);
   /** The roots of the open tooth, reported by the 3D view (a molar has up to three). */
   protected readonly roots3d = signal<{ slot: number; key: string }[]>([]);
+  /** A surface clicked on a top-view tile: select that tooth and open it in 3D with the surface picked. */
+  protected pickSurface(n: number, id: string): void { this.selected.set([n]); this.open3d.set(n); this.areas.set([id]); }
   protected pickArea(id: string, additive: boolean): void {
     const cur = this.areas();
     this.areas.set(additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : cur.length === 1 && cur[0] === id ? [] : [id]);
@@ -167,17 +169,16 @@ export class DentalChartComponent {
       occlusal: t(front ? 'dc.a.incisal' : 'dc.a.occlusal'), buccal: t(front ? 'dc.a.labial' : 'dc.a.buccal'), lingual: t(upper ? 'dc.a.palatal' : 'dc.a.lingual'),
       mesial: t('dc.a.mesial'), distal: t('dc.a.distal'), cervical: t('dc.a.cervical'), apical: t('dc.a.apical'),
     };
-    const many = this.roots3d().length > 1;
-    for (const r of this.roots3d()) names[`root-${r.slot}`] = many ? t((`dc.root.${r.key}`) as 'dc.root.p') : t('dc.a.radicular');
+    names['root'] = t('dc.a.radicular');
     return names;
   });
   protected readonly areaText = computed(() => this.areas().map((a) => this.areaNames()[a] ?? a).join(' · '));
   protected selectCoronal(): void { this.areas.set(['occlusal', 'buccal', 'lingual', 'mesial', 'distal']); }
-  protected selectRadicular(): void { this.areas.set(['cervical', 'apical', ...this.roots3d().map((r) => `root-${r.slot}`)]); }
+  protected selectRadicular(): void { this.areas.set(['cervical', 'apical', 'root']); }
   protected readonly areaSurfaces = computed(() => this.areas().filter((a) => ['occlusal', 'buccal', 'lingual', 'mesial', 'distal'].includes(a)));
-  protected readonly areaRoots = computed(() => this.areas().filter((a) => a.startsWith('root-') || a === 'apical'));
+  protected readonly areaRoots = computed(() => this.areas().filter((a) => a === 'root' || a === 'apical' || a === 'cervical'));
   /** Selected roots that are fractured / not (a fracture belongs to one root, so only whole roots are toggled). */
-  protected readonly pickedRoots = computed(() => this.areas().filter((a) => a.startsWith('root-')).map((a) => Number(a.slice(5))));
+  protected readonly pickedRoots = computed(() => this.areas().includes('root') ? this.roots3d().map((r) => r.slot) : []);
   protected rootBroken(k: number): boolean { const n = this.open3d(); return n !== null && !!(this.stateOf(n) as unknown as Record<string, boolean>)[`brokenRoot${k}`]; }
   protected allBroken(): boolean { const ks = this.pickedRoots(); return ks.length > 0 && ks.every((k) => this.rootBroken(k)); }
   protected toggleBroken(): void {
