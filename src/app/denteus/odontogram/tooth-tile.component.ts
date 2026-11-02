@@ -61,7 +61,7 @@ export class ToothTileComponent {
     const img = (e.target as HTMLElement).closest('img.real') as HTMLImageElement | null;
     if (!this.compact() || !img) { this.pick.emit(e); return; }
     const r = img.getBoundingClientRect();
-    void this.snap.surfaceAt(this.no(), this.state(), this.showHealthyPulp(), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height).then((id) => (id && id !== 'cervical' && !id.startsWith('root') && id !== 'apical' ? this.surface.emit(id) : this.pick.emit(e)));
+    void this.snap.surfaceAt(this.no(), this.state(), false, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height).then((id) => (id && id !== 'cervical' && !id.startsWith('root') && id !== 'apical' ? this.surface.emit(id) : this.pick.emit(e)));
   }
 
   private readonly art = inject(ToothArt);
@@ -88,7 +88,7 @@ export class ToothTileComponent {
     effect(() => {
       if (!this.browser) return;
       if (this.store.view3d()) {
-        const no = this.no(), st = this.state(), pulp = this.showHealthyPulp();
+        const no = this.no(), st = this.state(), pulp = this.showHealthyPulp() && !this.compact();
         void this.snap.snap(no, st, pulp, this.compact()).then((u) => { if (no === this.no()) this.real.set(u); });
         return;
       }

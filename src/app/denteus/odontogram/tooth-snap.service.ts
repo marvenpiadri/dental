@@ -28,7 +28,7 @@ export class ToothSnap {
     if (canvas.width !== size[0] || canvas.height !== size[1]) { canvas.width = size[0]; canvas.height = size[1]; s.renderer.setSize(size[0], size[1], false); }
     s.camera.aspect = size[0] / size[1];
     s.camera.up.set(0, 1, 0);
-    if (top) { const d = no < 30 ? -3.6 : 3.6; s.camera.position.set(0, d, 0.001); s.camera.up.set(0, 0, -1); } else s.camera.position.set(0, 0, 9.6);
+    if (top) { const d = no < 30 ? -5 : 5; s.camera.position.set(0, d, 0.001); s.camera.up.set(0, 0, -1); } else s.camera.position.set(0, 0, 9.6);
     s.camera.lookAt(0, 0, 0); s.camera.updateProjectionMatrix();
   }
 
