@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, PLATFORM_ID, computed, effect, inject, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, PLATFORM_ID, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import type { ToothRecord } from './engine/chart';
 import { TOOTH_TEMPLATE, isUpperTooth } from './engine/vendor/anatomy/profiles';
 import { markProposed, paintTooth, prepareArt } from './engine/render';
+import { DentalStore } from '../services/dental-store.service';
+import { ToothSnap } from './tooth-snap.service';
 import { ToothArt, artKey, type Template } from './tooth-art.service';
 
 /** One tooth: the real anatomy SVG painted from its record. Draws state; owns none. */
@@ -13,7 +15,8 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
   template: `
     <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="pick.emit($event)">
       @if (upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
-      <span class="art" #art [style.transform]="transform()"></span>
+      <span class="art" #art [style.transform]="transform()" [hidden]="!!real()"></span>
+      @if (real(); as src) { <img class="real" [src]="src" alt="" draggable="false" /> }
       @if (!upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
     </button>
   `,
@@ -24,6 +27,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     .tile.selected { border-color: var(--app-text); background: var(--app-hover); }
     .tile:focus-visible { outline: 2px solid var(--app-text); outline-offset: 1px; }
     .art { display: block; width: 100%; max-width: 64px; aspect-ratio: 39 / 72; }
+    .real { width: 100%; max-width: 64px; aspect-ratio: 180 / 330; object-fit: contain; display: block; }
     .art :is(svg) { width: 100%; height: 100%; display: block; }
     .tile.compact .art { max-width: 34px; aspect-ratio: 1; }
     .no { font-size: 11px; font-weight: 600; color: var(--app-muted); }
@@ -51,6 +55,10 @@ export class ToothTileComponent {
   readonly pick = output<MouseEvent>();
 
   private readonly art = inject(ToothArt);
+  private readonly snap = inject(ToothSnap);
+  private readonly store = inject(DentalStore);
+  /** The library tooth as a picture, when the 3D view setting is on (front-view tiles only; the top-view row keeps the drawing). */
+  protected readonly real = signal<string | null>(null);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('art');
   private svg: SVGElement | null = null;
@@ -69,6 +77,12 @@ export class ToothTileComponent {
     this.art.load();
     effect(() => {
       if (!this.browser) return;
+      if (this.store.view3d() && !this.compact()) {
+        const no = this.no(), st = this.state(), pulp = this.showHealthyPulp();
+        void this.snap.snap(no, st, pulp).then((u) => { if (no === this.no()) this.real.set(u); });
+        return;
+      }
+      this.real.set(null);
       const key = artKey(this.meta().tpl as Template, this.occlusal());
       const text = this.art.texts()[key];
       const state = this.state(), findings = this.findings();

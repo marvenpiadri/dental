@@ -61,7 +61,7 @@ void main(){
   col = mix(col, vec3(1.0, 0.62, 0.04), clamp(sel, 0.0, 1.0) * 0.78);    // selected: amber
   if (!gl_FrontFacing) col = vec3(0.55, 0.45, 0.35);
   vec3 N = normalize(vN); vec3 L = normalize(vec3(0.4, 0.8, 0.6)); vec3 V = vec3(0.0, 0.0, 1.0);
-  float d = abs(dot(N, L)) * 0.7 + 0.35; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
+  float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
   gl_FragColor = vec4(col * d + vec3(s), uAlpha);
 }`;
 const ROOT_FRAG = `uniform float uAlpha; uniform float uCalc; uniform float uRootCar; uniform float uHiSel; uniform float uHiCerv; uniform float uHiApical; uniform float uRootLen; uniform float uBroken; varying vec3 vP; varying vec3 vN;
@@ -190,7 +190,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const endo = str('endo'), dx = str('pulpDx');
     const treated = endo !== 'none';
     pulpMat.color.set(treated ? (endo === 'endo-metal-pin' ? 0x444a50 : endo === 'endo-medical-filling' ? 0xb48ac8 : endo === 'endo-glass-pin' ? 0x9fd8d0 : 0xe49aa6)
-      : dx === 'necrosis' ? 0x3a3a3a : dx === 'irreversible-pulpitis' ? 0xa1101f : dx === 'reversible-pulpitis' ? 0xe8505b : 0xd9626b);
+      : dx === 'necrosis' ? 0x3a3a3a : dx === 'irreversible-pulpitis' ? 0xa1101f : dx === 'reversible-pulpitis' ? 0xe8505b : 0xeeb4b4);
     const pulpOn = showPulp || treated || dx !== 'normal';
     const ghost = gone && !implant; // an extracted tooth stays as a faint outline
     crown.userData['ghost'] = ghost;
