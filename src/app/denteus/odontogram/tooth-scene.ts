@@ -50,6 +50,7 @@ void main(){
   if (uMode >= 1.0) { // a restoration shell
     col = uRestCol; spec = uRestSpec; shin = 70.0 * uRestSpec + 10.0;
     col = mix(col, vec3(0.1, 0.06, 0.03), uLeak * smoothstep(0.35, 0.9, vB.y) * 0.85);
+    col = mix(col, uRestCol * 0.45, 0.8 * smoothstep(0.8, 0.88, vB.y) * (1.0 - smoothstep(0.9, 0.97, vB.y))); // visible margin where the restoration meets the neck
   } else {
     if (uDisc == 1.0) col = mix(col, vec3(0.62, 0.6, 0.45), 0.55);
     if (uDisc == 2.0) col = mix(col, vec3(1.0), 0.5 * step(0.7, hash(p.xy * 5.0 + p.z * 3.0)));
@@ -267,7 +268,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const rt = str('restorationType'), rm = str('restorationMaterial');
     // No material chosen yet: the type itself sets the colour (as in the chart legend), so every restoration reads at a glance.
     const TYPE: Record<string, [number, number, number, number]> = { crown: [0.7, 0.82, 0.97, 0.5], bridge: [0.76, 0.62, 0.92, 0.5], veneer: [0.62, 0.92, 0.88, 0.4], inlay: [0.98, 0.78, 0.45, 0.6], onlay: [0.98, 0.78, 0.45, 0.6] };
-    const m = MAT[rm && rm !== 'none' ? rm : ''] ?? TYPE[rt] ?? MAT['none'];
+    const base = MAT[rm && rm !== 'none' ? rm : ''], tint = TYPE[rt];
+    const m = (base && tint ? base.map((v, i) => (i < 3 ? v * 0.5 + tint[i] * 0.5 : v)) : (base ?? tint ?? MAT['none'])) as [number, number, number, number]; // the material sets the look, the type tints it so a crown never passes for a natural tooth
     shellU.uRestCol.value.set(m[0], m[1], m[2]); shellU.uRestSpec.value = m[3];
     shellU.uLeak.value = R['crownLeakage'] ? 1 : 0;
     shellU.uMode.value = rt === 'veneer' ? 2 : rt === 'inlay' || rt === 'onlay' ? 3 : 1;
