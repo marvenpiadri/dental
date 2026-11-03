@@ -153,6 +153,14 @@
   @for (top of views(); track top) {
   <div class="arches" role="group" [attr.aria-label]="t(top ? 'dc.opt.occlusal' : 'dc.chart')">
     @for (arch of [upper, lower]; track $index) {
+      @if (!top && $index === 1) {
+      <div class="arch cubes">
+        @for (n of arch; track n) {
+          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
+          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
+        }
+      </div>
+      }
       <div class="arch" [class.lower]="$index === 1">
         @for (n of arch; track n) {
           @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
@@ -163,7 +171,7 @@
           }
         }
       </div>
-      @if (!top) {
+      @if (!top && $index === 0) {
       <div class="arch cubes">
         @for (n of arch; track n) {
           @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
