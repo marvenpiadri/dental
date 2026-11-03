@@ -89,7 +89,8 @@ export class DentalChartComponent {
   protected readonly examExaminer = signal('');
   protected readonly examNote = signal('');
 
-  protected readonly tabs: { id: Tab; key: Key }[] = [{ id: 'tooth', key: 'dc.tab.tooth' }, { id: 'perio', key: 'dc.tab.perio' }, { id: 'findings', key: 'dc.tab.findings' }, { id: 'history', key: 'dc.tab.history' }];
+  protected readonly tabs: { id: Tab; key: Key; icon: string }[] = [{ id: 'tooth', key: 'dc.tab.tooth', icon: 'fa-tooth' }, { id: 'perio', key: 'dc.tab.perio', icon: 'fa-chart-line' }, { id: 'findings', key: 'dc.tab.findings', icon: 'fa-stethoscope' }, { id: 'history', key: 'dc.tab.history', icon: 'fa-clock-rotate-left' }]
+  protected tabCount(id: Tab): number { return id === 'findings' ? this.diagnoses().filter((d) => !this.isConfirmed(d)).length : id === 'history' ? this.examinations().length : 0; };
   protected readonly tabList = computed(() => (this.readonlyView() ? this.tabs.filter((k) => k.id !== 'tooth') : this.tabs));
   protected readonly views = computed(() => [this.occlusalView()]);
   protected readonly upper = ALL_TEETH.slice(0, 16);

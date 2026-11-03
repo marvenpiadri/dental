@@ -95,6 +95,7 @@ const D = {
   'dc.show': ['Show', 'Afficher'],
   'dc.state': ['State', 'État'],
   'dc.substrate': ['Crown condition', 'État de la couronne'],
+  'dc.more': ['Export & import', 'Export et import'],
   'dc.tab.findings': ['Diagnoses', 'Diagnostics'],
   'dc.tab.history': ['History', 'Historique'],
   'dc.tab.perio': ['Periodontal', 'Parodontal'],

@@ -21,9 +21,19 @@
 .arch { display: grid; grid-template-columns: repeat(8, minmax(34px, 1fr)) 1px repeat(8, minmax(34px, 1fr)); gap: 2px; min-width: 640px; align-items: end; }
 .arch.lower { align-items: start; }
 .midline { background: var(--app-line); align-self: stretch; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--app-line); overflow-x: auto; }
-.tabs button { all: unset; cursor: pointer; padding: 8px 14px; font-weight: 600; font-size: 13px; color: var(--app-muted); border-bottom: 2px solid transparent; white-space: nowrap; }
-.tabs button.on { color: var(--app-text); border-bottom-color: var(--app-text); }
+.tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--app-line); border-radius: 12px; overflow: hidden; }
+.tabs button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; font-weight: 600; font-size: 13px; color: var(--app-muted); white-space: nowrap; }
+.tabs button + button { border-inline-start: 1px solid var(--app-line); }
+.tabs button.on { color: var(--app-bg, #fff); background: var(--app-text); }
+.tabs .count { font-size: 11px; padding: 0 6px; border-radius: 99px; background: var(--app-hover); color: var(--app-text); }
+.sheet-head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--app-line); border-radius: 12px; }
+.sheet-head .big { font-size: 26px; font-weight: 800; min-width: 44px; text-align: center; }
+.sheet-head .who { flex: 1; font-size: 13px; }
+.empty { display: grid; justify-items: center; gap: 8px; padding: 28px 12px; text-align: center; color: var(--app-muted); border: 1px dashed var(--app-line); border-radius: 12px; }
+.empty i { font-size: 28px; }
+.empty p { margin: 0; font-size: 13px; max-width: 28ch; }
+.more > summary { list-style: none; cursor: pointer; width: fit-content; }
+.more[open] > summary { margin-bottom: 8px; }
 .tabs button:focus-visible { outline: 2px solid var(--app-text); }
 .hint { margin: 0; font-size: 13px; color: var(--app-muted); }
 .sub { margin: 8px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--app-muted); }
