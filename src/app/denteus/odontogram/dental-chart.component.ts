@@ -250,6 +250,11 @@ export class DentalChartComponent {
     if (out.rejected.length) this.notice.set(out.rejected.map((r) => `${r.tooth}: ${r.reason}`).join(' · '));
     if (out.changed.length) { this.chart.set(out.chart); this.save.emit(writeChart(out.chart)); }
   }
+  /** Full braces mode: bonded brackets, molar bands and one archwire on a whole arch (or both), or all removed. */
+  protected braces(which: string): void {
+    const teeth = which === 'upper' ? this.upper : which === 'lower' ? this.lower : this.upper.concat(this.lower);
+    if (which) this.apply({ kind: 'enum', field: 'orthoAppliance', value: which === 'none' ? 'none' : 'braces' }, false, teeth);
+  }
   protected edentulous(confirmed = false): void {
     if (this.readOnly()) return;
     const out = setEdentulous(this.chart(), this.mode(), { confirmed });

@@ -24,9 +24,10 @@ const NOISE = `float h3(vec3 q){ return fract(sin(dot(q, vec3(12.9898, 78.233, 3
 float vn(vec3 q){ vec3 i = floor(q), f = fract(q); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y),
              mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
-float spots(vec3 q){ return smoothstep(0.58, 0.7, vn(q * 1.7) * 0.6 + vn(q * 4.3) * 0.4); }   // black decay spots
+float spotsT(vec3 q, float t){ return smoothstep(0.5 + t, 0.62 + t, vn(q * 1.7) * 0.6 + vn(q * 4.3) * 0.4); }
+float spots(vec3 q){ return spotsT(q, 0.0); }   // black decay spots
 `;
-const FRAG = `uniform float uCode[5]; uniform float uSev[5]; uniform float uAlpha; uniform float uCutY; uniform float uMode; uniform vec3 uRestCol; uniform float uRestSpec; uniform float uLeak;
+const FRAG = `uniform float uCode[5]; uniform float uSev[5]; uniform float uDef[5]; uniform float uAlpha; uniform float uCutY; uniform float uMode; uniform vec3 uRestCol; uniform float uRestSpec; uniform float uLeak;
 uniform float uTop; uniform vec4 uExt; uniform float uMes; uniform vec4 uCase; uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
 varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
 ${NOISE}
@@ -58,14 +59,19 @@ void main(){
     if (uSeal > 0.5) { col = mix(col, vec3(0.75, 0.85, 0.95), 0.5 * w[4]); }
     for (int i = 0; i < 5; i++) {
       float c = uCode[i];
-      if (c == 1.0) { float a = (0.55 + 0.4 * uSev[i] / 6.0 - 0.15 * hash(p.xz * 6.0)) * smoothstep(0.1, 0.7, w[i]); col = mix(col, vec3(0.55, 0.05, 0.1), a); col = mix(col, vec3(0.02, 0.01, 0.01), spots(p) * smoothstep(0.1, 0.6, w[i]) * (0.55 + 0.45 * uSev[i] / 6.0)); spec = mix(spec, 0.05, a); }
+      if (c == 1.0) { float cw = smoothstep(0.1, 0.7, w[i]), sv = uSev[i] / 6.0; float a = (0.55 + 0.4 * sv - 0.15 * hash(p.xz * 6.0)) * cw; col = mix(col, vec3(0.55, 0.05, 0.1), a);
+        float dark = clamp(spotsT(p, 0.16 * (1.0 - sv)) * (0.7 + 0.3 * sv) + smoothstep(0.6, 0.72, vn(p * 3.1 + 7.0)) * sv * 1.3, 0.0, 1.0);   // black spots, deep pits on severe decay
+        col = mix(col, vec3(0.025, 0.012, 0.01), dark * smoothstep(0.1, 0.6, w[i])); spec = mix(spec, 0.05, a); }
       else if (c > 1.0) {
         float a = smoothstep(0.42, 0.58, w[i]);
         vec3 fc = c == 2.0 ? vec3(0.42, 0.47, 0.56) : c == 3.0 ? vec3(0.16, 0.72, 0.85) : c == 4.0 ? vec3(0.62, 0.84, 0.25) : vec3(0.96, 0.5, 0.68);
-        col = mix(col, fc, a); spec = mix(spec, c == 2.0 ? 1.0 : c == 3.0 ? 0.1 : 0.8, a); shin = mix(shin, c == 2.0 ? 90.0 : 12.0, a);
+        col = mix(col, fc, a);
+        if (uDef[i] > 0.5) { float ring = smoothstep(0.15, 0.42, w[i]) * (1.0 - smoothstep(0.42, 0.62, w[i])); col = mix(col, vec3(0.04, 0.02, 0.012), clamp(ring * 1.5 + spots(p * 1.5) * 0.7 * a, 0.0, 0.95)); } // decay creeping under a failing filling
+        spec = mix(spec, c == 2.0 ? 1.0 : c == 3.0 ? 0.1 : 0.8, a); shin = mix(shin, c == 2.0 ? 90.0 : 12.0, a);
       }
     }
     if (uCervical > 0.5) col = mix(col, vec3(0.45, 0.38, 0.28), 0.6 * smoothstep(0.55, 0.9, vB.y));
+    col = mix(col, vec3(0.04, 0.025, 0.015), uRootCar * 0.3 * smoothstep(0.62, 0.9, vB.y) * clamp(spots(p * 1.3) * 1.6 + 0.25, 0.0, 1.0)); // decay at the neck
     col = mix(col, vec3(0.78, 0.66, 0.4), uCalc * smoothstep(0.5, 0.85, vB.y) * 0.8);
   }
   col = mix(col, uCase.rgb, uCase.a);                      // planned / needed work tints the whole crown
@@ -142,7 +148,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   };
 
   const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uTop: { value: 0 }, uExt: { value: new T.Vector4(1, 1, 0, 0) }, uMes: { value: 1 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
-  const U = () => ({ ...shared, uCode: { value: [0, 0, 0, 0, 0] }, uSev: { value: [0, 0, 0, 0, 0] }, uCutY: { value: 99 }, uMode: { value: 0 }, uRestCol: { value: new T.Vector3(1, 1, 1) }, uRestSpec: { value: 0.3 },
+  const U = () => ({ ...shared, uCode: { value: [0, 0, 0, 0, 0] }, uSev: { value: [0, 0, 0, 0, 0] }, uDef: { value: [0, 0, 0, 0, 0] }, uCutY: { value: 99 }, uMode: { value: 0 }, uRestCol: { value: new T.Vector3(1, 1, 1) }, uRestSpec: { value: 0.3 },
     uLeak: { value: 0 }, uCervical: { value: 0 }, uDisc: { value: 0 }, uSeal: { value: 0 }, uBase: { value: new T.Vector3(0.93, 0.91, 0.85) } });
   const crownU = U(), shellU = U(); shellU.uMode.value = 1;
   const mk = (u: ReturnType<typeof U>) => new T.ShaderMaterial({ uniforms: u, vertexShader: VERT, fragmentShader: FRAG, transparent: true, side: T.DoubleSide });
@@ -166,11 +172,12 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const braces = new T.Group();
   { const wireM = new T.MeshStandardMaterial({ color: 0xcfd6dc, metalness: 0.7, roughness: 0.25 }), tie = new T.MeshStandardMaterial({ color: 0x1fb6a6, roughness: 0.6 });
     const bk = new T.Mesh(new T.BoxGeometry(3.4, 2.4, 1.1), new T.MeshStandardMaterial({ color: 0xe4e8ec, metalness: 0.4, roughness: 0.3 })); const slot = new T.Mesh(new T.BoxGeometry(3.4, 0.5, 0.5), new T.MeshStandardMaterial({ color: 0x40464c })); slot.position.z = 0.45;
-    const wire = new T.Mesh(new T.CylinderGeometry(0.22, 0.22, 11, 10), wireM); wire.rotation.z = Math.PI / 2; wire.position.z = 0.65;
+    const wire = new T.Mesh(new T.CylinderGeometry(0.22, 0.22, 24, 10), wireM); wire.rotation.z = Math.PI / 2; wire.position.z = 0.65;
     const ties = [-1.1, 1.1].map((x) => { const r = new T.Mesh(new T.TorusGeometry(0.42, 0.14, 8, 16), tie); r.position.set(x, 0, 0.65); r.rotation.y = Math.PI / 2; return r; });
     braces.add(bk, slot, wire, ...ties);
   }
   const ringMat = new T.MeshStandardMaterial({ color: 0xe06a7a, roughness: 0.5 }), ring = new T.Mesh(new T.TorusGeometry(2.6, 0.45, 8, 28), ringMat); ring.rotation.x = Math.PI / 2; ring.visible = false; // inflamed gum collar around an implant
+  band.material = new T.MeshStandardMaterial({ color: 0xc9d0d6, metalness: 0.7, roughness: 0.3, side: T.DoubleSide });
   braces.scale.setScalar(1.35);
   braces.visible = false;
   // Implant fixture: a titanium screw with helical threads, a microthreaded collar, a tapered apex with cutting flutes and a hex socket.
@@ -238,6 +245,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const str = (k: string) => String(R[k] ?? '');
     crownU.uCode.value = ZONES.map((z) => CODE(t, z));
     crownU.uSev.value = ZONES.map((z) => t.cariesSeverity.get(z) ?? 0);
+    crownU.uDef.value = ZONES.map((z) => (t.fillingSurfaces.has(z) && (R['fillingDefect'] as unknown as Map<string, string>).get(z) ? 1 : 0));
     // How much of the crown is left.
     const sub = str('toothSubstrate');
     let cut = 99;
@@ -247,7 +255,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     if (str('wearEdge') !== 'none') cutBy(h * 0.07);
     crownU.uCutY.value = cut;
     crownU.uCervical.value = str('wearCervical') !== 'none' ? 1 : 0;
-    crownU.uDisc.value = Math.max(0, ['none', 'tetracycline', 'fluorosis', 'nonvital', 'extrinsic', 'other'].indexOf(str('discoloration')));
+    crownU.uDisc.value = str('pulpDx') === 'necrosis' && str('discoloration') === 'none' ? 3 : Math.max(0, ['none', 'tetracycline', 'fluorosis', 'nonvital', 'extrinsic', 'other'].indexOf(str('discoloration')));
     crownU.uSeal.value = R['fissureSealing'] ? 1 : 0;
     // Case colours (the same as the chart legend): the crown for planned or needed work, the root for resorption.
     const flag = (k: string) => !!R[k];
@@ -332,9 +340,10 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     ring.position.y = -mid + 0.5;
     braces.visible = str('orthoAppliance') === 'braces' && !gone && !implant;
     braces.position.set(0, h * 0.5 - mid, bounds[1][2] * 0.85);
-    band.visible = str('orthoAppliance') === 'band' && !gone && !implant;
-    band.position.set(0, h * 0.25 - mid, 0);
-    band.scale.set((bounds[1][0] - bounds[0][0]) / 9.6, 1, (bounds[1][2] - bounds[0][2]) / 9.6);
+    const molarBraces = braces.visible && no % 10 >= 6; // molars carry a band with a tube instead of a bonded bracket
+    band.visible = (str('orthoAppliance') === 'band' || molarBraces) && !gone && !implant;
+    band.position.set(0, h * 0.45 - mid, 0);
+    band.scale.set((bounds[1][0] - bounds[0][0]) / 9.6, 0.45, (bounds[1][2] - bounds[0][2]) / 9.6);
     render();
   };
   /** The surface a point of the crown falls in, in the surface view (same cut as the shader). */

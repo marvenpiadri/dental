@@ -33,6 +33,10 @@
         <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>
+        <select class="btn" [disabled]="readOnly()" [attr.aria-label]="t('dc.braces')" (change)="braces($any($event.target).value); $any($event.target).value = ''">
+          <option value="">{{ t('dc.braces') }}</option>
+          <option value="upper">{{ t('dc.braces.upper') }}</option><option value="lower">{{ t('dc.braces.lower') }}</option><option value="both">{{ t('dc.braces.both') }}</option><option value="none">{{ t('dc.braces.none') }}</option>
+        </select>
         @if (!hideSaveExam()) { <button type="button" class="btn btn--primary" [disabled]="locked() || viewing() !== null" (click)="openSave()"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>{{ t('dc.saveExam') }}</button> }
       }
     </div>
