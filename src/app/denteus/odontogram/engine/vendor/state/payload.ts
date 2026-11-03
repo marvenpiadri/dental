@@ -73,7 +73,7 @@ export function defaultState(){
     wearCervical: "none", // none | abrasion | abfraction | erosion  (cervical)
     discoloration: "none", // none | tetracycline | fluorosis | nonvital | extrinsic | other
     // Orthodontic charting axes.
-    orthoAppliance: "none", // none | bracket | band
+    orthoAppliance: "none", // none | bracket | band | braces | screw
     orthoDrift: "none", // none | mesial | distal
     orthoVertical: "none", // none | extrusion | intrusion
     orthoRotation: false,

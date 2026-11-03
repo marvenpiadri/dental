@@ -10,6 +10,7 @@
 .seg button:focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }
 .hint, .sum { margin: 0; font-size: 13px; color: var(--app-muted); }
 .error-text { margin: 0; color: var(--app-danger); font-size: 13px; }
-.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; padding: 10px 0; background: var(--app-panel, var(--app-bg)); border-top: 1px solid var(--app-line); }
+.sheet { position: sticky; bottom: 0; z-index: 5; display: grid; gap: 10px; padding: 12px 14px; background: var(--app-panel, var(--app-bg)); border: 1px solid var(--app-line); border-radius: 16px; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
 .sum { margin-inline-end: auto; }
 .draw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }

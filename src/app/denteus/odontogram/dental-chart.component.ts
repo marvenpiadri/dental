@@ -27,7 +27,7 @@ function storedNumbering(): NumberingSystem {
   try { return NUMBERING_SYSTEMS.find((s) => s === localStorage.getItem(NUMBERING_KEY)) ?? 'fdi'; } catch { return 'fdi'; }
 }
 
-type Tab = 'tooth' | 'perio' | 'findings' | 'history';
+type Tab = 'perio' | 'findings' | 'history';
 interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: number[] }
 
 /**
@@ -56,7 +56,6 @@ export class DentalChartComponent {
   readonly examinations = input<readonly Examination[]>([]);
   /** History view: nothing can be edited, side and top views are shown together. Editing lives in the act editor. */
   readonly readonlyView = input(false);
-  readonly layout = input<'stack' | 'split'>('stack');
   readonly hideSaveExam = input(false);
   readonly selection = output<readonly number[]>();
   readonly save = output<ChartPayload>();
@@ -78,7 +77,7 @@ export class DentalChartComponent {
   protected numLabel(s: NumberingSystem): Key { return `dc.num.${s}`; }
   protected readonly selected = signal<readonly number[]>([]);
   private readonly emitSelection = effect(() => this.selection.emit(this.selected()));
-  protected readonly tab = linkedSignal<Tab>(() => (this.readonlyView() ? 'findings' : 'tooth'));
+  protected readonly tab = signal<Tab>('findings');
   protected readonly pending = signal<Pending | null>(null);
   protected readonly notice = signal('');
   protected readonly viewing = signal<Examination | null>(null);
@@ -89,9 +88,8 @@ export class DentalChartComponent {
   protected readonly examExaminer = signal('');
   protected readonly examNote = signal('');
 
-  protected readonly tabs: { id: Tab; key: Key; icon: string }[] = [{ id: 'tooth', key: 'dc.tab.tooth', icon: 'fa-tooth' }, { id: 'perio', key: 'dc.tab.perio', icon: 'fa-chart-line' }, { id: 'findings', key: 'dc.tab.findings', icon: 'fa-stethoscope' }, { id: 'history', key: 'dc.tab.history', icon: 'fa-clock-rotate-left' }]
+  protected readonly tabs: { id: Tab; key: Key; icon: string }[] = [{ id: 'perio', key: 'dc.tab.perio', icon: 'fa-chart-line' }, { id: 'findings', key: 'dc.tab.findings', icon: 'fa-stethoscope' }, { id: 'history', key: 'dc.tab.history', icon: 'fa-clock-rotate-left' }]
   protected tabCount(id: Tab): number { return id === 'findings' ? this.diagnoses().filter((d) => !this.isConfirmed(d)).length : id === 'history' ? this.examinations().length : 0; };
-  protected readonly tabList = computed(() => (this.readonlyView() ? this.tabs.filter((k) => k.id !== 'tooth') : this.tabs));
   protected readonly views = computed(() => [this.occlusalView()]);
   protected readonly upper = ALL_TEETH.slice(0, 16);
   protected readonly lower = ALL_TEETH.slice(16);
@@ -146,8 +144,12 @@ export class DentalChartComponent {
   protected pick(n: number, ev: MouseEvent): void {
     const cur = this.selected();
     if (ev.ctrlKey || ev.metaKey || ev.shiftKey) this.selected.set(cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]);
-    else this.selected.set(cur.length === 1 && cur[0] === n ? [] : [n]);
-    this.open3d.set(this.store.view3d() && this.selected().length === 1 ? this.selected()[0] : null);
+    else this.selected.set([n]);
+    this.open3d.set(ev.ctrlKey || ev.metaKey || ev.shiftKey ? null : n); // a plain click opens the tooth; Shift/Ctrl builds a group to edit together
+    this.areas.set([]);
+  }
+  /** The teeth the overlay edits: the whole group when the open tooth belongs to it. */
+  protected editTeeth(): readonly number[] { const n = this.open3d(); return n !== null && this.selected().includes(n) ? this.selected() : n === null ? [] : [n];
     this.areas.set([]);
   }
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */

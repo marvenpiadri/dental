@@ -51,10 +51,6 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 
 .body { display: grid; gap: 14px; }
 .left, .panel { display: grid; gap: 14px; min-width: 0; align-content: start; }
-.body.split { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); align-items: start; }
-.body.split .panel { max-height: 72vh; overflow-y: auto; padding-inline-end: 4px; }
-.body.split .arch { min-width: 520px; }
-@media (max-width: 1100px) { .body.split { grid-template-columns: minmax(0, 1fr); } .body.split .panel { max-height: none; } }
 .dentisto { gap: 2px; padding: 14px 10px; }
 .dentisto .arch { align-items: center; }
 .dentisto .arch.lower { align-items: center; }
@@ -64,7 +60,11 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .surf { padding-block: 4px; }
 .cubes { padding-block: 0; }
 
-.ov { position: fixed; inset: 4vh 4vw; z-index: 50; display: grid; grid-template-rows: auto 1fr; background: var(--app-surface, var(--app-bg)); border: 1px solid var(--app-line); box-shadow: 0 0 0 100vmax rgba(0,0,0,.45); }
+.ov-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(0 0 0 / .4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.ov { width: min(1080px, 94vw); height: min(780px, 90vh); display: grid; grid-template-rows: auto 1fr; background: var(--app-surface, var(--app-bg)); border: 1px solid var(--app-line); border-radius: 18px; overflow: hidden; }
+.ov-body.flat { grid-template-columns: 1fr; overflow-y: auto; }
+.multi { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border: 1px solid var(--app-line); border-radius: 12px; font-size: 13px; }
+.multi strong { flex: 1; }
 .ov-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--app-line); }
 .ov-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr); min-height: 0; }
 .ov-3d { position: relative; border-inline-end: 1px solid var(--app-line); min-height: 320px; }
