@@ -23,7 +23,7 @@ const L: Record<string, [string, string]> = {
   internal: ['Internal resorption', 'Résorption interne'], 'external-cervical': ['External cervical resorption', 'Résorption cervicale externe'],
   attrition: ['Attrition', 'Attrition'], erosion: ['Erosion', 'Érosion'], abrasion: ['Abrasion', 'Abrasion'], abfraction: ['Abfraction', 'Abfraction'],
   tetracycline: ['Tetracycline', 'Tétracycline'], fluorosis: ['Fluorosis', 'Fluorose'], nonvital: ['Non-vital', 'Non vitale'], extrinsic: ['Extrinsic stain', 'Tache extrinsèque'], other: ['Other', 'Autre'],
-  bracket: ['Bracket', 'Bracket'], band: ['Band', 'Bague'], braces: ['Braces (bracket + wire)', 'Bagues (bracket + fil)'], screw: ['Mini-screw', 'Mini-vis'], mesial: ['Mesial', 'Mésial'], distal: ['Distal', 'Distal'], extrusion: ['Extrusion', 'Égression'], intrusion: ['Intrusion', 'Ingression'],
+  bracket: ['Bracket', 'Bracket'], band: ['Band', 'Bague'], braces: ['Braces (bracket + wire)', 'Bagues (bracket + fil)'], mesial: ['Mesial', 'Mésial'], distal: ['Distal', 'Distal'], extrusion: ['Extrusion', 'Égression'], intrusion: ['Intrusion', 'Ingression'],
   active: ['Active', 'Active'], arrested: ['Arrested', 'Stabilisée'], 'active-cavitated': ['Active, cavitated', 'Active, cavitaire'],
   mucositis: ['Mucositis', 'Mucosite'], 'peri-implantitis-mild': ['Peri-implantitis, mild', 'Péri-implantite légère'], 'peri-implantitis-moderate': ['Peri-implantitis, moderate', 'Péri-implantite modérée'], 'peri-implantitis-severe': ['Peri-implantitis, severe', 'Péri-implantite sévère'],
   marginal: ['Marginal defect', 'Défaut marginal'], fracture: ['Fracture', 'Fracture'], wear: ['Wear', 'Usure'],

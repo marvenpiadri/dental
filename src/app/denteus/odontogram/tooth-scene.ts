@@ -162,29 +162,44 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const gold = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.3, roughness: 0.4 });
   const hw = (id: string, m = steel) => { const mesh = new T.Mesh(geometry(id) ?? undefined, m); mesh.visible = false; return mesh; };
   const fixture = hw('hw-implant-fixture'), abutment = hw('hw-abutment'), healing = hw('hw-healing-cap', gold), cover = hw('hw-cover-screw'), bracket = hw('hw-bracket'), band = hw('hw-band');
-  // Home-made hardware (not in the scan library): braces = bracket + archwire + elastic ties, screw = threaded mini-screw.
-  const braces = new T.Group(), screw = new T.Group();
+  // Home-made hardware (not in the scan library): braces = bracket + archwire + elastic ties,.
+  const braces = new T.Group();
   { const wireM = new T.MeshStandardMaterial({ color: 0xcfd6dc, metalness: 0.7, roughness: 0.25 }), tie = new T.MeshStandardMaterial({ color: 0x1fb6a6, roughness: 0.6 });
     const bk = new T.Mesh(new T.BoxGeometry(3.4, 2.4, 1.1), new T.MeshStandardMaterial({ color: 0xe4e8ec, metalness: 0.4, roughness: 0.3 })); const slot = new T.Mesh(new T.BoxGeometry(3.4, 0.5, 0.5), new T.MeshStandardMaterial({ color: 0x40464c })); slot.position.z = 0.45;
     const wire = new T.Mesh(new T.CylinderGeometry(0.22, 0.22, 11, 10), wireM); wire.rotation.z = Math.PI / 2; wire.position.z = 0.65;
     const ties = [-1.1, 1.1].map((x) => { const r = new T.Mesh(new T.TorusGeometry(0.42, 0.14, 8, 16), tie); r.position.set(x, 0, 0.65); r.rotation.y = Math.PI / 2; return r; });
     braces.add(bk, slot, wire, ...ties);
-    const metal = new T.MeshStandardMaterial({ color: 0x9aa4ae, metalness: 0.6, roughness: 0.3 });
-    const shaft = new T.Mesh(new T.CylinderGeometry(0.8, 0.5, 8, 14), metal); shaft.rotation.x = Math.PI / 2; shaft.position.z = -4;
-    for (let i = 0; i < 7; i++) { const th = new T.Mesh(new T.TorusGeometry(0.78 - i * 0.04, 0.12, 6, 18), metal); th.position.z = -0.8 - i * 1.0; screw.add(th); }
-    const head = new T.Mesh(new T.CylinderGeometry(1.5, 1.2, 1.1, 18), steel); head.rotation.x = Math.PI / 2; head.position.z = 0.55;
-    const cross = new T.Mesh(new T.BoxGeometry(1.8, 0.35, 0.3), new T.MeshStandardMaterial({ color: 0x40464c })); cross.position.z = 1.1;
-    const cross2 = cross.clone(); cross2.rotation.z = Math.PI / 2;
-    screw.add(shaft, head, cross, cross2); }
+  }
   const ringMat = new T.MeshStandardMaterial({ color: 0xe06a7a, roughness: 0.5 }), ring = new T.Mesh(new T.TorusGeometry(2.6, 0.45, 8, 28), ringMat); ring.rotation.x = Math.PI / 2; ring.visible = false; // inflamed gum collar around an implant
-  braces.scale.setScalar(1.35); screw.scale.setScalar(0.7);
-  braces.visible = screw.visible = false;
+  braces.scale.setScalar(1.35);
+  braces.visible = false;
+  // Implant fixture: a titanium screw with helical threads, a microthreaded collar, a tapered apex with cutting flutes and a hex socket.
+  fixture.material = new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, metalness: 0.75, roughness: 0.38 });
+  const hexSocket = new T.Mesh(new T.CylinderGeometry(1.0, 1.0, 0.12, 6), new T.MeshStandardMaterial({ color: 0x2b3036, roughness: 0.6 }));
+  const fixtureGeometry = (len: number, r0: number) => {
+    const NY = 220, NA = 48, pitch = 0.85, depth = 0.4, pos: number[] = [], col: number[] = [], idx: number[] = [];
+    for (let j = 0; j <= NY; j++) {
+      const y = -(len * j) / NY, d = -y / len, apex = Math.max(0, (d - 0.78) / 0.22), neck = d < 0.12;
+      for (let i = 0; i <= NA; i++) {
+        const a = (i / NA) * Math.PI * 2, ph = -y / pitch - a / (Math.PI * 2), fr = ph - Math.floor(ph), tri = 1 - Math.abs(2 * fr - 1);
+        let r = (neck ? r0 + 0.12 * (0.5 + 0.5 * Math.cos((-y / 0.28) * Math.PI * 2)) : r0 - depth + depth * tri) * (1 - 0.5 * apex ** 1.6);
+        if (apex > 0 && Math.abs(Math.sin(1.5 * a)) < 0.12) r *= 0.7; // three cutting flutes
+        if (j === NY) r = 0;
+        const t = neck ? 0.6 : tri;
+        pos.push(r * Math.cos(a), y, r * Math.sin(a)); col.push(0.34 + 0.5 * t, 0.37 + 0.5 * t, 0.4 + 0.5 * t);
+      }
+    }
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NA; i++) { const p = j * (NA + 1) + i, q = p + NA + 1; idx.push(p, q, p + 1, p + 1, q, q + 1); }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new T.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  };
   const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
   const group = new T.Group(); // the invisible container: pose and visibility live here, the meshes inside only swap
   const empty = new T.BufferGeometry();
   // Exploded view: the natural crown cut into its five surfaces, each its own mesh (same material, so colours and highlight carry over).
   const pieces = ZONES.map((z) => { const m = new T.Mesh(empty, crown.material); m.userData['zone'] = z; m.visible = false; return m; });
-  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, screw, ring, lesion);
+  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, lesion);
   scene.add(group, new T.AmbientLight(0xffffff, 0.8), new T.DirectionalLight(0xffffff, 1.5));
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
@@ -282,12 +297,18 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     shared.uTop.value = top ? 1 : 0;
     shared.uExt.value.set(Math.max((bounds[1][0] - bounds[0][0]) / 2, 0.1), Math.max((bounds[1][2] - bounds[0][2]) / 2, 0.1), (bounds[1][0] + bounds[0][0]) / 2, (bounds[1][2] + bounds[0][2]) / 2);
     shared.uMes.value = mesial;
-    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, screw, ring, prep, ...pieces]) m.visible = false; }
+    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, prep, ...pieces]) m.visible = false; }
     if (pieces[0].visible) crown.visible = false;
     layout();
     // Implant hardware, all positioned at the neck.
     const prosthesis = str('prosthesis');
     fixture.visible = implant;
+    if (implant) {
+      const len = Math.min(Math.max(-ymin * 0.8, 9), 13), r0 = no % 10 >= 6 ? 2.4 : no % 10 >= 4 ? 2.05 : 1.8, key = `${len.toFixed(1)}-${r0}`;
+      if (fixture.userData['key'] !== key) { fixture.geometry.dispose(); fixture.geometry = fixtureGeometry(len, r0); fixture.userData['key'] = key; }
+    }
+    hexSocket.visible = implant && !(fullCover || prosthesis !== 'none');
+    hexSocket.position.y = -mid + 0.05;
     abutment.visible = implant && (fullCover || prosthesis !== 'none' && prosthesis !== 'healing-abutment');
     healing.visible = implant && (prosthesis === 'healing-abutment' || (!fullCover && prosthesis === 'none'));
     cover.visible = false;
@@ -311,8 +332,6 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     ring.position.y = -mid + 0.5;
     braces.visible = str('orthoAppliance') === 'braces' && !gone && !implant;
     braces.position.set(0, h * 0.5 - mid, bounds[1][2] * 0.85);
-    screw.visible = str('orthoAppliance') === 'screw' && !gone;
-    screw.position.set(0, ymin * 0.45 - mid, bounds[1][2] + 1);
     band.visible = str('orthoAppliance') === 'band' && !gone && !implant;
     band.position.set(0, h * 0.25 - mid, 0);
     band.scale.set((bounds[1][0] - bounds[0][0]) / 9.6, 1, (bounds[1][2] - bounds[0][2]) / 9.6);

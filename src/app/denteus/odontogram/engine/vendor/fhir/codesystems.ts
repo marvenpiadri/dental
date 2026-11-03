@@ -229,7 +229,6 @@ export const LOCAL_VALUE_MAPS: Record<string, Record<string, CodeEntry>> = {
     "bracket": { code: "bracket", display: "Fixed bracket" },
     "band": { code: "band", display: "Orthodontic band" },
     "braces": { code: "braces", display: "Braces (bracket and archwire)" },
-    "screw": { code: "screw", display: "Orthodontic mini-screw" },
   },
   orthoDrift: {
     "none": { code: "none", display: "No drift" },
