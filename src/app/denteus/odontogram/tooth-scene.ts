@@ -176,6 +176,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const cross = new T.Mesh(new T.BoxGeometry(1.8, 0.35, 0.3), new T.MeshStandardMaterial({ color: 0x40464c })); cross.position.z = 1.1;
     const cross2 = cross.clone(); cross2.rotation.z = Math.PI / 2;
     screw.add(shaft, head, cross, cross2); }
+  const ringMat = new T.MeshStandardMaterial({ color: 0xe06a7a, roughness: 0.5 }), ring = new T.Mesh(new T.TorusGeometry(2.6, 0.45, 8, 28), ringMat); ring.rotation.x = Math.PI / 2; ring.visible = false; // inflamed gum collar around an implant
   braces.scale.setScalar(1.35); screw.scale.setScalar(0.7);
   braces.visible = screw.visible = false;
   const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
@@ -183,7 +184,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const empty = new T.BufferGeometry();
   // Exploded view: the natural crown cut into its five surfaces, each its own mesh (same material, so colours and highlight carry over).
   const pieces = ZONES.map((z) => { const m = new T.Mesh(empty, crown.material); m.userData['zone'] = z; m.visible = false; return m; });
-  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, screw, lesion);
+  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, screw, ring, lesion);
   scene.add(group, new T.AmbientLight(0xffffff, 0.8), new T.DirectionalLight(0xffffff, 1.5));
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
@@ -281,7 +282,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     shared.uTop.value = top ? 1 : 0;
     shared.uExt.value.set(Math.max((bounds[1][0] - bounds[0][0]) / 2, 0.1), Math.max((bounds[1][2] - bounds[0][2]) / 2, 0.1), (bounds[1][0] + bounds[0][0]) / 2, (bounds[1][2] + bounds[0][2]) / 2);
     shared.uMes.value = mesial;
-    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, screw, prep, ...pieces]) m.visible = false; }
+    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, screw, ring, prep, ...pieces]) m.visible = false; }
     if (pieces[0].visible) crown.visible = false;
     layout();
     // Implant hardware, all positioned at the neck.
@@ -299,6 +300,15 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     // Orthodontic appliance on the lip side.
     bracket.visible = str('orthoAppliance') === 'bracket' && !gone && !implant;
     bracket.position.set(0, h * 0.5 - mid, bounds[1][2] * 0.85);
+    // Malposition: rotation about the long axis, drift along the arch, vertical shift toward/away from the bite.
+    const up = no < 30 ? -1 : 1, drift = str('orthoDrift'), vert = str('orthoVertical');
+    group.rotation.y = flag('orthoRotation') ? 0.6 : 0;
+    group.position.x = drift === 'mesial' ? 0.35 * mesial * up : drift === 'distal' ? -0.35 * mesial * up : 0;
+    group.position.y = vert === 'extrusion' ? 0.3 * up : vert === 'intrusion' ? -0.3 * up : 0;
+    const pi = str('periImplant');
+    ring.visible = implant && pi !== 'none' && pi !== '';
+    ringMat.color.set(pi === 'mucositis' ? 0xf0a0aa : pi === 'peri-implantitis-mild' ? 0xe06a7a : pi === 'peri-implantitis-moderate' ? 0xc2283d : 0x7a0f1f);
+    ring.position.y = -mid + 0.5;
     braces.visible = str('orthoAppliance') === 'braces' && !gone && !implant;
     braces.position.set(0, h * 0.5 - mid, bounds[1][2] * 0.85);
     screw.visible = str('orthoAppliance') === 'screw' && !gone;
