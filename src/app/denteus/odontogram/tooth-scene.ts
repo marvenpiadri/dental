@@ -27,7 +27,7 @@ float vn(vec3 q){ vec3 i = floor(q), f = fract(q); f = f * f * (3.0 - 2.0 * f);
 float spots(vec3 q){ return smoothstep(0.58, 0.7, vn(q * 1.7) * 0.6 + vn(q * 4.3) * 0.4); }   // black decay spots
 `;
 const FRAG = `uniform float uCode[5]; uniform float uSev[5]; uniform float uAlpha; uniform float uCutY; uniform float uMode; uniform vec3 uRestCol; uniform float uRestSpec; uniform float uLeak;
-uniform vec4 uCase; uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
+uniform float uTop; uniform vec4 uExt; uniform float uMes; uniform vec4 uCase; uniform float uHi[5]; uniform float uHiCerv; uniform float uCervical; uniform float uDisc; uniform float uSeal; uniform float uCalc; uniform float uRootCar; uniform vec3 uBase;
 varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
 ${NOISE}
 float hash(vec2 q){ return fract(sin(dot(floor(q), vec2(12.9898, 78.233))) * 43758.5453); }
@@ -35,6 +35,14 @@ void main(){
   vec3 p = vP;
   if (p.y > uCutY || p.y < 0.015) discard;         // worn or broken crown; the flat cap cut at the neck is never seen
   float w[5]; w[0] = vA.x; w[1] = vA.y; w[2] = vA.z; w[3] = vA.w; w[4] = vB.x;
+  float bd = 0.0;
+  if (uTop > 0.5) { // surface view: five crisp areas cut from the top, with a visible border between them
+    float a = (p.x - uExt.z) * uMes / uExt.x, b = (p.z - uExt.w) / uExt.y;
+    float m = max(abs(a), abs(b));
+    for (int i = 0; i < 5; i++) w[i] = 0.0;
+    if (m < 0.5) w[4] = 1.0; else if (abs(a) > abs(b)) { if (a > 0.0) w[0] = 1.0; else w[1] = 1.0; } else { if (b > 0.0) w[2] = 1.0; else w[3] = 1.0; }
+    bd = 1.0 - smoothstep(0.012, 0.032, min(abs(m - 0.5), m < 0.5 ? 9.0 : abs(abs(a) - abs(b))));
+  }
   if (uMode == 2.0 && w[2] < 0.5) discard;          // veneer: lip side only
   if (uMode == 3.0 && w[4] < 0.5) discard;          // inlay / onlay: biting face only
   vec3 col = uBase; float spec = 0.25; float shin = 24.0;
@@ -66,7 +74,8 @@ void main(){
   float neck = smoothstep(0.4, 0.9, vB.y);
   sel += uHiCerv * step(0.9, uHiCerv) * neck; hov += uHiCerv * (1.0 - step(0.9, uHiCerv)) * neck * 2.0;
   col = mix(col, vec3(0.13, 0.83, 0.93), clamp(hov, 0.0, 1.0) * 0.55);   // hover: cyan
-  col = mix(col, vec3(1.0, 0.62, 0.04), clamp(sel, 0.0, 1.0) * 0.78);    // selected: amber
+  col = mix(col, uTop > 0.5 ? vec3(0.1, 0.72, 0.32) : vec3(1.0, 0.62, 0.04), clamp(sel, 0.0, 1.0) * (uTop > 0.5 ? 0.92 : 0.78));    // selected: amber (green in the surface view)
+  col = mix(col, vec3(0.08, 0.1, 0.13), bd * 0.9);
   if (!gl_FrontFacing) col = vec3(0.93, 0.84, 0.7);   // the cut face of a pulled-apart piece shows dentin
   vec3 N = normalize(vN); vec3 L = normalize(vec3(0.4, 0.8, 0.6)); vec3 V = vec3(0.0, 0.0, 1.0);
   float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
@@ -132,7 +141,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     return g;
   };
 
-  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
+  const shared = { uAlpha: { value: 1 }, uCalc: { value: 0 }, uRootCar: { value: 0 }, uHi: { value: [0, 0, 0, 0, 0] }, uHiCerv: { value: 0 }, uTop: { value: 0 }, uExt: { value: new T.Vector4(1, 1, 0, 0) }, uMes: { value: 1 }, uCase: { value: new T.Vector4(0, 0, 0, 0) }, uCaseRoot: { value: new T.Vector4(0, 0, 0, 0) }, uRootLen: { value: -12 } };
   const U = () => ({ ...shared, uCode: { value: [0, 0, 0, 0, 0] }, uSev: { value: [0, 0, 0, 0, 0] }, uCutY: { value: 99 }, uMode: { value: 0 }, uRestCol: { value: new T.Vector3(1, 1, 1) }, uRestSpec: { value: 0.3 },
     uLeak: { value: 0 }, uCervical: { value: 0 }, uDisc: { value: 0 }, uSeal: { value: 0 }, uBase: { value: new T.Vector3(0.93, 0.91, 0.85) } });
   const crownU = U(), shellU = U(); shellU.uMode.value = 1;
@@ -163,6 +172,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
   let explode = 0;
+  let top = false;
   let last: [ToothRecord, number, boolean] | null = null;
   let shownFdi = 0, h = 10, ymin = -12, ymax = 10, mesial = 1, bounds: number[][] = [[0, 0, 0], [0, 0, 0]];
   const apply = (t: ToothRecord, no: number, showPulp: boolean) => {
@@ -251,7 +261,11 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     });
     pulp.visible = !implant && !gone && pulpOn;
     if (ghost) { crown.visible = true; shell.visible = false; }
-    pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost; });
+    pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost && !top; });
+    shared.uTop.value = top ? 1 : 0;
+    shared.uExt.value.set(Math.max((bounds[1][0] - bounds[0][0]) / 2, 0.1), Math.max((bounds[1][2] - bounds[0][2]) / 2, 0.1), (bounds[1][0] + bounds[0][0]) / 2, (bounds[1][2] + bounds[0][2]) / 2);
+    shared.uMes.value = mesial;
+    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, prep, ...pieces]) m.visible = false; }
     if (pieces[0].visible) crown.visible = false;
     layout();
     // Implant hardware, all positioned at the neck.
@@ -273,6 +287,29 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     band.position.set(0, h * 0.25 - mid, 0);
     band.scale.set((bounds[1][0] - bounds[0][0]) / 9.6, 1, (bounds[1][2] - bounds[0][2]) / 9.6);
     render();
+  };
+  /** The surface a point of the crown falls in, in the surface view (same cut as the shader). */
+  const zoneAt = (p: import('three').Vector3): string => {
+    const e = shared.uExt.value, a = (p.x - e.z) * mesial / e.x, b = (p.z - e.w) / e.y;
+    if (Math.max(Math.abs(a), Math.abs(b)) < 0.5) return 'occlusal';
+    return Math.abs(a) > Math.abs(b) ? (a > 0 ? 'mesial' : 'distal') : b > 0 ? 'buccal' : 'lingual';
+  };
+  /** Surface view: only the crown, seen from the biting side and zoomed to fill the frame; mesial toward the chart's midline. */
+  const setTop = (on: boolean) => { top = on; if (!on) { camera.fov = 35; camera.up.set(0, 1, 0); camera.position.set(0, 0, 9.6); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); } };
+  const frameTop = (no: number) => {
+    const mid = (ymin + ymax) / 2, e = shared.uExt.value, s = group.scale.x;
+    group.updateMatrixWorld(true);
+    const L = (x: number, y: number, z: number) => group.localToWorld(new T.Vector3(x, y - mid, z));
+    const c = L(e.z, h * 0.8, e.w), out = L(e.z, h * 0.8 + 1, e.w).sub(c).normalize(), zl = L(e.z, h * 0.8, e.w + 1).sub(c).normalize();
+    const half = Math.max(e.x, e.y) * s * 1.1, D = half / Math.tan((22 / 2) * Math.PI / 180) + h * s;
+    camera.fov = 22; camera.updateProjectionMatrix();
+    camera.position.copy(c).addScaledVector(out, D);
+    const midlineRight = [1, 4, 5, 8].includes(Math.floor(no / 10));
+    for (const sign of [1, -1]) {
+      camera.up.copy(zl).multiplyScalar(sign); camera.lookAt(c); camera.updateMatrixWorld(true);
+      const m = L(e.z + mesial * e.x, h * 0.8, e.w).project(camera);
+      if ((m.x > 0) === midlineRight) break;
+    }
   };
   /** Puts every part where the explode amount (0 = whole tooth, 1 = fully apart) asks. */
   const layout = () => {
@@ -308,6 +345,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const ray = new T.Raycaster();
   const areaAt = (ndc: import('three').Vector2): string | null => {
     ray.setFromCamera(ndc, camera);
+    if (top) { const t = [crown, shell].filter((m) => m.visible); const hit = ray.intersectObjects(t, false)[0]; return hit ? zoneAt(hit.object.worldToLocal(hit.point.clone())) : null; }
     const targets = [crown, shell, ...pieces, ...rootParts].filter((m) => m.visible && !m.userData['ghost']);
     const hit = ray.intersectObjects(targets, false)[0];
     if (!hit?.face) return null;
@@ -328,5 +366,5 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     for (let k = 1; k <= 3; k++) his[k].value = lv(`root-${k}`); // each horn is its own area
     render();
   };
-  return { setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
+  return { setTop, frameTop, setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
 }

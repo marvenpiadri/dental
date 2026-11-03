@@ -22,22 +22,22 @@ export class ToothSnap {
     })());
   }
 
-  /** Front view (buccal side, roots out of the crown) or top view (looking onto the biting face). */
-  private view(s: ReturnType<typeof makeToothScene>, canvas: HTMLCanvasElement, no: number, top: boolean): void {
-    const size = top ? [180, 180] : [180, 330];
+  /** Front view (buccal side, roots out of the crown) or surface view (crown only, from the biting side, zoomed in). */
+  private show(s: ReturnType<typeof makeToothScene>, canvas: HTMLCanvasElement, no: number, state: ToothRecord, pulp: boolean, top: boolean): void {
+    const size = top ? [200, 200] : [180, 330];
     if (canvas.width !== size[0] || canvas.height !== size[1]) { canvas.width = size[0]; canvas.height = size[1]; s.renderer.setSize(size[0], size[1], false); }
     s.camera.aspect = size[0] / size[1];
-    s.camera.up.set(0, 1, 0);
-    if (top) { const d = no < 30 ? -5 : 5; s.camera.position.set(0, d, 0.001); s.camera.up.set(0, 0, -1); } else s.camera.position.set(0, 0, 9.6);
-    s.camera.lookAt(0, 0, 0); s.camera.updateProjectionMatrix();
+    s.setTop(top);
+    if (!top) { s.camera.updateProjectionMatrix(); }
+    s.apply(state, no, pulp);
+    if (top) s.frameTop(no);
   }
 
-  /** The surface under a click on the top-view picture (x, y in 0..1 across it), or null. */
+  /** The surface under a click on the surface-view picture (x, y in 0..1 across it), or null. */
   surfaceAt(no: number, state: ToothRecord, pulp: boolean, x: number, y: number): Promise<string | null> {
     const job = this.queue.then(async () => {
       const { scene, canvas } = await this.start();
-      this.view(scene, canvas, no, true);
-      scene.apply(state, no, pulp);
+      this.show(scene, canvas, no, state, pulp, true);
       return scene.areaAt(new (await import('three')).Vector2(x * 2 - 1, 1 - y * 2));
     }).catch(() => null);
     this.queue = job;
@@ -52,8 +52,7 @@ export class ToothSnap {
     if (hit) return Promise.resolve(hit);
     const job = this.queue.then(async () => {
       const { scene, canvas } = await this.start();
-      this.view(scene, canvas, no, top);
-      scene.apply(state, no, pulp);
+      this.show(scene, canvas, no, state, pulp, top);
       scene.setHighlight(null, marked);
       const url = canvas.toDataURL('image/png');
       this.cache.set(key, url);

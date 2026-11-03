@@ -18,7 +18,8 @@ import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
 import { DentalStore } from '../services/dental-store.service';
 import { Tooth3dComponent } from './tooth-3d.component';
-import { SurfaceCubeComponent, type CubeSurface } from './surface-cube.component';
+import { type CubeSurface } from './surface-cube.component';
+import { CrownTopComponent } from './crown-top.component';
 import { ToothTileComponent } from './tooth-tile.component';
 
 const NUMBERING_KEY = 'dentaleus.numbering';
@@ -36,7 +37,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, SurfaceCubeComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
+  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
