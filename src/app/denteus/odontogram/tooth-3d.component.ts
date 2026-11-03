@@ -25,6 +25,8 @@ export class Tooth3dComponent implements OnDestroy {
   readonly selected = input<readonly string[]>([]);
   /** The dental name of each area for this tooth (incisal or occlusal, labial or buccal, palatal or lingual, ...). */
   readonly labels = input<Record<string, string>>({});
+  /** 0 = the whole tooth, 1 = cut into its surfaces and horns and moved fully apart. */
+  readonly explode = input(0);
   readonly hover = output<string | null>();
   /** The roots this tooth has, in slot order (key = mb, db, p, m, d, b, l or single). */
   readonly roots = output<{ slot: number; key: string }[]>();
@@ -38,16 +40,17 @@ export class Tooth3dComponent implements OnDestroy {
   private highlight: ((hover: string | null, selected: readonly string[]) => void) | null = null;
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
-  private ctx: { apply: (t: ToothRecord, no: number, pulp: boolean) => void; roots: () => { slot: number; key: string }[]; dispose: () => void } | null = null;
+  private ctx: { setExplode: (v: number) => void; apply: (t: ToothRecord, no: number, pulp: boolean) => void; roots: () => { slot: number; key: string }[]; dispose: () => void } | null = null;
   private starting = false;
 
   constructor() {
     effect(() => {
       const t = this.state(), no = this.no(), pulp = this.showPulp();
       if (!this.browser) return;
-      const sel = this.selected(); this.labels();
+      const sel = this.selected(); this.labels(); const ex = this.explode();
+      this.ctx?.setExplode(ex);
       if (this.ctx) { this.ctx.apply(t, no, pulp); this.emitRoots(); this.highlight?.(this.hovered, sel); this.relabel?.(); return; }
-      if (!this.starting) { this.starting = true; void this.start().then(() => { this.ctx?.apply(this.state(), this.no(), this.showPulp()); this.emitRoots(); this.highlight?.(this.hovered, this.selected()); }).catch(() => { this.host().nativeElement.textContent = this.unavailable(); }); }
+      if (!this.starting) { this.starting = true; void this.start().then(() => { this.ctx?.setExplode(this.explode()); this.ctx?.apply(this.state(), this.no(), this.showPulp()); this.emitRoots(); this.highlight?.(this.hovered, this.selected()); }).catch(() => { this.host().nativeElement.textContent = this.unavailable(); }); }
     });
   }
 
@@ -91,6 +94,6 @@ export class Tooth3dComponent implements OnDestroy {
       const a = at(e); if (a) this.area.emit({ id: a, additive: e.shiftKey || e.ctrlKey || e.metaKey });
     });
     this.highlight = (h, sel) => { s.setHighlight(h, sel); };
-    this.ctx = { apply: s.apply, roots: s.rootList, dispose: () => { ro.disconnect(); controls?.dispose(); renderer.dispose(); renderer.domElement.remove(); s.dispose(); } };
+    this.ctx = { setExplode: s.setExplode, apply: s.apply, roots: s.rootList, dispose: () => { ro.disconnect(); controls?.dispose(); renderer.dispose(); renderer.domElement.remove(); s.dispose(); } };
   }
 }

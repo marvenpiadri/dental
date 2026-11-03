@@ -151,6 +151,8 @@ export class DentalChartComponent {
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
   protected readonly open3d = signal<number | null>(null);
   protected readonly pulp3d = signal(false);
+  /** How far the 3D tooth is pulled apart into its surfaces and horns (0 = whole). */
+  protected readonly explode3d = signal(0);
   /** Areas picked in the 3D view: crown surfaces and thirds of the root. */
   protected readonly areas = signal<readonly string[]>([]);
   protected readonly hovered3d = signal<string | null>(null);

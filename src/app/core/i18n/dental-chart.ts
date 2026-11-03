@@ -476,6 +476,7 @@ const D = {
   'dc.lg.endo': ['Root filling', 'Obturation canalaire'],
   'dc.lg.absent': ['Absent tooth (outline)', 'Dent absente (contour)'],
   'dc.lg.planned': ['Planned work', 'Travail prévu'],
+  'dc.3d.explode': ['Pull apart', 'Éclater'],
   'dc.a.coronal': ['Coronal (whole crown)', 'Coronaire (toute la couronne)'],
   'dc.a.radicularAll': ['Radicular (whole root)', 'Radiculaire (toute la racine)'],
 } as const satisfies Record<string, readonly [string, string]>;

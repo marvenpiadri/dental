@@ -67,7 +67,7 @@ void main(){
   sel += uHiCerv * step(0.9, uHiCerv) * neck; hov += uHiCerv * (1.0 - step(0.9, uHiCerv)) * neck * 2.0;
   col = mix(col, vec3(0.13, 0.83, 0.93), clamp(hov, 0.0, 1.0) * 0.55);   // hover: cyan
   col = mix(col, vec3(1.0, 0.62, 0.04), clamp(sel, 0.0, 1.0) * 0.78);    // selected: amber
-  if (!gl_FrontFacing) col = vec3(0.55, 0.45, 0.35);
+  if (!gl_FrontFacing) col = vec3(0.93, 0.84, 0.7);   // the cut face of a pulled-apart piece shows dentin
   vec3 N = normalize(vN); vec3 L = normalize(vec3(0.4, 0.8, 0.6)); vec3 V = vec3(0.0, 0.0, 1.0);
   float d = abs(dot(N, L)) * 0.6 + 0.5; float s = pow(max(dot(reflect(-L, N), V), 0.0), shin) * spec;
   gl_FragColor = vec4(col * d + vec3(s), uAlpha);
@@ -93,6 +93,23 @@ const MAT: Record<string, [number, number, number, number]> = {
   emax: [0.97, 0.95, 0.9, 0.55], zircon: [0.98, 0.97, 0.94, 0.45], gold: [0.9, 0.7, 0.2, 1], metal: [0.62, 0.64, 0.67, 1],
   'metal-ceramic': [0.95, 0.92, 0.85, 0.5], gradia: [0.96, 0.9, 0.78, 0.2], telescope: [0.6, 0.62, 0.65, 1], temporary: [0.93, 0.7, 0.72, 0.1], none: [0.95, 0.93, 0.88, 0.4],
 };
+
+/** The triangles of a crown whose strongest surface weight is zone `i`, as a geometry sharing the crown's vertex data. */
+function zonePiece(src: import('three').BufferGeometry, i: number): import('three').BufferGeometry {
+  const A = src.getAttribute('zoneA'), B = src.getAttribute('zoneB'), ix = src.getIndex();
+  const g = new (src.constructor as typeof import('three').BufferGeometry)();
+  if (!A || !B || !ix) return g;
+  const w = (v: number) => [A.getX(v), A.getY(v), A.getZ(v), A.getW(v), B.getX(v)];
+  const keep: number[] = [];
+  for (let t = 0; t < ix.count; t += 3) {
+    const s = [0, 0, 0, 0, 0];
+    for (let k = 0; k < 3; k++) w(ix.getX(t + k)).forEach((x, j) => { s[j] += x; });
+    if (s.indexOf(Math.max(...s)) === i) keep.push(ix.getX(t), ix.getX(t + 1), ix.getX(t + 2));
+  }
+  for (const n of ['position', 'normal', 'zoneA', 'zoneB']) g.setAttribute(n, src.getAttribute(n));
+  g.setIndex(keep);
+  return g;
+}
 
 /** The scene for one tooth built from the library. Shared by the live 3D view and anything that needs a snapshot of a tooth. */
 export function makeToothScene(T: Three, data: LibData, renderer: import('three').WebGLRenderer, onNewTooth: () => void = () => undefined, onRender: () => void = () => undefined) {
@@ -130,7 +147,6 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const trunk = new T.Mesh(undefined, rootMat(his[0], brk[0], work[0]));
   const rootMeshes = [1, 2, 3].map((k) => new T.Mesh(undefined, rootMat(his[k], brk[k], work[k])));
   const rootParts = [trunk, ...rootMeshes];
-  const empty = new T.BufferGeometry();
   const pulpMat = new T.MeshStandardMaterial({ color: 0xd9626b, roughness: 0.5, transparent: true, opacity: 0.9 });
   const pulp = new T.Mesh(undefined, pulpMat);
   const steel = new T.MeshStandardMaterial({ color: 0xb4bcc4, metalness: 0.3, roughness: 0.4 });
@@ -139,12 +155,18 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const fixture = hw('hw-implant-fixture'), abutment = hw('hw-abutment'), healing = hw('hw-healing-cap', gold), cover = hw('hw-cover-screw'), bracket = hw('hw-bracket'), band = hw('hw-band');
   const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
   const group = new T.Group(); // the invisible container: pose and visibility live here, the meshes inside only swap
-  group.add(crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, lesion);
+  const empty = new T.BufferGeometry();
+  // Exploded view: the natural crown cut into its five surfaces, each its own mesh (same material, so colours and highlight carry over).
+  const pieces = ZONES.map((z) => { const m = new T.Mesh(empty, crown.material); m.userData['zone'] = z; m.visible = false; return m; });
+  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, lesion);
   scene.add(group, new T.AmbientLight(0xffffff, 0.8), new T.DirectionalLight(0xffffff, 1.5));
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
+  let explode = 0;
+  let last: [ToothRecord, number, boolean] | null = null;
   let shownFdi = 0, h = 10, ymin = -12, ymax = 10, mesial = 1, bounds: number[][] = [[0, 0, 0], [0, 0, 0]];
   const apply = (t: ToothRecord, no: number, showPulp: boolean) => {
+    last = [t, no, showPulp];
     const sel = String((t as { toothSelection?: string }).toothSelection ?? '');
     const gone = sel.includes('no-tooth'), implant = sel === 'implant';
     if (no !== shownFdi) {
@@ -165,6 +187,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       const mid = (ymin + ymax) / 2;
       group.children.forEach((m) => { m.position.y -= mid; });
       group.rotation.z = no < 30 ? Math.PI : 0; // roots up for the upper arch
+      pieces.forEach((m, i) => { m.geometry.dispose(); m.geometry = zonePiece(crown.geometry, i); });
       onNewTooth();
       shownFdi = no;
     }
@@ -228,6 +251,9 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     });
     pulp.visible = !implant && !gone && pulpOn;
     if (ghost) { crown.visible = true; shell.visible = false; }
+    pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost; });
+    if (pieces[0].visible) crown.visible = false;
+    layout();
     // Implant hardware, all positioned at the neck.
     const prosthesis = str('prosthesis');
     fixture.visible = implant;
@@ -248,18 +274,32 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     band.scale.set((bounds[1][0] - bounds[0][0]) / 9.6, 1, (bounds[1][2] - bounds[0][2]) / 9.6);
     render();
   };
+  /** Puts every part where the explode amount (0 = whole tooth, 1 = fully apart) asks. */
+  const layout = () => {
+    const mid = (ymin + ymax) / 2, e = explode;
+    const dir: Record<string, [number, number, number]> = { occlusal: [0, 1, 0], buccal: [0, 0, 1], lingual: [0, 0, -1], mesial: [mesial, 0, 0], distal: [-mesial, 0, 0] };
+    pieces.forEach((m) => { const d = dir[m.userData['zone'] as string]; m.position.set(d[0] * 5 * e, d[1] * 5 * e - mid, d[2] * 5 * e); });
+    rootMeshes.forEach((m, i) => {
+      const r = roots.find((q) => q.slot === i + 1); const tx = r?.tip[0] ?? 0, tz = r?.tip[2] ?? 0, l = Math.hypot(tx, tz) || 1;
+      m.position.set((tx / l) * 3.5 * e * (roots.length > 1 ? 1 : 0), -4 * e - mid, (tz / l) * 3.5 * e * (roots.length > 1 ? 1 : 0));
+    });
+  };
+  const setExplode = (v: number) => { explode = v; camera.position.setLength(9 + 6 * v); if (last) apply(last[0], last[1], last[2]); else render(); };
   /** Where each area's name label sits, in world space (null when that part is not shown). */
   const anchors = (): Record<string, import('three').Vector3 | null> => {
     const mid = (ymin + ymax) / 2, lo = bounds[0], hi = bounds[1];
     const near = mesial > 0 ? hi[0] + 1 : lo[0] - 1, far = mesial > 0 ? lo[0] - 1 : hi[0] + 1;
-    const crownShown = crown.visible || shell.visible || prep.visible, rootShown = rootParts.some((m) => m.visible);
+    const crownShown = crown.visible || pieces[0].visible || shell.visible || prep.visible, rootShown = rootParts.some((m) => m.visible);
     const at = (x: number, y: number, z: number, on: boolean) => (on ? group.localToWorld(new T.Vector3(x, y - mid, z)) : null);
     const out: Record<string, import('three').Vector3 | null> = {
-      occlusal: at(0, h + 0.8, 0, crownShown), buccal: at(0, h * 0.55, hi[2] + 1, crownShown), lingual: at(0, h * 0.55, lo[2] - 1, crownShown),
-      mesial: at(near, h * 0.55, 0, crownShown), distal: at(far, h * 0.55, 0, crownShown),
+      occlusal: at(0, h + 0.8 + 5 * explode, 0, crownShown), buccal: at(0, h * 0.55, hi[2] + 1 + 5 * explode, crownShown), lingual: at(0, h * 0.55, lo[2] - 1 - 5 * explode, crownShown),
+      mesial: at(near + mesial * 5 * explode, h * 0.55, 0, crownShown), distal: at(far - mesial * 5 * explode, h * 0.55, 0, crownShown),
       cervical: at(far, h * 0.05, 0, crownShown),
     };
-    for (const r of roots) out[`root-${r.slot}`] = at(r.tip[0], r.tip[1] * 0.55, r.tip[2], rootShown && rootParts[r.slot].visible);
+    for (const r of roots) {
+      const l = Math.hypot(r.tip[0], r.tip[2]) || 1, sp = roots.length > 1 ? 3.5 * explode : 0;
+      out[`root-${r.slot}`] = at(r.tip[0] + (r.tip[0] / l) * sp, r.tip[1] * 0.55 - 4 * explode, r.tip[2] + (r.tip[2] / l) * sp, rootShown && rootParts[r.slot].visible);
+    }
     return out;
   };
   /** The roots of the shown tooth, in slot order, with their anatomical key (mb, db, p, m, d, b, l, single). */
@@ -268,11 +308,12 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const ray = new T.Raycaster();
   const areaAt = (ndc: import('three').Vector2): string | null => {
     ray.setFromCamera(ndc, camera);
-    const targets = [crown, shell, ...rootParts].filter((m) => m.visible && !m.userData['ghost']);
+    const targets = [crown, shell, ...pieces, ...rootParts].filter((m) => m.visible && !m.userData['ghost']);
     const hit = ray.intersectObjects(targets, false)[0];
     if (!hit?.face) return null;
     const p = hit.object.worldToLocal(hit.point.clone());
     const k = rootMeshes.findIndex((m) => m === hit.object);
+    if (hit.object.userData['zone']) return hit.object.userData['zone'] as string;
     if (hit.object === trunk) return null; // the shared trunk is not a horn
     if (k >= 0) return `root-${k + 1}`;
     const n = hit.face.normal; // already in the tooth's own frame: +y toward the bite, +z toward the lip or cheek
@@ -287,5 +328,5 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     for (let k = 1; k <= 3; k++) his[k].value = lv(`root-${k}`); // each horn is its own area
     render();
   };
-  return { renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
+  return { setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
 }
