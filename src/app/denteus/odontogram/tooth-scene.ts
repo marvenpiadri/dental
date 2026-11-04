@@ -219,7 +219,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const apply = (t: ToothRecord, no: number, showPulp: boolean) => {
     last = [t, no, showPulp];
     const sel = String((t as { toothSelection?: string }).toothSelection ?? '');
-    const gone = sel.includes('no-tooth'), implant = sel === 'implant';
+    const gone = sel === 'none' || sel.includes('no-tooth'), implant = sel === 'implant', underGum = sel === 'tooth-under-gum'; // 'none' is a gap: no tooth recorded there
     if (no !== shownFdi) {
       const c = data.parts.get(`crown-${no}`);
       const rts = [...data.parts.values()].filter((q) => q.kind === 'root' && q.fdi === no);
@@ -282,10 +282,11 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     pulpMat.color.set(treated ? (endo === 'endo-metal-pin' ? 0x444a50 : endo === 'endo-medical-filling' ? 0xb48ac8 : endo === 'endo-glass-pin' ? 0x9fd8d0 : 0xe49aa6)
       : dx === 'necrosis' ? 0x3a3a3a : dx === 'irreversible-pulpitis' ? 0xa1101f : dx === 'reversible-pulpitis' ? 0xe8505b : 0xeeb4b4);
     const pulpOn = showPulp || treated || dx !== 'normal';
-    const ghost = gone && !implant; // an extracted tooth stays as a faint outline
+    const pontic = sel === 'none' && rt === 'bridge'; // a bridge over a gap: the restoration shell stands alone as the pontic
+    const ghost = gone && !implant && !pontic; // an extracted tooth stays as a faint outline
     crown.userData['ghost'] = ghost;
-    const glass = ghost || (pulpOn && !(implant && hasRest));
-    shared.uAlpha.value = ghost ? 0.14 : glass ? 0.35 : 1;
+    const glass = ghost || underGum || (pulpOn && !(implant && hasRest));
+    shared.uAlpha.value = ghost ? 0.14 : underGum ? 0.25 : glass ? 0.35 : 1; // a tooth under the gum is shown faint
     for (const mesh of [crown, ...rootParts, prep, shell]) (mesh.material as import('three').ShaderMaterial).depthWrite = !glass;
     pulp.renderOrder = 1;
     // Presence and parts.
@@ -293,7 +294,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const naturalCrown = !implant && !radix && !stump && !(fullCover);
     crown.visible = (naturalCrown && !gone) || ghost;
     prep.visible = !implant && stump && !gone;
-    shell.visible = hasRest && !gone && (!implant ? true : fullCover);
+    shell.visible = hasRest && (!gone || pontic) && (!implant ? true : fullCover);
     const rootsOn = !implant && (!gone || ghost);
     trunk.visible = rootsOn && trunk.geometry !== empty;
     rootMeshes.forEach((m, i) => {
@@ -303,6 +304,11 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       brk[i + 1].value = br ? 1 : 0; work[i + 1].value = R[`rootWork${i + 1}`] ? 1 : 0;
     });
     pulp.visible = !implant && !gone && pulpOn;
+    // Baby teeth reuse the permanent tooth of the same position, smaller with shorter roots and a bluer enamel.
+    const milk = sel === 'milktooth';
+    for (const m of [crown, shell, prep, ...pieces]) m.scale.setScalar(milk ? 0.82 : 1);
+    for (const m of [trunk, ...rootMeshes, pulp]) m.scale.set(milk ? 0.82 : 1, milk ? 0.65 : 1, milk ? 0.82 : 1);
+    crownU.uBase.value.set(...(milk ? [0.96, 0.96, 0.94] : [0.93, 0.91, 0.85]) as [number, number, number]);
     if (ghost) { crown.visible = true; shell.visible = false; }
     pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost && !top; });
     shared.uTop.value = top ? 1 : 0;

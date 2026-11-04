@@ -46,3 +46,12 @@ Licence notice: `src/app/denteus/odontogram/engine/vendor/LICENSE.odontogram`. T
 
 ## Not done
 - The top view (premolars and molars; front teeth have no top drawing and keep the front one) is a per-browser display toggle, not the source's `occlusalVisible` global. Measured anatomy (4 MB of art) is not vendored.
+
+## 3D chart, overlay and workflow (current state)
+
+- **Layout:** the chart is full width. A plain click opens the tooth overlay (3D tooth + every option + history + files); Shift/Ctrl-click builds a group, then "Edit N teeth". Periodontal, Diagnoses and History sit under the chart. The act form is a bar under the chart.
+- **Renderer** (`tooth-scene.ts`, `tooth-snap.service.ts`): the renderer only reads clinical state; the engine stays Three.js-free. Library meshes come from `tools/tooth-lib` (ToothFairy3 case F_026); hardware not in the scan is built in code: implant fixture (helical thread, collar, flutes, hex socket), braces (bracket, archwire, ties; molars get a band), ring around inflamed implants.
+- **State to 3D:** surface caries (soft black taint, deeper with severity), failing-filling margins, neck decay, fillings by material, crowns/bridges/veneers/inlays tinted by type with a margin line, bridge pontic over a gap (`toothSelection: none` + bridge), primary teeth (smaller, shorter roots), tooth under gum (faint), implants replace the root, per-horn root work and fractures, malposition (rotation, drift, extrusion/intrusion), peri-implant collar.
+- **Undo/redo:** every chart change goes through `commit()` in `dental-chart.component.ts` (50 steps; Ctrl+Z / Ctrl+Y). `editChart` never mutates its input (tested).
+- **Not yet in 3D:** interproximal contacts, mobility, apicoectomy, extraction wound, parapulpal pin, root concavity, gum thickness/recession class, CEJ visibility. Primary teeth reuse permanent meshes. No gum or bone is drawn around implants.
+- **Open clinical questions for a dentist:** which materials are valid for which restoration types in each market; whether "no tooth status" and "missing after extraction" should differ visually (today both show a gap; extraction shows a faint outline).
