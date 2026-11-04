@@ -283,19 +283,21 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
       : dx === 'necrosis' ? 0x3a3a3a : dx === 'irreversible-pulpitis' ? 0xa1101f : dx === 'reversible-pulpitis' ? 0xe8505b : 0xeeb4b4);
     const pulpOn = showPulp || treated || dx !== 'normal';
     const pontic = sel === 'none' && rt === 'bridge'; // a bridge over a gap: the restoration shell stands alone as the pontic
-    const ghost = gone && !implant && !pontic; // an extracted tooth stays as a faint outline
+    const gap = sel === 'none' && !pontic; // no tooth recorded there: shown solid grey
+    const ghost = gone && !implant && !pontic && !gap; // an extracted tooth stays as a faint outline
+    if (gap) { shared.uCase.value.set(0.5, 0.52, 0.55, 0.9); shared.uCaseRoot.value.set(0.5, 0.52, 0.55, 0.9); }
     crown.userData['ghost'] = ghost;
-    const glass = ghost || underGum || (pulpOn && !(implant && hasRest));
-    shared.uAlpha.value = ghost ? 0.14 : underGum ? 0.25 : glass ? 0.35 : 1; // a tooth under the gum is shown faint
+    const glass = ghost || underGum || gap || (pulpOn && !(implant && hasRest));
+    shared.uAlpha.value = ghost ? 0.14 : underGum ? 0.25 : gap ? 0.7 : glass ? 0.35 : 1; // a tooth under the gum is shown faint
     for (const mesh of [crown, ...rootParts, prep, shell]) (mesh.material as import('three').ShaderMaterial).depthWrite = !glass;
     pulp.renderOrder = 1;
     // Presence and parts.
     const radix = sub === 'radix', stump = sub === 'crownprep';
     const naturalCrown = !implant && !radix && !stump && !(fullCover);
-    crown.visible = (naturalCrown && !gone) || ghost;
+    crown.visible = (naturalCrown && !gone) || ghost || gap;
     prep.visible = !implant && stump && !gone;
     shell.visible = hasRest && (!gone || pontic) && (!implant ? true : fullCover);
-    const rootsOn = !implant && (!gone || ghost);
+    const rootsOn = !implant && (!gone || ghost || gap);
     trunk.visible = rootsOn && trunk.geometry !== empty;
     rootMeshes.forEach((m, i) => {
       const r = roots.find((q) => q.slot === i + 1), br = !!r && !!R[`brokenRoot${i + 1}`] && !!data.parts.get(r.broken);
@@ -309,7 +311,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     for (const m of [crown, shell, prep, ...pieces]) m.scale.setScalar(milk ? 0.82 : 1);
     for (const m of [trunk, ...rootMeshes, pulp]) m.scale.set(milk ? 0.82 : 1, milk ? 0.65 : 1, milk ? 0.82 : 1);
     crownU.uBase.value.set(...(milk ? [0.96, 0.96, 0.94] : [0.93, 0.91, 0.85]) as [number, number, number]);
-    if (ghost) { crown.visible = true; shell.visible = false; }
+    if (ghost || gap) { crown.visible = true; shell.visible = false; }
     pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost && !top; });
     shared.uTop.value = top ? 1 : 0;
     shared.uExt.value.set(Math.max((bounds[1][0] - bounds[0][0]) / 2, 0.1), Math.max((bounds[1][2] - bounds[0][2]) / 2, 0.1), (bounds[1][0] + bounds[0][0]) / 2, (bounds[1][2] + bounds[0][2]) / 2);
