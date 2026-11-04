@@ -5,6 +5,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { statementHtml } from './statement-html';
 import { receiptHtml } from './receipt-html';
 import { balance, parsePrice, procedureName } from './treatment-rules';
+import { scopeText } from './procedure-record';
 
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer' };
 
@@ -67,7 +68,7 @@ export class BillingComponent {
     const html = statementHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dentaleus', patient: this.patientName(), insurer: this.insurer(), number: this.insuranceNumber(),
       date: day(new Date().toISOString()), lang: this.i18n.lang(), total: this.i18n.money(this.sums().charged),
-      lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? '', name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
+      lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? (i.scope ? scopeText(i, t) : ''), name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
       labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') },
     });
     const win = window.open('', '_blank');

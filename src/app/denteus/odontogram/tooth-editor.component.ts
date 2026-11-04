@@ -24,6 +24,8 @@ export class ToothEditorComponent {
   readonly teeth = input.required<readonly number[]>();
   readonly mode = input<ChartMode>('status');
   readonly disabled = input(false);
+  /** Which group of controls is showing: the panel is tabbed so only one group is on screen. */
+  readonly tab = input<'surf' | 'tooth' | 'endo' | 'wear' | 'plan'>('surf');
   readonly edit = output<ToothEdit>();
 
   protected readonly surfaces = SURFACES;

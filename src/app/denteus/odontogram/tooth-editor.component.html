@@ -1,7 +1,7 @@
 @let s = state();
 @let off = disabled();
 <div class="grid">
-  <section class="grp">
+  <section class="grp" [hidden]="tab() !== 'tooth'">
     <h3>{{ t('dc.group.tooth') }}</h3>
     <label class="field"><span class="label">{{ t('dc.state') }}</span>
       <select class="input" [disabled]="off" [value]="sel()" (change)="edit.emit({ kind: 'selection', value: value($event) })">
@@ -16,7 +16,7 @@
   </section>
 
   @if (sel() !== 'no-tooth-after-extraction') {
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'tooth'">
       <h3>{{ t('dc.group.prosthetic') }}</h3>
       <div class="two">
         <label class="field"><span class="label">{{ t('dc.restoration') }}</span>
@@ -42,7 +42,7 @@
   }
 
   @if (natural()) {
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'surf'">
       <h3>{{ t('dc.group.caries') }}</h3>
       <div class="cross" role="group" [attr.aria-label]="t('dc.caries.surfaces')">
         @for (sf of surfaces; track sf) {
@@ -64,7 +64,7 @@
         </select></label>
     </section>
 
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'surf'">
       <h3>{{ t('dc.group.fillings') }}</h3>
       <label class="field"><span class="label">{{ t('dc.material') }}</span>
         <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'fillingMaterial', value: value($event) })">
@@ -89,7 +89,7 @@
       }
     </section>
 
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'endo'">
       <h3>{{ t('dc.group.pulp') }}</h3>
       <label class="field"><span class="label">{{ t('dc.pulp') }}</span>
         <select class="input" [disabled]="off" (change)="edit.emit({ kind: 'pulp', value: value($event) })">
@@ -117,7 +117,7 @@
       <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('parapulpalPin')" (change)="setFlag('parapulpalPin', $event)" />{{ t('dc.flag.parapulpalPin') }}</label>
     </section>
 
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'endo'">
       <h3>{{ t('dc.group.periodontium') }}</h3>
       <label class="field"><span class="label">{{ t('dc.mobility') }}</span>
         <select class="input" [disabled]="off" (change)="setEnum('mobility', $event)">
@@ -127,7 +127,7 @@
       <label class="check"><input type="checkbox" [disabled]="off" [checked]="has(s['mods'], 'parodontal')" (change)="edit.emit({ kind: 'mod', id: 'parodontal', on: checked($event) })" />{{ name('parodontal') }}</label>
     </section>
 
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'wear'">
       <h3>{{ t('dc.group.wear') }}</h3>
       <div class="two">
         <label class="field"><span class="label">{{ t('dc.wearEdge') }}</span>
@@ -148,7 +148,7 @@
       <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('brokenDistal')" (change)="setFlag('brokenDistal', $event)" />{{ t('dc.flag.brokenDistal') }}</label>
     </section>
 
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'wear'">
       <h3>{{ t('dc.group.ortho') }}</h3>
       <div class="two">
         <label class="field"><span class="label">{{ t('dc.orthoAppliance') }}</span>
@@ -169,7 +169,7 @@
   }
 
   @if (sel() === 'implant') {
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'tooth'">
       <h3>{{ t('dc.group.implant') }}</h3>
       <label class="field"><span class="label">{{ t('dc.periImplant') }}</span>
         <select class="input" [disabled]="off" (change)="setEnum('periImplant', $event)">
@@ -179,7 +179,7 @@
   }
 
   @if (present() || sel() === 'none') {
-    <section class="grp">
+    <section class="grp" [hidden]="tab() !== 'plan'">
       <h3>{{ t('dc.group.planning') }}</h3>
       @if (present()) {
         <label class="check"><input type="checkbox" [disabled]="off" [checked]="flag('extractionPlan')" (change)="setFlag('extractionPlan', $event)" />{{ t('dc.flag.extractionPlan') }}</label>

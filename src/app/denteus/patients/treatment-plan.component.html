@@ -28,15 +28,15 @@
 @if (priceInvalid()) { <p class="error-text" id="price-error" role="alert">{{ t('plan.price.error') }}</p> }
 
 @if (sorted().length) {
-  <div class="table zebra" role="table" [attr.aria-label]="t('act.list')">
+  <div class="table zebra" role="table" [attr.aria-label]="t('procedure.list')">
     <div class="tr th" role="row">
-      <span role="columnheader">{{ t('act.date') }}</span><span role="columnheader">{{ t('plan.tooth') }}</span><span role="columnheader">{{ t('plan.procedure') }}</span>
-      <span class="num" role="columnheader">{{ t('plan.price') }}</span><span class="num" role="columnheader">{{ t('act.received') }}</span><span class="num" role="columnheader">{{ t('act.remaining') }}</span><span role="columnheader">{{ t('act.status') }}</span><span></span>
+      <span role="columnheader">{{ t('procedure.date') }}</span><span role="columnheader">{{ t('plan.tooth') }}</span><span role="columnheader">{{ t('plan.procedure') }}</span>
+      <span class="num" role="columnheader">{{ t('plan.price') }}</span><span class="num" role="columnheader">{{ t('procedure.received') }}</span><span class="num" role="columnheader">{{ t('procedure.remaining') }}</span><span role="columnheader">{{ t('procedure.status') }}</span><span></span>
     </div>
     @for (item of sorted(); track item.id) {
       <div class="tr" role="row" [class.done]="item.status === 'done'">
         <span class="muted" role="cell">{{ dayOf(item) }}</span>
-        <span role="cell"><span class="chip" data-tone="neutral">{{ item.tooth ?? '—' }}</span></span>
+        <span role="cell"><span class="chip" data-tone="neutral">{{ scopeLabel(item) }}</span></span>
         <span class="name" role="cell">{{ nameOf(item.procedure, item.name) }}</span>
         <span class="num" role="cell">{{ i18n.money(item.price) }}</span>
         <span class="num" role="cell">{{ item.status === 'done' ? i18n.money(paid(item).received) : '–' }}</span>

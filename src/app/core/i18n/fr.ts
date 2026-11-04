@@ -43,7 +43,7 @@ export const fr: Record<keyof typeof en, string> = {
   'setup.dentists.empty.body': 'Ajoutez les dentistes qui reçoivent des patients. Chacun a sa couleur dans le calendrier.',
   'setup.chairs.empty.title': 'Aucun fauteuil',
   'setup.chairs.empty.body': 'Ajoutez les fauteuils ou salles à réserver. Un rendez-vous en nécessite un.',
-  'setup.acts': 'Actes et tarifs',
+  'setup.acts': 'Catalogue des actes',
   'setup.act.add': 'Ajouter un acte',
   'setup.act.new': 'Nouvel acte',
   'setup.acts.empty.title': 'Aucun acte',

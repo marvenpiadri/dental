@@ -203,12 +203,20 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new T.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
     return g;
   };
+  // Clinical cue glyphs: mobility arrows, healing wound, parapulpal pins, gum margin (recession), open-contact dots.
+  const mobMat = new T.MeshStandardMaterial({ color: 0xe8a317, roughness: 0.5 }), mob = new T.Group();
+  for (const sg of [1, -1]) { const sh = new T.Mesh(new T.CylinderGeometry(0.25, 0.25, 2, 10), mobMat); sh.rotation.x = Math.PI / 2; sh.position.z = sg * 1.2; const cone = new T.Mesh(new T.ConeGeometry(0.65, 1.3, 14), mobMat); cone.rotation.x = sg * Math.PI / 2; cone.position.z = sg * 2.8; mob.add(sh, cone); }
+  const wound = new T.Mesh(new T.SphereGeometry(1, 16, 10), new T.MeshStandardMaterial({ color: 0xb3202f, roughness: 0.5 })); wound.scale.set(2.2, 0.8, 2.2);
+  const pin = new T.Group(); for (const x of [-0.9, 0.9]) { const p = new T.Mesh(new T.CylinderGeometry(0.18, 0.18, 1.8, 8), steel); p.position.x = x; pin.add(p); }
+  const gumMat = new T.MeshStandardMaterial({ color: 0xe58a9b, roughness: 0.7 }), gum = new T.Mesh(new T.TorusGeometry(1, 0.5, 8, 32), gumMat); gum.rotation.x = Math.PI / 2;
+  const contactDots = [1, -1].map(() => new T.Mesh(new T.SphereGeometry(0.45, 10, 8), new T.MeshStandardMaterial({ color: 0xd62839, roughness: 0.5 })));
+  for (const m of [mob, wound, pin, gum, ...contactDots]) m.visible = false;
   const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
   const group = new T.Group(); // the invisible container: pose and visibility live here, the meshes inside only swap
   const empty = new T.BufferGeometry();
   // Exploded view: the natural crown cut into its five surfaces, each its own mesh (same material, so colours and highlight carry over).
   const pieces = ZONES.map((z) => { const m = new T.Mesh(empty, crown.material); m.userData['zone'] = z; m.visible = false; return m; });
-  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, lesion);
+  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, mob, wound, pin, gum, ...contactDots, lesion);
   scene.add(group, new T.AmbientLight(0xffffff, 0.8), new T.DirectionalLight(0xffffff, 1.5));
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
@@ -309,14 +317,15 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     // Baby teeth reuse the permanent tooth of the same position, smaller with shorter roots and a bluer enamel.
     const milk = sel === 'milktooth';
     for (const m of [crown, shell, prep, ...pieces]) m.scale.setScalar(milk ? 0.82 : 1);
-    for (const m of [trunk, ...rootMeshes, pulp]) m.scale.set(milk ? 0.82 : 1, milk ? 0.65 : 1, milk ? 0.82 : 1);
+    const resect = flag('endoResection') ? 0.88 : 1; // apicoectomy: the root tip is cut
+    for (const m of [trunk, ...rootMeshes, pulp]) m.scale.set(milk ? 0.82 : 1, (milk ? 0.65 : 1) * resect, milk ? 0.82 : 1);
     crownU.uBase.value.set(...(milk ? [0.96, 0.96, 0.94] : [0.93, 0.91, 0.85]) as [number, number, number]);
     if (ghost || gap) { crown.visible = true; shell.visible = false; }
     pieces.forEach((m) => { m.visible = explode > 0.01 && crown.visible && !ghost && !top; });
     shared.uTop.value = top ? 1 : 0;
     shared.uExt.value.set(Math.max((bounds[1][0] - bounds[0][0]) / 2, 0.1), Math.max((bounds[1][2] - bounds[0][2]) / 2, 0.1), (bounds[1][0] + bounds[0][0]) / 2, (bounds[1][2] + bounds[0][2]) / 2);
     shared.uMes.value = mesial;
-    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, prep, ...pieces]) m.visible = false; }
+    if (top) { for (const m of [...rootParts, pulp, lesion, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, mob, wound, pin, gum, ...contactDots, prep, ...pieces]) m.visible = false; }
     if (pieces[0].visible) crown.visible = false;
     layout();
     // Implant hardware, all positioned at the neck.
@@ -349,6 +358,17 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     ring.visible = implant && pi !== 'none' && pi !== '';
     ringMat.color.set(pi === 'mucositis' ? 0xf0a0aa : pi === 'peri-implantitis-mild' ? 0xe06a7a : pi === 'peri-implantitis-moderate' ? 0xc2283d : 0x7a0f1f);
     ring.position.y = -mid + 0.5;
+    const mg = str('mobility');
+    mob.visible = mg !== '' && mg !== 'none'; mobMat.color.set(mg === 'm3' ? 0xd62839 : mg === 'm2' ? 0xf06a1a : 0xe8a317);
+    mob.position.set(bounds[1][0] + 2.5, h * 0.55 - mid, 0);
+    wound.visible = gone && !implant && !!flag('extractionWound'); wound.position.set(0, -mid - 0.3, 0);
+    pin.visible = !gone && !!flag('parapulpalPin') && !implant; pin.position.set(0, h * 0.97 - mid, 0);
+    const mc = ['none', 'i', 'ii', 'iii', 'iv'].indexOf(str('millerClass'));
+    gum.visible = mc > 0 && !gone && !implant;
+    gum.scale.setScalar(Math.max((bounds[1][0] - bounds[0][0]) / 2, 1) * 0.92);
+    gumMat.color.set(mc >= 3 ? 0xd9627a : 0xe58a9b);
+    gum.scale.z = gum.scale.x; gum.position.set(0, -mid - [0, 0.4, 1.0, 1.7, 2.5][Math.max(mc, 0)], 0);
+    contactDots.forEach((d, i) => { const on = !gone && !!flag(i === 0 ? 'contactMesial' : 'contactDistal'); d.visible = on; d.position.set((i === 0 ? mesial : -mesial) * (bounds[1][0] - bounds[0][0]) / 2, h * 0.7 - mid, 0); });
     braces.visible = str('orthoAppliance') === 'braces' && !gone && !implant;
     braces.position.set(0, h * 0.5 - mid, bounds[1][2] * 0.85);
     const molarBraces = braces.visible && no % 10 >= 6; // molars carry a band with a tube instead of a bonded bracket

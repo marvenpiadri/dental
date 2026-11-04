@@ -155,21 +155,14 @@
       </div>
               }
               @case ('acts') {
-                @if (adding()) {
-                  <section class="card" aria-labelledby="act-title">
-                    <header class="card-head"><h2 class="card-title" id="act-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('act.add') }}</h2></header>
-                    <den-act-editor [patient]="p" (closed)="adding.set(false)" />
-                  </section>
-                } @else {
                   <section class="card" aria-labelledby="teeth-title">
                     <header class="card-head">
                       <h2 class="card-title" id="teeth-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('profile.teeth') }}</h2>
-                      <button type="button" class="btn btn--primary" (click)="adding.set(true)"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('act.add') }}</button>
                     </header>
                     <div class="card-body">
                       @defer (on viewport) {
                         @for (key of [p.id]; track key) {
-                          <den-dental-chart [readonlyView]="true" [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" />
+                          <den-dental-chart [readonlyView]="true" [hideSaveExam]="true" [patientId]="p.id" [patientName]="p.fullName" [clinicName]="store.locations()[0]?.name ?? ''" [raw]="p.odontogram" [examinations]="p.examinations ?? []" />
                         }
                       } @placeholder {
                         <span class="skeleton"></span>
@@ -177,10 +170,9 @@
                     </div>
                   </section>
                   <section class="card" aria-labelledby="plan-title">
-                    <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('act.list') }}</h2></header>
+                    <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('procedure.list') }}</h2></header>
                     <den-treatment-plan [readonlyAdd]="true" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
                   </section>
-                }
               }
               @case ('appointments') {
                 <section class="card" aria-labelledby="appts-title">

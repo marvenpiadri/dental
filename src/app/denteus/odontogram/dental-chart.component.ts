@@ -15,6 +15,7 @@ import { PerioGraphComponent } from './perio-graph.component';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioSheetComponent } from './perio-sheet.component';
 import { PerioEditorComponent } from './perio-editor.component';
+import { ProcedurePanelComponent } from './procedure-panel.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
 import { DentalStore } from '../services/dental-store.service';
@@ -38,7 +39,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
+  imports: [ProcedurePanelComponent, PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -55,7 +56,7 @@ export class DentalChartComponent {
   readonly patientName = input('');
   readonly clinicName = input('');
   readonly examinations = input<readonly Examination[]>([]);
-  /** History view: nothing can be edited, side and top views are shown together. Editing lives in the act editor. */
+  /** History view: nothing can be edited, side and top views are shown together. Procedures are added from the toolbar. */
   readonly readonlyView = input(false);
   readonly hideSaveExam = input(false);
   readonly selection = output<readonly number[]>();
@@ -99,7 +100,15 @@ export class DentalChartComponent {
     const v = this.viewing();
     return v ? (readChart(v.chart).chart ?? this.chart()) : this.chart();
   });
-  protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null || this.readonlyView());
+  /** Adding a procedure makes the history view editable until it is saved or cancelled. */
+  protected readonly procMode = signal(false);
+  protected readonly ro = computed(() => this.readonlyView() && !this.procMode());
+  protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null || this.ro());
+  /** Leave procedure mode. Saving updates the stored chart, which resets this one; cancelling resets it here. */
+  protected endProc(): void {
+    this.procMode.set(false); this.selected.set([]); this.open3d.set(null);
+    this.chart.set(this.source().chart ?? newChart()); this.undoStack.set([]); this.redoStack.set([]);
+  }
   /** Wisdom teeth can be hidden for a cleaner chart, but never when something is recorded on them. */
   /** Display only, per browser: not part of the chart. */
   protected readonly occlusalView = signal(false);
@@ -154,6 +163,14 @@ export class DentalChartComponent {
   /** The tooth shown in the 3D overlay; closing it leaves the selection alone. */
   protected readonly open3d = signal<number | null>(null);
   protected readonly pulp3d = signal(false);
+  protected readonly otab = signal<'surf' | 'tooth' | 'endo' | 'wear' | 'plan' | 'history'>('surf');
+  protected readonly otabs = ['surf', 'tooth', 'endo', 'wear', 'plan', 'history'] as const;
+  /** A tooth that is not natural has no surfaces to chart, so the panel opens on the tooth itself. */
+  protected tabNow(n: number): 'surf' | 'tooth' | 'endo' | 'wear' | 'plan' | 'history' {
+    const sel = String(this.stateOf(n).toothSelection);
+    return this.otab() === 'surf' && sel !== 'tooth-base' && sel !== 'milktooth' ? 'tooth' : this.otab();
+  }
+  protected tabName(k: string): string { return this.t(`dc.ot.${k}` as 'dc.ot.surf'); }
   /** How far the 3D tooth is pulled apart into its surfaces and horns (0 = whole). */
   protected readonly explode3d = signal(0);
   /** Areas picked in the 3D view: crown surfaces and thirds of the root. */

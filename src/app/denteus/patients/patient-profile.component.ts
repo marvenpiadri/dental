@@ -14,14 +14,13 @@ import { DocumentsComponent } from './documents.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 import { PROFILE_PAGES, Section } from './profile-pages';
-import { ActEditorComponent } from './act-editor.component';
 import { FormsComponent } from '../forms/forms.component';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, ActEditorComponent, FormsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
+  imports: [RouterLink, FormsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,7 +52,6 @@ export class PatientProfileComponent {
     const want = (this.page() ?? (this.note() ? 'visits' : 'overview')) as Section; // a link from the calendar lands on the notes
     return this.sections().includes(want) ? want : 'overview';
   });
-  protected readonly adding = signal(false);
   /** WhatsApp messages ready to send (the clinic presses send): next visit, balance due, check-up invitation. */
   protected readonly reminders = computed(() => {
     const p = this.patient();

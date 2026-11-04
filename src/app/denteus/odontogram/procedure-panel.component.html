@@ -1,0 +1,30 @@
+<section class="proc" [attr.aria-label]="t('procedure.details')">
+  <div class="grid">
+    <label class="f"><span>{{ t('procedure.scope') }}</span>
+      <select (change)="setScope($any($event.target).value)">@for (s of scopes; track s) { <option [value]="s" [selected]="scope() === s">{{ scopeName(s) }}</option> }</select>
+    </label>
+    @if (scope() === 'quadrant') {
+      <label class="f narrow"><span>{{ t('procedure.scope.quadrant') }}</span>
+        <select (change)="setQuadrant(+$any($event.target).value)">@for (q of [1, 2, 3, 4]; track q) { <option [value]="q" [selected]="quadrant() === q">{{ q }}</option> }</select>
+      </label>
+    }
+    <label class="f wide"><span>{{ t('plan.procedure') }}</span>
+      <select (change)="setProcedure($any($event.target).value)">@for (e of catalog(); track e.id) { <option [value]="e.id" [selected]="procedure() === e.id">{{ nameOf(e.id, e.name) }}</option> }</select>
+    </label>
+    <label class="f narrow"><span>{{ t('procedure.date') }}</span><input type="date" required [value]="date()" (input)="date.set($any($event.target).value)" /></label>
+    <label class="f narrow"><span>{{ perTooth() ? t('procedure.priceEach') : t('procedure.price') }}</span><input inputmode="numeric" [value]="price()" (input)="price.set($any($event.target).value); invalid.set(false)" [attr.aria-invalid]="invalid() ? 'true' : null" /></label>
+    <div class="f"><span>{{ t('procedure.status') }}</span>
+      <div class="seg" role="group" [attr.aria-label]="t('procedure.status')">
+        <button type="button" [class.on]="!done()" [attr.aria-pressed]="!done()" (click)="done.set(false)">{{ t('plan.planned') }}</button>
+        <button type="button" [class.on]="done()" [attr.aria-pressed]="done()" (click)="done.set(true)">{{ t('plan.done') }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <p class="sum" [class.bad]="invalid()">{{ invalid() ? t('procedure.invalid') : summary() }}</p>
+    @if (drawable() && perTooth()) { <label class="draw"><input type="checkbox" [checked]="draw()" (change)="draw.set($any($event.target).checked)" /> {{ t('procedure.draw') }}</label> }
+    @if (!catalog().length) { <p class="sum bad">{{ t('plan.catalog.empty') }}</p> }
+    <button type="button" class="b" (click)="closed.emit()">{{ t('procedure.cancel') }}</button>
+    <button type="button" class="b go" [disabled]="!catalog().length" (click)="save()">{{ t('procedure.save') }}</button>
+  </div>
+</section>

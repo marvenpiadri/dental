@@ -1,4 +1,5 @@
 :host { display: grid; gap: 14px; }
+.grp[hidden] { display: none; }
 .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); align-items: start; }
 .grp { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--app-line); border-radius: 14px; background: var(--app-panel); }
 h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--app-muted); }

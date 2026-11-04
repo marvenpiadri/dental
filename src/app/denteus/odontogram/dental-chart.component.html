@@ -12,7 +12,7 @@
   }
 
   <div class="bar">
-    @if (readonlyView()) {
+    @if (ro()) {
       <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
         <button type="button" [disabled]="!examinations().length" [class.on]="viewing() !== null && viewing()?.id === examinations()[0]?.id" (click)="setView('initial')">{{ t('dc.mode.initial') }}</button>
         <button type="button" [class.on]="viewing() === null && mode() === 'status'" (click)="setView('current')">{{ t('dc.mode.current') }}</button>
@@ -26,10 +26,11 @@
     </div>
     }
     <div class="actions">
+      @if (!locked() && viewing() === null) { <button type="button" class="btn" [class.on]="procMode()" [attr.aria-pressed]="procMode()" (click)="procMode() ? endProc() : procMode.set(true)"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('procedure.add') }}</button> }
       <select class="btn" [attr.aria-label]="t('dc.numbering')" (change)="setNumbering($any($event.target).value)">
         @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }
       </select>
-      @if (!readonlyView()) {
+      @if (!ro()) {
         <button type="button" class="btn" [disabled]="!canUndo()" [attr.aria-label]="t('dc.undo')" [title]="t('dc.undo')" (click)="undo()"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
         <button type="button" class="btn" [disabled]="!canRedo()" [attr.aria-label]="t('dc.redo')" [title]="t('dc.redo')" (click)="redo()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
@@ -68,29 +69,30 @@
       <button type="button" class="btn" (click)="pending.set(null)">{{ t('dc.cancel') }}</button>
     </div>
   }
+  @if (procMode()) { <den-procedure-panel [patientId]="patientId()" [chart]="chart()" [teeth]="selected()" (highlight)="selected.set($event)" (closed)="endProc()" /> }
   @if (notice()) { <p class="banner warn" role="status"><i class="fa-solid fa-ban" aria-hidden="true"></i>{{ notice() }}</p> }
 
-  @if (selected().length > 1 && !open3d() && !readonlyView()) {
+  @if (selected().length > 1 && !open3d() && !ro()) {
     <div class="multi" role="status"><strong>{{ t('dc.editing.many', { n: selected().length }) }}</strong>
       <button type="button" class="btn btn--primary" [disabled]="readOnly()" (click)="open3d.set(selected()[0])">{{ t('dc.edit') }}</button>
       <button type="button" class="btn" (click)="selected.set([])">{{ t('dc.cancel') }}</button></div>
   }
   <div class="body">
   <div class="left">
-  @if (!readonlyView()) {
-  <div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
+  @if (!ro()) {
+  <details class="fold" [attr.aria-label]="t('dc.opt.title')"><summary>{{ t('dc.viewOpts') }}</summary><div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
     <label><input type="checkbox" [checked]="occlusalView()" (change)="occlusalView.set($any($event.target).checked)" /> {{ t('dc.opt.occlusal') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showBase" (change)="setGlobal('showBase', $any($event.target).checked)" /> {{ t('dc.opt.base') }}</label>
-  </div>
+  </div></details>
   }
 
   @if (store.view3d()) {
-    <ul class="legend" [attr.aria-label]="t('dc.lg.title')">
+    <details class="fold"><summary>{{ t('dc.legend') }}</summary><ul class="legend" [attr.aria-label]="t('dc.lg.title')">
       @for (l of legend; track l[1]) { <li><i [style.background]="l[0]"></i>{{ legendName(l[1]) }}</li> }
       <li><i class="absent"></i>{{ t('dc.lg.absent') }}</li><li><i class="plan"></i>{{ t('dc.lg.planned') }}</li>
-    </ul>
+    </ul></details>
   }
 
   @if (readonlyView()) {
@@ -280,13 +282,14 @@
   @if (open3d(); as n3) {
   <div class="ov-back" (click)="open3d.set(null)" (document:keydown.escape)="open3d.set(null)">
   <div class="ov" role="dialog" aria-modal="true" [attr.aria-label]="t('dc.3d.title', { n: num(n3) })" (click)="$event.stopPropagation()">
-    <div class="ov-head"><strong>{{ editTeeth().length > 1 ? t('dc.editing.many', { n: editTeeth().length }) : t('dc.3d.title', { n: num(n3) }) }}</strong><button type="button" class="btn" [attr.aria-label]="t('dc.3d.close')" (click)="open3d.set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+    <div class="ov-head"><strong class="ov-title">{{ editTeeth().length > 1 ? t('dc.editing.many', { n: editTeeth().length }) : t('dc.3d.title', { n: num(n3) }) }}</strong><button type="button" class="btn" [attr.aria-label]="t('dc.3d.close')" (click)="open3d.set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
     <div class="ov-body" [class.flat]="!store.view3d()">
       @if (store.view3d()) {
       <div class="ov-3d"><den-tooth-3d [no]="n3" [state]="stateOf(n3)" [showPulp]="pulp3d()" [explode]="explode3d()" [unavailable]="t('dc.3d.unavailable')" (roots)="roots3d.set($event)" [selected]="areas()" [labels]="areaNames()" (hover)="hovered3d.set($event)" (area)="pickArea($event.id, $event.additive)" /><label class="ov-explode">{{ t('dc.3d.explode') }} <input type="range" min="0" max="1" step="0.05" [value]="explode3d()" (input)="explode3d.set(+$any($event.target).value)" /></label><label class="ov-pulp"><input type="checkbox" [checked]="pulp3d()" (change)="pulp3d.set($any($event.target).checked)" /> {{ t('dc.3d.pulp') }}</label><den-crown-top class="ov-cube" [no]="n3" [state]="stateOf(n3)" [marked]="areas()" (pick)="pickArea($event, false)" /></div>
       }
       <div class="ov-side">
-        @if (store.view3d()) {
+        <div class="ov-tabs" role="tablist">@for (k of otabs; track k) { <button type="button" role="tab" [class.on]="tabNow(n3) === k" [attr.aria-selected]="tabNow(n3) === k" (click)="otab.set(k)">{{ tabName(k) }}</button> }</div>
+        @if (store.view3d() && tabNow(n3) === 'surf') {
         <div class="ov-areas" role="group" [attr.aria-label]="t('dc.3d.areas')">
           <span class="ov-sel">{{ areas().length ? areaText() : (hovered3d() ? areaNames()[hovered3d()!] : t('dc.3d.pickHint')) }}</span>
           <button type="button" class="btn" [disabled]="readOnly() || !areaSurfaces().length" (click)="applyAreas('caries')">{{ t('dc.3d.act.caries') }}</button>
@@ -298,12 +301,15 @@
           <button type="button" class="btn" (click)="selectRadicular()">{{ t('dc.a.radicularAll') }}</button>
         </div>
         }
-        <den-tooth-editor [state]="stateOf(n3)" [teeth]="editTeeth()" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event, false, editTeeth())" />
+        @if (tabNow(n3) !== 'history') {
+        <den-tooth-editor [tab]="$any(tabNow(n3))" [state]="stateOf(n3)" [teeth]="editTeeth()" [mode]="mode()" [disabled]="readOnly()" (edit)="apply($event, false, editTeeth())" />
+        } @else {
         <h4 class="ov-h">{{ t('dc.3d.history') }}</h4>
         @for (h of toothHistory(); track h.id) {
           <p class="ov-row"><b>{{ h.date }}</b> {{ h.caries.length ? t('dc.3d.caries') + ' ' + h.caries.join(', ') : '' }} {{ h.fillings.length ? t('dc.3d.fillings') + ' ' + h.fillings.join(', ') : '' }} {{ !h.caries.length && !h.fillings.length ? t('dc.3d.clean') : '' }}</p>
         } @empty { <p class="ov-row">{{ t('dc.3d.none') }}</p> }
         <den-tooth-files [patientId]="patientId()" [tooth]="n3" />
+        }
       </div>
     </div>
   </div>

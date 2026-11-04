@@ -20,6 +20,7 @@
 .arches { display: grid; gap: 10px; overflow-x: auto; padding: 10px; border: 1px solid var(--app-line); border-radius: 16px; background: var(--app-panel); }
 .arch { display: grid; grid-template-columns: repeat(8, minmax(34px, 1fr)) 1px repeat(8, minmax(34px, 1fr)); gap: 2px; min-width: 640px; align-items: end; }
 .arch.lower { align-items: start; }
+.xfer { flex-wrap: wrap; }
 .midline { background: var(--app-line); align-self: stretch; }
 .tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--app-line); border-radius: 12px; overflow: hidden; }
 .tabs button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; font-weight: 600; font-size: 13px; color: var(--app-muted); white-space: nowrap; }
@@ -43,37 +44,46 @@
 .what { flex: 1 1 200px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .chg { font-size: 12px; color: var(--app-muted); }
 code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--app-hover); }
-.xfer { flex-wrap: wrap; }
-.btn.disabled { opacity: .5; pointer-events: none; }
 
 .opts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--app-muted); }
 .opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 
 .body { display: grid; gap: 14px; }
-.left, .panel { display: grid; gap: 14px; min-width: 0; align-content: start; }
+.left, .panel { display: grid; gap: 10px 8px; min-width: 0; align-content: start; }
 .dentisto { gap: 2px; padding: 14px 10px; }
 .dentisto .arch { align-items: center; }
-.dentisto .arch.lower { align-items: center; }
 .num { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); }
 .nums { min-height: 20px; }
 .incisal { justify-self: center; width: 22px; height: 12px; border-radius: 50%; border: 1px solid var(--app-line); background: var(--app-subtle); }
 .surf { padding-block: 4px; }
 .cubes { padding-block: 0; }
 
-.ov-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(0 0 0 / .4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.ov { width: min(1080px, 94vw); height: min(780px, 90vh); display: grid; grid-template-rows: auto 1fr; background: var(--app-surface, var(--app-bg)); border: 1px solid var(--app-line); border-radius: 18px; overflow: hidden; }
+.ov-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(6 10 9 / .62); backdrop-filter: blur(14px) saturate(.8); -webkit-backdrop-filter: blur(14px) saturate(.8); }
+.ov { --app-bg: #12171a; --app-surface: #12171a; --app-panel: rgb(255 255 255 / .05); --app-subtle: rgb(255 255 255 / .06); --app-hover: rgb(255 255 255 / .1); --app-line: rgb(255 255 255 / .12); --app-text: #eef2f0; --app-muted: #97a39d; color: var(--app-text); color-scheme: dark;
+  width: min(1120px, 96vw); height: min(800px, 92vh); display: grid; grid-template-rows: auto 1fr; background: radial-gradient(120% 90% at 30% 20%, #1d2a27 0%, #0e1213 70%); border: 1px solid rgb(255 255 255 / .1); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+.ov-tabs { display: flex; gap: 4px; flex-wrap: wrap; position: sticky; top: -12px; z-index: 2; margin: -12px -14px 4px; padding: 10px 14px; background: #12171a; border-bottom: 1px solid var(--app-line); }
+.ov-tabs button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--app-muted); }
+.ov-tabs button:hover { color: var(--app-text); background: var(--app-hover); }
+.ov-tabs button.on { background: var(--app-text); color: #12171a; }
+.ov-tabs button:focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }
+.fold > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 12px; border: 1px solid var(--app-line); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--app-muted); }
+.fold > summary::before { content: '▸'; font-size: 10px; }
+.fold[open] > summary::before { content: '▾'; }
+.fold[open] > summary { margin-bottom: 8px; }
+.left { grid-template-columns: auto auto 1fr; }
+.left > :not(.fold) { grid-column: 1 / -1; }
 .ov-body.flat { grid-template-columns: 1fr; overflow-y: auto; }
 .multi { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border: 1px solid var(--app-line); border-radius: 12px; font-size: 13px; }
 .multi strong { flex: 1; }
-.ov-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--app-line); }
+.ov-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; }
 .ov-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr); min-height: 0; }
-.ov-3d { position: relative; border-inline-end: 1px solid var(--app-line); min-height: 320px; }
+.ov-3d { position: relative; min-height: 320px; }
 .ov-3d den-tooth-3d { position: absolute; inset: 0; }
 .ov-cube { position: absolute; inset-inline-start: 12px; inset-block-end: 12px; width: 190px; --crown-top: 190px; }
-.ov-side { overflow-y: auto; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+.ov-side { background: rgb(255 255 255 / .03); border-inline-start: 1px solid var(--app-line); overflow-y: auto; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
 .ov-h { margin: 6px 0 0; font-size: 13px; }
 .ov-row { margin: 0; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--app-line); }
-@media (max-width: 800px) { .ov-body { grid-template-columns: 1fr; overflow-y: auto; } .ov-3d { height: 45vh; } }
+@media (max-width: 800px) { .ov-body { grid-template-columns: 1fr; overflow-y: auto; } .ov-3d { height: 38vh; } }
 .ov-pulp { position: absolute; inset-inline-end: 12px; inset-block-start: 10px; font-size: 13px; display: flex; gap: 6px; align-items: center; }
 .ov-areas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--app-line); }
 .ov-sel { flex: 1 1 100%; font-size: 13px; font-weight: 600; min-height: 18px; }

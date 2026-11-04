@@ -5,6 +5,7 @@ import { Payment, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { quoteHtml } from './quote-html';
 import { allocate, parsePrice, planTotals, procedureName } from './treatment-rules';
+import { scopeText } from './procedure-record';
 import { CHILD_LOWER, CHILD_UPPER, LOWER, UPPER } from './tooth-numbers';
 
 /** The patient's treatment plan: add work (optionally on a tooth), mark it done, see what is left to pay. */
@@ -19,11 +20,12 @@ export class TreatmentPlanComponent {
   readonly plan = input<TreatmentItem[]>([]);
   /** A tooth picked in the chart: preselected in the add form. */
   readonly tooth = input<string | null>(null);
+  protected readonly scopeLabel = (i: TreatmentItem) => scopeText(i, this.t);
   readonly patientName = input('');
   readonly payments = input<Payment[]>([]);
   /** Quotes page: show only the planned work. */
   readonly only = input<'planned' | null>(null);
-  /** Hides the add form: new acts are written in the act editor, with the chart. */
+  /** Hides the add form: new procedures are added from the chart toolbar. */
   readonly readonlyAdd = input(false);
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
 
@@ -85,7 +87,7 @@ export class TreatmentPlanComponent {
 
   /** Opens the quote for the planned work in a new window and prints it. A blocked pop-up simply does nothing. */
   protected printQuote(): void {
-    const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? '', name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price) }));
+    const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? (i.scope ? scopeText(i, this.t) : ''), name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price) }));
     if (!lines.length) return;
     const t = this.t;
     const html = quoteHtml({
