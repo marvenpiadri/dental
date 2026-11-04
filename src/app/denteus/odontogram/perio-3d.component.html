@@ -1,27 +1,60 @@
-<div class="bar">
-  <div class="seg" role="group" [attr.aria-label]="t('dc.pv.arch')">
-    <button type="button" [class.on]="arch() === 'upper'" [attr.aria-pressed]="arch() === 'upper'" (click)="arch.set('upper')">{{ t('dc.pv.upper') }}</button>
-    <button type="button" [class.on]="arch() === 'lower'" [attr.aria-pressed]="arch() === 'lower'" (click)="arch.set('lower')">{{ t('dc.pv.lower') }}</button>
+<div class="ws">
+  <nav class="nav" [attr.aria-label]="t('dc.pv.title')">
+    <div class="seg" role="group" [attr.aria-label]="t('dc.pv.arch')">
+      <button type="button" [class.on]="arch() === 'upper'" [attr.aria-pressed]="arch() === 'upper'" (click)="arch.set('upper')">{{ t('dc.pv.upper') }}</button>
+      <button type="button" [class.on]="arch() === 'lower'" [attr.aria-pressed]="arch() === 'lower'" (click)="arch.set('lower')">{{ t('dc.pv.lower') }}</button>
+    </div>
+    <div class="seg" role="group" [attr.aria-label]="t('dc.pv.side')">
+      <button type="button" [class.on]="side() === 'buccal'" [attr.aria-pressed]="side() === 'buccal'" (click)="side.set('buccal')">{{ t('dc.idx.buccal') }}</button>
+      <button type="button" [class.on]="side() === 'lingual'" [attr.aria-pressed]="side() === 'lingual'" (click)="side.set('lingual')">{{ t('dc.idx.lingual') }}</button>
+    </div>
+    <button type="button" class="ov" (click)="reset()"><i class="fa-solid fa-expand" aria-hidden="true"></i>{{ t('dc.pv.overview') }}</button>
+  </nav>
+  <div class="tools" role="group" [attr.aria-label]="t('dc.pv.layers')">
+    @for (g of layerGroups; track g.key) {
+      <div class="grp"><span class="gl">{{ t(g.key) }}</span>
+        <div class="gb">@for (l of g.items; track l) {
+          <button type="button" class="tg" [class.on]="layers().has(l)" [attr.aria-pressed]="layers().has(l)" [title]="l === 'bone' ? t('dc.pv.boneHint') : ''" (click)="toggle(l)"><i class="sw" [style.background]="swatch[l]" aria-hidden="true"></i>{{ layerName(l) }}</button>
+        }</div>
+      </div>
+    }
   </div>
-  <div class="seg" role="group" [attr.aria-label]="t('dc.pv.side')">
-    <button type="button" [class.on]="side() === 'buccal'" [attr.aria-pressed]="side() === 'buccal'" (click)="side.set('buccal')">{{ t('dc.idx.buccal') }}</button>
-    <button type="button" [class.on]="side() === 'lingual'" [attr.aria-pressed]="side() === 'lingual'" (click)="side.set('lingual')">{{ t('dc.idx.lingual') }}</button>
+  <div class="main">
+    <div #host class="host" role="img" [attr.aria-label]="t('dc.pv.title')">
+      @if (failed()) { <p class="fail">{{ t('dc.pv.failed') }}</p> }
+    </div>
+    <aside class="side" [attr.aria-label]="t('dc.pv.measure')">
+      @if (panel(); as p) {
+        <header class="sh">
+          <button type="button" class="st" (click)="step(-1)" [attr.aria-label]="t('dc.pv.prev')"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+          <h3>@if (p.tooth !== null) { <b>{{ p.tooth }}</b> <span>{{ t(side() === 'buccal' ? 'dc.idx.buccal' : 'dc.idx.lingual') }}</span> } @else { <span>{{ t('dc.pv.noTooth') }}</span> }</h3>
+          <button type="button" class="st" (click)="step(1)" [attr.aria-label]="t('dc.pv.next')"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        </header>
+        @if (p.v) {
+          <table class="grid">
+            <caption class="sr-only">{{ t('dc.pv.measure') }}</caption>
+            <thead><tr><th scope="col">{{ t('dc.pv.site') }}</th><th scope="col">{{ t('dc.pv.pd') }}</th><th scope="col">{{ t('dc.pv.rec') }}</th><th scope="col">{{ t('dc.pv.cal') }}</th><th scope="col">{{ t('dc.pv.bop') }}</th><th scope="col">{{ t('dc.pv.pus') }}</th></tr></thead>
+            <tbody>
+              @for (s of p.sites; track s.site) {
+                <tr [class.sel]="p.site === s.site" (click)="pick(p.tooth!, s.site)">
+                  <th scope="row">{{ s.site }}</th>
+                  <td><input type="number" min="0" max="15" [disabled]="disabled()" [attr.aria-label]="t('dc.pv.pd') + ' ' + s.site" [value]="s.pd ?? ''" (focus)="pick(p.tooth!, s.site)" (change)="setPd(s.site, $event)" /></td>
+                  <td><input type="number" min="-10" max="20" [disabled]="disabled() || s.pd === null" [attr.aria-label]="t('dc.pv.rec') + ' ' + s.site" [value]="s.gm ?? ''" (focus)="pick(p.tooth!, s.site)" (change)="setGm(s.site, $event)" /></td>
+                  <td class="cal">{{ s.cal ?? '–' }}</td>
+                  <td><button type="button" class="ck" [class.on]="s.bop" [attr.aria-pressed]="s.bop" [attr.aria-label]="t('dc.pv.bop') + ' ' + s.site" [disabled]="disabled() || s.pd === null" (click)="flag(s.site, 'bop', s.bop); pick(p.tooth!, s.site)"></button></td>
+                  <td><button type="button" class="ck" [class.on]="s.sup" [attr.aria-pressed]="s.sup" [attr.aria-label]="t('dc.pv.pus') + ' ' + s.site" [disabled]="disabled() || s.pd === null" (click)="flag(s.site, 'sup', s.sup); pick(p.tooth!, s.site)"></button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <dl class="facts">
+            <dt>{{ t('dc.pv.mobility') }}</dt><dd>{{ p.v.mobility ? 'M' + p.v.mobility : '–' }}</dd>
+            <dt>{{ t('dc.pv.furcation') }}</dt><dd>@for (f of p.v.furcation; track f.entrance) { <span class="tag">{{ f.entrance }} {{ f.grade }}</span> } @empty { – }</dd>
+            <dt>{{ t('dc.pv.plaque') }}</dt><dd>@for (sf of surfaces; track sf) { @if (p.v.plaque.has(sf)) { <span class="tag">{{ surfaceName(sf) }}</span> } } @if (!p.v.plaque.size) { – }</dd>
+            <dt>{{ t('dc.pv.gi') }}</dt><dd>@for (sf of surfaces; track sf) { @if (p.v.gingival.get(sf); as g) { <span class="tag">{{ surfaceName(sf) }} {{ g }}</span> } } @if (!p.v.gingival.size) { – }</dd>
+          </dl>
+        } @else { <p class="hint">{{ t('dc.pv.hint') }}</p> }
+      }
+    </aside>
   </div>
-  <button type="button" class="lyr" (click)="reset()">{{ t('dc.pv.overview') }}</button>
-  <span class="layers" role="group" [attr.aria-label]="t('dc.pv.layers')">
-    @for (l of layerList; track l) { <button type="button" class="lyr" [class.on]="layers().has(l)" [attr.aria-pressed]="layers().has(l)" (click)="toggle(l)">{{ layerName(l) }}</button> }
-  </span>
-</div>
-<div #host class="host" role="img" [attr.aria-label]="t('dc.pv.title')">
-  @if (failed()) { <p class="fail">{{ t('dc.pv.failed') }}</p> }
-</div>
-<div class="site" aria-live="polite">
-  @if (cur(); as c) {
-    <strong>{{ c.tooth }} · {{ c.site.site }}</strong>
-    <label>{{ t('dc.perio.depth') }}<input type="number" min="0" max="15" [disabled]="disabled()" [value]="c.site.pd ?? ''" (change)="setPd($event)" /></label>
-    <label>{{ t('dc.perio.recession') }}<input type="number" min="-10" max="20" [disabled]="disabled() || c.site.pd === null" [value]="c.site.gm ?? ''" (change)="setGm($event)" /></label>
-    <span class="cal">{{ t('dc.pv.cal') }} {{ c.site.cal ?? '–' }}</span>
-    <button type="button" class="lyr" [class.on]="c.site.bop" [attr.aria-pressed]="c.site.bop" [disabled]="disabled() || c.site.pd === null" (click)="flag('bop')">{{ t('dc.perio.bleeding') }}</button>
-    <button type="button" class="lyr" [class.on]="c.site.sup" [attr.aria-pressed]="c.site.sup" [disabled]="disabled() || c.site.pd === null" (click)="flag('sup')">{{ t('dc.pv.pus') }}</button>
-  } @else { <span class="hint">{{ t('dc.pv.hint') }}</span> }
 </div>

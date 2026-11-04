@@ -10,6 +10,7 @@ export type PerioLayer = 'depth' | 'recession' | 'bleeding' | 'plaque' | 'furcat
 export const PERIO_LAYERS: readonly PerioLayer[] = ['depth', 'recession', 'bleeding', 'plaque', 'furcation', 'mobility', 'bone'];
 export interface PerioSel { tooth: number; site: PerioSiteId }
 type Geo = import('three').BufferGeometry;
+const BUCCAL: readonly PerioSiteId[] = ['MB', 'B', 'DB'], LINGUAL: readonly PerioSiteId[] = ['ML', 'L', 'DL'];
 const TONE = { shallow: 0x7a96ab, watch: 0xdf8a2f, deep: 0xc0392b } as const;
 const SURFACE_ANGLE: Record<string, number> = { mesial: 0, buccal: 90, distal: 180, lingual: 270 };
 const surfaceAt = (phi: number) => { const p = ((phi % 360) + 360) % 360; return p < 45 || p >= 315 ? 'mesial' : p < 135 ? 'buccal' : p < 225 ? 'distal' : 'lingual'; };
@@ -38,7 +39,19 @@ export class Perio3dComponent implements OnDestroy {
   protected readonly side = signal<'buccal' | 'lingual'>('buccal');
   protected readonly layers = signal<ReadonlySet<PerioLayer>>(new Set<PerioLayer>(['depth', 'recession', 'bleeding', 'plaque', 'furcation', 'mobility']));
   protected readonly failed = signal(false);
-  protected readonly cur = computed(() => { const s = this.selected(); const v = s ? toothViz(this.chart(), s.tooth) : null; return v && s ? { v, site: v.sites.find((x) => x.site === s.site)!, tooth: s.tooth } : null; });
+  /** The sites of the surface being viewed, for the selected tooth (or the first tooth of the arch while nothing is selected). */
+  protected readonly panel = computed(() => {
+    const sel = this.selected(), tooth = sel?.tooth ?? null, v = tooth === null ? null : toothViz(this.chart(), tooth);
+    const names = this.side() === 'buccal' ? BUCCAL : LINGUAL;
+    return { tooth, v, sites: v ? names.map((n) => v.sites.find((x) => x.site === n)!) : [], site: sel?.site ?? null };
+  });
+  protected readonly layerGroups: { key: 'dc.pv.g.probing' | 'dc.pv.g.findings' | 'dc.pv.g.structure'; items: readonly PerioLayer[] }[] = [
+    { key: 'dc.pv.g.probing', items: ['depth', 'recession', 'bone'] }, { key: 'dc.pv.g.findings', items: ['bleeding', 'plaque'] }, { key: 'dc.pv.g.structure', items: ['furcation', 'mobility'] },
+  ];
+  protected readonly surfaces = ['buccal', 'lingual', 'mesial', 'distal'] as const;
+  protected surfaceName(sf: string) { return this.t(`dc.idx.${sf}` as 'dc.idx.buccal'); }
+  protected readonly swatch: Record<PerioLayer, string> = { depth: 'linear-gradient(90deg,#7a96ab 33%,#df8a2f 33% 66%,#c0392b 66%)', recession: '#d8c48f', bleeding: '#b3202a', plaque: '#eadf9a', furcation: '#252b2f', mobility: 'linear-gradient(90deg,#2b3236 20%,transparent 20% 80%,#2b3236 80%)', bone: '#4a4a4a' };
+  private readonly followSide = effect(() => { const s = this.selected(); if (s) this.side.set((LINGUAL as readonly string[]).includes(s.site) ? 'lingual' : 'buccal'); });
   protected layerName(l: PerioLayer) { return this.t(`dc.pv.${l}` as 'dc.pv.depth'); }
 
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -58,9 +71,12 @@ export class Perio3dComponent implements OnDestroy {
 
   protected toggle(l: PerioLayer): void { const n = new Set(this.layers()); if (!n.delete(l)) n.add(l); this.layers.set(n); }
   protected reset(): void { this.ctx?.reset(); }
-  protected setPd(e: Event): void { const c = this.cur(); if (c) { const raw = (e.target as HTMLInputElement).value.trim(); this.edit.emit({ tooth: c.tooth, edit: { kind: 'perio', site: c.site.site, pd: raw === '' ? null : Number(raw) } }); } }
-  protected setGm(e: Event): void { const c = this.cur(), raw = (e.target as HTMLInputElement).value.trim(); if (c && raw !== '') this.edit.emit({ tooth: c.tooth, edit: { kind: 'perio', site: c.site.site, gm: Number(raw) } }); }
-  protected flag(k: 'bop' | 'sup'): void { const c = this.cur(); if (c) this.edit.emit({ tooth: c.tooth, edit: { kind: 'perio', site: c.site.site, [k]: !c.site[k] } }); }
+  protected pick(tooth: number, site: PerioSiteId): void { this.select.emit({ tooth, site }); }
+  protected setPd(site: PerioSiteId, e: Event): void { const t = this.panel().tooth; if (t !== null) { const raw = (e.target as HTMLInputElement).value.trim(); this.edit.emit({ tooth: t, edit: { kind: 'perio', site, pd: raw === '' ? null : Number(raw) } }); } }
+  protected setGm(site: PerioSiteId, e: Event): void { const t = this.panel().tooth, raw = (e.target as HTMLInputElement).value.trim(); if (t !== null && raw !== '') this.edit.emit({ tooth: t, edit: { kind: 'perio', site, gm: Number(raw) } }); }
+  protected flag(site: PerioSiteId, k: 'bop' | 'sup', on: boolean): void { const t = this.panel().tooth; if (t !== null) this.edit.emit({ tooth: t, edit: { kind: 'perio', site, [k]: !on } }); }
+  /** Move to the neighbouring tooth of the arch, keeping the same surface and position. */
+  protected step(d: -1 | 1): void { const list = this.teeth(), cur = this.panel().tooth; if (!list.length) return; const i = cur === null ? (d > 0 ? 0 : list.length - 1) : (list.indexOf(cur) + d + list.length) % list.length; this.select.emit({ tooth: list[i], site: this.selected()?.site ?? (this.side() === 'buccal' ? 'B' : 'L') }); }
   protected focusTooth(tooth: number): void { this.ctx?.focus(tooth); this.select.emit({ tooth, site: this.selected()?.tooth === tooth ? this.selected()!.site : 'B' }); }
   protected readonly teeth = computed(() => chartViz(this.chart()).filter((v) => (this.arch() === 'upper') === (v.tooth < 30)).map((v) => v.tooth));
 
@@ -117,7 +133,7 @@ export class Perio3dComponent implements OnDestroy {
         if (on.has('recession') && (s.gm ?? 0) > 0) { const m = new T.Mesh(surf(e, arc(phi), [() => ({ k: 0.99, y: 0 }), () => ({ k: 0.99, y: top })]), mat(0xd8c48f, 0.85)); m.renderOrder = 2; e.dyn.add(m); }
         if (on.has('bleeding') && s.bop) e.dyn.add(sphere(e, phi, 1.08, top + 0.1, 0.5, 0xb3202a));
         if (on.has('bleeding') && s.sup) e.dyn.add(sphere(e, phi + 9, 1.08, top - 1, 0.42, 0xe3c21c));
-        const hit = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.1, y: 2 }), () => ({ k: 1.1, y: top - Math.max(s.pd ?? 0, 3) - 2 })]), new T.MeshBasicMaterial({ transparent: true, opacity: sel && sel.tooth === v.tooth && sel.site === s.site ? 0.38 : 0, color: 0x16a34a, side: T.DoubleSide, depthWrite: false }));
+        const hit = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.1, y: 2 }), () => ({ k: 1.1, y: top - Math.max(s.pd ?? 0, 3) - 2 })]), new T.MeshBasicMaterial({ transparent: true, opacity: sel && sel.tooth === v.tooth && sel.site === s.site ? 0.5 : 0, color: 0x111111, side: T.DoubleSide, depthWrite: false }));
         hit.userData = { tooth: v.tooth, site: s.site }; hit.renderOrder = 6; e.dyn.add(hit); hits.push(hit);
       }
       if (on.has('recession')) { const l = new T.LineLoop(new T.BufferGeometry().setFromPoints(around.map((p) => { const a = (p * Math.PI) / 180, b = e.s.info().bounds, mes = e.s.info().mesial; return new T.Vector3(Math.cos(a) * ((b[1][0] - b[0][0]) / 2) * 0.78 * 1.03 * mes, margin(p) + 0.05, Math.sin(a) * ((b[1][2] - b[0][2]) / 2) * 0.8 * 1.03); })), new T.LineBasicMaterial({ color: 0xc0392b })); l.renderOrder = 3; e.dyn.add(l); }
@@ -156,7 +172,7 @@ export class Perio3dComponent implements OnDestroy {
       const w = el.clientWidth, h = el.clientHeight, v = new T.Vector3();
       for (const b of Array.from(labels.children) as HTMLElement[]) {
         const e = entries.get(Number(b.dataset['no'])); if (!e) continue;
-        e.holder.getWorldPosition(v); v.y = this.arch() === 'upper' ? 2.7 : -2.7; v.project(camera);
+        e.holder.getWorldPosition(v); v.y = this.arch() === 'upper' ? 2.45 : -2.45; v.project(camera);
         b.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -50%)`;
         b.classList.toggle('on', this.selected()?.tooth === e.no);
       }
@@ -165,7 +181,7 @@ export class Perio3dComponent implements OnDestroy {
     const resize = () => { const w = el.clientWidth || 600, h = el.clientHeight || 300; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); render(); place(); };
     const ro = new ResizeObserver(resize); ro.observe(el);
 
-    const frameAll = () => { const w = el.clientWidth || 600, h = el.clientHeight || 300, span = Math.max(...Array.from(entries.values()).map((e) => Math.abs(e.holder.position.x)), 1) * 2 + 6; homeDist = Math.max(14, Math.min(60, (Math.max(span / (w / h), 7) / 2) / Math.tan((camera.fov * Math.PI) / 360))); camera.position.set(0, 0, homeDist); controls.target.set(0, 0, 0); controls.update(); };
+    const frameAll = () => { const w = el.clientWidth || 600, h = el.clientHeight || 300, span = Math.max(...Array.from(entries.values()).map((e) => Math.abs(e.holder.position.x)), 1) * 2 + 3; homeDist = Math.max(14, Math.min(60, (Math.max(span / (w / h), 7) / 2) / Math.tan((camera.fov * Math.PI) / 360))); camera.position.set(0, 0, homeDist); controls.target.set(0, 0, 0); controls.update(); };
     const redraw = () => {
       const key = this.arch();
       if (key !== shownArch) { for (const e of entries.values()) row.remove(e.holder); entries.clear(); shownArch = key; delete el.dataset['framed']; }

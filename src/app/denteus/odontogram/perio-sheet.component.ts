@@ -65,7 +65,7 @@ export function sheetRows(chart: Chart): SheetRow[] {
     th, td { padding: 3px 4px; text-align: center; border-bottom: 1px solid var(--app-line); }
     thead th { position: sticky; top: 0; background: var(--app-panel, var(--app-bg)); font-size: 12px; color: var(--app-muted); z-index: 1; }
     tbody th { font-weight: 700; padding-inline: 8px; }
-    td.sel { background: color-mix(in srgb, var(--app-accent) 18%, transparent); box-shadow: inset 0 0 0 2px var(--app-accent); }
+    td.sel { background: var(--app-subtle); box-shadow: inset 0 0 0 2px var(--app-text); }
     td:nth-child(4) { border-inline-start: 1px solid var(--app-line); }
     .num { width: 52px; min-height: 32px; text-align: center; padding: 0 4px; }
     .bop { min-width: 44px; min-height: 32px; border: 1px solid var(--app-line); border-radius: 8px; background: transparent; color: var(--app-text); cursor: pointer; font: inherit; }
