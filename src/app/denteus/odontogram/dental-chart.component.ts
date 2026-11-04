@@ -104,6 +104,8 @@ export class DentalChartComponent {
   protected readonly procMode = signal(false);
   protected readonly ro = computed(() => this.readonlyView() && !this.procMode());
   protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null || this.ro());
+  /** From the open tooth: keep it selected and move to the procedure row. */
+  protected addFromOverlay(): void { this.selected.set(this.editTeeth()); this.procMode.set(true); this.open3d.set(null); }
   /** Leave procedure mode. Saving updates the stored chart, which resets this one; cancelling resets it here. */
   protected endProc(): void {
     this.procMode.set(false); this.selected.set([]); this.open3d.set(null);

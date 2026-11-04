@@ -1,17 +1,18 @@
 :host { display: block; }
-.proc { border: 1px solid var(--app-text); }
+.proc { border: 1.5px solid var(--app-accent); border-radius: 14px; overflow: hidden; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .f { display: grid; gap: 4px; padding: 8px 10px; border-inline-end: 1px solid var(--app-line); border-bottom: 1px solid var(--app-line); font-size: 11px; font-weight: 600; color: var(--app-muted); }
 .f.wide { grid-column: span 2; }
 select, input:not([type=checkbox]) { font: inherit; font-size: 14px; font-weight: 500; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-line); border-radius: 4px; padding: 6px 8px; min-width: 0; }
-.seg { display: inline-flex; border: 1px solid var(--app-line); border-radius: 4px; overflow: hidden; width: fit-content; }
+.seg { display: inline-flex; border: 1px solid var(--app-line); border-radius: 8px; overflow: hidden; width: fit-content; }
 .seg button { all: unset; cursor: pointer; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--app-muted); }
-.seg button.on { background: var(--app-text); color: var(--app-bg); }
+.seg button.on { background: var(--app-accent); color: var(--app-accent-text); }
 .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 10px; }
 .sum { margin: 0 auto 0 0; font-size: 13px; color: var(--app-muted); }
 .sum.bad, [aria-invalid=true] { color: var(--app-danger); border-color: var(--app-danger); }
 .draw { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
 .b { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border: 1px solid var(--app-text); border-radius: 4px; background: var(--app-bg); color: var(--app-text); cursor: pointer; }
-.b.go { background: var(--app-text); color: var(--app-bg); }
+.b.go { background: var(--app-accent); border-color: var(--app-accent); color: var(--app-accent-text); }
+.b { border-radius: 8px; }
 .b:disabled { opacity: .4; cursor: not-allowed; }
 :is(.b, .seg button, select, input):focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }

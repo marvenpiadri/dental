@@ -358,7 +358,7 @@ const D = {
   'procedure.status': ['Status', 'Statut'],
   'procedure.invalid': ['Choose a procedure, a date and a valid price.', 'Choisissez un acte, une date et un prix valide.'],
   'procedure.hint': ['Click a tooth to open it and record its conditions. Shift-click selects several. Nothing is saved until you save the procedure.', 'Cliquez une dent pour l’ouvrir et noter son état. Maj-clic en sélectionne plusieurs. Rien n’est enregistré avant la validation de l’acte.'],
-  'procedure.teeth': ['{n} teeth: {list}', '{n} dents : {list}'],
+  'procedure.teeth': ['Selected ({n}): {list}', 'Sélection ({n}) : {list}'],
   'procedure.noTeeth': ['No tooth selected (procedure not tied to a tooth)', 'Aucune dent sélectionnée (acte non lié à une dent)'],
   'procedure.scope.teeth': ['Selected teeth', 'Dents sélectionnées'],
   'procedure.scope.quadrant': ['Quadrant', 'Quadrant'],

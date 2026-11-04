@@ -61,6 +61,7 @@ code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--
 .ov-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(6 10 9 / .62); backdrop-filter: blur(14px) saturate(.8); -webkit-backdrop-filter: blur(14px) saturate(.8); }
 .ov { --app-bg: #12171a; --app-surface: #12171a; --app-panel: rgb(255 255 255 / .05); --app-subtle: rgb(255 255 255 / .06); --app-hover: rgb(255 255 255 / .1); --app-line: rgb(255 255 255 / .12); --app-text: #eef2f0; --app-muted: #97a39d; color: var(--app-text); color-scheme: dark;
   width: min(1120px, 96vw); height: min(800px, 92vh); display: grid; grid-template-rows: auto 1fr; background: radial-gradient(120% 90% at 30% 20%, #1d2a27 0%, #0e1213 70%); border: 1px solid rgb(255 255 255 / .1); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+.ov-acts { display: flex; gap: 8px; }
 .ov-tabs { display: flex; gap: 4px; flex-wrap: wrap; position: sticky; top: -12px; z-index: 2; margin: -12px -14px 4px; padding: 10px 14px; background: #12171a; border-bottom: 1px solid var(--app-line); }
 .ov-tabs button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--app-muted); }
 .ov-tabs button:hover { color: var(--app-text); background: var(--app-hover); }

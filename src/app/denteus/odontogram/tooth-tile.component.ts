@@ -25,7 +25,7 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     .tile { all: unset; box-sizing: border-box; display: grid; justify-items: center; gap: 2px; width: 100%; padding: 4px 2px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }
     .tile:hover { background: var(--app-hover); }
     .tile.planned { border-color: #3b82f6; border-style: dashed; background: color-mix(in srgb, #3b82f6 8%, transparent); }
-    .tile.selected { border-color: var(--app-text); background: var(--app-hover); }
+    .tile.selected { border-color: var(--app-accent); box-shadow: inset 0 0 0 1px var(--app-accent); background: var(--app-hover); }
     .tile:focus-visible { outline: 2px solid var(--app-text); outline-offset: 1px; }
     .art { display: block; width: 100%; max-width: 64px; aspect-ratio: 39 / 72; }
     .real { width: 100%; max-width: 64px; aspect-ratio: 180 / 330; object-fit: contain; display: block; }
