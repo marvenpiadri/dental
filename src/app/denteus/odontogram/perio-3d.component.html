@@ -1,0 +1,27 @@
+<div class="bar">
+  <div class="seg" role="group" [attr.aria-label]="t('dc.pv.arch')">
+    <button type="button" [class.on]="arch() === 'upper'" [attr.aria-pressed]="arch() === 'upper'" (click)="arch.set('upper')">{{ t('dc.pv.upper') }}</button>
+    <button type="button" [class.on]="arch() === 'lower'" [attr.aria-pressed]="arch() === 'lower'" (click)="arch.set('lower')">{{ t('dc.pv.lower') }}</button>
+  </div>
+  <div class="seg" role="group" [attr.aria-label]="t('dc.pv.side')">
+    <button type="button" [class.on]="side() === 'buccal'" [attr.aria-pressed]="side() === 'buccal'" (click)="side.set('buccal')">{{ t('dc.idx.buccal') }}</button>
+    <button type="button" [class.on]="side() === 'lingual'" [attr.aria-pressed]="side() === 'lingual'" (click)="side.set('lingual')">{{ t('dc.idx.lingual') }}</button>
+  </div>
+  <button type="button" class="lyr" (click)="reset()">{{ t('dc.pv.overview') }}</button>
+  <span class="layers" role="group" [attr.aria-label]="t('dc.pv.layers')">
+    @for (l of layerList; track l) { <button type="button" class="lyr" [class.on]="layers().has(l)" [attr.aria-pressed]="layers().has(l)" (click)="toggle(l)">{{ layerName(l) }}</button> }
+  </span>
+</div>
+<div #host class="host" role="img" [attr.aria-label]="t('dc.pv.title')">
+  @if (failed()) { <p class="fail">{{ t('dc.pv.failed') }}</p> }
+</div>
+<div class="site" aria-live="polite">
+  @if (cur(); as c) {
+    <strong>{{ c.tooth }} · {{ c.site.site }}</strong>
+    <label>{{ t('dc.perio.depth') }}<input type="number" min="0" max="15" [disabled]="disabled()" [value]="c.site.pd ?? ''" (change)="setPd($event)" /></label>
+    <label>{{ t('dc.perio.recession') }}<input type="number" min="-10" max="20" [disabled]="disabled() || c.site.pd === null" [value]="c.site.gm ?? ''" (change)="setGm($event)" /></label>
+    <span class="cal">{{ t('dc.pv.cal') }} {{ c.site.cal ?? '–' }}</span>
+    <button type="button" class="lyr" [class.on]="c.site.bop" [attr.aria-pressed]="c.site.bop" [disabled]="disabled() || c.site.pd === null" (click)="flag('bop')">{{ t('dc.perio.bleeding') }}</button>
+    <button type="button" class="lyr" [class.on]="c.site.sup" [attr.aria-pressed]="c.site.sup" [disabled]="disabled() || c.site.pd === null" (click)="flag('sup')">{{ t('dc.pv.pus') }}</button>
+  } @else { <span class="hint">{{ t('dc.pv.hint') }}</span> }
+</div>

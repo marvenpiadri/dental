@@ -1,0 +1,21 @@
+:host { display: grid; gap: 8px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.layers { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-inline-start: auto; }
+.seg { display: inline-flex; border: 1px solid var(--app-line); border-radius: 8px; overflow: hidden; }
+.seg button { all: unset; cursor: pointer; padding: 5px 12px; font-size: 13px; font-weight: 600; color: var(--app-muted); }
+.seg button.on { background: var(--app-text); color: var(--app-bg); }
+.lyr { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 10px; border: 1px solid var(--app-line); border-radius: 999px; background: transparent; color: var(--app-muted); cursor: pointer; }
+.lyr.on { border-color: var(--app-accent); color: var(--app-text); background: color-mix(in srgb, var(--app-accent) 14%, transparent); }
+.lyr:disabled { opacity: .4; cursor: default; }
+:is(.lyr, .seg button, input):focus-visible { outline: 2px solid var(--app-text); outline-offset: 2px; }
+.host { position: relative; height: 380px; border: 1px solid var(--app-line); border-radius: 14px; overflow: hidden; touch-action: none; background: radial-gradient(100% 80% at 50% 40%, var(--app-subtle), transparent); }
+.fail { margin: 20px; color: var(--app-muted); }
+.host ::ng-deep canvas { display: block; }
+.host ::ng-deep .pv-labels { position: absolute; inset: 0; pointer-events: none; }
+.host ::ng-deep .pv-no { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; font: 600 11px/1 system-ui, sans-serif; padding: 3px 6px; border: 1px solid var(--app-line); border-radius: 6px; background: var(--app-bg); color: var(--app-text); }
+.host ::ng-deep .pv-no.on { border-color: var(--app-accent); box-shadow: inset 0 0 0 1px var(--app-accent); }
+.site { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-height: 40px; padding: 6px 10px; border: 1px solid var(--app-line); border-radius: 10px; font-size: 13px; }
+.site label { display: inline-flex; align-items: center; gap: 6px; color: var(--app-muted); font-weight: 600; font-size: 12px; }
+.site input { width: 56px; font: inherit; font-size: 14px; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-line); border-radius: 6px; padding: 4px 6px; text-align: center; }
+.cal { color: var(--app-muted); }
+.hint { color: var(--app-muted); }

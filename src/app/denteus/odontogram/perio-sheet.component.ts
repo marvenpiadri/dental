@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
 import { ALL_TEETH, isBlankTooth, type Chart } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
+import type { PerioSel } from './perio-3d.component';
 
 const BUCCAL = ['MB', 'B', 'DB'] as const;
 const LINGUAL = ['ML', 'L', 'DL'] as const;
@@ -38,7 +39,7 @@ export function sheetRows(chart: Chart): SheetRow[] {
           <tr>
             <th scope="row">{{ r.tooth }}</th>
             @for (s of r.sites; track s.site) {
-              <td>
+              <td [class.sel]="selected()?.tooth === r.tooth && selected()?.site === s.site" [attr.data-k]="r.tooth + '-' + s.site" (focusin)="pick.emit({ tooth: r.tooth, site: $any(s.site) })" (click)="pick.emit({ tooth: r.tooth, site: $any(s.site) })">
                 @switch (mode()) {
                   @case ('pd') { <input class="input num" type="number" inputmode="numeric" min="0" max="15" [disabled]="disabled()" [attr.aria-label]="'PD ' + r.tooth + ' ' + s.site" [value]="s.pd ?? ''" (change)="setPd(r.tooth, s.site, $event)" /> }
                   @case ('gm') { <input class="input num" type="number" inputmode="numeric" min="-10" max="20" [disabled]="disabled() || s.pd === null" [attr.aria-label]="'GM ' + r.tooth + ' ' + s.site" [value]="s.gm ?? ''" (change)="setGm(r.tooth, s.site, $event)" /> }
@@ -64,6 +65,7 @@ export function sheetRows(chart: Chart): SheetRow[] {
     th, td { padding: 3px 4px; text-align: center; border-bottom: 1px solid var(--app-line); }
     thead th { position: sticky; top: 0; background: var(--app-panel, var(--app-bg)); font-size: 12px; color: var(--app-muted); z-index: 1; }
     tbody th { font-weight: 700; padding-inline: 8px; }
+    td.sel { background: color-mix(in srgb, var(--app-accent) 18%, transparent); box-shadow: inset 0 0 0 2px var(--app-accent); }
     td:nth-child(4) { border-inline-start: 1px solid var(--app-line); }
     .num { width: 52px; min-height: 32px; text-align: center; padding: 0 4px; }
     .bop { min-width: 44px; min-height: 32px; border: 1px solid var(--app-line); border-radius: 8px; background: transparent; color: var(--app-text); cursor: pointer; font: inherit; }
@@ -75,6 +77,13 @@ export class PerioSheetComponent {
   protected readonly t = inject(I18n).t;
   readonly chart = input.required<Chart>();
   readonly disabled = input(false);
+  /** The site chosen in the table or the 3D view. */
+  readonly selected = input<PerioSel | null>(null);
+  readonly pick = output<PerioSel>();
+  private readonly el = inject<ElementRef<HTMLElement>>(ElementRef);
+  constructor() {
+    effect(() => { const s = this.selected(); if (s) this.el.nativeElement.querySelector(`td[data-k="${s.tooth}-${s.site}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+  }
   readonly edit = output<{ tooth: number; edit: ToothEdit }>();
   protected readonly mode = signal<Mode>('pd');
   protected readonly modes: { id: Mode; key: 'dc.perio.depth' | 'dc.perio.recession' | 'dc.perio.bleeding' }[] = [{ id: 'pd', key: 'dc.perio.depth' }, { id: 'gm', key: 'dc.perio.recession' }, { id: 'bop', key: 'dc.perio.bleeding' }];

@@ -15,6 +15,7 @@ import { PerioGraphComponent } from './perio-graph.component';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioSheetComponent } from './perio-sheet.component';
 import { PerioEditorComponent } from './perio-editor.component';
+import { Perio3dComponent, type PerioSel } from './perio-3d.component';
 import { ProcedurePanelComponent } from './procedure-panel.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
@@ -39,7 +40,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [ProcedurePanelComponent, PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
+  imports: [Perio3dComponent, ProcedurePanelComponent, PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -102,6 +103,8 @@ export class DentalChartComponent {
   });
   /** Adding a procedure makes the history view editable until it is saved or cancelled. */
   protected readonly procMode = signal(false);
+  /** The perio site chosen in the table or the 3D view: one signal, so both always show the same one. */
+  protected readonly perioSel = signal<PerioSel | null>(null);
   protected readonly ro = computed(() => this.readonlyView() && !this.procMode());
   protected readonly readOnly = computed(() => this.locked() || this.viewing() !== null || this.ro());
   /** From the open tooth: keep it selected and move to the procedure row. */

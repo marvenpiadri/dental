@@ -455,5 +455,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     for (let k = 1; k <= 3; k++) his[k].value = lv(`root-${k}`); // each horn is its own area
     render();
   };
-  return { setTop, frameTop, setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
+  /** The tooth's frame, for anything drawn around it: lib units (mm), CEJ at 0, +y to the bite, +z to the lip, `mesial` = ±1 along x. */
+  const info = () => ({ mid: (ymin + ymax) / 2, ymin, ymax, bounds, mesial });
+  return { info, setTop, frameTop, setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
 }

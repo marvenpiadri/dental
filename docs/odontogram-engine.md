@@ -55,3 +55,7 @@ Licence notice: `src/app/denteus/odontogram/engine/vendor/LICENSE.odontogram`. T
 - **Undo/redo:** every chart change goes through `commit()` in `dental-chart.component.ts` (50 steps; Ctrl+Z / Ctrl+Y). `editChart` never mutates its input (tested).
 - **Not yet in 3D:** interproximal contacts, mobility, apicoectomy, extraction wound, parapulpal pin, root concavity, gum thickness/recession class, CEJ visibility. Primary teeth reuse permanent meshes. No gum or bone is drawn around implants.
 - **Open clinical questions for a dentist:** which materials are valid for which restoration types in each market; whether "no tooth status" and "missing after extraction" should differ visually (a gap now shows solid grey, a socket after extraction a faint outline).
+
+## 3D periodontal view
+
+`perio-viz.ts` reads the chart (six sites, CAL = PD + recession, plaque, gingival index, furcation, mobility) and nothing else; `perio-3d.component.ts` only draws that. Gum is a procedural mesh around each tooth neck in the tooth's own frame (`makeToothScene().info()`), never tooth colouring. Layers: probing depth, recession, bleeding/pus, plaque, furcation, mobility, attachment level. The bone layer is the attachment level (PD + recession) as a proxy: radiographic bone is not recorded, and unprobed teeth get no bone line. One `perioSel` signal in the chart links the 3D sites and the six-site sheet; edits leave as the same `ToothEdit` the sheet emits. Not yet: gum around implants, true bone loss from radiographs.
