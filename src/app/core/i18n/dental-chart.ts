@@ -100,6 +100,8 @@ const D = {
   'dc.braces.lower': ['Braces on lower arch', 'Bagues arcade inférieure'],
   'dc.braces.both': ['Braces on both arches', 'Bagues sur les deux arcades'],
   'dc.braces.none': ['Remove all braces', 'Retirer toutes les bagues'],
+  'dc.undo': ['Undo (Ctrl+Z)', 'Annuler (Ctrl+Z)'],
+  'dc.redo': ['Redo (Ctrl+Y)', 'Rétablir (Ctrl+Y)'],
   'dc.edit': ['Edit', 'Modifier'],
   'dc.more': ['Export & import', 'Export et import'],
   'dc.tab.findings': ['Diagnoses', 'Diagnostics'],

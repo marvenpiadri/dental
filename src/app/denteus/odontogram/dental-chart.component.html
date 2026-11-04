@@ -1,4 +1,4 @@
-<div class="chart-root">
+<div class="chart-root" (document:keydown)="onKey($event)">
   @if (locked()) {
     <p class="banner danger" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ t('dc.locked') }}</p>
   }
@@ -30,6 +30,8 @@
         @for (s of numberings; track s) { <option [value]="s" [selected]="s === numbering()">{{ t(numLabel(s)) }}</option> }
       </select>
       @if (!readonlyView()) {
+        <button type="button" class="btn" [disabled]="!canUndo()" [attr.aria-label]="t('dc.undo')" [title]="t('dc.undo')" (click)="undo()"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
+        <button type="button" class="btn" [disabled]="!canRedo()" [attr.aria-label]="t('dc.redo')" [title]="t('dc.redo')" (click)="redo()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(upper)">{{ t('dc.selectUpper') }}</button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="selectArch(lower)">{{ t('dc.selectLower') }}</button>
         <button type="button" class="btn" [disabled]="readOnly()" (click)="edentulous()">{{ t('dc.edentulous') }}</button>

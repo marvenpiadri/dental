@@ -109,9 +109,7 @@ export class DentalChartComponent {
   }
   protected setGlobal(key: 'wisdomVisible' | 'showHealthyPulp' | 'showBase', on: boolean): void {
     if (this.readOnly()) return;
-    const next = { ...this.chart(), globals: { ...this.chart().globals, [key]: on } };
-    this.chart.set(next);
-    this.save.emit(writeChart(next));
+    this.commit({ ...this.chart(), globals: { ...this.chart().globals, [key]: on } });
   }
   protected readonly planned = computed(() => plannedTeeth(this.chart()));
   protected readonly firstSelected = computed(() => this.selected()[0] ?? null);
@@ -241,6 +239,33 @@ export class DentalChartComponent {
   }
   protected selectArch(teeth: readonly number[]): void { this.selected.set(teeth); }
 
+  /** Every change to the working chart goes through here so it can be undone (Ctrl+Z) and redone (Ctrl+Y). */
+  private readonly undoStack = signal<Chart[]>([]);
+  private readonly redoStack = signal<Chart[]>([]);
+  protected readonly canUndo = computed(() => this.undoStack().length > 0 && !this.readOnly());
+  protected readonly canRedo = computed(() => this.redoStack().length > 0 && !this.readOnly());
+  private commit(next: Chart): void {
+    this.undoStack.update((u) => [...u.slice(-49), this.chart()]);
+    this.redoStack.set([]);
+    this.chart.set(next); this.save.emit(writeChart(next));
+  }
+  protected undo(): void {
+    const u = this.undoStack(); if (!u.length || this.readOnly()) return;
+    this.redoStack.update((r) => [...r, this.chart()]); this.undoStack.set(u.slice(0, -1));
+    this.chart.set(u[u.length - 1]); this.save.emit(writeChart(u[u.length - 1]));
+  }
+  protected redo(): void {
+    const r = this.redoStack(); if (!r.length || this.readOnly()) return;
+    this.undoStack.update((u) => [...u, this.chart()]); this.redoStack.set(r.slice(0, -1));
+    this.chart.set(r[r.length - 1]); this.save.emit(writeChart(r[r.length - 1]));
+  }
+  protected onKey(e: KeyboardEvent): void {
+    const el = e.target as HTMLElement | null;
+    if (!(e.ctrlKey || e.metaKey) || /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName ?? '')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redo(); }
+  }
+
   protected apply(edit: ToothEdit, confirmed = false, teeth: readonly number[] = this.selected()): void {
     if (this.readOnly() || !teeth.length) return;
     this.notice.set('');
@@ -248,7 +273,7 @@ export class DentalChartComponent {
     if (out.kind === 'confirm') { this.pending.set({ edit, teeth: [...teeth], diverging: out.teeth }); return; }
     this.pending.set(null);
     if (out.rejected.length) this.notice.set(out.rejected.map((r) => `${r.tooth}: ${r.reason}`).join(' · '));
-    if (out.changed.length) { this.chart.set(out.chart); this.save.emit(writeChart(out.chart)); }
+    if (out.changed.length) this.commit(out.chart);
   }
   /** Full braces mode: bonded brackets, molar bands and one archwire on a whole arch (or both), or all removed. */
   protected braces(which: string): void {
@@ -260,7 +285,7 @@ export class DentalChartComponent {
     const out = setEdentulous(this.chart(), this.mode(), { confirmed });
     if (out.kind === 'confirm') { this.pending.set({ edit: 'edentulous', teeth: [...ALL_TEETH], diverging: out.teeth }); return; }
     this.pending.set(null);
-    if (out.changed.length) { this.chart.set(out.chart); this.save.emit(writeChart(out.chart)); }
+    if (out.changed.length) this.commit(out.chart);
   }
   protected confirmPending(): void {
     const p = this.pending();
@@ -270,9 +295,7 @@ export class DentalChartComponent {
 
   protected patchMeta(p: Partial<CaseMeta>): void {
     if (this.readOnly()) return;
-    const next = patchCaseMeta(this.chart(), p);
-    this.chart.set(next);
-    this.save.emit(writeChart(next));
+    this.commit(patchCaseMeta(this.chart(), p));
   }
   protected readonly incoming = signal<{ chart: Chart; issues: number } | null>(null);
   protected download(kind: 'json' | 'fhir'): void {
@@ -316,7 +339,7 @@ export class DentalChartComponent {
   protected applyImport(): void {
     const inc = this.incoming();
     if (!inc) return;
-    this.chart.set(inc.chart); this.save.emit(writeChart(inc.chart)); this.incoming.set(null); this.selected.set([]);
+    this.commit(inc.chart); this.incoming.set(null); this.selected.set([]);
   }
   protected setDx(d: { tooth: number; key: string }, mode: 'add' | 'suppress' | null): void { this.apply({ kind: 'dxOverride', key: d.key, mode }, false, [d.tooth]); }
   protected isConfirmed(d: SuggestedDiagnosis): boolean {

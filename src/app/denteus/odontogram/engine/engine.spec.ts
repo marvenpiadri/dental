@@ -278,3 +278,14 @@ describe('plaque and gingival indices', () => {
     expect(indexSummary(back.chart!)).toEqual(indexSummary(c));
   });
 });
+
+describe('undo relies on edits never mutating the chart they start from', () => {
+  it('leaves the previous chart untouched and keeps unrelated findings', () => {
+    const a = applied(editChart(newChart(), 'status', [16], { kind: 'caries', surface: 'occlusal', on: true }));
+    const before = JSON.stringify(writeChart(a));
+    const b = applied(editChart(a, 'status', [16], { kind: 'restoration', value: 'crown|emax' }));
+    expect(JSON.stringify(writeChart(a))).toBe(before);
+    expect(b.status.get(16)?.caries.has('caries-occlusal')).toBe(true);
+    expect(String(b.status.get(16)?.restorationType)).toBe('crown');
+  });
+});
