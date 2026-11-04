@@ -60,14 +60,15 @@ void main(){
     if (uSeal > 0.5) { col = mix(col, vec3(0.75, 0.85, 0.95), 0.5 * w[4]); }
     for (int i = 0; i < 5; i++) {
       float c = uCode[i];
-      if (c == 1.0) { float cw = smoothstep(0.1, 0.7, w[i]), sv = uSev[i] / 6.0; float a = (0.55 + 0.4 * sv - 0.15 * hash(p.xz * 6.0)) * cw; col = mix(col, vec3(0.55, 0.05, 0.1), a);
-        float dark = clamp(spotsT(p, 0.16 * (1.0 - sv)) * (0.7 + 0.3 * sv) + smoothstep(0.6, 0.72, vn(p * 3.1 + 7.0)) * sv * 1.3, 0.0, 1.0);   // black spots, deep pits on severe decay
-        col = mix(col, vec3(0.025, 0.012, 0.01), dark * smoothstep(0.1, 0.6, w[i])); spec = mix(spec, 0.05, a); }
+      if (c == 1.0) { float cw = smoothstep(0.1, 0.7, w[i]), sv = uSev[i] / 6.0; float a = (0.3 + 0.3 * sv) * cw; col = mix(col, vec3(0.55, 0.05, 0.1), a);
+        float n = vn(p * 1.7) * 0.6 + vn(p * 4.3) * 0.4;   // soft black taint, deeper with severity; never opaque so the area borders stay readable
+        float taint = smoothstep(0.3, 0.75, n) * (0.3 + 0.4 * sv) + smoothstep(0.68, 0.8, n) * 0.25 * sv;
+        col = mix(col, vec3(0.06, 0.03, 0.025), clamp(taint, 0.0, 0.7) * cw); spec = mix(spec, 0.05, a); }
       else if (c > 1.0) {
         float a = smoothstep(0.42, 0.58, w[i]);
         vec3 fc = c == 2.0 ? vec3(0.42, 0.47, 0.56) : c == 3.0 ? vec3(0.16, 0.72, 0.85) : c == 4.0 ? vec3(0.62, 0.84, 0.25) : vec3(0.96, 0.5, 0.68);
         col = mix(col, fc, a);
-        if (uDef[i] > 0.5) { float ring = smoothstep(0.15, 0.42, w[i]) * (1.0 - smoothstep(0.42, 0.62, w[i])); col = mix(col, vec3(0.04, 0.02, 0.012), clamp(ring * 1.5 + spots(p * 1.5) * 0.7 * a, 0.0, 0.95)); } // decay creeping under a failing filling
+        if (uDef[i] > 0.5) { float ring = smoothstep(0.15, 0.42, w[i]) * (1.0 - smoothstep(0.42, 0.62, w[i])); col = mix(col, vec3(0.04, 0.02, 0.012), clamp(ring * 0.9 + spots(p * 1.5) * 0.3 * a, 0.0, 0.7)); } // decay creeping under a failing filling
         spec = mix(spec, c == 2.0 ? 1.0 : c == 3.0 ? 0.1 : 0.8, a); shin = mix(shin, c == 2.0 ? 90.0 : 12.0, a);
       }
     }
