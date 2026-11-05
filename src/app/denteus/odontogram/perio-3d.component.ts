@@ -139,12 +139,7 @@ export class Perio3dComponent implements OnDestroy {
       const gm = (phi: number) => levelAt(v, phi, (s) => s.gm), cal = (phi: number) => levelAt(v, phi, (s) => s.cal);
       const papilla = (phi: number) => 1.8 * (Math.exp(-(((((phi + 180) % 360) - 180) / 30) ** 2)) + Math.exp(-((((phi % 360) - 180) / 30) ** 2)));
       const margin = (phi: number) => -gm(phi) + papilla(phi);
-      const grade = (phi: number) => (v.gingival.get(surfaceAt(phi)) ?? 0) / 3;
-      const pink = [0.96, 0.6, 0.6], red = [0.74, 0.22, 0.26], fade = [0.96, 0.96, 0.9, 0.55, 0]; // alpha fades toward the apex so the gum melts into the root
       const around = Array.from({ length: 60 }, (_, i) => i * 6);
-      const gum = new T.Mesh(surf(e, around, [(p) => ({ k: 1.0, y: margin(p) }), (p) => ({ k: 1.05, y: margin(p) - 0.6 }), (p) => ({ k: 1.1, y: margin(p) - 2.2 }), (p) => ({ k: 1.12, y: margin(p) - 5 }), (p) => ({ k: 1.1, y: margin(p) - 9 })], (p, ri) => [...pink.map((x, i) => x + (red[i] - x) * grade(p) * (ri < 2 ? 1 : 0.7)), fade[ri] * (on.has('bone') ? 0.45 : 1)], true),
-        new T.MeshPhysicalMaterial({ vertexColors: true, transparent: true, side: T.DoubleSide, depthWrite: false, roughness: 0.45, clearcoat: 0.4, clearcoatRoughness: 0.35, sheen: 0.6, sheenColor: new T.Color(0xffb3b3) }));
-      gum.renderOrder = 1; e.dyn.add(gum);
       for (const s of v.sites) {
         const phi = SITE_ANGLE[s.site], top = -(s.gm ?? 0);
         if (on.has('depth') && s.pd !== null) { const m = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.03, y: top }), () => ({ k: 1.03, y: top - s.pd! })]), mat(TONE[pocketTone(s.pd)], 0.9)); m.renderOrder = 2; e.dyn.add(m); }
@@ -213,12 +208,70 @@ export class Perio3dComponent implements OnDestroy {
     const ro = new ResizeObserver(resize); ro.observe(el);
 
     const frameAll = () => { const w = el.clientWidth || 600, h = el.clientHeight || 300, span = Math.max(...Array.from(entries.values()).map((e) => Math.abs(e.holder.position.x)), 1) * 2 + 3; homeDist = Math.max(14, Math.min(60, (Math.max(span / (w / h), 7) / 2) / Math.tan((camera.fov * Math.PI) / 360))); camera.position.set(0, 0, homeDist); controls.target.set(0, 0, 0); controls.update(); };
+    /** One gum for the whole arch: each tooth's own gum (collar down past the apex) joined to its neighbours by papillae into a single mesh. */
+    let gumMesh: import('three').Mesh | null = null;
+    const buildGum = () => {
+      if (gumMesh) { row.remove(gumMesh); gumMesh.geometry.dispose(); (gumMesh.material as import('three').Material).dispose(); gumMesh = null; }
+      row.updateMatrixWorld(true);
+      type P = { x: number; y: number; z: number };
+      const dir = this.arch() === 'upper' ? 1 : -1, bone = this.layers().has('bone'), tmp = new T.Vector3();
+      const list = Array.from(entries.values()).map((e) => ({ e, v: toothViz(this.chart(), e.no) })).filter((t): t is { e: Entry; v: ToothViz } => !!t.v).sort((a, b) => a.e.holder.position.x - b.e.holder.position.x);
+      if (!list.length) return;
+      const side = (e: Entry, v: ToothViz, lingual: boolean): P[] => {
+        const b = e.s.info().bounds, mes = e.s.info().mesial, rx = ((b[1][0] - b[0][0]) / 2) * 0.78, rz = ((b[1][2] - b[0][2]) / 2) * 0.8, out: P[] = [];
+        for (let d = 0; d <= 180; d += 7.5) {
+          const phi = lingual ? 180 + d : d, a = (phi * Math.PI) / 180;
+          const m = -levelAt(v, phi, (s) => s.gm) + 1.8 * (Math.exp(-(((((phi + 180) % 360) - 180) / 30) ** 2)) + Math.exp(-((((phi % 360) - 180) / 30) ** 2)));
+          tmp.set(Math.cos(a) * rx * 1.1 * mes, m, Math.sin(a) * rz * 1.1); e.frame.localToWorld(tmp); row.worldToLocal(tmp);
+          out.push({ x: tmp.x, y: tmp.y, z: tmp.z });
+        }
+        return out.sort((p, q) => p.x - q.x);
+      };
+      const curves = [false, true].map((l) => list.flatMap(({ e, v }) => side(e, v, l)).sort((p, q) => p.x - q.x));
+      const at = (c: P[], x: number): P => {
+        let i = 0; while (i < c.length - 2 && c[i + 1].x < x) i++;
+        const p = c[i], q = c[i + 1], f = q.x === p.x ? 0 : Math.min(1, Math.max(0, (x - p.x) / (q.x - p.x)));
+        return { x, y: p.y + (q.y - p.y) * f, z: p.z + (q.z - p.z) * f };
+      };
+      const x0 = curves[0][0].x, x1 = curves[0][curves[0].length - 1].x, C = Math.max(40, list.length * 16);
+      const tooth = (x: number) => list.reduce((best, t) => (Math.abs(t.e.holder.position.x - x) < Math.abs(best.e.holder.position.x - x) ? t : best)).e;
+      const reach = (x: number) => { // root length under x, blended between neighbouring teeth so the gum has no steps
+        let lo = list[0], hi = list[list.length - 1];
+        for (const t of list) { if (t.e.holder.position.x <= x) lo = t; }
+        for (const t of [...list].reverse()) { if (t.e.holder.position.x >= x) hi = t; }
+        const span = hi.e.holder.position.x - lo.e.holder.position.x, f = span > 0 ? (x - lo.e.holder.position.x) / span : 0;
+        return lo.e.rootLen + (hi.e.rootLen - lo.e.rootLen) * f + 1.4;
+      };
+      const frac = [0, 0.02, 0.1, 0.35, 0.7, 0.92, 1], bulge = [1, 1.02, 1.08, 1.16, 1.12, 0.85, 0.35];
+      const R = frac.length, pos: number[] = [], col: number[] = [], idx: number[] = [], pink = [0.96, 0.6, 0.6], red = [0.74, 0.22, 0.26], deep = [0.82, 0.38, 0.42];
+      const grade = (e: Entry, lingual: boolean) => { const v = list.find((t) => t.e === e)!.v; return (v.gingival.get(surfaceAt(lingual ? 270 : 90)) ?? 0) / 3; };
+      for (let c = 0; c < C; c++) {
+        const x = x0 + ((x1 - x0) * c) / (C - 1), L = reach(x), owner = tooth(x);
+        for (const lingual of [false, true]) {
+          const m = at(curves[lingual ? 1 : 0], x), g = grade(owner, lingual);
+          const zMin = lingual ? -0.5 : 0.5, z0 = lingual ? Math.min(m.z, zMin) : Math.max(m.z, zMin); // papillae keep some thickness between teeth
+          for (let r = 0; r < R; r++) {
+            const ri = lingual ? R - 1 - r : r, f = frac[ri];
+            pos.push(x, m.y + dir * f * L, z0 * bulge[ri]);
+            const mix = ri < 2 ? 1 : 0.7, base = pink.map((q, k) => q + (red[k] - q) * g * mix), tone = base.map((q, k) => q + (deep[k] - q) * Math.min(1, f * 1.4));
+            col.push(...tone, (ri < 5 ? 0.9 : 0.7) * (bone ? 0.45 : 1));
+          }
+        }
+      }
+      const W = 2 * R;
+      for (let c = 0; c < C - 1; c++) for (let r = 0; r < W - 1; r++) { const a = c * W + r, b = (c + 1) * W + r; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+      for (const c of [0, C - 1]) { const mid = pos.length / 3; pos.push(pos[c * W * 3], pos[c * W * 3 + 1] + dir * 0.5 * reach(c ? x1 : x0), 0); col.push(...deep, 0.7 * (bone ? 0.45 : 1)); for (let r = 0; r < W - 1; r++) idx.push(c * W + r, c * W + r + 1, mid); }
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new T.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
+      gumMesh = new T.Mesh(g, new T.MeshPhysicalMaterial({ vertexColors: true, transparent: true, side: T.DoubleSide, depthWrite: false, roughness: 0.45, clearcoat: 0.4, clearcoatRoughness: 0.35, sheen: 0.6, sheenColor: new T.Color(0xffb3b3) }));
+      gumMesh.renderOrder = 1; row.add(gumMesh);
+    };
     const redraw = () => {
       const key = this.arch();
       if (key !== shownArch) { for (const e of entries.values()) row.remove(e.holder); entries.clear(); shownArch = key; delete el.dataset['framed']; }
       layout(); hits.length = 0;
       row.rotation.y = this.side() === 'lingual' ? Math.PI : 0;
       for (const e of entries.values()) { const v = toothViz(this.chart(), e.no); if (v) draw(e, v, this.layers(), this.selected()); }
+      buildGum();
       labels.replaceChildren(...Array.from(entries.keys()).map((no) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pv-no'; b.textContent = String(no); b.dataset['no'] = String(no); b.onclick = () => this.focusTooth(no); return b; }));
       const names = this.side() === 'buccal' ? BUCCAL : LINGUAL;
       dataRows.replaceChildren(...Array.from(entries.keys()).flatMap((no) => { const v = toothViz(this.chart(), no); return names.map((site) => {
