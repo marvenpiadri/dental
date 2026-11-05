@@ -88,24 +88,25 @@ export class Perio3dComponent implements OnDestroy {
     el.appendChild(renderer.domElement);
     const scene = new T.Scene(), camera = new T.PerspectiveCamera(30, 2, 0.1, 200);
     const sun = new T.DirectionalLight(0xffffff, 1.3); sun.position.set(3, 6, 10);
-    scene.add(new T.AmbientLight(0xffffff, 0.95), sun);
+    const rim = new T.DirectionalLight(0xffffff, 0.5); rim.position.set(-6, -2, 6);
+    scene.add(new T.HemisphereLight(0xffffff, 0xb9a89e, 0.9), sun, rim);
     const row = new T.Group(); scene.add(row);
     const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = false;
     const render = () => renderer.render(scene, camera);
     controls.addEventListener('change', render);
-    type Entry = { s: ReturnType<typeof makeToothScene>; holder: import('three').Group; frame: import('three').Group; dyn: import('three').Group; no: number; width: number };
+    type Entry = { s: ReturnType<typeof makeToothScene>; holder: import('three').Group; frame: import('three').Group; dyn: import('three').Group; no: number; width: number; neck: number; rootLen: number; crownLen: number };
     const entries = new Map<number, Entry>();
     const hits: import('three').Mesh[] = [];
     let shownArch = '', homeDist = 22;
 
     /** A surface hanging off the tooth neck: columns at the angles `cols`, one row of {radius factor, y} per ring. */
-    const surf = (e: Entry, cols: number[], rows: ((phi: number) => { k: number; y: number })[], rgb?: (phi: number) => [number, number, number], wrap = false): Geo => {
+    const surf = (e: Entry, cols: number[], rows: ((phi: number) => { k: number; y: number })[], rgba?: (phi: number, row: number) => number[], wrap = false): Geo => {
       const b = e.s.info().bounds, mes = e.s.info().mesial, rx = ((b[1][0] - b[0][0]) / 2) * 0.78, rz = ((b[1][2] - b[0][2]) / 2) * 0.8;
       const pos: number[] = [], col: number[] = [], idx: number[] = [];
-      for (const phi of cols) for (const r of rows) { const { k, y } = r(phi), a = (phi * Math.PI) / 180; pos.push(Math.cos(a) * rx * k * mes, y, Math.sin(a) * rz * k); if (rgb) col.push(...rgb(phi)); }
+      for (const phi of cols) rows.forEach((r, ri) => { const { k, y } = r(phi), a = (phi * Math.PI) / 180; pos.push(Math.cos(a) * rx * k * mes, y, Math.sin(a) * rz * k); if (rgba) col.push(...rgba(phi, ri)); });
       const R = rows.length, C = cols.length;
       for (let c = 0; c < (wrap ? C : C - 1); c++) for (let r = 0; r < R - 1; r++) { const a = c * R + r, b2 = ((c + 1) % C) * R + r; idx.push(a, b2, a + 1, b2, b2 + 1, a + 1); }
-      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); if (rgb) g.setAttribute('color', new T.Float32BufferAttribute(col, 3));
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); if (rgba) g.setAttribute('color', new T.Float32BufferAttribute(col, 4));
       g.setIndex(idx); g.computeVertexNormals(); return g;
     };
     const mat = (color: number, opacity: number, extra: Record<string, unknown> = {}) => new T.MeshStandardMaterial({ color, transparent: true, opacity, side: T.DoubleSide, depthWrite: false, roughness: 0.7, ...extra });
@@ -120,12 +121,13 @@ export class Perio3dComponent implements OnDestroy {
       e.dyn.traverse((o) => { const m = o as import('three').Mesh; m.geometry?.dispose(); (m.material as import('three').Material | undefined)?.dispose?.(); });
       e.dyn.clear();
       const gm = (phi: number) => levelAt(v, phi, (s) => s.gm), cal = (phi: number) => levelAt(v, phi, (s) => s.cal);
-      const papilla = (phi: number) => 1.5 * (Math.exp(-(((((phi + 180) % 360) - 180) / 24) ** 2)) + Math.exp(-((((phi % 360) - 180) / 24) ** 2)));
+      const papilla = (phi: number) => 1.8 * (Math.exp(-(((((phi + 180) % 360) - 180) / 30) ** 2)) + Math.exp(-((((phi % 360) - 180) / 30) ** 2)));
       const margin = (phi: number) => -gm(phi) + papilla(phi);
       const grade = (phi: number) => (v.gingival.get(surfaceAt(phi)) ?? 0) / 3;
-      const pink: [number, number, number] = [0.95, 0.56, 0.56], red: [number, number, number] = [0.72, 0.25, 0.28];
-      const around = Array.from({ length: 48 }, (_, i) => i * 7.5);
-      const gum = new T.Mesh(surf(e, around, [(p) => ({ k: 1.02, y: margin(p) }), (p) => ({ k: 1.08, y: margin(p) - 0.8 }), (p) => ({ k: 1.18, y: margin(p) - 3 }), (p) => ({ k: 1.12, y: margin(p) - 7 })], (p) => pink.map((x, i) => x + (red[i] - x) * grade(p)) as [number, number, number], true), mat(0xffffff, on.has('bone') ? 0.25 : 0.62, { vertexColors: true }));
+      const pink = [0.96, 0.6, 0.6], red = [0.74, 0.22, 0.26], fade = [0.96, 0.96, 0.9, 0.55, 0]; // alpha fades toward the apex so the gum melts into the root
+      const around = Array.from({ length: 60 }, (_, i) => i * 6);
+      const gum = new T.Mesh(surf(e, around, [(p) => ({ k: 1.0, y: margin(p) }), (p) => ({ k: 1.05, y: margin(p) - 0.6 }), (p) => ({ k: 1.1, y: margin(p) - 2.2 }), (p) => ({ k: 1.12, y: margin(p) - 5 }), (p) => ({ k: 1.1, y: margin(p) - 9 })], (p, ri) => [...pink.map((x, i) => x + (red[i] - x) * grade(p) * (ri < 2 ? 1 : 0.7)), fade[ri] * (on.has('bone') ? 0.45 : 1)], true),
+        new T.MeshPhysicalMaterial({ vertexColors: true, transparent: true, side: T.DoubleSide, depthWrite: false, roughness: 0.45, clearcoat: 0.4, clearcoatRoughness: 0.35, sheen: 0.6, sheenColor: new T.Color(0xffb3b3) }));
       gum.renderOrder = 1; e.dyn.add(gum);
       for (const s of v.sites) {
         const phi = SITE_ANGLE[s.site], top = -(s.gm ?? 0);
@@ -153,6 +155,7 @@ export class Perio3dComponent implements OnDestroy {
     };
 
     const labels = document.createElement('div'); labels.className = 'pv-labels'; el.appendChild(labels);
+    const dataRows = document.createElement('div'); dataRows.className = 'pv-labels'; el.appendChild(dataRows);
     const layout = () => {
       const list = this.teeth(), want = new Set(list);
       for (const [no, e] of entries) if (!want.has(no)) { row.remove(e.holder); entries.delete(no); } // shortcut: tooth scenes are kept only while their arch shows
@@ -162,17 +165,29 @@ export class Perio3dComponent implements OnDestroy {
         s.apply(this.chart().status.get(no)!, no, false);
         holder.add(s.group); s.group.add(frame); frame.add(dyn); frame.position.y = -s.info().mid;
         const b = s.info().bounds; row.add(holder);
-        entries.set(no, { s, holder, frame, dyn, no, width: (b[1][0] - b[0][0]) * s.group.scale.x });
+        row.updateMatrixWorld(true); const nv = new T.Vector3(); frame.getWorldPosition(nv); // line every neck up on y = 0 so the gingival line is level across the arch
+        const sc = s.group.scale.x, inf = s.info();
+        entries.set(no, { s, holder, frame, dyn, no, width: (b[1][0] - b[0][0]) * sc, neck: -nv.y, rootLen: -inf.ymin * sc, crownLen: inf.ymax * sc });
       }
       let x = 0; const gap = 0.12;
-      for (const no of list) { const e = entries.get(no)!; e.holder.position.set(x + e.width / 2, 0, 0); x += e.width + gap; }
+      for (const no of list) { const e = entries.get(no)!; e.holder.position.set(x + e.width / 2, e.neck, 0); x += e.width + gap; }
       for (const e of entries.values()) e.holder.position.x -= (x - gap) / 2;
     };
+    const roots = () => Math.max(...Array.from(entries.values()).map((e) => e.rootLen), 3), crowns = () => Math.max(...Array.from(entries.values()).map((e) => e.crownLen), 1.5);
+    const numY = () => (this.arch() === 'upper' ? roots() + 0.5 : -(roots() + 0.5));
+    const dataY = () => (this.arch() === 'upper' ? -(crowns() + 0.9) : crowns() + 0.9);
+    const sitePt = (e: Entry, site: PerioSiteId, out: import('three').Vector3) => { const b = e.s.info().bounds, mes = e.s.info().mesial, a = (SITE_ANGLE[site] * Math.PI) / 180; out.set(Math.cos(a) * ((b[1][0] - b[0][0]) / 2) * 0.78 * 1.1 * mes, 0, Math.sin(a) * ((b[1][2] - b[0][2]) / 2) * 0.8 * 1.1); return e.frame.localToWorld(out); };
     const place = () => {
       const w = el.clientWidth, h = el.clientHeight, v = new T.Vector3();
+      for (const b of Array.from(dataRows.children) as HTMLElement[]) {
+        const e = entries.get(Number(b.dataset['no'])); if (!e) continue;
+        sitePt(e, b.dataset['site'] as PerioSiteId, v); v.y = dataY(); v.project(camera);
+        b.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -50%)`;
+        const sel = this.selected(); b.classList.toggle('on', sel?.tooth === e.no && sel.site === b.dataset['site']);
+      }
       for (const b of Array.from(labels.children) as HTMLElement[]) {
         const e = entries.get(Number(b.dataset['no'])); if (!e) continue;
-        e.holder.getWorldPosition(v); v.y = this.arch() === 'upper' ? 2.45 : -2.45; v.project(camera);
+        e.holder.getWorldPosition(v); v.y = numY(); v.project(camera);
         b.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -50%)`;
         b.classList.toggle('on', this.selected()?.tooth === e.no);
       }
@@ -189,6 +204,14 @@ export class Perio3dComponent implements OnDestroy {
       row.rotation.y = this.side() === 'lingual' ? Math.PI : 0;
       for (const e of entries.values()) { const v = toothViz(this.chart(), e.no); if (v) draw(e, v, this.layers(), this.selected()); }
       labels.replaceChildren(...Array.from(entries.keys()).map((no) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pv-no'; b.textContent = String(no); b.dataset['no'] = String(no); b.onclick = () => this.focusTooth(no); return b; }));
+      const names = this.side() === 'buccal' ? BUCCAL : LINGUAL;
+      dataRows.replaceChildren(...Array.from(entries.keys()).flatMap((no) => { const v = toothViz(this.chart(), no); return names.map((site) => {
+        const x = v?.sites.find((q) => q.site === site), b = document.createElement('button'); b.type = 'button'; b.className = 'pv-d'; b.dataset['no'] = String(no); b.dataset['site'] = site; b.onclick = () => this.pick(no, site);
+        b.setAttribute('aria-label', `${no} ${site}`);
+        const n = document.createElement('b'); n.className = `n ${x?.pd == null ? 'nil' : pocketTone(x.pd)}`; n.textContent = x?.pd == null ? '·' : String(x.pd);
+        const r = document.createElement('small'); r.textContent = x?.gm && x.gm > 0 ? `R${x.gm}` : '';
+        const dots = document.createElement('span'); dots.className = 'dots'; if (x?.bop) dots.append(Object.assign(document.createElement('i'), { className: 'bop' })); if (x?.sup) dots.append(Object.assign(document.createElement('i'), { className: 'sup' }));
+        b.append(n, r, dots); return b; }); }));
       if (!el.dataset['framed']) { el.dataset['framed'] = '1'; frameAll(); }
       render(); place();
     };
@@ -204,6 +227,6 @@ export class Perio3dComponent implements OnDestroy {
     });
     const focus = (tooth: number) => { const e = entries.get(tooth); if (!e) return; const p = new T.Vector3(); e.holder.getWorldPosition(p); controls.target.copy(p); camera.position.set(p.x, p.y, 7.5); controls.update(); };
     const reset = () => { frameAll(); };
-    this.ctx = { redraw, reset, focus, dispose: () => { ro.disconnect(); controls.dispose(); renderer.dispose(); renderer.domElement.remove(); labels.remove(); for (const e of entries.values()) e.s.dispose(); } };
+    this.ctx = { redraw, reset, focus, dispose: () => { dataRows.remove(); ro.disconnect(); controls.dispose(); renderer.dispose(); renderer.domElement.remove(); labels.remove(); for (const e of entries.values()) e.s.dispose(); } };
   }
 }

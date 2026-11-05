@@ -29,6 +29,17 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .host ::ng-deep .pv-no { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; min-width: 26px; font: 600 12px/1 system-ui, sans-serif; padding: 5px 4px; border: 1px solid var(--app-line); background: var(--app-bg); color: var(--app-muted); }
 .host ::ng-deep .pv-no:hover { color: var(--app-text); border-color: var(--app-text); }
 .host ::ng-deep .pv-no.on { background: var(--app-text); border-color: var(--app-text); color: var(--app-bg); }
+.host ::ng-deep .pv-d { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; display: grid; justify-items: center; gap: 1px; min-width: 22px; padding: 2px 3px; border: 1px solid transparent; background: transparent; font: inherit; color: var(--app-text); }
+.host ::ng-deep .pv-d:hover { border-color: var(--app-line); }
+.host ::ng-deep .pv-d.on { border-color: var(--app-text); background: var(--app-subtle); }
+.host ::ng-deep .pv-d .n { font-size: 14px; line-height: 1.1; font-weight: 600; }
+.host ::ng-deep .pv-d .n.nil { color: var(--app-line); }
+.host ::ng-deep .pv-d .n.watch { color: #b86a10; } .host ::ng-deep .pv-d .n.deep { color: #c0392b; font-weight: 800; }
+.host ::ng-deep .pv-d small { font-size: 10px; line-height: 1; min-height: 10px; color: var(--app-muted); }
+.host ::ng-deep .pv-d .dots { display: flex; gap: 2px; min-height: 7px; }
+.host ::ng-deep .pv-d i { width: 7px; height: 7px; border-radius: 50%; } .host ::ng-deep .pv-d i.bop { background: #b3202a; } .host ::ng-deep .pv-d i.sup { background: #e3c21c; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 12px; border-top: 1px solid var(--app-line); font-size: 12px; color: var(--app-muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { width: 12px; height: 12px; display: inline-block; border: 1px solid var(--app-line); }
 .side { display: grid; align-content: start; }
 .sh { display: grid; grid-template-columns: 40px 1fr 40px; align-items: stretch; border-bottom: 1px solid var(--app-line); }
 .sh h3 { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 8px; padding: 10px; font-size: 13px; color: var(--app-muted); font-weight: 600; }
