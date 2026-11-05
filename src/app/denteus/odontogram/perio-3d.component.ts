@@ -142,15 +142,10 @@ export class Perio3dComponent implements OnDestroy {
       const around = Array.from({ length: 60 }, (_, i) => i * 6);
       for (const s of v.sites) {
         const phi = SITE_ANGLE[s.site], top = -(s.gm ?? 0);
-        if (on.has('depth') && s.pd !== null) { const m = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.03, y: top }), () => ({ k: 1.03, y: top - s.pd! })]), mat(TONE[pocketTone(s.pd)], 0.9)); m.renderOrder = 2; e.dyn.add(m); }
-        if (on.has('recession') && (s.gm ?? 0) > 0) { const m = new T.Mesh(surf(e, arc(phi), [() => ({ k: 0.99, y: 0 }), () => ({ k: 0.99, y: top })]), mat(0xd8c48f, 0.85)); m.renderOrder = 2; e.dyn.add(m); }
-        if (on.has('bleeding') && s.bop) e.dyn.add(sphere(e, phi, 1.08, top + 0.1, 0.5, 0xb3202a));
-        if (on.has('bleeding') && s.sup) e.dyn.add(sphere(e, phi + 9, 1.08, top - 1, 0.42, 0xe3c21c));
-        const hit = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.1, y: 2 }), () => ({ k: 1.1, y: top - Math.max(s.pd ?? 0, 3) - 2 })]), new T.MeshBasicMaterial({ transparent: true, opacity: sel && sel.tooth === v.tooth && sel.site === s.site ? 0.5 : 0, color: 0x111111, side: T.DoubleSide, depthWrite: false }));
+        const hit = new T.Mesh(surf(e, arc(phi), [() => ({ k: 1.2, y: 2 }), () => ({ k: 1.2, y: top - Math.max(s.pd ?? 0, 3) - 2 })]), new T.MeshBasicMaterial({ transparent: true, opacity: sel && sel.tooth === v.tooth && sel.site === s.site ? 0.5 : 0, color: 0x111111, side: T.DoubleSide, depthWrite: false }));
         hit.userData = { tooth: v.tooth, site: s.site }; hit.renderOrder = 6; e.dyn.add(hit); hits.push(hit);
       }
       if (on.has('recession')) { const l = new T.LineLoop(new T.BufferGeometry().setFromPoints(around.map((p) => { const a = (p * Math.PI) / 180, b = e.s.info().bounds, mes = e.s.info().mesial; return new T.Vector3(Math.cos(a) * ((b[1][0] - b[0][0]) / 2) * 0.78 * 1.03 * mes, margin(p) + 0.05, Math.sin(a) * ((b[1][2] - b[0][2]) / 2) * 0.8 * 1.03); })), new T.LineBasicMaterial({ color: 0xc0392b })); l.renderOrder = 3; e.dyn.add(l); }
-      if (on.has('plaque')) for (const surface of v.plaque) { const m = sphere(e, SURFACE_ANGLE[surface] ?? 0, 1.06, 1, 0.9, 0xeadf9a); m.scale.set(1.5, 0.55, 0.5); e.dyn.add(m); }
       if (on.has('furcation')) for (const f of v.furcation) e.dyn.add(sphere(e, ENTRANCE_ANGLE[f.entrance] ?? 0, 1.06, -4, 0.45 + 0.22 * f.grade, 0x252b2f, true));
       if (on.has('mobility') && v.mobility) {
         const top = e.s.info().bounds[1][1] + 3, len = 2 + v.mobility * 1.5, dark = new T.MeshBasicMaterial({ color: 0x2b3236 });
@@ -208,61 +203,62 @@ export class Perio3dComponent implements OnDestroy {
     const ro = new ResizeObserver(resize); ro.observe(el);
 
     const frameAll = () => { const w = el.clientWidth || 600, h = el.clientHeight || 300, span = Math.max(...Array.from(entries.values()).map((e) => Math.abs(e.holder.position.x)), 1) * 2 + 3; homeDist = Math.max(14, Math.min(60, (Math.max(span / (w / h), 7) / 2) / Math.tan((camera.fov * Math.PI) / 360))); camera.position.set(0, 0, homeDist); controls.target.set(0, 0, 0); controls.update(); };
-    /** One gum for the whole arch: each tooth's own gum (collar down past the apex) joined to its neighbours by papillae into a single mesh. */
+    /** The periodontal chart as one ribbon around the arch: top edge = gingival margin, bottom edge = pocket base, so its height IS the probing depth. */
     let gumMesh: import('three').Mesh | null = null;
+    const lerpRgb = (p: number[], q: number[], f: number) => p.map((x, i) => x + (q[i] - x) * Math.min(1, Math.max(0, f)));
+    const stops: [number, number[]][] = [[3, [0.3, 0.55, 0.78]], [4, [0.93, 0.6, 0.18]], [5, [0.93, 0.6, 0.18]], [6, [0.8, 0.12, 0.16]]];
+    const pdColor = (pd: number) => { if (pd <= stops[0][0]) return stops[0][1]; for (let i = 1; i < stops.length; i++) if (pd <= stops[i][0]) return lerpRgb(stops[i - 1][1], stops[i][1], (pd - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0])); return stops[3][1]; };
     const buildGum = () => {
       if (gumMesh) { row.remove(gumMesh); gumMesh.geometry.dispose(); (gumMesh.material as import('three').Material).dispose(); gumMesh = null; }
       row.updateMatrixWorld(true);
-      type P = { x: number; y: number; z: number };
-      const dir = this.arch() === 'upper' ? 1 : -1, bone = this.layers().has('bone'), tmp = new T.Vector3();
+      type P = { x: number; y: number; z: number; pd: number; gm: number; cal: number; bop: number; sup: number; pl: number; pr: number };
+      const dir = this.arch() === 'upper' ? 1 : -1, on = this.layers(), bone = on.has('bone'), tmp = new T.Vector3();
       const list = Array.from(entries.values()).map((e) => ({ e, v: toothViz(this.chart(), e.no) })).filter((t): t is { e: Entry; v: ToothViz } => !!t.v).sort((a, b) => a.e.holder.position.x - b.e.holder.position.x);
       if (!list.length) return;
+      const near = (v: ToothViz, phi: number, flag: 'bop' | 'sup') => Math.max(0, ...v.sites.filter((s) => s[flag]).map((s) => { const d = Math.abs(((phi - SITE_ANGLE[s.site] + 540) % 360) - 180); return Math.exp(-((d / 17) ** 2)); }));
       const side = (e: Entry, v: ToothViz, lingual: boolean): P[] => {
         const b = e.s.info().bounds, mes = e.s.info().mesial, rx = ((b[1][0] - b[0][0]) / 2) * 0.78, rz = ((b[1][2] - b[0][2]) / 2) * 0.8, out: P[] = [];
         for (let d = 0; d <= 180; d += 7.5) {
-          const phi = lingual ? 180 + d : d, a = (phi * Math.PI) / 180;
-          const m = -levelAt(v, phi, (s) => s.gm) + 1.8 * (Math.exp(-(((((phi + 180) % 360) - 180) / 30) ** 2)) + Math.exp(-((((phi % 360) - 180) / 30) ** 2)));
-          tmp.set(Math.cos(a) * rx * 1.1 * mes, m, Math.sin(a) * rz * 1.1); e.frame.localToWorld(tmp); row.worldToLocal(tmp);
-          out.push({ x: tmp.x, y: tmp.y, z: tmp.z });
+          const phi = lingual ? 180 + d : d, a = (phi * Math.PI) / 180, gm = levelAt(v, phi, (s) => s.gm);
+          const m = -gm + 1.8 * (Math.exp(-(((((phi + 180) % 360) - 180) / 30) ** 2)) + Math.exp(-((((phi % 360) - 180) / 30) ** 2)));
+          tmp.set(Math.cos(a) * rx * 1.12 * mes, m, Math.sin(a) * rz * 1.45); e.frame.localToWorld(tmp); row.worldToLocal(tmp);
+          out.push({ x: tmp.x, y: tmp.y, z: tmp.z, gm, pd: levelAt(v, phi, (s) => s.pd), cal: levelAt(v, phi, (s) => s.cal), bop: near(v, phi, 'bop'), sup: near(v, phi, 'sup'), pl: v.plaque.has(surfaceAt(phi)) ? 1 : 0, pr: v.probed ? 1 : 0 });
         }
         return out.sort((p, q) => p.x - q.x);
       };
       const curves = [false, true].map((l) => list.flatMap(({ e, v }) => side(e, v, l)).sort((p, q) => p.x - q.x));
       const at = (c: P[], x: number): P => {
         let i = 0; while (i < c.length - 2 && c[i + 1].x < x) i++;
-        const p = c[i], q = c[i + 1], f = q.x === p.x ? 0 : Math.min(1, Math.max(0, (x - p.x) / (q.x - p.x)));
-        return { x, y: p.y + (q.y - p.y) * f, z: p.z + (q.z - p.z) * f };
+        const p = c[i], q = c[i + 1], f = q.x === p.x ? 0 : Math.min(1, Math.max(0, (x - p.x) / (q.x - p.x))), o = { x } as P;
+        for (const k of Object.keys(p) as (keyof P)[]) o[k] = p[k] + (q[k] - p[k]) * f;
+        return o;
       };
       const x0 = curves[0][0].x, x1 = curves[0][curves[0].length - 1].x, C = Math.max(40, list.length * 16);
-      const tooth = (x: number) => list.reduce((best, t) => (Math.abs(t.e.holder.position.x - x) < Math.abs(best.e.holder.position.x - x) ? t : best)).e;
-      const reach = (x: number) => { // root length under x, blended between neighbouring teeth so the gum has no steps
-        let lo = list[0], hi = list[list.length - 1];
-        for (const t of list) { if (t.e.holder.position.x <= x) lo = t; }
-        for (const t of [...list].reverse()) { if (t.e.holder.position.x >= x) hi = t; }
-        const span = hi.e.holder.position.x - lo.e.holder.position.x, f = span > 0 ? (x - lo.e.holder.position.x) / span : 0;
-        return lo.e.rootLen + (hi.e.rootLen - lo.e.rootLen) * f + 1.4;
-      };
-      const frac = [0, 0.02, 0.1, 0.35, 0.7, 0.92, 1], bulge = [1, 1.02, 1.08, 1.16, 1.12, 0.85, 0.35];
-      const R = frac.length, pos: number[] = [], col: number[] = [], idx: number[] = [], pink = [0.96, 0.6, 0.6], red = [0.74, 0.22, 0.26], deep = [0.82, 0.38, 0.42];
-      const grade = (e: Entry, lingual: boolean) => { const v = list.find((t) => t.e === e)!.v; return (v.gingival.get(surfaceAt(lingual ? 270 : 90)) ?? 0) / 3; };
+      const tooth = (x: number) => list.reduce((best, t) => (Math.abs(t.e.holder.position.x - x) < Math.abs(best.e.holder.position.x - x) ? t : best));
+      const frac = [0, 0.25, 0.5, 0.75, 1], R = frac.length, W = 2 * R, pos: number[] = [], col: number[] = [], idx: number[] = [];
+      const base = [0.6, 0.22, 0.26], blood = [0.78, 0.03, 0.06], pus = [0.95, 0.82, 0.1], plaque = [0.93, 0.87, 0.55], tan = [0.86, 0.72, 0.45];
       for (let c = 0; c < C; c++) {
-        const x = x0 + ((x1 - x0) * c) / (C - 1), L = reach(x), owner = tooth(x);
+        const x = x0 + ((x1 - x0) * c) / (C - 1), own = tooth(x);
         for (const lingual of [false, true]) {
-          const m = at(curves[lingual ? 1 : 0], x), g = grade(owner, lingual);
-          const zMin = lingual ? -0.5 : 0.5, z0 = lingual ? Math.min(m.z, zMin) : Math.max(m.z, zMin); // papillae keep some thickness between teeth
+          const m = at(curves[lingual ? 1 : 0], x), grade = (own.v.gingival.get(surfaceAt(lingual ? 270 : 90)) ?? 0) / 3;
+          const z0 = lingual ? Math.min(m.z, -0.8) : Math.max(m.z, 0.8), sc = own.e.s.group.scale.x, h = (m.pr > 0.5 ? Math.max(m.pd, 0.5) : 1) * sc; // an unprobed site keeps a thin neutral band
+          let rgb = lerpRgb(base, [0.75, 0.15, 0.2], grade);
+          if (m.pr > 0.5) {
+            if (bone) { const g = 0.88 - 0.08 * Math.min(m.cal, 8); rgb = [g, g, g]; } // CAL mode: the layer labelled CAL
+            else if (on.has('depth')) rgb = pdColor(m.pd);
+            else if (on.has('recession') && m.gm > 0) rgb = lerpRgb(base, tan, m.gm / 2);
+          }
+          if (on.has('plaque')) rgb = lerpRgb(rgb, plaque, m.pl);
+          if (on.has('bleeding')) rgb = lerpRgb(lerpRgb(rgb, blood, m.bop), pus, m.sup);
           for (let r = 0; r < R; r++) {
-            const ri = lingual ? R - 1 - r : r, f = frac[ri];
-            pos.push(x, m.y + dir * f * L, z0 * bulge[ri]);
-            const mix = ri < 2 ? 1 : 0.7, base = pink.map((q, k) => q + (red[k] - q) * g * mix), tone = base.map((q, k) => q + (deep[k] - q) * Math.min(1, f * 1.4));
-            col.push(...tone, (ri < 5 ? 0.9 : 0.7) * (bone ? 0.45 : 1));
+            const ri = lingual ? R - 1 - r : r; // lingual rows run base -> margin so both sides share the strip index
+            pos.push(x, m.y + dir * frac[ri] * h, z0); col.push(...rgb, 1);
           }
         }
       }
-      const W = 2 * R;
-      for (let c = 0; c < C - 1; c++) for (let r = 0; r < W - 1; r++) { const a = c * W + r, b = (c + 1) * W + r; idx.push(a, b, a + 1, b, b + 1, a + 1); }
-      for (const c of [0, C - 1]) { const mid = pos.length / 3; pos.push(pos[c * W * 3], pos[c * W * 3 + 1] + dir * 0.5 * reach(c ? x1 : x0), 0); col.push(...deep, 0.7 * (bone ? 0.45 : 1)); for (let r = 0; r < W - 1; r++) idx.push(c * W + r, c * W + r + 1, mid); }
+      for (let c = 0; c < C - 1; c++) for (let r = 0; r < W - 1; r++) if (r !== R - 1) { const a = c * W + r, b = (c + 1) * W + r; idx.push(a, b, a + 1, b, b + 1, a + 1); }
       const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new T.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
-      gumMesh = new T.Mesh(g, new T.MeshPhysicalMaterial({ vertexColors: true, transparent: true, side: T.DoubleSide, depthWrite: false, roughness: 0.45, clearcoat: 0.4, clearcoatRoughness: 0.35, sheen: 0.6, sheenColor: new T.Color(0xffb3b3) }));
+      gumMesh = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, side: T.DoubleSide, roughness: 0.55, metalness: 0 }));
       gumMesh.renderOrder = 1; row.add(gumMesh);
     };
     const redraw = () => {
