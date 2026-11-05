@@ -26,7 +26,7 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 12px; border-top: 1px solid var(--app-line); font-size: 12px; color: var(--app-muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { width: 12px; height: 12px; display: inline-block; border: 1px solid var(--app-line); }
-.side { display: grid; align-content: start; }
+.side { display: grid; align-content: start; border-inline-start: 1px solid var(--app-line); }
 .sh { display: grid; grid-template-columns: 40px 1fr 40px; align-items: stretch; border-bottom: 1px solid var(--app-line); }
 .sh h3 { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 8px; padding: 10px; font-size: 13px; color: var(--app-muted); font-weight: 600; }
 .sh h3 b { font-size: 26px; line-height: 1; color: var(--app-text); letter-spacing: -.02em; }
@@ -56,16 +56,17 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
-  .host { border-inline-end: 0; border-bottom: 1px solid var(--app-line); }
+  .host { border-bottom: 1px solid var(--app-line); }
   .arch { min-width: 640px; }
   .grp { flex: 1 1 100%; border-inline-end: 0; border-bottom: 1px solid var(--app-line); }
   .seg button { padding: 10px 12px; }
 }
 /* the chart: both arches, one column per tooth, same tiles as the odontogram */
-.host { overflow-x: auto; border-inline-end: 1px solid var(--app-line); padding: 8px 6px; display: grid; gap: 14px; align-content: start; }
+.host { overflow-x: auto; padding: 0; display: grid; gap: 14px; align-content: start; }
 .arch { display: grid; grid-template-columns: repeat(16, minmax(36px, 1fr)); align-items: stretch; }
 .tc { display: flex; flex-direction: column-reverse; align-items: stretch; min-width: 0; border-inline-end: 1px solid var(--app-line); }
 .arch.low .tc { flex-direction: column; }
+.tc:last-child { border-inline-end-color: transparent; }
 .tc.mid { box-shadow: inset 1px 0 0 var(--app-text); }
 .tc.gone den-tooth-tile { opacity: .45; }
 .tc.sel { background: var(--app-subtle); }
