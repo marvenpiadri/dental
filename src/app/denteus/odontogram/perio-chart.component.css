@@ -69,10 +69,8 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .tc.mid { box-shadow: inset 1px 0 0 var(--app-text); }
 .tc.gone den-tooth-tile { opacity: .45; }
 .tc.sel { background: var(--app-subtle); }
-.strip { display: block; width: 100%; height: 64px; border-block: 1px solid var(--app-line); }
-.strip.off { visibility: hidden; }
-.band { fill-opacity: .4; stroke: none; } .band.shallow, .band.nil { fill: #7a96ab; } .band.watch { fill: #df8a2f; } .band.deep { fill: #c0392b; }
-.margin { fill: none; stroke: #b3202a; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.band { fill-opacity: .55; stroke: none; } .band.shallow, .band.nil { fill: #7a96ab; } .band.watch { fill: #df8a2f; } .band.deep { fill: #c0392b; }
+.margin { fill: none; stroke: #b3202a; stroke-width: 2; vector-effect: non-scaling-stroke; }
 .nums { display: grid; grid-template-columns: repeat(3, 1fr); }
 .pc { all: unset; cursor: pointer; display: grid; justify-items: center; padding: 2px 0; box-sizing: border-box; border: 1px solid transparent; }
 .pc:hover:not(:disabled) { border-color: var(--app-line); } .pc:disabled { cursor: default; } .pc.on { border-color: var(--app-text); background: var(--app-bg); }
@@ -83,3 +81,7 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .dots i.on.pl { background: #8fb4e8; border-color: #8fb4e8; } .dots i.on.bl { background: #b3202a; border-color: #b3202a; } .dots i.on.pu { background: #e3c21c; border-color: #e3c21c; }
 .tags { display: flex; justify-content: center; gap: 3px; min-height: 16px; } .tags span { font-size: 10px; font-weight: 700; padding: 0 3px; border: 1px solid var(--app-text); }
 .no { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); padding: 4px 0; } .no.on { color: var(--app-bg); background: var(--app-text); }
+.stack { position: relative; }
+.over { position: absolute; top: 4px; left: 0; right: 0; margin-inline: auto; width: calc(100% - 4px); max-width: 64px; aspect-ratio: 180 / 330; pointer-events: none; overflow: visible; }
+.over.off { visibility: hidden; }
+.top { --crown-top: 40px; margin-block: 2px; }

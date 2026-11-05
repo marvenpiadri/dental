@@ -26,10 +26,13 @@
           @for (c of arch.cols; track c.no) {
             @if (hidden()(c.no)) { <span aria-hidden="true"></span> } @else {
               <div class="tc" [attr.data-no]="c.no" [class.mid]="c.no === 21 || c.no === 31" [class.sel]="selected()?.tooth === c.no" [class.gone]="!c.v">
-                <den-tooth-tile [no]="c.no" [display]="numbering()(c.no)" [state]="chart().status.get(c.no)!" [hideNumber]="true" [selected]="selected()?.tooth === c.no" [label]="numbering()(c.no)" [showBase]="showBase()" [showHealthyPulp]="false" (pick)="pickTooth(c.no)" />
-                <svg class="strip" [class.off]="!layers().has('depth')" viewBox="0 0 3 64" preserveAspectRatio="none" aria-hidden="true">
-                  @if (c.poly) { <polygon [attr.points]="c.poly" [attr.class]="'band ' + c.tone" /><polyline [attr.points]="c.margin" class="margin" /> }
-                </svg>
+                @if (store.view3d()) { <den-crown-top class="top" [no]="c.no" [state]="chart().status.get(c.no)!" [readonly]="true" /> }
+                <div class="stack">
+                  <den-tooth-tile [no]="c.no" [display]="numbering()(c.no)" [state]="chart().status.get(c.no)!" [hideNumber]="true" [selected]="selected()?.tooth === c.no" [label]="numbering()(c.no)" [showBase]="showBase()" [showHealthyPulp]="false" (pick)="pickTooth(c.no)" />
+                  <svg class="over" [class.off]="!layers().has('depth')" viewBox="0 0 3 100" preserveAspectRatio="none" aria-hidden="true">
+                    @if (c.poly) { <polygon [attr.points]="c.poly" [attr.class]="'band ' + c.tone" /><polyline [attr.points]="c.margin" class="margin" /> }
+                  </svg>
+                </div>
                 <div class="nums">
                   @for (x of c.cells; track x.site) {
                     <button type="button" class="pc" [class.on]="selected()?.tooth === c.no && selected()?.site === x.site" [disabled]="!c.v" [attr.aria-label]="c.no + ' ' + x.site + ' ' + (x.s?.pd ?? '')" (click)="pick(c.no, x.site)">

@@ -1,4 +1,4 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import type { ToothRecord } from './engine/chart';
 import { loadLib, makeToothScene, type Three } from './tooth-scene';
@@ -9,6 +9,8 @@ export class ToothSnap {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly cache = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
+  /** Where the neck (CEJ) sits in each front picture, as a fraction of its height, and how much of that height one mm covers: lets charts draw on the real tooth. */
+  readonly cej = signal<Record<number, { frac: number; per: number }>>({});
   private ctx: Promise<{ T: Three; scene: ReturnType<typeof makeToothScene>; canvas: HTMLCanvasElement }> | null = null;
 
   private start() {
@@ -54,6 +56,11 @@ export class ToothSnap {
       const { scene, canvas } = await this.start();
       this.show(scene, canvas, no, state, pulp, top);
       scene.setHighlight(null, marked);
+      if (!top) { // the scene centres each tooth and scales it to 4 units; the camera sees ~6.05 units across the picture height
+        const i = scene.info(), sc = 4 / (i.ymax - i.ymin), mid = (i.ymin + i.ymax) / 2, per = sc / 6.054, frac = 0.5 + (no < 30 ? -1 : 1) * mid * per;
+        const old = this.cej()[no];
+        if (!old || Math.abs(old.frac - frac) > 1e-3) this.cej.update((m) => ({ ...m, [no]: { frac, per } }));
+      }
       const url = canvas.toDataURL('image/png');
       this.cache.set(key, url);
       return url;
