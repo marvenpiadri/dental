@@ -15,7 +15,7 @@ import { PerioGraphComponent } from './perio-graph.component';
 import { PerioSummaryComponent } from './perio-summary.component';
 import { PerioSheetComponent } from './perio-sheet.component';
 import { PerioEditorComponent } from './perio-editor.component';
-import { Perio3dComponent, type PerioSel } from './perio-3d.component';
+import { PeriodontogramComponent, type PerioSel } from './perio-chart.component';
 import { ProcedurePanelComponent } from './procedure-panel.component';
 import { ToothEditorComponent } from './tooth-editor.component';
 import { ToothFilesComponent } from './tooth-files.component';
@@ -40,7 +40,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
  */
 @Component({
   selector: 'den-dental-chart',
-  imports: [Perio3dComponent, ProcedurePanelComponent, PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
+  imports: [PeriodontogramComponent, ProcedurePanelComponent, PerioGraphComponent, ToothFilesComponent, ToothTileComponent, CrownTopComponent, Tooth3dComponent, ToothEditorComponent, PerioEditorComponent, PerioSummaryComponent, PerioSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dental-chart.component.html',
   styleUrl: './dental-chart.component.css',
@@ -118,6 +118,8 @@ export class DentalChartComponent {
   /** Display only, per browser: not part of the chart. */
   protected readonly occlusalView = signal(false);
 
+  protected readonly hiddenFn = (n: number) => this.hiddenTooth(n);
+  protected readonly numFn = (n: number) => this.num(n);
   protected hiddenTooth(n: number): boolean {
     const c = this.chart();
     return !c.globals.wisdomVisible && WISDOM_TEETH.includes(n) && isBlankTooth(c, n);

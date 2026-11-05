@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, injec
 import { I18n } from '../../core/i18n/i18n.service';
 import { ALL_TEETH, isBlankTooth, type Chart } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
-import type { PerioSel } from './perio-3d.component';
+import type { PerioSel } from './perio-chart.component';
 
 const BUCCAL = ['MB', 'B', 'DB'] as const;
 const LINGUAL = ['ML', 'L', 'DL'] as const;

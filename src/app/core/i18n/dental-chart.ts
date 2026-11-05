@@ -115,7 +115,7 @@ const D = {
   'dc.ot.history': ['History', 'Historique'],
   'dc.viewOpts': ['View', 'Affichage'],
   'dc.legend': ['Colour key', 'Légende'],
-  'dc.pv.title': ['3D periodontal view', 'Vue parodontale 3D'],
+  'dc.pv.title': ['Periodontogram', 'Parodontogramme'],
   'dc.pv.arch': ['Arch', 'Arcade'],
   'dc.pv.upper': ['Upper', 'Haut'],
   'dc.pv.lower': ['Lower', 'Bas'],

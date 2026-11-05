@@ -209,7 +209,7 @@
     @case ('perio') {
       <den-perio-graph [chart]="shown()" />
       <den-perio-summary [chart]="shown()" [disabled]="readOnly()" (patch)="patchMeta($event)" />
-      <den-perio-3d [examinations]="examinations()" [chart]="shown()" [selected]="perioSel()" [disabled]="readOnly() || mode() === 'plan'" (select)="perioSel.set($event)" (edit)="apply($event.edit, false, [$event.tooth])" />
+      <den-periodontogram [examinations]="examinations()" [chart]="shown()" [hidden]="hiddenFn" [numbering]="numFn" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="perioSel()" [disabled]="readOnly() || mode() === 'plan'" (select)="perioSel.set($event)" (edit)="apply($event.edit, false, [$event.tooth])" />
       <den-perio-sheet [chart]="shown()" [selected]="perioSel()" [disabled]="readOnly() || mode() === 'plan'" (pick)="perioSel.set($event)" (edit)="apply($event.edit, false, [$event.tooth])" />
       @if (firstState(); as st) {
         <den-perio-editor [no]="firstSelected()!" [state]="st" [disabled]="readOnly() || mode() === 'plan'" (edit)="apply($event, false, [firstSelected()!])" />
