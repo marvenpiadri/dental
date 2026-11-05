@@ -1,6 +1,6 @@
 import { newChart } from './engine/chart';
 import { editChart } from './engine/plan';
-import { chartViz, levelAt, pocketTone, toothViz } from './perio-viz';
+import { chartViz, levelAt, pdChange, perioStats, pocketTone, toothViz } from './perio-viz';
 
 function withPerio() {
   let c = newChart();
@@ -28,6 +28,13 @@ describe('perio viz', () => {
   it('lists only teeth that are present', () => { expect(chartViz(newChart()).length).toBeLessThanOrEqual(32); const o = editChart(newChart(), 'status', [16], { kind: 'selection', value: 'none' }, { confirmed: true });
     if (o.kind === 'confirm') throw new Error('confirm');
     expect(toothViz(o.chart, 16)).toBeNull(); expect(chartViz(o.chart).some((v) => v.tooth === 16)).toBe(false); });
+  it('compares pocket depth with an earlier exam without inventing readings', () => {
+    const now = withPerio(); let before = newChart();
+    const o = editChart(before, 'status', [16], { kind: 'perio', site: 'B', pd: 2 }, { confirmed: true }); if (o.kind === 'confirm') throw new Error('confirm'); before = o.chart;
+    expect(pdChange(toothViz(now, 16), toothViz(before, 16), 'B')).toBe(3);
+    expect(pdChange(toothViz(now, 16), toothViz(before, 16), 'ML')).toBeNull();
+    expect(perioStats(now, before)).toMatchObject({ sites: 2, pd4: 1, pd6: 0, worse: 1, bopPct: 50 });
+  });
   it('tones pocket depth', () => { expect([3, 4, 5, 6].map(pocketTone)).toEqual(['shallow', 'watch', 'watch', 'deep']); });
   it('interpolates between sites and hits the site value at its own angle', () => {
     const v = toothViz(withPerio(), 16)!, pd = (s: { pd: number | null }) => s.pd;

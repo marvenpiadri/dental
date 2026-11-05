@@ -57,3 +57,20 @@ export function levelAt(v: ToothViz, phi: number, pick: (s: SiteViz) => number |
   const span = (((hi.a - lo.a) % 360) + 360) % 360 || 360, f = (((p - lo.a) % 360) + 360) % 360 / span;
   return lo.x + (hi.x - lo.x) * (0.5 - Math.cos(Math.PI * f) / 2);
 }
+
+/** How a site's pocket depth changed since an earlier exam: positive = deeper. Null when either exam has no reading. */
+export function pdChange(now: ToothViz | null, before: ToothViz | null, site: PerioSiteId): number | null {
+  const a = now?.sites.find((s) => s.site === site)?.pd, b = before?.sites.find((s) => s.site === site)?.pd;
+  return a == null || b == null ? null : a - b;
+}
+
+export interface PerioStats { sites: number; bopPct: number; pd4: number; pd6: number; worse: number }
+/** Whole-mouth numbers for the summary strip. `worse` counts sites at least 2 mm deeper than `before` (when given). */
+export function perioStats(chart: Chart, before?: Chart | null): PerioStats {
+  let sites = 0, bop = 0, pd4 = 0, pd6 = 0, worse = 0;
+  for (const v of chartViz(chart)) {
+    const old = before ? toothViz(before, v.tooth) : null;
+    for (const s of v.sites) { if (s.pd === null) continue; sites++; if (s.bop) bop++; if (s.pd >= 4) pd4++; if (s.pd >= 6) pd6++; if ((pdChange(v, old, s.site) ?? 0) >= 2) worse++; }
+  }
+  return { sites, bopPct: sites ? Math.round((bop / sites) * 100) : 0, pd4, pd6, worse };
+}

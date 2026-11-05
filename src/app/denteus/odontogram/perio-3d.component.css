@@ -10,7 +10,11 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .seg button + button { border-inline-start: 1px solid var(--app-line); }
 .seg button.on { background: var(--app-text); color: var(--app-bg); }
 .seg button:not(.on):hover, .ov:hover { background: var(--app-hover); color: var(--app-text); }
-.ov { all: unset; cursor: pointer; margin-inline-start: auto; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; border-inline-start: 1px solid var(--app-line); }
+.cmp { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; font-size: 12px; font-weight: 600; color: var(--app-muted); }
+.cmp select { font: inherit; font-size: 13px; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-line); padding: 4px 6px; }
+.chg { display: block; font-size: 10px; font-weight: 600; color: var(--app-muted); } .chg.worse, .wr { color: #c0392b; }
+.facts.sum { grid-template-columns: 96px 1fr; }
+.ov { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; border-inline-start: 1px solid var(--app-line); }
 /* measurement layers, grouped */
 .tools { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--app-line); }
 .grp { display: grid; gap: 4px; padding: 6px 12px 8px; border-inline-end: 1px solid var(--app-line); }
@@ -36,6 +40,7 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
 .host ::ng-deep .pv-d .n.nil { color: var(--app-line); }
 .host ::ng-deep .pv-d .n.watch { color: #b86a10; } .host ::ng-deep .pv-d .n.deep { color: #c0392b; font-weight: 800; }
 .host ::ng-deep .pv-d small { font-size: 10px; line-height: 1; min-height: 10px; color: var(--app-muted); }
+.host ::ng-deep .pv-d small.worse { color: #c0392b; font-weight: 800; }
 .host ::ng-deep .pv-d .dots { display: flex; gap: 2px; min-height: 7px; }
 .host ::ng-deep .pv-d i { width: 7px; height: 7px; border-radius: 50%; } .host ::ng-deep .pv-d i.bop { background: #b3202a; } .host ::ng-deep .pv-d i.sup { background: #e3c21c; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 12px; border-top: 1px solid var(--app-line); font-size: 12px; color: var(--app-muted); }
@@ -74,3 +79,5 @@ button { font: inherit; color: var(--app-text); cursor: pointer; }
   .grp { flex: 1 1 100%; border-inline-end: 0; border-bottom: 1px solid var(--app-line); }
   .seg button, .ov { padding: 10px 12px; }
 }
+.cmp + .ov { margin-inline-start: 0; }
+.ov { margin-inline-start: auto; }

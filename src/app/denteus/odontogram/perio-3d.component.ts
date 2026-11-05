@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, PLATFORM_ID, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { I18n } from '../../core/i18n/i18n.service';
-import type { Chart } from './engine/chart';
+import { readChart, type Chart } from './engine/chart';
+import type { Examination } from './engine/exam';
 import type { ToothEdit } from './engine/edits';
-import { ENTRANCE_ANGLE, SITE_ANGLE, SURFACE_SITES, chartViz, levelAt, pocketTone, toothViz, type PerioSiteId, type ToothViz } from './perio-viz';
+import { ENTRANCE_ANGLE, SITE_ANGLE, chartViz, levelAt, pdChange, perioStats, pocketTone, toothViz, type PerioSiteId, type ToothViz } from './perio-viz';
 import { loadLib, makeToothScene, type Three } from './tooth-scene';
 
 export type PerioLayer = 'depth' | 'recession' | 'bleeding' | 'plaque' | 'furcation' | 'mobility' | 'bone';
@@ -30,6 +31,8 @@ export class Perio3dComponent implements OnDestroy {
   readonly chart = input.required<Chart>();
   readonly selected = input<PerioSel | null>(null);
   readonly disabled = input(false);
+  /** Earlier exams of this patient, offered for comparison. */
+  readonly examinations = input<readonly Examination[]>([]);
   readonly select = output<PerioSel | null>();
   readonly edit = output<{ tooth: number; edit: ToothEdit }>();
 
@@ -39,6 +42,19 @@ export class Perio3dComponent implements OnDestroy {
   protected readonly side = signal<'buccal' | 'lingual'>('buccal');
   protected readonly layers = signal<ReadonlySet<PerioLayer>>(new Set<PerioLayer>(['depth', 'recession', 'bleeding', 'plaque', 'furcation', 'mobility']));
   protected readonly failed = signal(false);
+  protected readonly compareId = signal('');
+  /** The earlier exam chosen for comparison, read back through the engine like any saved chart. */
+  protected readonly before = computed<Chart | null>(() => { const e = this.examinations().find((x) => x.id === this.compareId()); return e ? (readChart(e.chart).chart ?? null) : null; });
+  protected readonly stats = computed(() => perioStats(this.chart(), this.before()));
+  protected readonly changes = computed(() => { const p = this.panel(), b = this.before(); return p.v ? p.sites.map((s) => pdChange(p.v, p.tooth === null || !b ? null : toothViz(b, p.tooth), s.site)) : []; });
+  protected setCompare(e: Event): void { this.compareId.set((e.target as HTMLSelectElement).value); }
+  private readonly host0 = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** Enter in a PD box moves to the next site, then to the next tooth: probing without leaving the keyboard. */
+  protected advance(i: number): void {
+    const boxes = () => Array.from(this.host0.nativeElement.querySelectorAll<HTMLInputElement>('.grid input[aria-label^="PD"]'));
+    if (i < boxes().length - 1) boxes()[i + 1].focus();
+    else { this.step(1); setTimeout(() => boxes()[0]?.focus()); }
+  }
   /** The sites of the surface being viewed, for the selected tooth (or the first tooth of the arch while nothing is selected). */
   protected readonly panel = computed(() => {
     const sel = this.selected(), tooth = sel?.tooth ?? null, v = tooth === null ? null : toothViz(this.chart(), tooth);
@@ -61,7 +77,7 @@ export class Perio3dComponent implements OnDestroy {
 
   constructor() {
     effect(() => {
-      this.chart(); this.selected(); this.layers(); this.arch(); this.side();
+      this.chart(); this.selected(); this.layers(); this.arch(); this.side(); this.before();
       if (!this.browser) return;
       if (this.ctx) { this.ctx.redraw(); return; }
       if (!this.starting) { this.starting = true; this.start().then(() => this.ctx?.redraw()).catch((e) => { console.error("perio3d", e); this.failed.set(true); }); }
@@ -209,7 +225,8 @@ export class Perio3dComponent implements OnDestroy {
         const x = v?.sites.find((q) => q.site === site), b = document.createElement('button'); b.type = 'button'; b.className = 'pv-d'; b.dataset['no'] = String(no); b.dataset['site'] = site; b.onclick = () => this.pick(no, site);
         b.setAttribute('aria-label', `${no} ${site}`);
         const n = document.createElement('b'); n.className = `n ${x?.pd == null ? 'nil' : pocketTone(x.pd)}`; n.textContent = x?.pd == null ? '·' : String(x.pd);
-        const r = document.createElement('small'); r.textContent = x?.gm && x.gm > 0 ? `R${x.gm}` : '';
+        const old = this.before() ? toothViz(this.before()!, no) : null, dl = pdChange(v ?? null, old, site);
+        const r = document.createElement('small'); r.textContent = [x?.gm && x.gm > 0 ? `R${x.gm}` : '', dl ? (dl > 0 ? `+${dl}` : `−${-dl}`) : ''].filter(Boolean).join(' '); if (dl && dl >= 2) r.className = 'worse';
         const dots = document.createElement('span'); dots.className = 'dots'; if (x?.bop) dots.append(Object.assign(document.createElement('i'), { className: 'bop' })); if (x?.sup) dots.append(Object.assign(document.createElement('i'), { className: 'sup' }));
         b.append(n, r, dots); return b; }); }));
       if (!el.dataset['framed']) { el.dataset['framed'] = '1'; frameAll(); }

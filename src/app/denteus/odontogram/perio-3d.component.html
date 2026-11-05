@@ -8,6 +8,11 @@
       <button type="button" [class.on]="side() === 'buccal'" [attr.aria-pressed]="side() === 'buccal'" (click)="side.set('buccal')">{{ t('dc.idx.buccal') }}</button>
       <button type="button" [class.on]="side() === 'lingual'" [attr.aria-pressed]="side() === 'lingual'" (click)="side.set('lingual')">{{ t('dc.idx.lingual') }}</button>
     </div>
+    @if (examinations().length) {
+      <label class="cmp">{{ t('dc.pv.compare') }}
+        <select (change)="setCompare($event)"><option value="" [selected]="!compareId()">{{ t('dc.pv.noCompare') }}</option>@for (e of examinations(); track e.id) { <option [value]="e.id" [selected]="compareId() === e.id">{{ e.date }}</option> }</select>
+      </label>
+    }
     <button type="button" class="ov" (click)="reset()"><i class="fa-solid fa-expand" aria-hidden="true"></i>{{ t('dc.pv.overview') }}</button>
   </nav>
   <div class="tools" role="group" [attr.aria-label]="t('dc.pv.layers')">
@@ -38,15 +43,18 @@
               @for (s of p.sites; track s.site) {
                 <tr [class.sel]="p.site === s.site" (click)="pick(p.tooth!, s.site)">
                   <th scope="row">{{ s.site }}</th>
-                  <td><input type="number" min="0" max="15" [disabled]="disabled()" [attr.aria-label]="t('dc.pv.pd') + ' ' + s.site" [value]="s.pd ?? ''" (focus)="pick(p.tooth!, s.site)" (change)="setPd(s.site, $event)" /></td>
+                  <td><input type="number" min="0" max="15" [disabled]="disabled()" [attr.aria-label]="t('dc.pv.pd') + ' ' + s.site" [value]="s.pd ?? ''" (focus)="pick(p.tooth!, s.site)" (change)="setPd(s.site, $event)" (keydown.enter)="advance($index)" /></td>
                   <td><input type="number" min="-10" max="20" [disabled]="disabled() || s.pd === null" [attr.aria-label]="t('dc.pv.rec') + ' ' + s.site" [value]="s.gm ?? ''" (focus)="pick(p.tooth!, s.site)" (change)="setGm(s.site, $event)" /></td>
-                  <td class="cal">{{ s.cal ?? '–' }}</td>
+                  <td class="cal">{{ s.cal ?? '–' }}@if (changes()[$index]) { <small class="chg" [class.worse]="changes()[$index]! >= 2">{{ changes()[$index]! > 0 ? '+' : '−' }}{{ changes()[$index]! > 0 ? changes()[$index] : -changes()[$index]! }}</small> }</td>
                   <td><button type="button" class="ck" [class.on]="s.bop" [attr.aria-pressed]="s.bop" [attr.aria-label]="t('dc.pv.bop') + ' ' + s.site" [disabled]="disabled() || s.pd === null" (click)="flag(s.site, 'bop', s.bop); pick(p.tooth!, s.site)"></button></td>
                   <td><button type="button" class="ck" [class.on]="s.sup" [attr.aria-pressed]="s.sup" [attr.aria-label]="t('dc.pv.pus') + ' ' + s.site" [disabled]="disabled() || s.pd === null" (click)="flag(s.site, 'sup', s.sup); pick(p.tooth!, s.site)"></button></td>
                 </tr>
               }
             </tbody>
           </table>
+          <dl class="facts sum">
+            <dt>{{ t('dc.pv.summary') }}</dt><dd>{{ stats().sites }} {{ t('dc.pv.sites') }} · BOP {{ stats().bopPct }}% · PD ≥4: {{ stats().pd4 }} · ≥6: {{ stats().pd6 }}@if (before()) { · <b class="wr">{{ t('dc.pv.deeper') }}: {{ stats().worse }}</b> }</dd>
+          </dl>
           <dl class="facts">
             <dt>{{ t('dc.pv.mobility') }}</dt><dd>{{ p.v.mobility ? 'M' + p.v.mobility : '–' }}</dd>
             <dt>{{ t('dc.pv.furcation') }}</dt><dd>@for (f of p.v.furcation; track f.entrance) { <span class="tag">{{ f.entrance }} {{ f.grade }}</span> } @empty { – }</dd>
