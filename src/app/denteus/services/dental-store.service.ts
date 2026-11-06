@@ -20,6 +20,7 @@ import {
   PatientInput,
   CatalogEntry,
   Invoice,
+  Message,
   Payment,
   VisitNote,
   TreatmentItem,
@@ -209,7 +210,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -234,6 +235,18 @@ export class DentalStore {
   markReminded(appointmentId: string): void {
     const at = new Date().toISOString();
     this.appointments.update((list) => list.map((a) => (a.id === appointmentId ? { ...a, remindedAt: at } : a)));
+  }
+
+  /** Records that a WhatsApp message was prepared for the patient; for a visit reminder it also marks the visit as reminded. */
+  logMessage(patientId: string, kind: Message['kind'], text: string, appointmentId?: string): void {
+    const msg: Message = { id: crypto.randomUUID(), at: new Date().toISOString(), kind, text, status: 'prepared', ...(appointmentId ? { appointmentId } : {}) };
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, messages: [...(p.messages ?? []), msg] } : p)));
+    if (appointmentId) this.markReminded(appointmentId);
+  }
+
+  setWhatsappConsent(patientId: string, value: 'granted' | 'declined' | undefined): void {
+    const at = value ? new Date().toISOString() : undefined;
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, whatsappConsent: value, whatsappConsentAt: at } : p)));
   }
 
   /** Appends an examination snapshot to this patient only (the record carries its own patientId; a mismatch is dropped). */

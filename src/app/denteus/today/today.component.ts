@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, typeKey, waitingMinutes } from '../utils/appointment-labels';
 import { initials } from '../patients/patient-rules';
 import { recallDue } from '../patients/recall-rules';
-import { reminderLink } from '../patients/reminder-rules';
+import { messageLink } from '../patients/reminder-rules';
 import { balance } from '../patients/treatment-rules';
 
 /** The front desk's morning view: what is booked, who is waiting, who is next. */
@@ -98,7 +98,7 @@ export class TodayComponent {
           day: this.i18n.date(a.start, { weekday: 'long', day: 'numeric', month: 'long' }),
           time: this.i18n.time(a.start),
         });
-        return { appointment: a, patient, link: patient ? reminderLink(patient.phone, message) : null };
+        return { appointment: a, patient, message, link: patient ? messageLink(patient, message) : null };
       });
   });
 
@@ -117,11 +117,10 @@ export class TodayComponent {
     if (!now) return { rows: [], count: 0 };
     const all = recallDue(this.store.patients(), this.store.appointments(), now);
     const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
-    const rows = all.slice(0, 5).map(({ patient, lastVisit }) => ({
-      patient,
-      lastVisit,
-      link: reminderLink(patient.phone, this.t('recall.message', { name: patient.fullName, clinic })),
-    }));
+    const rows = all.slice(0, 5).map(({ patient, lastVisit }) => {
+      const message = this.t('recall.message', { name: patient.fullName, clinic });
+      return { patient, lastVisit, message, link: messageLink(patient, message) };
+    });
     return { rows, count: all.length };
   });
 

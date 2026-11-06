@@ -122,7 +122,7 @@
                 </span>
                 @if (row.appointment.remindedAt) { <span class="chip" data-tone="ok">{{ t('today.remind.sent') }}</span> }
                 @if (row.link) {
-                  <a class="btn" [href]="row.link" target="_blank" rel="noopener" (click)="store.markReminded(row.appointment.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t(row.appointment.remindedAt ? 'today.remind.again' : 'today.remind.send') }}</a>
+                  <a class="btn" [href]="row.link" target="_blank" rel="noopener" (click)="store.logMessage(row.appointment.patientId, 'appointment', row.message, row.appointment.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t(row.appointment.remindedAt ? 'today.remind.again' : 'today.remind.send') }}</a>
                 } @else {
                   <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span>
                 }
@@ -152,7 +152,7 @@
                   <span class="name">{{ row.patient.fullName }}</span>
                   <span class="sub muted">{{ t('today.recall.last', { date: i18n.date(row.lastVisit, { day: 'numeric', month: 'short', year: 'numeric' }) }) }}</span>
                 </span>
-                @if (row.link) { <a class="btn" [href]="row.link" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }
+                @if (row.link) { <a class="btn" [href]="row.link" target="_blank" rel="noopener" (click)="store.logMessage(row.patient.id, 'recall', row.message)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }
                 @else { <span class="chip" data-tone="warn">{{ t('today.remind.noNumber') }}</span> }
               </li>
             }

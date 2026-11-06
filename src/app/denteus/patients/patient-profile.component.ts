@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, initials, parseIsoDate } from './patient-rules';
 import { balance, procedureName } from './treatment-rules';
-import { reminderLink, whatsappNumber } from './reminder-rules';
+import { messageLink, whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
@@ -59,15 +59,25 @@ export class PatientProfileComponent {
     const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
     const next = this.upcoming().find((a) => a.status === 'scheduled' || a.status === 'confirmed') ?? null;
     const due = this.money().due;
-    const link = (m: string) => reminderLink(p.phone, m);
+    const link = (m: string) => messageLink(p, m);
+    const text = {
+      appointment: next ? this.t('reminder.message', { name: p.fullName, clinic, day: this.i18n.date(next.start, { weekday: 'long', day: 'numeric', month: 'long' }), time: this.i18n.time(next.start) }) : '',
+      balance: due > 0 ? this.t('reminder.balance', { name: p.fullName, clinic, amount: this.i18n.money(due) }) : '',
+      recall: this.t('recall.message', { name: p.fullName, clinic }),
+    };
     return {
-      next,
-      appointment: next ? link(this.t('reminder.message', { name: p.fullName, clinic, day: this.i18n.date(next.start, { weekday: 'long', day: 'numeric', month: 'long' }), time: this.i18n.time(next.start) })) : null,
-      balance: due > 0 ? link(this.t('reminder.balance', { name: p.fullName, clinic, amount: this.i18n.money(due) })) : null,
-      recall: link(this.t('recall.message', { name: p.fullName, clinic })),
-      hasNumber: link('x') !== null,
+      next, text,
+      appointment: text.appointment ? link(text.appointment) : null,
+      balance: text.balance ? link(text.balance) : null,
+      recall: link(text.recall),
+      hasNumber: whatsappNumber(p.phone) !== null,
+      declined: p.whatsappConsent === 'declined',
     };
   });
+  protected readonly sentMessages = computed(() => [...(this.patient()?.messages ?? [])].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8));
+  protected readonly kindKey = { appointment: 'profile.remind.appt', balance: 'profile.remind.balance', recall: 'profile.remind.recall' } as const;
+  protected readonly statusKey = { prepared: 'wa.status.prepared', sent: 'wa.status.sent', delivered: 'wa.status.delivered', read: 'wa.status.read', failed: 'wa.status.failed' } as const;
+  protected day2(iso: string): string { return this.i18n.date(new Date(iso), { day: 'numeric', month: 'short', year: 'numeric' }); }
   protected wa(phone: string): string | null { const n = whatsappNumber(phone); return n ? `https://wa.me/${n}` : null; }
   /** Everything that happened to this patient, newest first: acts done, payments, visit notes and appointments. */
   protected readonly feed = computed(() => {

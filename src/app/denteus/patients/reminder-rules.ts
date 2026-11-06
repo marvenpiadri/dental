@@ -14,3 +14,8 @@ export function reminderLink(phone: string, message: string): string | null {
   const number = whatsappNumber(phone);
   return number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : null;
 }
+
+/** The link for one patient: none when they declined WhatsApp messages. Not asking yet still allows a manual message. */
+export function messageLink(patient: { phone: string; whatsappConsent?: 'granted' | 'declined' }, message: string): string | null {
+  return patient.whatsappConsent === 'declined' ? null : reminderLink(patient.phone, message);
+}

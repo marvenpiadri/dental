@@ -1,4 +1,4 @@
-import { reminderLink, whatsappNumber } from './reminder-rules';
+import { messageLink, reminderLink, whatsappNumber } from './reminder-rules';
 
 describe('whatsappNumber', () => {
   it('turns local Moroccan numbers into international ones', () => {
@@ -21,5 +21,13 @@ describe('reminderLink', () => {
   });
   it('is null without a usable number', () => {
     expect(reminderLink('12', 'x')).toBeNull();
+  });
+});
+
+describe('messageLink', () => {
+  it('blocks a patient who declined, allows the rest', () => {
+    expect(messageLink({ phone: '0612345678', whatsappConsent: 'declined' }, 'hi')).toBeNull();
+    expect(messageLink({ phone: '0612345678' }, 'hi')).toContain('https://wa.me/212612345678');
+    expect(messageLink({ phone: '0612345678', whatsappConsent: 'granted' }, 'hi')).not.toBeNull();
   });
 });

@@ -113,14 +113,26 @@
         <section class="card" aria-labelledby="remind-title">
           <header class="card-head"><h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('profile.remind') }}</h2></header>
           @if (reminders(); as r) {
-            @if (!r.hasNumber) { <p class="card-body muted">{{ t('profile.remind.nonumber') }}</p> } @else {
+            <label class="card-body consent"><span class="label">{{ t('wa.consent') }}</span>
+              <select class="input" [value]="p.whatsappConsent ?? ''" (change)="store.setWhatsappConsent(p.id, $any($event.target).value || undefined)">
+                <option value="" [selected]="!p.whatsappConsent">{{ t('wa.consent.unknown') }}</option>
+                <option value="granted" [selected]="p.whatsappConsent === 'granted'">{{ t('wa.consent.granted') }}</option>
+                <option value="declined" [selected]="p.whatsappConsent === 'declined'">{{ t('wa.consent.declined') }}</option>
+              </select></label>
+            @if (r.declined) { <p class="card-body muted">{{ t('wa.blocked') }}</p> } @else if (!r.hasNumber) { <p class="card-body muted">{{ t('profile.remind.nonumber') }}</p> } @else {
               <ul class="remind">
                 <li><span>{{ t('profile.remind.appt') }}@if (r.next?.remindedAt) { <span class="chip" data-tone="ok">{{ t('today.remind.sent') }}</span> }</span>
-                  @if (r.appointment) { <a class="btn" [href]="r.appointment" target="_blank" rel="noopener" (click)="store.markReminded(r.next!.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
+                  @if (r.appointment) { <a class="btn" [href]="r.appointment" target="_blank" rel="noopener" (click)="store.logMessage(p.id, 'appointment', r.text.appointment, r.next!.id)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
                 <li><span>{{ t('profile.remind.balance') }}</span>
-                  @if (r.balance) { <a class="btn" [href]="r.balance" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
+                  @if (r.balance) { <a class="btn" [href]="r.balance" target="_blank" rel="noopener" (click)="store.logMessage(p.id, 'balance', r.text.balance)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> } @else { <span class="muted">{{ t('profile.remind.none') }}</span> }</li>
                 <li><span>{{ t('profile.remind.recall') }}</span>
-                  @if (r.recall) { <a class="btn" [href]="r.recall" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }</li>
+                  @if (r.recall) { <a class="btn" [href]="r.recall" target="_blank" rel="noopener" (click)="store.logMessage(p.id, 'recall', r.text.recall)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.send') }}</a> }</li>
+              </ul>
+            }
+            @if (sentMessages().length) {
+              <h3 class="card-body wa-h">{{ t('wa.history') }}</h3>
+              <ul class="remind wa-log">
+                @for (m of sentMessages(); track m.id) { <li><span>{{ day2(m.at) }} · {{ t(kindKey[m.kind]) }}</span><span class="chip" data-tone="neutral">{{ t(statusKey[m.status]) }}</span></li> }
               </ul>
             }
           }

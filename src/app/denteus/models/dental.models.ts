@@ -42,6 +42,12 @@ export interface Patient {
   payments?: Payment[];
   /** Invoices and credit notes issued to this patient, oldest first. */
   invoices?: Invoice[];
+  /** Whether the patient agreed to WhatsApp messages from the clinic. Unset means not asked yet; `declined` blocks every message. */
+  whatsappConsent?: 'granted' | 'declined';
+  /** ISO timestamp the consent answer was recorded. */
+  whatsappConsentAt?: string;
+  /** WhatsApp messages prepared for this patient, oldest first. */
+  messages?: Message[];
   /** What was found and done at each visit, newest last. */
   visits?: VisitNote[];
   /** Small JPEG data URL (see the profile's photo picker). Optional, added whenever the clinic likes. */
@@ -65,6 +71,21 @@ export interface VisitNote {
   findings?: string;
   care?: string;
   prescription?: PrescriptionLine[];
+}
+
+/**
+ * One WhatsApp message. In Phase 2 the receptionist presses send in WhatsApp, so the best the app knows is `prepared`.
+ * Phase 3 (the clinic's own WhatsApp Business Cloud API number) moves it through sent, delivered, read or failed and stores `externalId`.
+ */
+export interface Message {
+  id: string;
+  /** ISO timestamp. */
+  at: string;
+  kind: 'appointment' | 'balance' | 'recall';
+  text: string;
+  status: 'prepared' | 'sent' | 'delivered' | 'read' | 'failed';
+  appointmentId?: string;
+  externalId?: string;
 }
 
 export const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'cheque', 'other'] as const;
@@ -149,7 +170,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits'>;
 
 export interface Dentist {
   id: string;
