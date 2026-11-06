@@ -81,6 +81,8 @@ export class DentalStore {
   readonly hiddenPages = signal<string[]>([]);
   /** The 3D tooth overlay; turning it off leaves the flat chart exactly as before. */
   readonly view3d = signal(true);
+  /** Clinic wording for WhatsApp messages; a kind left out uses the built-in text. */
+  readonly waTemplates = signal<Partial<Record<Message['kind'], string>>>({});
   readonly appointments = signal<Appointment[]>([]);
 
   /** Recorded on every change. In the real app this is the signed-in user. */
@@ -141,6 +143,7 @@ export class DentalStore {
 
     this.hiddenPages.set((await this.database.loadSetting<string[]>('hiddenPages')) ?? []);
     this.view3d.set((await this.database.loadSetting<boolean>('view3d')) ?? true);
+    this.waTemplates.set((await this.database.loadSetting<Partial<Record<Message['kind'], string>>>('waTemplates')) ?? {});
 
     const saved = await this.database.loadSchedulingSnapshot();
     this.patients.set(saved.patients);
@@ -157,6 +160,17 @@ export class DentalStore {
   async saveHiddenPages(ids: string[]): Promise<void> {
     await this.database.saveSetting('hiddenPages', ids);
     this.hiddenPages.set(ids);
+  }
+
+  async saveWaTemplates(templates: Partial<Record<Message['kind'], string>>): Promise<void> {
+    await this.database.saveSetting('waTemplates', templates);
+    this.waTemplates.set(templates);
+  }
+
+  /** The text of one WhatsApp message: the clinic's own wording when it set one, else the built-in text (`fallback`). */
+  message(kind: Message['kind'], fallback: string, vars: Record<string, string>): string {
+    const custom = this.waTemplates()[kind]?.trim();
+    return custom ? custom.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all) : fallback;
   }
 
   async saveCatalog(entries: CatalogEntry[]): Promise<void> {

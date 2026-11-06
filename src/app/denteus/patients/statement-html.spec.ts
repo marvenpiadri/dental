@@ -14,6 +14,6 @@ describe('statementHtml', () => {
   it('omits insurer lines when there is none and escapes typed text', () => {
     const html = statementHtml({ ...base, insurer: '', number: '', patient: '<img src=x onerror=1>' });
     expect(html).not.toContain('Insurer:');
-    expect(html).not.toContain('<img');
+    expect(html).not.toContain('<img src=x');
   });
 });

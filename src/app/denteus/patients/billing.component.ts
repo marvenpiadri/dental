@@ -104,6 +104,11 @@ export class BillingComponent {
     if (inv) this.editInvoices.emit((list) => [...list, inv]);
   }
 
+  private legal(): string[] {
+    const c = this.store.locations()[0];
+    return c ? [c.legalName ?? '', c.taxId ? `${this.t('set.taxId')}: ${c.taxId}` : '', c.bank ? `${this.t('set.bank')}: ${c.bank}` : '', c.address ?? '', c.phone ?? '', c.invoiceNote ?? ''] : [];
+  }
+
   protected printInvoice(inv: Invoice): void {
     const t = this.t;
     const st = invoiceState(inv, this.payments());
@@ -114,6 +119,7 @@ export class BillingComponent {
       date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
       lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.i18n.money(l.price) })),
       total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
+      legal: this.legal(),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
     });
     const win = window.open('', '_blank');

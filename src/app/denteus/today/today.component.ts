@@ -92,12 +92,13 @@ export class TodayComponent {
       .sort((a, b) => a.start.getTime() - b.start.getTime())
       .map((a) => {
         const patient = this.store.patientMap().get(a.patientId);
-        const message = this.t('reminder.message', {
+        const vars = {
           name: patient?.fullName ?? '',
           clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
           day: this.i18n.date(a.start, { weekday: 'long', day: 'numeric', month: 'long' }),
           time: this.i18n.time(a.start),
-        });
+        };
+        const message = this.store.message('appointment', this.t('reminder.message', vars), vars);
         return { appointment: a, patient, message, link: patient ? messageLink(patient, message) : null };
       });
   });
@@ -118,7 +119,8 @@ export class TodayComponent {
     const all = recallDue(this.store.patients(), this.store.appointments(), now);
     const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
     const rows = all.slice(0, 5).map(({ patient, lastVisit }) => {
-      const message = this.t('recall.message', { name: patient.fullName, clinic });
+      const vars = { name: patient.fullName, clinic };
+      const message = this.store.message('recall', this.t('recall.message', vars), vars);
       return { patient, lastVisit, message, link: messageLink(patient, message) };
     });
     return { rows, count: all.length };

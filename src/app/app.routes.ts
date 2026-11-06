@@ -40,7 +40,10 @@ export const routes: Routes = [
     path: 'setup',
     canActivate: [permissionGuard],
     data: { permission: 'setup', titleKey: 'nav.setup' },
-    loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent),
+    children: [
+      { path: '', loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent) },
+      { path: ':section', loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent) },
+    ],
   },
   {
     path: '**',

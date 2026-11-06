@@ -1,4 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { ThemeService } from '../../core/theme.service';
+import { LANGS, Lang } from '../../core/i18n/i18n.service';
+import { ClinicLocation, Message } from '../models/dental.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { ROLES, Role } from '../../core/auth/auth-rules';
 import { ROLE_KEY } from '../../core/auth/sign-in.component';
@@ -23,15 +27,38 @@ const toDataUrl = (blob: Blob): Promise<string> => new Promise((done, fail) => {
 
 const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
+const SECTIONS = [
+  { id: 'clinic', icon: 'fa-hospital', key: 'set.clinic' },
+  { id: 'team', icon: 'fa-user-doctor', key: 'set.team' },
+  { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule' },
+  { id: 'services', icon: 'fa-file-invoice', key: 'set.services' },
+  { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging' },
+  { id: 'integrations', icon: 'fa-plug', key: 'set.integrations' },
+  { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace' },
+] as const satisfies readonly { id: string; icon: string; key: Key }[];
+type SectionId = (typeof SECTIONS)[number]['id'];
+
 /** Who treats and where: the dentists and chairs the calendar books against. Every change saves at once. */
 @Component({
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })
 export class ClinicSetupComponent {
+  readonly section = input<string>();
+  protected readonly sections = SECTIONS;
+  protected readonly current = computed<SectionId>(() => SECTIONS.find((x) => x.id === this.section())?.id ?? 'clinic');
+  protected readonly clinic = computed<ClinicLocation | undefined>(() => this.store.locations()[0]);
+  protected readonly theme = inject(ThemeService);
+  protected readonly langs = LANGS;
+  protected readonly waKinds = ['appointment', 'balance', 'recall'] as const satisfies readonly Message['kind'][];
+  protected readonly waKey = { appointment: 'set.wa.appointment', balance: 'set.wa.balance', recall: 'set.wa.recall' } as const;
+  protected readonly savedAt = signal(0);
+  protected readonly needName = signal(false);
+
   protected readonly store = inject(DentalStore);
   protected readonly pages = PROFILE_PAGES;
   protected togglePage(id: string, shown: boolean): void {
@@ -210,5 +237,29 @@ export class ClinicSetupComponent {
     } catch {
       this.failed.set(true);
     }
+  }
+
+  protected setTheme(value: string): void { if (value !== this.theme.theme()) this.theme.toggle(); }
+  protected setLang(code: string): void { this.i18n.setLang(code as Lang); }
+
+  /** Saves one or more clinic fields on the first site, creating it if the clinic has none. An empty name is refused. */
+  protected async patchClinic(patch: Partial<ClinicLocation>): Promise<void> {
+    if (patch.name !== undefined && !patch.name.trim()) { this.needName.set(true); return; }
+    this.needName.set(false);
+    const trimmed = Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])) as Partial<ClinicLocation>;
+    const base: ClinicLocation = this.clinic() ?? { id: crypto.randomUUID(), name: 'Dentaleus', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
+    this.failed.set(false);
+    try {
+      await this.store.saveLocations([{ ...base, ...trimmed }, ...this.store.locations().slice(1)]);
+      this.savedAt.set(Date.now());
+    } catch {
+      this.failed.set(true);
+    }
+  }
+
+  protected async setTemplate(kind: Message['kind'], text: string): Promise<void> {
+    const next = { ...this.store.waTemplates() };
+    if (text.trim()) next[kind] = text.trim(); else delete next[kind];
+    try { await this.store.saveWaTemplates(next); this.failed.set(false); this.savedAt.set(Date.now()); } catch { this.failed.set(true); }
   }
 }

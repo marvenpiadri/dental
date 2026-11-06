@@ -2,6 +2,14 @@
   <div class="ds-head-main"><h1 class="ds-title">{{ t('nav.setup') }}</h1></div>
 </header>
 
+<nav class="pages" [attr.aria-label]="t('set.sections')">
+  @for (x of sections; track x.id) {
+    <a class="page-link" [routerLink]="['/setup', x.id]" [class.on]="current() === x.id" [attr.aria-current]="current() === x.id ? 'page' : null">
+      <i [class]="x.icon.includes(' ') ? x.icon : 'fa-solid ' + x.icon" aria-hidden="true"></i><span>{{ t(x.key) }}</span>
+    </a>
+  }
+</nav>
+
 <div class="ds-body canvas">
   <div class="grid-wide">
     @if (failed()) {
@@ -14,7 +22,70 @@
     @if (!store.loaded()) {
       <span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span>
     } @else {
-      <section class="card" aria-labelledby="dentists-title">
+      @if (current() === 'clinic') {
+        <section class="card" aria-labelledby="ident-title">
+          <header class="card-head"><h2 class="card-title" id="ident-title"><i class="fa-solid fa-hospital" aria-hidden="true"></i>{{ t('set.identity') }}</h2></header>
+          <div class="row"><label class="hours-field grow">{{ t('set.name') }}<input class="input" [value]="clinic()?.name ?? ''" maxlength="80" (change)="patchClinic({ name: $any($event.target).value })" [attr.aria-invalid]="needName() ? 'true' : null" /></label></div>
+          <div class="row"><label class="hours-field grow">{{ t('set.address') }}<input class="input" [value]="clinic()?.address ?? ''" maxlength="160" (change)="patchClinic({ address: $any($event.target).value })" /></label></div>
+          <div class="row">
+            <label class="hours-field grow">{{ t('set.phone') }}<input class="input" type="tel" [value]="clinic()?.phone ?? ''" maxlength="30" (change)="patchClinic({ phone: $any($event.target).value })" /></label>
+            <label class="hours-field grow">{{ t('set.email') }}<input class="input" type="email" [value]="clinic()?.email ?? ''" maxlength="80" (change)="patchClinic({ email: $any($event.target).value })" /></label>
+          </div>
+          @if (needName()) { <p class="row banner" role="alert">{{ t('set.needName') }}</p> }
+          @if (savedAt()) { <p class="row ok" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('set.saved') }}</p> }
+        </section>
+      }
+      @if (current() === 'services') {
+        <section class="card" aria-labelledby="legal-title">
+          <header class="card-head"><h2 class="card-title" id="legal-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i>{{ t('set.legal') }}</h2></header>
+          <p class="intro hint">{{ t('set.legal.hint') }}</p>
+          <div class="row">
+            <label class="hours-field grow">{{ t('set.legalName') }}<input class="input" [value]="clinic()?.legalName ?? ''" maxlength="120" (change)="patchClinic({ legalName: $any($event.target).value })" /></label>
+            <label class="hours-field grow">{{ t('set.taxId') }}<input class="input" [value]="clinic()?.taxId ?? ''" maxlength="40" (change)="patchClinic({ taxId: $any($event.target).value })" /></label>
+          </div>
+          <div class="row"><label class="hours-field grow">{{ t('set.bank') }}<input class="input" [value]="clinic()?.bank ?? ''" maxlength="60" (change)="patchClinic({ bank: $any($event.target).value })" /></label></div>
+          <div class="row"><label class="hours-field grow">{{ t('set.invoiceNote') }}<textarea class="input" rows="2" maxlength="300" [value]="clinic()?.invoiceNote ?? ''" (change)="patchClinic({ invoiceNote: $any($event.target).value })"></textarea></label></div>
+        </section>
+      }
+      @if (current() === 'messaging') {
+        <section class="card" aria-labelledby="wa-title">
+          <header class="card-head"><h2 class="card-title" id="wa-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('set.wa') }}</h2></header>
+          <p class="intro hint">{{ t('set.wa.hint') }}</p>
+          @for (k of waKinds; track k) {
+            <div class="row">
+              <label class="hours-field grow">{{ t(waKey[k]) }}<textarea class="input" rows="3" maxlength="600" [value]="store.waTemplates()[k] ?? ''" (change)="setTemplate(k, $any($event.target).value)"></textarea></label>
+              @if (store.waTemplates()[k]) { <button type="button" class="btn" (click)="setTemplate(k, '')">{{ t('set.wa.reset') }}</button> }
+            </div>
+          }
+        </section>
+      }
+      @if (current() === 'integrations') {
+        @for (i of [{ id: 'g', icon: 'fa-brands fa-google', title: 'set.int.google', text: 'set.int.google.text' }, { id: 'w', icon: 'fa-brands fa-whatsapp', title: 'set.int.wa', text: 'set.int.wa.text' }]; track i.id) {
+          <section class="card" [attr.aria-labelledby]="'int-' + i.id">
+            <header class="card-head"><h2 class="card-title" [id]="'int-' + i.id"><i [class]="i.icon" aria-hidden="true"></i>{{ t($any(i.title)) }}</h2><span class="chip" data-tone="neutral">{{ t('set.int.notconnected') }}</span></header>
+            <p class="intro hint">{{ t($any(i.text)) }}</p>
+            <div class="row"><button type="button" class="btn" disabled>{{ t('set.int.needs') }}</button></div>
+          </section>
+        }
+      }
+      @if (current() === 'workspace') {
+        <section class="card" aria-labelledby="look-title">
+          <header class="card-head"><h2 class="card-title" id="look-title"><i class="fa-solid fa-palette" aria-hidden="true"></i>{{ t('set.appearance') }}</h2></header>
+          <div class="row">
+            <label class="hours-field grow">{{ t('set.theme') }}
+              <select class="input" (change)="setTheme($any($event.target).value)">
+                <option value="light" [selected]="theme.theme() === 'light'">{{ t('set.theme.light') }}</option>
+                <option value="dark" [selected]="theme.theme() === 'dark'">{{ t('set.theme.dark') }}</option>
+              </select></label>
+            <label class="hours-field grow">{{ t('set.language') }}
+              <select class="input" (change)="setLang($any($event.target).value)">
+                @for (l of langs; track l.code) { <option [value]="l.code" [selected]="i18n.lang() === l.code">{{ l.label }}</option> }
+              </select></label>
+          </div>
+        </section>
+      }
+      @if (current() === 'team') {
+<section class="card" aria-labelledby="dentists-title">
         <header class="card-head">
           <h2 class="card-title" id="dentists-title"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i>{{ t('setup.dentists') }}</h2>
           <button type="button" class="btn" (click)="addDentist()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.dentist.add') }}</button>
@@ -36,8 +107,10 @@
           </div>
         }
       </section>
+}
 
-      <section class="card" aria-labelledby="hours-title">
+      @if (current() === 'schedule') {
+<section class="card" aria-labelledby="hours-title">
           <header class="card-head"><h2 class="card-title" id="hours-title"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ t('setup.hours') }}</h2></header>
           <div class="row">
             <label class="hours-field">{{ t('setup.hours.open') }}<input class="input" type="time" [value]="hoursText().open" (change)="setHours({ open: $any($event.target).value })" /></label>
@@ -50,8 +123,10 @@
           </div>
           <p class="row hint">{{ t('setup.hours.hint') }}</p>
       </section>
+}
 
-      <section class="card" aria-labelledby="chairs-title">
+      @if (current() === 'schedule') {
+<section class="card" aria-labelledby="chairs-title">
         <header class="card-head">
           <h2 class="card-title" id="chairs-title"><i class="fa-solid fa-chair" aria-hidden="true"></i>{{ t('setup.chairs') }}</h2>
           <button type="button" class="btn" (click)="addChair()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.chair.add') }}</button>
@@ -69,8 +144,10 @@
           </div>
         }
       </section>
+}
 
-      <section class="card" aria-labelledby="acts-title">
+      @if (current() === 'services') {
+<section class="card" aria-labelledby="acts-title">
         <header class="card-head">
           <h2 class="card-title" id="acts-title"><i class="fa-solid fa-tags" aria-hidden="true"></i>{{ t('setup.acts') }}</h2>
           <button type="button" class="btn" (click)="addAct()"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('setup.act.add') }}</button>
@@ -89,8 +166,10 @@
           </div>
         }
       </section>
+}
 
-      <section class="card" aria-labelledby="pages-title">
+      @if (current() === 'workspace') {
+<section class="card" aria-labelledby="pages-title">
         <header class="card-head"><h2 class="card-title" id="pages-title"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>{{ t('setup.pages') }}</h2></header>
         <p class="muted intro">{{ t('setup.pages.intro') }}</p>
         <div class="pages-grid">
@@ -99,14 +178,18 @@
           }
         </div>
       </section>
+}
 
-      <section class="card" aria-labelledby="v3d-title">
+      @if (current() === 'workspace') {
+<section class="card" aria-labelledby="v3d-title">
         <header class="card-head"><h2 class="card-title" id="v3d-title"><i class="fa-solid fa-cube" aria-hidden="true"></i>{{ t('dc.3d.setting') }}</h2></header>
         <p class="muted intro">{{ t('dc.3d.setting.intro') }}</p>
         <label class="page-opt"><input type="checkbox" [checked]="store.view3d()" (change)="store.saveView3d($any($event.target).checked)" />{{ t('dc.3d.setting') }}</label>
       </section>
+}
 
-      <section class="card" aria-labelledby="team-title">
+      @if (current() === 'team') {
+<section class="card" aria-labelledby="team-title">
         <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
         <p class="muted intro">{{ t('team.intro') }}</p>
         @for (m of auth.staff(); track m.id) {
@@ -127,8 +210,10 @@
         </form>
         @if (teamProblem()) { <p class="error-text intro" role="alert">{{ t(teamProblem()!) }}</p> }
       </section>
+}
 
-      <section class="card" aria-labelledby="backup-title">
+      @if (current() === 'workspace') {
+<section class="card" aria-labelledby="backup-title">
         <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
         <div class="card-body backup">
           <p class="muted">{{ t('setup.backup.intro') }}</p>
@@ -152,6 +237,7 @@
           }
         </div>
       </section>
+}
     }
   </div>
 </div>

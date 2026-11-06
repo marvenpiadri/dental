@@ -13,7 +13,7 @@ describe('receiptHtml', () => {
   });
   it('escapes names so they cannot inject markup', () => {
     const html = receiptHtml({ ...base, patient: '<img src=x onerror=alert(1)> & "co"' });
-    expect(html).not.toContain('<img');
+    expect(html).not.toContain('<img src=x');
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt; &amp; &quot;co&quot;');
   });
 });

@@ -61,10 +61,14 @@ export class PatientProfileComponent {
     const next = this.upcoming().find((a) => a.status === 'scheduled' || a.status === 'confirmed') ?? null;
     const due = this.money().due;
     const link = (m: string) => messageLink(p, m);
+    const v = (extra: Record<string, string>) => ({ name: p.fullName, clinic, ...extra });
+    const day = next ? this.i18n.date(next.start, { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+    const time = next ? this.i18n.time(next.start) : '';
+    const amount = this.i18n.money(due);
     const text = {
-      appointment: next ? this.t('reminder.message', { name: p.fullName, clinic, day: this.i18n.date(next.start, { weekday: 'long', day: 'numeric', month: 'long' }), time: this.i18n.time(next.start) }) : '',
-      balance: due > 0 ? this.t('reminder.balance', { name: p.fullName, clinic, amount: this.i18n.money(due) }) : '',
-      recall: this.t('recall.message', { name: p.fullName, clinic }),
+      appointment: next ? this.store.message('appointment', this.t('reminder.message', v({ day, time })), v({ day, time })) : '',
+      balance: due > 0 ? this.store.message('balance', this.t('reminder.balance', v({ amount })), v({ amount })) : '',
+      recall: this.store.message('recall', this.t('recall.message', v({})), v({})),
     };
     return {
       next, text,

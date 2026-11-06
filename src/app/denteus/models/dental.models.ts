@@ -13,6 +13,13 @@ export interface ClinicLocation {
   active: boolean;
   /** Opening hours the slot finder uses; unset means the defaults. */
   hours?: OpeningHours;
+  phone?: string;
+  email?: string;
+  /** Printed on invoices: the registered business name, tax number (ICE in Morocco), bank details and a footer note. */
+  legalName?: string;
+  taxId?: string;
+  bank?: string;
+  invoiceNote?: string;
 }
 
 export interface Patient {
