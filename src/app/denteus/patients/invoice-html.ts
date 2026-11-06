@@ -22,7 +22,7 @@ export function invoiceHtml(d: InvoiceData): string {
   tfoot th { border-bottom: 1px solid #ccc; } tfoot tr.strong th, tfoot tr.strong td { font-size: 17px; font-weight: 700; color: #0a0a0a; border-bottom: 2px solid #0a0a0a; }
   @media print { body { padding: 0; } }
 </style></head><body>
-<p class="clinic">${esc(d.clinic)}</p>
+<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(d.clinic)}</p>
 <h1>${esc(d.title)} N° ${esc(d.number)}</h1>${d.cancels ? `<p class="meta">${esc(d.cancels)}</p>` : ''}
 <p class="meta">${esc(d.labels.date)}: ${esc(d.date)}</p><p class="meta">${esc(d.labels.patient)}: ${esc(d.patient)}</p>
 <table><thead><tr><th>${esc(d.labels.where)}</th><th>${esc(d.labels.act)}</th><th class="n">${esc(d.labels.price)}</th></tr></thead><tbody>${rows}</tbody>

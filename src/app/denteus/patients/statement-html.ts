@@ -18,7 +18,7 @@ export function statementHtml(s: StatementData): string {
   td { padding: 6px 8px 6px 0; border-bottom: 1px solid #ccc; } td.n, th.n { text-align: end; font-variant-numeric: tabular-nums; }
   tfoot td { font-weight: 700; border-bottom: 0; } .note { margin-top: 24px; color: #555; font-size: 12px; } @media print { body { padding: 0; } }
 </style></head><body>
-<p class="clinic">${esc(s.clinic)}</p><h1>${esc(s.labels.title)}</h1>
+<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(s.clinic)}</p><h1>${esc(s.labels.title)}</h1>
 ${meta(s.labels.patient, s.patient)}${meta(s.labels.insurer, s.insurer)}${meta(s.labels.number, s.number)}${meta(s.labels.date, s.date)}
 <table><thead><tr><th>${esc(s.labels.date)}</th><th>${esc(s.labels.tooth)}</th><th>${esc(s.labels.act)}</th><th class="n">${esc(s.labels.price)}</th></tr></thead><tbody>
 ${s.lines.map((l) => `<tr><td>${esc(l.date)}</td><td>${esc(l.tooth)}</td><td>${esc(l.name)}</td><td class="n">${esc(l.price)}</td></tr>`).join('\n')}

@@ -30,7 +30,7 @@ export function receiptHtml(r: ReceiptData): string {
   tr.strong th, tr.strong td { font-size: 18px; font-weight: 700; color: #0a0a0a; border-top: 2px solid #0a0a0a; } .thanks { margin-top: 28px; color: #555; }
   @media print { body { padding: 0; } }
 </style></head><body>
-<p class="clinic">${esc(r.clinic)}</p>
+<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(r.clinic)}</p>
 <h1>${esc(r.labels.title)}</h1><p class="meta">N° ${esc(r.number)}</p>
 <table>
 ${row(r.labels.patient, r.patient)}${row(r.labels.date, r.date)}${row(r.labels.method, r.method)}${r.reference ? row(r.labels.reference ?? '', r.reference) : ''}${row(r.labels.amount, r.amount, true)}

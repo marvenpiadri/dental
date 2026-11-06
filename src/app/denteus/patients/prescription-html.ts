@@ -27,7 +27,7 @@ export function prescriptionHtml(r: PrescriptionData): string {
   .sign { margin-top: 56px; text-align: end; color: #555; } .sign span { display: inline-block; min-width: 180px; border-top: 1px solid #0a0a0a; padding-top: 4px; }
   @media print { body { padding: 0; } }
 </style></head><body>
-<p class="clinic">${esc(r.clinic)}</p><p class="dentist">${esc(r.dentist)}</p>
+<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(r.clinic)}</p><p class="dentist">${esc(r.dentist)}</p>
 <h1>${esc(r.labels.title)}</h1>
 <div class="meta"><span>${esc(r.labels.patient)}: <strong>${esc(r.patient)}</strong></span><span>${esc(r.labels.date)}: ${esc(r.date)}</span></div>
 <ol>${lines}</ol>

@@ -35,8 +35,9 @@
   letter-spacing: -1.5px;
 }
 
-.brand span {
-  color: var(--app-muted);
+.brand img {
+  display: block;
+  border-radius: 8px;
 }
 
 .item {

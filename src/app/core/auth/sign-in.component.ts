@@ -11,7 +11,7 @@ export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', dentist: 
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="box" (submit)="$event.preventDefault(); go(who.value, pin.value); pin.value = ''">
-      <span class="logo">D<span>.</span></span>
+      <img class="logo" src="logo.png" alt="" width="56" height="56" />
       <h1>{{ t('auth.title') }}</h1>
       <label class="field">
         <span class="label">{{ t('auth.who') }}</span>
@@ -30,7 +30,7 @@ export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', dentist: 
     :host { display: grid; place-items: center; height: 100%; background: var(--app-canvas); padding: 16px; }
     .box { display: grid; gap: 14px; width: min(360px, 100%); padding: 28px; border: 1px solid var(--app-line); border-radius: var(--radius-card); background: var(--app-panel); }
     h1 { margin: 0; font-size: 17px; }
-    .logo { font-size: 22px; font-weight: 750; } .logo span { color: var(--app-muted); }`,
+    .logo { border-radius: 12px; }`,
 })
 export class SignInComponent {
   protected readonly auth = inject(AuthService);

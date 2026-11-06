@@ -22,7 +22,7 @@ export function quoteHtml(q: QuoteData): string {
   tfoot td { font-size: 18px; font-weight: 700; border-bottom: 0; border-top: 2px solid #0a0a0a; } .note { margin-top: 28px; color: #555; }
   @media print { body { padding: 0; } }
 </style></head><body>
-<p class="clinic">${esc(q.clinic)}</p><h1>${esc(q.labels.title)}</h1>
+<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(q.clinic)}</p><h1>${esc(q.labels.title)}</h1>
 <p class="meta">${esc(q.labels.patient)}: ${esc(q.patient)} · ${esc(q.labels.date)}: ${esc(q.date)}</p>
 <table><thead><tr><th>${esc(q.labels.tooth)}</th><th>${esc(q.labels.act)}</th><th class="n">${esc(q.labels.price)}</th></tr></thead><tbody>${rows}</tbody>
 <tfoot><tr><td></td><td>${esc(q.labels.total)}</td><td class="n">${esc(q.total)}</td></tr></tfoot></table>
