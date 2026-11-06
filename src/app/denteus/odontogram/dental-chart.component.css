@@ -17,11 +17,11 @@
 .examform { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; padding: 14px; border: 1px solid var(--app-line); border-radius: 14px; }
 .examform .wide { grid-column: 1 / -1; }
 .row { display: flex; gap: 8px; }
-.arches { display: grid; gap: 10px; overflow-x: auto; padding: 10px; border: 1px solid var(--app-line); border-radius: 16px; background: var(--app-panel); }
-.arch { display: grid; grid-template-columns: repeat(8, minmax(34px, 1fr)) 1px repeat(8, minmax(34px, 1fr)); gap: 2px; min-width: 640px; align-items: end; }
+.arches { display: grid; overflow-x: auto; border: 1px solid var(--app-line); background: var(--app-panel); }
+.arch { display: grid; grid-template-columns: repeat(8, minmax(34px, 1fr)) 1px repeat(8, minmax(34px, 1fr)); min-width: 640px; align-items: end; }
 .arch.lower { align-items: start; }
 .xfer { flex-wrap: wrap; }
-.midline { background: var(--app-line); align-self: stretch; }
+.midline { background: var(--app-text); align-self: stretch; }
 .tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--app-line); border-radius: 12px; overflow: hidden; }
 .tabs button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; font-weight: 600; font-size: 13px; color: var(--app-muted); white-space: nowrap; }
 .tabs button + button { border-inline-start: 1px solid var(--app-line); }
@@ -43,15 +43,16 @@
 .tooth { font-weight: 700; min-width: 28px; }
 .what { flex: 1 1 200px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .chg { font-size: 12px; color: var(--app-muted); }
-code { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: var(--app-hover); }
+code { font-size: 11px; padding: 1px 6px; background: var(--app-hover); }
 
 .opts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--app-muted); }
 .opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 
 .body { display: grid; gap: 14px; }
 .left, .panel { display: grid; gap: 10px 8px; min-width: 0; align-content: start; }
-.dentisto { gap: 2px; padding: 14px 10px; }
-.dentisto .arch { align-items: center; }
+.dentisto .arch { align-items: stretch; }
+.arch > :not(.midline) { border-inline-end: 1px solid var(--app-line); display: grid; align-content: center; }
+.arch + .arch { border-top: 1px solid var(--app-line); }
 .num { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); }
 .nums { min-height: 20px; }
 .incisal { justify-self: center; width: 22px; height: 12px; border-radius: 50%; border: 1px solid var(--app-line); background: var(--app-subtle); }

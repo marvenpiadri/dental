@@ -472,4 +472,4 @@ body.cal-dragging * {
 .zebra .tr:not(.th):nth-child(even) { background: var(--app-zebra); }
 
 /* Two columns of panels on wide screens, one on narrow ones. */
-.grid-wide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); align-items: start; }
+.grid-wide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); align-items: stretch; }

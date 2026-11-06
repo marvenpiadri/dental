@@ -37,5 +37,5 @@
   }
 }
 
-.form-grid { align-items: start; }
+.form-grid { align-items: stretch; }
 .form-grid > .banner { grid-column: 1 / -1; }

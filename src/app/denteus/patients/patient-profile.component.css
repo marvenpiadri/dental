@@ -268,14 +268,14 @@
 .flush { padding: 0; }
 .flush .stack { max-width: none; gap: 0; }
 .flush .card { border-radius: 0; border-width: 0 1px 1px 0; }
-.cover { height: 120px; background: linear-gradient(120deg, #052e16 0%, #15803d 100%); }
+.cover { display: none; }
 .cover-wrap { background: var(--app-panel); border-bottom: 1px solid var(--app-line); }
-.idrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; padding: 0 24px 16px; margin-top: -52px; }
+.idrow { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 16px 24px; }
 .photo { position: relative; flex: 0 0 auto; }
-.photo-img, .photo .avatar { width: 104px; height: 104px; border-radius: 50%; border: 4px solid var(--app-panel); object-fit: cover; display: block; }
+.photo-img, .photo .avatar { width: 80px; height: 80px; border-radius: 50%; border: 1px solid var(--app-line); object-fit: cover; display: block; }
 .photo-btn { position: absolute; inset-block-end: 0; inset-inline-end: 0; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; cursor: pointer; background: var(--app-panel); }
 .photo-btn:focus-within { outline: 2px solid var(--app-text); outline-offset: 2px; }
-.hero-main { flex: 1 1 280px; min-width: 0; padding-top: 56px; }
+.hero-main { flex: 1 1 280px; min-width: 0; }
 .hero-name { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.02em; }
 .quick { display: flex; gap: 8px; padding-top: 56px; margin-inline-start: auto; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
