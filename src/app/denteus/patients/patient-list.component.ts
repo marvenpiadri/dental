@@ -7,7 +7,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { isActive, relativeDay } from '../utils/appointment-labels';
 import { ageOn, initials, matchesQuery } from './patient-rules';
 
-type Filter = 'all' | 'today' | 'alert';
+type Filter = 'all' | 'today' | 'alert' | 'archived';
 type Sort = 'name' | 'recent';
 
 interface Row {
@@ -37,7 +37,7 @@ export class PatientListComponent {
   protected readonly filter = signal<Filter>('all');
   protected readonly sort = signal<Sort>('name');
   private readonly limit = signal(PAGE);
-  protected readonly filters: readonly Filter[] = ['all', 'today', 'alert'];
+  protected readonly filters: readonly Filter[] = ['all', 'today', 'alert', 'archived'];
 
   // Only read after the store has loaded, which only happens in the browser.
   private readonly now = new Date();
@@ -61,6 +61,8 @@ export class PatientListComponent {
     const filter = this.filter();
     const rows = this.rows().filter((row) => {
       if (!matchesQuery(row.patient, query)) return false;
+      if (filter === 'archived') return !!row.patient.archivedAt;
+      if (row.patient.archivedAt) return false;
       if (filter === 'alert') return !!row.patient.alert;
       if (filter === 'today') return (!!row.next && isSameDay(row.next.start, this.now)) || row.live !== null;
       return true;

@@ -27,7 +27,7 @@
   @if (scheduleLocked()) {
     <p class="readonly">{{ store.patientMap().get(patientId() ?? '')?.fullName }}</p>
   } @else {
-    <den-patient-picker [patients]="store.patients()" [(patientId)]="patientId" (createPatient)="onCreatePatient($event)" />
+    <den-patient-picker [patients]="bookable()" [(patientId)]="patientId" (createPatient)="onCreatePatient($event)" />
   }
   @if (patientAlert(); as medicalAlert) {
     <div class="warn medical" role="note">

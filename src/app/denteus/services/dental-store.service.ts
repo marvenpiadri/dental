@@ -225,7 +225,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -262,6 +262,11 @@ export class DentalStore {
     const msg: Message = { id: crypto.randomUUID(), at: new Date().toISOString(), kind, text, status: 'prepared', ...(appointmentId ? { appointmentId } : {}) };
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, messages: [...(p.messages ?? []), msg] } : p)));
     if (appointmentId) this.markReminded(appointmentId);
+  }
+
+  /** Archiving hides a patient without deleting anything; restoring brings them back. */
+  setArchived(patientId: string, on: boolean): void {
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, archivedAt: on ? new Date().toISOString() : undefined } : p)));
   }
 
   setWhatsappConsent(patientId: string, value: 'granted' | 'declined' | undefined): void {

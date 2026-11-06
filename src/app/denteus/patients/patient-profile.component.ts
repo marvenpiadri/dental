@@ -79,6 +79,7 @@ export class PatientProfileComponent {
       declined: p.whatsappConsent === 'declined',
     };
   });
+  protected readonly askArchive = signal(false);
   protected readonly sentMessages = computed(() => [...(this.patient()?.messages ?? [])].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8));
   protected readonly kindKey = { appointment: 'profile.remind.appt', balance: 'profile.remind.balance', recall: 'profile.remind.recall' } as const;
   protected readonly statusKey = { prepared: 'wa.status.prepared', sent: 'wa.status.sent', delivered: 'wa.status.delivered', read: 'wa.status.read', failed: 'wa.status.failed' } as const;

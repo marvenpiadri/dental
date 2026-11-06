@@ -49,6 +49,8 @@ export interface Patient {
   payments?: Payment[];
   /** Invoices and credit notes issued to this patient, oldest first. */
   invoices?: Invoice[];
+  /** ISO timestamp when the patient was archived. Archived patients leave the list and the pickers but keep every record. */
+  archivedAt?: string;
   /** Certificates and referral letters, oldest first. */
   letters?: Letter[];
   /** Whether the patient agreed to WhatsApp messages from the clinic. Unset means not asked yet; `declined` blocks every message. */
@@ -193,7 +195,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits'>;
 
 export interface Dentist {
   id: string;

@@ -38,7 +38,7 @@
             @for (f of filters; track f) {
               <button type="button" class="pill" [class.on]="filter() === f" [attr.aria-pressed]="filter() === f" (click)="setFilter(f)">
                 @if (f === 'alert') { <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> }
-                {{ t(f === 'all' ? 'patients.filter.all' : f === 'today' ? 'patients.filter.today' : 'patients.filter.alert') }}
+                {{ t(f === 'all' ? 'patients.filter.all' : f === 'today' ? 'patients.filter.today' : f === 'alert' ? 'patients.filter.alert' : 'patients.filter.archived') }}
               </button>
             }
           </div>

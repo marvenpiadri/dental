@@ -5,6 +5,7 @@
   </div>
   @if (patient(); as p) {
     <div class="ds-actions">
+      <button type="button" class="btn" (click)="askArchive.set(true)"><i class="fa-solid" [class.fa-box-archive]="!p.archivedAt" [class.fa-box-open]="p.archivedAt" aria-hidden="true"></i><span class="hide-sm">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</span></button>
       <a class="btn" [routerLink]="['/patients', p.id, 'edit']"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></a>
       <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a>
     </div>
@@ -27,6 +28,14 @@
     </div>
   } @else if (patient(); as p) {
     <div class="stack">
+      @if (p.archivedAt && !askArchive()) { <p class="archived-note" role="status"><i class="fa-solid fa-box-archive" aria-hidden="true"></i>{{ t('profile.archived') }}</p> }
+      @if (askArchive()) {
+        <div class="archived-note" role="alertdialog" [attr.aria-label]="t(p.archivedAt ? 'profile.restore' : 'profile.archive')">
+          <span>{{ t(p.archivedAt ? 'profile.restore.confirm' : 'profile.archive.confirm', { name: p.fullName }) }}</span>
+          <button type="button" class="btn btn--primary" (click)="store.setArchived(p.id, !p.archivedAt); askArchive.set(false)">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</button>
+          <button type="button" class="btn" (click)="askArchive.set(false)">{{ t('common.cancel') }}</button>
+        </div>
+      }
       <section class="cover-wrap">
         <div class="cover" aria-hidden="true"></div>
         <div class="idrow">
