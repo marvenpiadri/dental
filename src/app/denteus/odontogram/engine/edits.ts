@@ -5,7 +5,7 @@ import { defaultState, serializeState, clampPerio, furcationEntrances, PERIO_SIT
   VALID_TOOTH_SELECTION, VALID_TOOTH_SUBSTRATE, VALID_ENDO, VALID_PULP_DX, VALID_APICAL_DX, VALID_PERIAPICAL_TYPE, VALID_MOBILITY,
   VALID_RESORPTION_TYPE, VALID_WEAR_EDGE, VALID_WEAR_CERVICAL, VALID_DISCOLORATION, VALID_ORTHO_APPLIANCE, VALID_ORTHO_DRIFT,
   VALID_ORTHO_VERTICAL, VALID_ROOT_CARIES, VALID_PERI_IMPLANT, VALID_MODS, VALID_FILLING_MATERIAL, VALID_CARIES_SEVERITY,
-  VALID_FILLING_DEFECT, VALID_CARIES, VALID_DX_OVERRIDE_VALUE, TOOTH_LEVEL_DX_KEYS } from './vendor/state/payload';
+  VALID_FILLING_DEFECT, VALID_CARIES, VALID_CEJ_VISIBILITY, VALID_ROOT_CONCAVITY, VALID_GINGIVAL_THICKNESS, VALID_MILLER_CLASS, VALID_DX_OVERRIDE_VALUE, TOOTH_LEVEL_DX_KEYS } from './vendor/state/payload';
 import { isValidRestoration } from './vendor/registry/restorations';
 import type { ToothRecord } from './chart';
 
@@ -19,6 +19,7 @@ const ENUM_FIELDS = {
   discoloration: VALID_DISCOLORATION, orthoAppliance: VALID_ORTHO_APPLIANCE, orthoDrift: VALID_ORTHO_DRIFT,
   orthoVertical: VALID_ORTHO_VERTICAL, rootCaries: VALID_ROOT_CARIES, periImplant: VALID_PERI_IMPLANT,
   periapicalType: VALID_PERIAPICAL_TYPE, apicalDx: VALID_APICAL_DX,
+  cejVisibility: VALID_CEJ_VISIBILITY, rootConcavity: VALID_ROOT_CONCAVITY, gingivalThickness: VALID_GINGIVAL_THICKNESS, millerClass: VALID_MILLER_CLASS,
 } as const;
 export type EnumField = keyof typeof ENUM_FIELDS;
 
@@ -45,7 +46,8 @@ export type ToothEdit =
   | { kind: 'perio'; site: string; pd?: number | null; gm?: number; bop?: boolean; sup?: boolean }
   | { kind: 'furcation'; entrance: string; grade: number | null }
   | { kind: 'plaque'; surface: string; on: boolean }
-  | { kind: 'index'; index: 'pi' | 'gi'; surface: string; grade: number }
+  | { kind: 'index'; index: 'pi' | 'gi' | 'mpi' | 'mbi'; surface: string; grade: number }
+  | { kind: 'kg'; mm: number | null }
   | { kind: 'dxOverride'; key: string; mode: 'add' | 'suppress' | null }
   | { kind: 'note'; value: string }
   | { kind: 'reset' };
@@ -169,6 +171,11 @@ function run(t: ToothRecord, toothNo: number, e: ToothEdit): EditResult {
       if (!Number.isInteger(e.grade) || e.grade < 0 || e.grade > 3) return rejected('index grade must be 0–3');
       const m = t[e.index] as Map<string, number>;
       if (e.grade === 0) m.delete(e.surface); else m.set(e.surface, e.grade);
+      return { ok: true, changed: true };
+    }
+    case 'kg': {
+      if (e.mm !== null && !(Number.isInteger(e.mm) && e.mm >= 0 && e.mm <= 15)) return rejected('keratinized gingiva must be a whole number 0–15 mm');
+      t.kg = e.mm;
       return { ok: true, changed: true };
     }
     case 'dxOverride':

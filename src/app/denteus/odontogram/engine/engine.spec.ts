@@ -89,6 +89,17 @@ describe('invariants', () => {
     applyEdit(t, 11, { kind: 'perio', site: 'MB', pd: 0 });
     expect(t.perio.bop.size).toBe(0);
   });
+  it('records periodontal descriptors and round-trips them', () => {
+    const t = defaultState();
+    expect(applyEdit(t, 11, { kind: 'enum', field: 'millerClass', value: 'ii' }).ok).toBe(true);
+    expect(applyEdit(t, 11, { kind: 'enum', field: 'gingivalThickness', value: 'bogus' }).ok).toBe(false);
+    expect(applyEdit(t, 11, { kind: 'kg', mm: 4 }).ok).toBe(true);
+    expect(applyEdit(t, 11, { kind: 'kg', mm: 99 }).ok).toBe(false);
+    expect(applyEdit(t, 11, { kind: 'index', index: 'mpi', surface: 'buccal', grade: 2 }).ok).toBe(true);
+    const back = serializeState(t) as Record<string, unknown>;
+    expect([back['millerClass'], back['kg']]).toEqual(['ii', 4]);
+  });
+
   it('furcation entrance is position gated', () => {
     const t = defaultState();
     expect(applyEdit(t, 16, { kind: 'furcation', entrance: 'lingual', grade: 2 }).ok).toBe(false);

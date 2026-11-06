@@ -29,6 +29,9 @@ const L: Record<string, [string, string]> = {
   marginal: ['Marginal defect', 'Défaut marginal'], fracture: ['Fracture', 'Fracture'], wear: ['Wear', 'Usure'],
   parodontal: ['Periodontal', 'Parodontal'], inflammation: ['Inflammation', 'Inflammation'],
   buccal: ['Buccal', 'Vestibulaire'], lingual: ['Lingual', 'Lingual'], occlusal: ['Occlusal', 'Occlusal'],
+  detectable: ['Detectable', 'Détectable'], 'not-detectable': ['Not detectable', 'Non détectable'], mild: ['Mild', 'Légère'], deep: ['Deep', 'Profonde'],
+  unknown: ['Unknown', 'Inconnue'], thin: ['Thin', 'Fine'], medium: ['Medium', 'Moyenne'], thick: ['Thick', 'Épaisse'],
+  i: ['Class I', 'Classe I'], ii: ['Class II', 'Classe II'], iii: ['Class III', 'Classe III'], iv: ['Class IV', 'Classe IV'],
   'add': ['Add', 'Ajouter'], suppress: ['Suppress', 'Supprimer'],
 };
 

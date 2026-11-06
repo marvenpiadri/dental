@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { I18n } from '../../core/i18n/i18n.service';
+import { I18n, type Key } from '../../core/i18n/i18n.service';
 import type { ToothRecord } from './engine/chart';
-import type { ToothEdit } from './engine/edits';
-import { PERIO_SITES, furcationEntrances } from './engine/vendor/state/payload';
+import type { EnumField, ToothEdit } from './engine/edits';
+import { PERIO_SITES, furcationEntrances, VALID_CEJ_VISIBILITY, VALID_ROOT_CONCAVITY, VALID_GINGIVAL_THICKNESS, VALID_MILLER_CLASS } from './engine/vendor/state/payload';
 import { label } from './labels';
 
 /** Six-site probing for one tooth. Sites need a probing depth first; CAL is derived (PD + gingival margin), never stored. */
@@ -10,7 +10,23 @@ import { label } from './labels';
   selector: 'den-perio-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (!allowed()) { <p class="hint">{{ t('dc.perio.na') }}</p> } @else {
+    @if (implant()) {
+      <div class="scroll"><table>
+        <caption class="sr-only">{{ t('dc.idx.title') }}</caption>
+        <thead><tr><th scope="col">{{ t('dc.idx.title') }}</th><th scope="col">{{ t('dc.idx.mpi') }}</th><th scope="col">{{ t('dc.idx.mbi') }}</th></tr></thead>
+        <tbody>
+          @for (s of surfaces; track s) {
+            <tr><th scope="row">{{ t(surfaceKey[s]) }}</th>
+              @for (k of implantIdx; track k) {
+                <td><select class="input num" [disabled]="disabled()" [attr.aria-label]="k.toUpperCase() + ' ' + s" (change)="setIndex(k, s, $event)">
+                  @for (g of [0,1,2,3]; track g) { <option [value]="g" [selected]="grade(k, s) === g">{{ g }}</option> }
+                </select></td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table></div>
+    } @else if (!allowed()) { <p class="hint">{{ t('dc.perio.na') }}</p> } @else {
       <div class="scroll"><table>
         <caption class="sr-only">{{ t('dc.perio.title', { n: no() }) }}</caption>
         <thead><tr><th scope="col">{{ t('dc.perio.site') }}</th><th scope="col">PD</th><th scope="col">GM</th><th scope="col">CAL</th><th scope="col">BOP</th><th scope="col">{{ t('dc.perio.sup') }}</th></tr></thead>
@@ -55,6 +71,16 @@ import { label } from './labels';
           }
         </div>
       }
+      <div class="furc">
+        @for (f of enums; track f.field) {
+          <label class="field"><span class="label">{{ t(f.key) }}</span>
+            <select class="input" [disabled]="disabled()" (change)="setEnum(f.field, $event)">
+              @for (o of f.options; track o) { <option [value]="o" [selected]="o === state()[f.field]">{{ name(o) }}</option> }
+            </select></label>
+        }
+        <label class="field"><span class="label">{{ t('dc.perio.kg') }}</span>
+          <input class="input" type="number" inputmode="numeric" min="0" max="15" step="1" [disabled]="disabled()" [value]="state().kg ?? ''" (change)="setKg($event)" /></label>
+      </div>
     }
   `,
   styles: `
@@ -80,8 +106,16 @@ export class PerioEditorComponent {
   protected readonly surfaces = ['mesial', 'distal', 'buccal', 'lingual'] as const;
   protected readonly surfaceKey = { mesial: 'dc.idx.mesial', distal: 'dc.idx.distal', buccal: 'dc.idx.buccal', lingual: 'dc.idx.lingual' } as const;
   protected readonly indices = ['pi', 'gi'] as const;
-  protected grade(k: 'pi' | 'gi', s: string): number { return (this.state()[k] as Map<string, number>).get(s) ?? 0; }
-  protected setIndex(k: 'pi' | 'gi', s: string, e: Event): void { this.edit.emit({ kind: 'index', index: k, surface: s, grade: Number((e.target as HTMLSelectElement).value) }); }
+  protected readonly implantIdx = ['mpi', 'mbi'] as const;
+  protected readonly enums: { field: EnumField; key: Key; options: string[] }[] = [
+    { field: 'cejVisibility', key: 'dc.perio.cej', options: [...VALID_CEJ_VISIBILITY] }, { field: 'rootConcavity', key: 'dc.perio.concavity', options: [...VALID_ROOT_CONCAVITY] },
+    { field: 'gingivalThickness', key: 'dc.perio.thickness', options: [...VALID_GINGIVAL_THICKNESS] }, { field: 'millerClass', key: 'dc.perio.miller', options: [...VALID_MILLER_CLASS] },
+  ];
+  protected readonly implant = computed(() => String(this.state().toothSelection) === 'implant');
+  protected setEnum(field: EnumField, e: Event): void { this.edit.emit({ kind: 'enum', field, value: (e.target as HTMLSelectElement).value }); }
+  protected setKg(e: Event): void { const raw = (e.target as HTMLInputElement).value.trim(); this.edit.emit({ kind: 'kg', mm: raw === '' ? null : Number(raw) }); }
+  protected grade(k: 'pi' | 'gi' | 'mpi' | 'mbi', s: string): number { return (this.state()[k] as Map<string, number>).get(s) ?? 0; }
+  protected setIndex(k: 'pi' | 'gi' | 'mpi' | 'mbi', s: string, e: Event): void { this.edit.emit({ kind: 'index', index: k, surface: s, grade: Number((e.target as HTMLSelectElement).value) }); }
 
   protected readonly allowed = computed(() => { const s = String(this.state().toothSelection); return s === 'tooth-base' || s === 'milktooth'; });
   protected readonly entrances = computed(() => (this.allowed() ? furcationEntrances(this.no()) : []));
