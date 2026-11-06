@@ -19,6 +19,7 @@ import {
   Patient,
   PatientInput,
   CatalogEntry,
+  Invoice,
   Payment,
   VisitNote,
   TreatmentItem,
@@ -208,7 +209,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -249,6 +250,11 @@ export class DentalStore {
   /** Same shape as `changePlan`, for the patient's payments. */
   changePayments(patientId: string, change: (payments: Payment[]) => Payment[]): void {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, payments: change(p.payments ?? []) } : p)));
+  }
+
+  /** Same shape as `changePlan`, for the patient's invoices. Callers only ever append (issue) or add a credit note (cancel). */
+  changeInvoices(patientId: string, change: (invoices: Invoice[]) => Invoice[]): void {
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, invoices: change(p.invoices ?? []) } : p)));
   }
 
   /* ----------------------------- appointments ----------------------------- */

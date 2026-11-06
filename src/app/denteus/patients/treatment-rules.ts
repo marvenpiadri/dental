@@ -41,7 +41,7 @@ export interface Balance { charged: number; paid: number; due: number }
 /** Done work is what the patient is charged for; planned work is not billed yet. `due` is negative when they have paid ahead. */
 export function balance(plan: readonly TreatmentItem[], payments: readonly Payment[]): Balance {
   const charged = planTotals(plan).done;
-  const paid = payments.reduce((n, p) => n + p.amount, 0);
+  const paid = payments.filter((p) => !p.voidedAt).reduce((n, p) => n + p.amount, 0);
   return { charged, paid, due: charged - paid };
 }
 
@@ -50,7 +50,7 @@ export function balance(plan: readonly TreatmentItem[], payments: readonly Payme
  * shortcut: first-in first-out allocation, upgrade to per-act payments if the clinic needs to settle acts out of order.
  */
 export function allocate(plan: readonly TreatmentItem[], payments: readonly Payment[]): Map<string, { received: number; remaining: number }> {
-  let pool = payments.reduce((n, p) => n + p.amount, 0);
+  let pool = payments.filter((p) => !p.voidedAt).reduce((n, p) => n + p.amount, 0);
   const out = new Map<string, { received: number; remaining: number }>();
   const when = (i: TreatmentItem) => i.date ?? i.doneAt?.slice(0, 10) ?? '';
   for (const item of plan.filter((i) => i.status === 'done').sort((a, b) => when(a).localeCompare(when(b)))) {

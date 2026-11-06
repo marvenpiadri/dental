@@ -15,3 +15,7 @@
 .when { flex: 1; color: var(--app-muted); }
 .amount { font-variant-numeric: tabular-nums; font-weight: 600; }
 .empty-note { margin: 14px 0 0; color: var(--app-muted); }
+.sub { margin: 20px 0 8px; font-size: 13px; color: var(--app-muted); }
+.gone { opacity: .55; } .gone .amount { text-decoration: line-through; }
+small { color: var(--app-muted); font-weight: 400; }
+.ask { margin-top: 12px; } .grow { flex: 1; min-width: 200px; }

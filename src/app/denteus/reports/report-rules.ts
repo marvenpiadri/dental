@@ -39,9 +39,10 @@ export function buildReport(data: { patients: Patient[]; appointments: Appointme
 
   let revenue = 0;
   let charged = 0;
-  const byMethod: Record<PaymentMethod, number> = { cash: 0, card: 0, transfer: 0 };
+  const byMethod: Record<PaymentMethod, number> = { cash: 0, card: 0, transfer: 0, cheque: 0, other: 0 };
   for (const patient of data.patients) {
     for (const payment of patient.payments ?? []) {
+      if (payment.voidedAt) continue;
       const at = new Date(payment.at);
       if (!within(at, range)) continue;
       revenue += payment.amount;

@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { I18n, Key } from '../../core/i18n/i18n.service';
-import { PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
+import { Invoice, PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { statementHtml } from './statement-html';
 import { receiptHtml } from './receipt-html';
 import { balance, parsePrice, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
+import { InvoiceState, cancelInvoice, invoiceState, issueInvoice, uninvoiced, voidPayment } from './invoice-rules';
+import { invoiceHtml } from './invoice-html';
 
-const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer' };
+const STATE_KEY: Record<InvoiceState, Key> = { unpaid: 'inv.state.unpaid', partial: 'inv.state.partial', paid: 'inv.state.paid', cancelled: 'inv.state.cancelled' };
+const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' };
 
 /** What the patient owes (done work) against what they have paid. Payments are recorded here; nothing is sent anywhere. */
 @Component({
@@ -23,17 +26,29 @@ export class BillingComponent {
   readonly patientName = input('');
   readonly insurer = input('');
   readonly insuranceNumber = input('');
+  readonly invoices = input<Invoice[]>([]);
   readonly edit = output<(payments: Payment[]) => Payment[]>();
+  readonly editInvoices = output<(invoices: Invoice[]) => Invoice[]>();
 
   protected readonly i18n = inject(I18n);
   private readonly store = inject(DentalStore);
   protected readonly t = this.i18n.t;
   protected readonly methods = PAYMENT_METHODS;
   protected readonly methodKey = METHOD_KEY;
+  protected readonly stateKey = STATE_KEY;
 
   protected readonly amount = signal('');
   protected readonly method = signal<PaymentMethod>('cash');
   protected readonly invalid = signal(false);
+  protected readonly reference = signal('');
+  protected readonly forInvoice = signal('');
+  /** The payment or invoice waiting for a reason before it is voided or cancelled. */
+  protected readonly asking = signal<{ kind: 'payment' | 'invoice'; id: string } | null>(null);
+  protected readonly reason = signal('');
+  protected readonly toBill = computed(() => uninvoiced(this.plan(), this.invoices()));
+  protected readonly toBillTotal = computed(() => this.toBill().reduce((n, i) => n + i.price, 0));
+  protected readonly rows = computed(() => [...this.invoices()].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt)).map((inv) => ({ inv, ...invoiceState(inv, this.payments()) })));
+  protected readonly open = computed(() => this.rows().filter((r) => r.state === 'unpaid' || r.state === 'partial'));
 
   protected readonly sums = computed(() => balance(this.plan(), this.payments()));
   protected readonly recent = computed(() => [...this.payments()].sort((a, b) => b.at.localeCompare(a.at)));
@@ -48,13 +63,64 @@ export class BillingComponent {
     const value = parsePrice(this.amount());
     if (!value) { this.invalid.set(true); return; } // zero is not a payment
     const payment: Payment = { id: crypto.randomUUID(), amount: value, method: this.method(), at: new Date().toISOString() };
+    if (this.reference().trim()) payment.reference = this.reference().trim();
+    if (this.forInvoice()) payment.invoiceId = this.forInvoice();
     this.edit.emit((list) => [...list, payment]);
     this.amount.set('');
+    this.reference.set('');
+    this.forInvoice.set('');
     this.invalid.set(false);
   }
 
-  protected remove(payment: Payment): void {
-    this.edit.emit((list) => list.filter((p) => p.id !== payment.id));
+  /** Picking an invoice offers what is left on it. */
+  protected pickInvoice(id: string): void {
+    this.forInvoice.set(id);
+    const left = this.open().find((r) => r.inv.id === id)?.remaining;
+    if (left && !this.amount()) this.amount.set(String(left));
+  }
+
+  protected ask(kind: 'payment' | 'invoice', id: string): void { this.reason.set(''); this.asking.set({ kind, id }); }
+
+  /** Voiding keeps the payment in the history; cancelling an invoice issues a credit note. Both need a reason. */
+  protected confirm(): void {
+    const a = this.asking();
+    if (!a || !this.reason().trim()) return;
+    const now = new Date();
+    if (a.kind === 'payment') {
+      this.edit.emit((list) => list.map((p) => (p.id === a.id ? voidPayment(p, this.reason(), now) ?? p : p)));
+    } else {
+      const inv = this.invoices().find((i) => i.id === a.id);
+      const all = this.store.patients().flatMap((p) => p.invoices ?? []);
+      const done = inv && cancelInvoice(inv, this.reason(), all, now);
+      if (done) this.editInvoices.emit((list) => [...list.map((i) => (i.id === a.id ? done.marked : i)), done.creditNote]);
+    }
+    this.asking.set(null);
+  }
+
+  protected issue(): void {
+    const t = this.t;
+    const all = this.store.patients().flatMap((p) => p.invoices ?? []);
+    const inv = issueInvoice(this.toBill(), (i) => ({ itemId: i.id, label: procedureName(t, i.procedure, i.name), where: i.tooth ?? (i.scope ? scopeText(i, t) : ''), price: i.price }), all, new Date());
+    if (inv) this.editInvoices.emit((list) => [...list, inv]);
+  }
+
+  protected printInvoice(inv: Invoice): void {
+    const t = this.t;
+    const st = invoiceState(inv, this.payments());
+    const orig = inv.cancelsId ? this.invoices().find((i) => i.id === inv.cancelsId) : undefined;
+    const html = invoiceHtml({
+      clinic: this.store.locations()[0]?.name ?? 'Dentaleus', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
+      cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
+      date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
+      lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.i18n.money(l.price) })),
+      total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
+      labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
+    });
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   }
 
   protected readonly doneLines = computed(() => this.plan().filter((i) => i.status === 'done'));
@@ -86,13 +152,14 @@ export class BillingComponent {
       clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
       patient: this.patientName(),
       number: payment.id.slice(0, 8).toUpperCase(),
-      date: this.when(payment),
+      reference: payment.reference,
+      date: this.when(payment.at),
       method: t(METHOD_KEY[payment.method]),
       amount: this.i18n.money(payment.amount),
       charged: this.i18n.money(sums.charged),
       paid: this.i18n.money(sums.paid),
       due: this.i18n.money(Math.max(0, sums.due)),
-      labels: { title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') },
+      labels: { reference: t('bill.reference'), title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') },
       lang: this.i18n.lang(),
       dir: 'ltr', // shortcut: receipts are left-to-right until an RTL language is added
     });
@@ -103,7 +170,7 @@ export class BillingComponent {
     win.document.close();
   }
 
-  protected when(payment: Payment): string {
-    return this.i18n.date(new Date(payment.at), { day: 'numeric', month: 'short', year: 'numeric' });
+  protected when(at: string): string {
+    return this.i18n.date(new Date(at), { day: 'numeric', month: 'short', year: 'numeric' });
   }
 }

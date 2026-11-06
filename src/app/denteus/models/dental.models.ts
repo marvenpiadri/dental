@@ -40,6 +40,8 @@ export interface Patient {
   plan?: TreatmentItem[];
   /** Money received from the patient. What they owe is the done work in `plan` minus these. */
   payments?: Payment[];
+  /** Invoices and credit notes issued to this patient, oldest first. */
+  invoices?: Invoice[];
   /** What was found and done at each visit, newest last. */
   visits?: VisitNote[];
   /** Small JPEG data URL (see the profile's photo picker). Optional, added whenever the clinic likes. */
@@ -65,7 +67,7 @@ export interface VisitNote {
   prescription?: PrescriptionLine[];
 }
 
-export const PAYMENT_METHODS = ['cash', 'card', 'transfer'] as const;
+export const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'cheque', 'other'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export interface Payment {
@@ -75,6 +77,43 @@ export interface Payment {
   method: PaymentMethod;
   /** ISO timestamp. */
   at: string;
+  /** Card slip, transfer or cheque number: whatever lets the clinic find the money in its bank statement. */
+  reference?: string;
+  note?: string;
+  /** The invoice this money settles; absent means an advance or a payment on account. */
+  invoiceId?: string;
+  /** A voided payment is never deleted: it stays in the history, out of every total. */
+  voidedAt?: string;
+  voidReason?: string;
+}
+
+/** One line of an invoice, frozen when the invoice is issued so later plan edits never rewrite it. */
+export interface InvoiceLine {
+  itemId: string;
+  label: string;
+  /** Tooth or area the act covered, as text. */
+  where?: string;
+  /** Whole units; negative on a credit note. */
+  price: number;
+}
+
+/**
+ * An invoice, or the credit note that cancels one. Never edited and never deleted after issue:
+ * a mistake is cancelled (which issues a credit note) and the work is invoiced again under a new number.
+ */
+export interface Invoice {
+  id: string;
+  /** `FA-2026-0001` for invoices, `AV-2026-0001` for credit notes: gap-free per kind and year. */
+  number: string;
+  kind: 'invoice' | 'credit-note';
+  /** ISO timestamp. */
+  issuedAt: string;
+  lines: InvoiceLine[];
+  total: number;
+  /** A credit note points at the invoice it cancels. */
+  cancelsId?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
 }
 
 export const PROCEDURES = ['filling', 'cleaning', 'extraction', 'root-canal', 'crown', 'implant', 'xray', 'other'] as const;
@@ -110,7 +149,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'visits'>;
 
 export interface Dentist {
   id: string;

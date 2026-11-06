@@ -37,7 +37,7 @@ describe('buildReport (this month)', () => {
   const report = buildReport(data, 'month', now);
   it('counts money received only inside the period', () => {
     expect(report.revenue).toBe(800);
-    expect(report.byMethod).toEqual({ cash: 500, card: 300, transfer: 0 });
+    expect(report.byMethod).toEqual({ cash: 500, card: 300, transfer: 0, cheque: 0, other: 0 });
   });
   it('charges work by the day it was done', () => expect(report.charged).toBe(2500));
   it('counts visits and the no-show rate', () => {

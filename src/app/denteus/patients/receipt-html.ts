@@ -4,11 +4,12 @@ export interface ReceiptData {
   number: string;
   date: string;
   method: string;
+  reference?: string;
   amount: string;
   charged: string;
   paid: string;
   due: string;
-  labels: { title: string; patient: string; date: string; method: string; amount: string; charged: string; paid: string; due: string; thanks: string };
+  labels: { title: string; patient: string; date: string; method: string; amount: string; charged: string; paid: string; due: string; thanks: string; reference?: string };
   lang: string;
   dir: 'ltr' | 'rtl';
 }
@@ -32,7 +33,7 @@ export function receiptHtml(r: ReceiptData): string {
 <p class="clinic">${esc(r.clinic)}</p>
 <h1>${esc(r.labels.title)}</h1><p class="meta">N° ${esc(r.number)}</p>
 <table>
-${row(r.labels.patient, r.patient)}${row(r.labels.date, r.date)}${row(r.labels.method, r.method)}${row(r.labels.amount, r.amount, true)}
+${row(r.labels.patient, r.patient)}${row(r.labels.date, r.date)}${row(r.labels.method, r.method)}${r.reference ? row(r.labels.reference ?? '', r.reference) : ''}${row(r.labels.amount, r.amount, true)}
 ${row(r.labels.charged, r.charged)}${row(r.labels.paid, r.paid)}${row(r.labels.due, r.due)}
 </table>
 <p class="thanks">${esc(r.labels.thanks)}</p>
