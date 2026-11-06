@@ -83,7 +83,6 @@
   <details class="fold" [attr.aria-label]="t('dc.opt.title')"><summary>{{ t('dc.viewOpts') }}</summary><div class="opts" role="group" [attr.aria-label]="t('dc.opt.title')">
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.wisdomVisible" (change)="setGlobal('wisdomVisible', $any($event.target).checked)" /> {{ t('dc.opt.wisdom') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showHealthyPulp" (change)="setGlobal('showHealthyPulp', $any($event.target).checked)" /> {{ t('dc.opt.pulp') }}</label>
-    <label><input type="checkbox" [checked]="occlusalView()" (change)="occlusalView.set($any($event.target).checked)" /> {{ t('dc.opt.occlusal') }}</label>
     <label><input type="checkbox" [disabled]="readOnly()" [checked]="chart().globals.showBase" (change)="setGlobal('showBase', $any($event.target).checked)" /> {{ t('dc.opt.base') }}</label>
   </div></details>
   }
@@ -95,107 +94,24 @@
     </ul></details>
   }
 
-  @if (readonlyView()) {
-  <div class="arches dentisto" role="group" [attr.aria-label]="t('dc.chart')">
-    <div class="arch upper-side">
-      @for (n of upper; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [marked]="open3d() === n ? areas() : []" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
-        }
-      }
-    </div>
-    <div class="arch surf">
-      @for (n of upper; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (store.view3d()) { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> } @else if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
-            <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
-          }
-        }
-      }
-    </div>
-    <div class="arch nums">
-      @for (n of upper; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <span class="num">{{ num(n) }}</span>
-        }
-      }
-    </div>
-    <div class="arch cubes" [hidden]="store.view3d()">
-      @for (n of upper; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
-      }
-    </div>
-    <div class="arch cubes" [hidden]="store.view3d()">
-      @for (n of lower; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
-      }
-    </div>
-    <div class="arch nums">
-      @for (n of lower; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <span class="num">{{ num(n) }}</span>
-        }
-      }
-    </div>
-    <div class="arch surf">
-      @for (n of lower; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          @if (store.view3d()) { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> } @else if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
-            <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
-          }
-        }
-      }
-    </div>
-    <div class="arch lower-side lower">
-      @for (n of lower; track n) {
-        @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-        @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [marked]="open3d() === n ? areas() : []" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
-        }
-      }
-    </div>
-  </div>
-  } @else {
-  @for (top of views(); track top) {
-  <div class="arches" role="group" [attr.aria-label]="t(top ? 'dc.opt.occlusal' : 'dc.chart')">
+  <div class="arches" role="group" [attr.aria-label]="t('dc.chart')">
     @for (arch of [upper, lower]; track $index) {
-      @if (!top && $index === 1) {
-      <div class="arch cubes">
+      <div class="arch" [class.low]="$index === 1">
         @for (n of arch; track n) {
-          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
-        }
-      </div>
-      }
-      <div class="arch" [class.lower]="$index === 1">
-        @for (n of arch; track n) {
-          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else {
-          <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)"
-            [occlusal]="top" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp"
-            [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+          @if (hiddenTooth(n)) { <span class="tc" aria-hidden="true"></span> } @else {
+            <div class="tc" [class.mid]="n === 21 || n === 31" [class.sel]="selected().includes(n)">
+              @if (!store.view3d()) { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
+              @if (store.view3d()) { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> } @else if (n % 10 < 4) { <span class="incisal" aria-hidden="true"></span> } @else {
+                <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" (surface)="pickSurface(n, $event)" [compact]="true" [occlusal]="true" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+              }
+              <den-tooth-tile [no]="n" [display]="num(n)" [state]="stateOf(n)" [findings]="findingsOf(n)" [label]="toothLabel(n)" [hideNumber]="true" [marked]="open3d() === n ? areas() : []" [showBase]="shown().globals.showBase" [showHealthyPulp]="shown().globals.showHealthyPulp" [selected]="selected().includes(n)" (pick)="pick(n, $event)" />
+              <span class="num">{{ num(n) }}</span>
+            </div>
           }
         }
       </div>
-      @if (!top && $index === 0) {
-      <div class="arch cubes">
-        @for (n of arch; track n) {
-          @if (n === 21 || n === 31) { <span class="midline" aria-hidden="true"></span> }
-          @if (hiddenTooth(n)) { <span aria-hidden="true"></span> } @else { <den-crown-top [no]="n" [state]="stateOf(n)" [readonly]="readOnly()" [marked]="open3d() === n ? areas() : []" (pick)="cube(n, $event)" /> }
-        }
-      </div>
-      }
     }
   </div>
-  }
-  }
   </div>
 
   <div class="panel">

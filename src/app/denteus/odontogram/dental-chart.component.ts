@@ -93,7 +93,6 @@ export class DentalChartComponent {
 
   protected readonly tabs: { id: Tab; key: Key; icon: string }[] = [{ id: 'perio', key: 'dc.tab.perio', icon: 'fa-chart-line' }, { id: 'findings', key: 'dc.tab.findings', icon: 'fa-stethoscope' }, { id: 'history', key: 'dc.tab.history', icon: 'fa-clock-rotate-left' }]
   protected tabCount(id: Tab): number { return id === 'findings' ? this.diagnoses().filter((d) => !this.isConfirmed(d)).length : id === 'history' ? this.examinations().length : 0; };
-  protected readonly views = computed(() => [this.occlusalView()]);
   protected readonly upper = ALL_TEETH.slice(0, 16);
   protected readonly lower = ALL_TEETH.slice(16);
   /** What is drawn: a saved examination (read-only) or the working chart. */
@@ -116,7 +115,6 @@ export class DentalChartComponent {
   }
   /** Wisdom teeth can be hidden for a cleaner chart, but never when something is recorded on them. */
   /** Display only, per browser: not part of the chart. */
-  protected readonly occlusalView = signal(false);
 
   protected readonly hiddenFn = (n: number) => this.hiddenTooth(n);
   protected readonly numFn = (n: number) => this.num(n);

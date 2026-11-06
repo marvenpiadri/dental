@@ -18,10 +18,7 @@
 .examform .wide { grid-column: 1 / -1; }
 .row { display: flex; gap: 8px; }
 .arches { display: grid; overflow-x: auto; border: 1px solid var(--app-line); background: var(--app-panel); }
-.arch { display: grid; grid-template-columns: repeat(8, minmax(34px, 1fr)) 1px repeat(8, minmax(34px, 1fr)); min-width: 640px; align-items: end; }
-.arch.lower { align-items: start; }
 .xfer { flex-wrap: wrap; }
-.midline { background: var(--app-text); align-self: stretch; }
 .tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--app-line); border-radius: 12px; overflow: hidden; }
 .tabs button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; font-weight: 600; font-size: 13px; color: var(--app-muted); white-space: nowrap; }
 .tabs button + button { border-inline-start: 1px solid var(--app-line); }
@@ -50,14 +47,16 @@ code { font-size: 11px; padding: 1px 6px; background: var(--app-hover); }
 
 .body { display: grid; gap: 14px; }
 .left, .panel { display: grid; gap: 10px 8px; min-width: 0; align-content: start; }
-.dentisto .arch { align-items: stretch; }
-.arch > :not(.midline) { border-inline-end: 1px solid var(--app-line); display: grid; align-content: center; }
 .arch + .arch { border-top: 1px solid var(--app-line); }
-.num { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); }
-.nums { min-height: 20px; }
+.arch { display: grid; grid-template-columns: repeat(16, minmax(34px, 1fr)); min-width: 640px; }
+.tc { display: flex; flex-direction: column-reverse; min-width: 0; border-inline-end: 1px solid var(--app-line); }
+.low .tc { flex-direction: column; }
+.tc:last-child { border-inline-end-color: transparent; }
+.tc.mid { box-shadow: inset 1px 0 0 var(--app-text); }
+.tc.sel { background: var(--app-subtle); }
+.tc > * { padding-block: 2px; }
+.num { text-align: center; font-size: 12px; font-weight: 600; color: var(--app-muted); padding-block: 4px; }
 .incisal { justify-self: center; width: 22px; height: 12px; border-radius: 50%; border: 1px solid var(--app-line); background: var(--app-subtle); }
-.surf { padding-block: 4px; }
-.cubes { padding-block: 0; }
 
 .ov-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(6 10 9 / .62); backdrop-filter: blur(14px) saturate(.8); -webkit-backdrop-filter: blur(14px) saturate(.8); }
 .ov { --app-bg: #12171a; --app-surface: #12171a; --app-panel: rgb(255 255 255 / .05); --app-subtle: rgb(255 255 255 / .06); --app-hover: rgb(255 255 255 / .1); --app-line: rgb(255 255 255 / .12); --app-text: #eef2f0; --app-muted: #97a39d; color: var(--app-text); color-scheme: dark;
