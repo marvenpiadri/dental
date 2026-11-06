@@ -236,6 +236,10 @@
                   <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
                   <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
                 </section>
+                <section class="card" aria-labelledby="letters-title">
+                  <header class="card-head"><h2 class="card-title" id="letters-title"><i class="fa-solid fa-file-signature" aria-hidden="true"></i>{{ t('profile.letters') }}</h2></header>
+                  <den-letters [patientName]="p.fullName" [letters]="p.letters ?? []" (edit)="store.changeLetters(p.id, $event)" />
+                </section>
               }
               @case ('documents') {
                 <section class="card" aria-labelledby="docs-title">

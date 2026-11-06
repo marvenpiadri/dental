@@ -11,6 +11,7 @@ import { messageLink, whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
+import { LettersComponent } from './letters.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 import { PROFILE_PAGES, Section } from './profile-pages';
@@ -20,7 +21,7 @@ type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, FormsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, DocumentsComponent],
+  imports: [RouterLink, FormsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
