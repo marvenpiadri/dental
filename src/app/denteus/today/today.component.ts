@@ -82,11 +82,13 @@ export class TodayComponent {
     });
   });
 
-  /** Tomorrow's visits that still need a reminder: booked or confirmed, with a WhatsApp link when the number allows. */
+  /** Visits `reminderDays` ahead (tomorrow by default) that still need a reminder: booked or confirmed, with a WhatsApp link when the number allows. */
   protected readonly tomorrow = computed(() => {
     const now = this.now();
     if (!now) return [];
-    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const ahead = this.store.prefs().reminderDays;
+    if (!ahead) return [];
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + ahead);
     return this.store.appointments()
       .filter((a) => isSameDay(a.start, day) && (a.status === 'scheduled' || a.status === 'confirmed'))
       .sort((a, b) => a.start.getTime() - b.start.getTime())

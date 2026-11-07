@@ -14,7 +14,7 @@ Scope: every route, nav item, settings area and workflow reachable in the app to
 | `/practice` | Tasks, implant lots, sterilization, expenses, stock, lab orders | Complete for current scope |
 | `/reports` | Revenue series, per dentist, per payment method, CSV | Complete |
 | `/setup/clinic` | Clinic name, address, phone, email | New, complete |
-| `/setup/team` | Dentists, staff roles and PINs | Complete |
+| `/setup/team` | Six roles, grouped permissions, per-person changes, suspension, activity log | Complete (frontend-only security) |
 | `/setup/schedule` | Opening hours, chairs | Complete |
 | `/setup/services` | Act catalog and prices, invoice legal details | Complete |
 | `/setup/messaging` | Clinic wording for the three WhatsApp messages | New, complete |
@@ -39,9 +39,9 @@ Scope: every route, nav item, settings area and workflow reachable in the app to
 
 ## C. Still open (frontend)
 
-1. Appointment settings (default duration, slot step) are per appointment type in code, not editable in Settings.
-2. Billing preferences beyond legal details (enabled payment methods, currency) are not configurable; MAD only.
-3. Notification preferences: none exist because nothing sends notifications yet.
+1. ~~Appointment durations~~ Done: Settings → Schedule sets the starting length per appointment type.
+2. ~~Payment methods~~ Done: Settings → Services & billing enables methods (at least one stays on). Currency stays MAD.
+3. ~~Notification preferences~~ Done in the only form that is real today: Settings → Messaging chooses which Today lists show (visit reminders 1–3 days ahead or off, unpaid balances, check-up recall). Nothing is sent automatically; the clinic presses send in WhatsApp.
 4. Clinical preferences (default chart numbering is on the chart; no clinic-wide default).
 5. Stock thresholds are per item on the Practice page; no Settings entry (intentional).
 6. Periodontogram row-visibility settings and perio PDF export from the reference library.

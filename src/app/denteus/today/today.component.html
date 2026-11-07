@@ -106,9 +106,10 @@
         </section>
       </div>
 
-      <section class="card" aria-labelledby="remind-title">
+      @if (store.prefs().reminderDays > 0) {
+<section class="card" aria-labelledby="remind-title">
         <header class="card-head">
-          <h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ t('today.remind.title') }}</h2>
+          <h2 class="card-title" id="remind-title"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i>{{ store.prefs().reminderDays === 1 ? t('today.remind.title') : t('today.remind.ahead', { n: store.prefs().reminderDays }) }}</h2>
           <span class="chip" data-tone="neutral">{{ tomorrow().length }}</span>
         </header>
         @if (tomorrow().length) {
@@ -137,8 +138,10 @@
           </div>
         }
       </section>
+}
 
-      <section class="card" aria-labelledby="recall-title">
+      @if (store.prefs().showRecall) {
+<section class="card" aria-labelledby="recall-title">
         <header class="card-head">
           <h2 class="card-title" id="recall-title"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i>{{ t('today.recall.title') }}</h2>
           <span class="chip" data-tone="neutral">{{ recall().count }}</span>
@@ -166,8 +169,10 @@
           </div>
         }
       </section>
+}
 
-      <section class="card" aria-labelledby="owing-title">
+      @if (store.prefs().showOwing) {
+<section class="card" aria-labelledby="owing-title">
         <header class="card-head">
           <h2 class="card-title" id="owing-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('today.owing.title') }}</h2>
           @if (owing().count) { <span class="chip" data-tone="danger">{{ i18n.money(owing().total) }}</span> }
@@ -196,6 +201,7 @@
           </div>
         }
       </section>
+}
 
       <section class="card" aria-labelledby="dentists-title">
         <header class="card-head">

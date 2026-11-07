@@ -1,3 +1,4 @@
+import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
@@ -83,6 +84,7 @@ export class DentalStore {
   /** The 3D tooth overlay; turning it off leaves the flat chart exactly as before. */
   readonly view3d = signal(true);
   /** Clinic wording for WhatsApp messages; a kind left out uses the built-in text. */
+  readonly prefs = signal<ClinicPrefs>(DEFAULT_PREFS);
   readonly waTemplates = signal<Partial<Record<Message['kind'], string>>>({});
   readonly appointments = signal<Appointment[]>([]);
 
@@ -145,6 +147,7 @@ export class DentalStore {
 
     this.hiddenPages.set((await this.database.loadSetting<string[]>('hiddenPages')) ?? []);
     this.view3d.set((await this.database.loadSetting<boolean>('view3d')) ?? true);
+    this.prefs.set(normalizePrefs(await this.database.loadSetting<unknown>('prefs')));
     this.waTemplates.set((await this.database.loadSetting<Partial<Record<Message['kind'], string>>>('waTemplates')) ?? {});
 
     const saved = await this.database.loadSchedulingSnapshot();
@@ -162,6 +165,12 @@ export class DentalStore {
   async saveHiddenPages(ids: string[]): Promise<void> {
     await this.database.saveSetting('hiddenPages', ids);
     this.hiddenPages.set(ids);
+  }
+
+  async savePrefs(patch: Partial<ClinicPrefs>): Promise<void> {
+    const next = normalizePrefs({ ...this.prefs(), ...patch });
+    await this.database.saveSetting('prefs', next);
+    this.prefs.set(next);
   }
 
   async saveWaTemplates(templates: Partial<Record<Message['kind'], string>>): Promise<void> {

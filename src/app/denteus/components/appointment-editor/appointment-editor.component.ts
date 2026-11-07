@@ -1,3 +1,4 @@
+import { typeMinutes } from '../../setup/prefs-rules';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -32,7 +33,7 @@ export interface EditorProblem {
   details: string[];
 }
 
-const DURATIONS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15); // 15 min .. 3 h
+const DURATIONS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15); // 15 min .. 3 h; a length the clinic configured is added when used
 
 /**
  * Booking form for one appointment. It never saves by itself: it emits the draft, the parent sends it
@@ -138,7 +139,7 @@ export class AppointmentEditorComponent implements OnInit {
   protected onType(id: AppointmentTypeId): void {
     this.type.set(id);
     if (!this.durationTouched) {
-      this.duration.set(this.types.find((t) => t.id === id)?.minutes ?? 30);
+      this.duration.set(typeMinutes(this.store.prefs(), id));
     }
   }
 

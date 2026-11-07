@@ -16,7 +16,7 @@
   <label class="field">
     <span class="label">{{ t('bill.method') }}</span>
     <select class="input" (change)="method.set($any($event.target).value)">
-      @for (m of methods; track m) { <option [value]="m" [selected]="method() === m">{{ t(methodKey[m]) }}</option> }
+      @for (m of methods(); track m) { <option [value]="m" [selected]="chosen() === m">{{ t(methodKey[m]) }}</option> }
     </select>
   </label>
   <label class="field">

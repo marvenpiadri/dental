@@ -35,12 +35,14 @@ export class BillingComponent {
   private readonly store = inject(DentalStore);
   private readonly auth = inject(AuthService);
   protected readonly t = this.i18n.t;
-  protected readonly methods = PAYMENT_METHODS;
+  protected readonly methods = computed(() => PAYMENT_METHODS.filter((m) => this.store.prefs().payMethods.includes(m)));
   protected readonly methodKey = METHOD_KEY;
   protected readonly stateKey = STATE_KEY;
 
   protected readonly amount = signal('');
   protected readonly method = signal<PaymentMethod>('cash');
+  /** The chosen method, or the first enabled one when the clinic has since turned the chosen one off. */
+  protected readonly chosen = computed(() => (this.methods().includes(this.method()) ? this.method() : this.methods()[0]));
   protected readonly invalid = signal(false);
   protected readonly reference = signal('');
   protected readonly forInvoice = signal('');
@@ -64,7 +66,7 @@ export class BillingComponent {
   protected add(): void {
     const value = parsePrice(this.amount());
     if (!value) { this.invalid.set(true); return; } // zero is not a payment
-    const payment: Payment = { id: crypto.randomUUID(), amount: value, method: this.method(), at: new Date().toISOString() };
+    const payment: Payment = { id: crypto.randomUUID(), amount: value, method: this.chosen(), at: new Date().toISOString() };
     if (this.reference().trim()) payment.reference = this.reference().trim();
     if (this.forInvoice()) payment.invoiceId = this.forInvoice();
     this.edit.emit((list) => [...list, payment]);

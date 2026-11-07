@@ -25,3 +25,17 @@ Baseline: commit 264247b plus the clinic-profile rules below. Statuses use the b
 | Multi-location | Not building | `locations` store holds exactly one clinic by decision |
 
 Architecture constraint found: public pages must be rendered from data the server can read, but all clinic data lives in the owner's browser. The public route will read through one `PublicClinicSource` interface. Until the backend exists the only implementation is a server-side JSON file with the shape the future API returns; the owner exports it from Settings. This is a seam, not a working publishing service.
+
+## Frontend gap review (this phase)
+
+Done: appointment lengths per type, enabled payment methods, Today notification lists, lab case tooth and shade with a patient-file link, and the Settings schedule section (dentists, hours, chairs) that a template cleanup had dropped.
+
+Already complete and untouched: calendar conflicts, dentist and chair assignment, waiting room, statuses; Practice task list (a plain checklist, enough for the front desk).
+
+Still missing in the frontend:
+- Treatment-plan acceptance and version history (plan is one live list; no accepted/declined state or dated versions).
+- Structured medical history (conditions, allergies, medications); today it is one free-text alert.
+
+Google Business: the clinic's Google data is imported from a Maps link. A live Business Profile connection needs OAuth and a server, so Settings → Integrations says "not connected". Nothing simulates a connection.
+
+Backend needs recorded for later: global slug uniqueness, server-side permissions, stored files instead of data URLs, Places terms review for stored place data, automated WhatsApp sending.

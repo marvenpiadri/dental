@@ -118,19 +118,21 @@
         @case ('lab') {
           <section class="card">
             <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-flask" aria-hidden="true"></i>{{ t('practice.tab.lab') }}</h2></header>
-            <form class="row" (submit)="$event.preventDefault(); addOrder(who.value, work.value, lab.value, due.value); work.value = ''; lab.value = ''">
+            <form class="row" (submit)="$event.preventDefault(); addOrder(who.value, work.value, lab.value, due.value, otooth.value, shade.value); work.value = ''; lab.value = ''; otooth.value = ''; shade.value = ''">
               <select class="input" #who [attr.aria-label]="t('practice.lab.patient')">
                 <option value="">{{ t('practice.lab.patient') }}</option>
                 @for (p of store.patients(); track p.id) { <option [value]="p.id">{{ p.fullName }}</option> }
               </select>
               <input class="input" #work [attr.aria-label]="t('practice.lab.work')" [placeholder]="t('practice.lab.work')" />
+              <input class="input num" #otooth [attr.aria-label]="t('plan.tooth')" [placeholder]="t('plan.tooth')" />
+              <input class="input num" #shade [attr.aria-label]="t('practice.lab.shade')" [placeholder]="t('practice.lab.shade')" />
               <input class="input" #lab [attr.aria-label]="t('practice.lab.lab')" [placeholder]="t('practice.lab.lab')" />
               <input class="input date" #due type="date" [attr.aria-label]="t('practice.lab.due')" />
               <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
             </form>
             @for (o of orders(); track o.id) {
               <div class="row">
-                <span class="grow"><strong>{{ patientName(o.patientId) }}</strong> <span class="muted">· {{ o.work }}@if (o.lab) { · {{ o.lab }} }@if (o.due) { · {{ o.due }} }</span></span>
+                <span class="grow"><a class="link" [routerLink]="['/patients', o.patientId]"><strong>{{ patientName(o.patientId) }}</strong></a> <span class="muted">· {{ o.work }}@if (o.tooth) { · {{ t('plan.tooth') }} {{ o.tooth }} }@if (o.shade) { · {{ o.shade }} }@if (o.lab) { · {{ o.lab }} }@if (o.due) { · {{ o.due }} }</span></span>
                 @if (late(o)) { <span class="chip" data-tone="danger">{{ t('practice.lab.late') }}</span> }
                 <select class="input status" [attr.aria-label]="t('practice.lab.status')" (change)="setStatus(o.id, $any($event.target).value)">
                   @for (s of statuses; track s) { <option [value]="s" [selected]="o.status === s">{{ t(statusKey[s]) }}</option> }

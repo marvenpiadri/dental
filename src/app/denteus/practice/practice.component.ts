@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
@@ -10,6 +11,7 @@ type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
 /** The daily running of the clinic outside the chair: what was spent, what is running out, what is at the lab. */
 @Component({
   selector: 'den-practice',
+  imports: [RouterLink],
   templateUrl: './practice.component.html',
   styleUrl: './practice.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,10 +71,10 @@ export class PracticeComponent {
     this.practice.changeStock((list) => list.map((s) => (s.id === id ? { ...s, qty: Math.max(0, s.qty + by) } : s)));
   }
 
-  protected addOrder(patientId: string, work: string, lab: string, due: string): void {
+  protected addOrder(patientId: string, work: string, lab: string, due: string, tooth = '', shade = ''): void {
     if (!patientId || !work.trim()) { this.invalid.set(true); return; }
     this.invalid.set(false);
-    this.practice.changeLab((list) => [...list, { id: crypto.randomUUID(), patientId, work: work.trim(), lab: lab.trim(), due, status: 'sent' }]);
+    this.practice.changeLab((list) => [...list, { id: crypto.randomUUID(), patientId, work: work.trim(), lab: lab.trim(), due, status: 'sent', tooth: tooth.trim() || undefined, shade: shade.trim() || undefined }]);
   }
 
   protected addTask(text: string): void {

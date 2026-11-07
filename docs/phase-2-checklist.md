@@ -21,14 +21,14 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 | Medical certificates and referral letters | Complete and verified | Create, validate, print, persist tested. |
 | X | Implemented but needs validation | Verified earlier with a sample PDF; not re-run after this phase. |
 | Imaging and patient files | Implemented but needs validation | Upload per tooth and filter exist; no viewer tools (zoom, compare). |
-| Prosthesis cases / lab orders | Partially implemented | Lab orders with status and late flag exist; no case file linking to the chart. |
+| Prosthesis cases / lab orders | Partially implemented | Lab orders with status, late flag, tooth, shade and a link to the patient file. No file attachments or chart overlay. |
 | Inventory, sterilization, implant lots, expenses | Implemented but needs validation | Rules tested; screens exist. |
 | Staff and clinic configuration | Partially implemented | Locations, chairs, dentists set up; roles exist, no real authentication (Phase 3). |
 | French pass | Implemented but needs validation | 406 keys match in both languages; spot-checked profile, billing, chart. |
 | Dark mode | Implemented but needs validation | Chart, billing, profile checked; other modules not re-checked. |
 | Phone and tablet layout | Implemented but needs validation | No page-level horizontal overflow on the 8 patient tabs at 390 and 820 px; chart scrolls inside its frame. |
 | Accessibility (keyboard, labels) | Partially implemented | Labels and aria on new forms; no full keyboard audit. |
-| Google Business Profile and public clinic page | Missing | Design only (domain-model.md). OAuth and sync are Phase 3. |
+| Public clinic page and profile | Implemented | Settings → Clinic profile, preview, SSR page with SEO, sitemap, robots, slug redirects, Google Maps link import. Business Profile OAuth and sync need the backend. |
 | Backend, database, authentication | Blocked | Phase 3 by decision. |
 
 ## End-to-end acceptance criteria

@@ -7,7 +7,7 @@ export interface ImplantRecord { id: string; patientId: string; tooth: string; b
 export interface SterilizationCycle { id: string; day: string; device: string; lot: string; operator: string }
 export const LAB_STATUSES = ['sent', 'ready', 'fitted'] as const;
 export type LabStatus = (typeof LAB_STATUSES)[number];
-export interface LabOrder { id: string; patientId: string; work: string; lab: string; due: string; status: LabStatus }
+export interface LabOrder { id: string; patientId: string; work: string; lab: string; due: string; status: LabStatus; tooth?: string; shade?: string }
 
 /** Total spent in a month, `month` as "YYYY-MM". */
 export const monthTotal = (expenses: Expense[], month: string): number =>

@@ -4,7 +4,9 @@ import { ClinicProfileComponent } from './clinic-profile.component';
 import { TeamComponent } from './team.component';
 import { ThemeService } from '../../core/theme.service';
 import { LANGS, Lang } from '../../core/i18n/i18n.service';
-import { ClinicLocation, Message } from '../models/dental.models';
+import { APPOINTMENT_TYPES, ClinicLocation, Message, PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
+import { MAX_DURATION, MIN_DURATION, toggleMethod, typeMinutes } from './prefs-rules';
+import { typeKey } from '../utils/domain-keys';
 import { AuthService } from '../../core/auth/auth.service';
 import { Permission } from '../../core/auth/auth-rules';
 import { Key } from '../../core/i18n/i18n.service';
@@ -64,6 +66,27 @@ export class ClinicSetupComponent {
 
   protected readonly store = inject(DentalStore);
   protected readonly pages = PROFILE_PAGES;
+  protected readonly types = APPOINTMENT_TYPES;
+  protected readonly typeKey = typeKey;
+  protected readonly payMethods = PAYMENT_METHODS;
+  protected readonly payKey = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' } as const satisfies Record<PaymentMethod, Key>;
+  protected readonly minutes = (id: string) => typeMinutes(this.store.prefs(), id);
+  protected readonly reminderChoices = [[0, 'set.notify.off'], [1, 'set.notify.d1'], [2, 'set.notify.d2'], [3, 'set.notify.d3']] as const satisfies readonly (readonly [number, Key])[];
+
+  protected setLength(id: string, input: HTMLInputElement): void {
+    const m = Math.round(Number(input.value));
+    if (!Number.isFinite(m) || m < MIN_DURATION || m > MAX_DURATION) { input.value = String(this.minutes(id)); return; }
+    void this.store.savePrefs({ typeMinutes: { ...this.store.prefs().typeMinutes, [id]: m } });
+  }
+
+  protected resetLength(id: string): void {
+    const { [id]: _drop, ...rest } = this.store.prefs().typeMinutes;
+    void this.store.savePrefs({ typeMinutes: rest });
+  }
+
+  protected setReminderDays(v: string): void { void this.store.savePrefs({ reminderDays: Number(v) as 0 | 1 | 2 | 3 }); }
+
+  protected togglePay(m: PaymentMethod): void { void this.store.savePrefs({ payMethods: toggleMethod(this.store.prefs().payMethods, m) }); }
   protected togglePage(id: string, shown: boolean): void {
     const hidden = this.store.hiddenPages().filter((x) => x !== id);
     void this.store.saveHiddenPages(shown ? hidden : [...hidden, id]);
