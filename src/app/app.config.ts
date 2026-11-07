@@ -1,4 +1,5 @@
-import { isDevMode } from '@angular/core';
+import { inject, isDevMode, provideAppInitializer } from '@angular/core';
+import { I18n } from './core/i18n/i18n.service';
 import { provideServiceWorker } from '@angular/service-worker';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -9,6 +10,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideAppInitializer(() => inject(I18n).ready()),
     // Query parameters (?date=...&patient=...) arrive as component inputs.
     provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useExisting: PageTitle },

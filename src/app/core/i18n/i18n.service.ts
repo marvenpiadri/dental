@@ -2,19 +2,20 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, REQUEST, effect, inject, signal } from '@angular/core';
 import { readCookie } from '../cookie';
 import { en } from './en';
-import { fr } from './fr';
 
 export type Key = keyof typeof en;
 export type Lang = 'en' | 'fr';
 
-/** Adding a language: add a file like fr.ts (the compiler lists every missing key), then one line here. */
+/** Adding a language: add a file like fr.ts (the compiler lists every missing key), one line here and one in `loaders`. */
 export const LANGS: readonly { code: Lang; label: string; short: string; dir: 'ltr' | 'rtl' }[] = [
   { code: 'en', label: 'English', short: 'EN', dir: 'ltr' },
   { code: 'fr', label: 'Français', short: 'FR', dir: 'ltr' },
 ];
 
-const DICTIONARIES: Record<Lang, Record<Key, string>> = { en, fr };
 const COOKIE = 'dtl-lang';
+
+/** English is always loaded (it is the fallback); other languages load when first needed, so they stay out of the first download. */
+const loaders: Partial<Record<Lang, () => Promise<Record<Key, string>>>> = { fr: () => import('./fr').then((m) => m.fr) };
 
 const isLang = (value: unknown): value is Lang => LANGS.some((l) => l.code === value);
 
@@ -32,6 +33,8 @@ export class I18n {
   private readonly request = inject(REQUEST, { optional: true });
 
   readonly lang = signal<Lang>(this.initial());
+  private readonly loaded = signal<Partial<Record<Lang, Record<Key, string>>>>({ en });
+  private readonly loading = new Map<Lang, Promise<void>>();
 
   constructor() {
     effect(() => {
@@ -42,7 +45,7 @@ export class I18n {
   }
 
   readonly t = (key: Key, params?: Record<string, string | number>): string => {
-    let text = DICTIONARIES[this.lang()][key] ?? en[key];
+    let text = this.loaded()[this.lang()]?.[key] ?? en[key];
     if (params) for (const [name, value] of Object.entries(params)) text = text.replaceAll(`{${name}}`, String(value));
     return text;
   };
@@ -54,7 +57,18 @@ export class I18n {
     return this.t(key, { n });
   };
 
-  setLang(lang: Lang): void {
+  /** Resolves once the current language's dictionary is in memory. The app waits for it before the first render, so French pages never flash English. */
+  ready(): Promise<void> { return this.ensure(this.lang()); }
+
+  private ensure(lang: Lang): Promise<void> {
+    const load = loaders[lang];
+    if (!load || this.loaded()[lang]) return Promise.resolve();
+    if (!this.loading.has(lang)) this.loading.set(lang, load().then((dict) => this.loaded.update((d) => ({ ...d, [lang]: dict }))));
+    return this.loading.get(lang)!;
+  }
+
+  async setLang(lang: Lang): Promise<void> {
+    await this.ensure(lang);
     this.lang.set(lang);
     this.doc.cookie = `${COOKIE}=${lang}; Path=/; Max-Age=31536000; SameSite=Lax`;
   }
