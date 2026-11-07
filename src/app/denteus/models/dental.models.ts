@@ -20,6 +20,44 @@ export interface ClinicLocation {
   taxId?: string;
   bank?: string;
   invoiceNote?: string;
+  /** Public page content and location, all owned by the clinic. Absent until the owner fills it in. */
+  profile?: ClinicProfile;
+}
+
+export type PublishState = 'draft' | 'published' | 'unpublished' | 'closed';
+
+/** What the clinic publishes about itself. `name`/`legalName` on the location stay the private business identity. */
+export interface ClinicProfile {
+  state: PublishState;
+  displayName?: string;
+  intro?: string;
+  description?: string;
+  /** Images are resized in the browser and kept as data URLs until the online version stores files. */
+  cover?: string;
+  gallery?: string[];
+  whatsapp?: string;
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  /** ISO 3166-1 alpha-2, for example `MA`. */
+  countryCode?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  /** Google's identifier for the place; the only Google data kept as an external reference. */
+  placeId?: string;
+  /** Last URL segment. The full path is `/clinics/{country}/{city}/{slug}` built by `clinicPath`. */
+  slug?: string;
+  /** Slugs this clinic used to publish under; they redirect to the current one. */
+  previousSlugs?: string[];
+  languages?: string[];
+  services?: string[];
+  specialties?: string[];
+  /** Holidays and temporary closures, ISO dates. */
+  closures?: { from: string; to: string; reason?: string }[];
+  publishedAt?: string;
 }
 
 export interface Patient {
