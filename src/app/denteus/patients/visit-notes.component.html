@@ -54,8 +54,24 @@
           <span class="spacer"></span>
           @if (n.prescription?.length) { <button type="button" class="btn" (click)="print(n)"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('rx.print') }}</button> }
           <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.edit')" (click)="correct(n)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-          <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.remove')" (click)="remove(n)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          @if (n.revisions?.length) { <button type="button" class="btn" [attr.aria-expanded]="showHistory() === n.id" (click)="showHistory.set(showHistory() === n.id ? null : n.id)"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>{{ t('visit.history', { n: n.revisions!.length }) }}</button> }
+          @if (askRemove() === n.id) {
+            <button type="button" class="btn btn--primary" (click)="remove(n)">{{ t('visit.remove.confirm') }}</button>
+            <button type="button" class="btn" (click)="askRemove.set(null)">{{ t('common.cancel') }}</button>
+          } @else { <button type="button" class="btn btn--icon" [attr.aria-label]="t('visit.remove')" (click)="askRemove.set(n.id)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button> }
         </header>
+        @if (showHistory() === n.id) {
+          <ol class="revs">
+            @for (r of n.revisions!.slice().reverse(); track r.at) {
+              <li><strong>{{ day(r.at) }}</strong> <span class="muted">{{ t('visit.history.replaced') }}</span>
+                @if (r.complaint) { <p>{{ t('visit.complaint') }}: {{ r.complaint }}</p> }
+                @if (r.findings) { <p>{{ t('visit.findings') }}: {{ r.findings }}</p> }
+                @if (r.care) { <p>{{ t('visit.care') }}: {{ r.care }}</p> }
+                @if (r.prescription?.length) { <p>{{ t('rx.title') }}: @for (l of r.prescription; track $index) { {{ l.drug }}{{ $last ? '' : ', ' }} }</p> }
+              </li>
+            }
+          </ol>
+        }
         <dl>
           @if (n.complaint) { <div><dt>{{ t('visit.complaint') }}</dt><dd>{{ n.complaint }}</dd></div> }
           @if (n.findings) { <div><dt>{{ t('visit.findings') }}</dt><dd>{{ n.findings }}</dd></div> }

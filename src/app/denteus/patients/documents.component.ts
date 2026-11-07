@@ -13,6 +13,7 @@ interface Shown { doc: PatientDocument; url: string; image: boolean }
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown)': 'key($event)' },
 })
 export class DocumentsComponent {
   readonly patientId = input.required<string>();
@@ -41,6 +42,36 @@ export class DocumentsComponent {
     }
   }
   protected readonly loading = signal(true);
+
+  /** The image viewer: which picture is open, how far it is zoomed, and whether it is inverted (an X-ray often reads better that way). */
+  protected readonly viewing = signal<string | null>(null);
+  protected readonly zoom = signal(1);
+  protected readonly invert = signal(false);
+  protected readonly images = computed(() => this.visible().filter((x) => x.image));
+  protected readonly current = computed(() => this.images().find((x) => x.doc.id === this.viewing()) ?? null);
+
+  protected view(item: Shown, event: Event): void {
+    if (!item.image) return; // a PDF opens in its own tab
+    event.preventDefault();
+    this.zoom.set(1); this.invert.set(false); this.viewing.set(item.doc.id);
+  }
+  protected step(by: number): void {
+    const list = this.images();
+    const at = list.findIndex((x) => x.doc.id === this.viewing());
+    if (at >= 0 && list.length) { this.viewing.set(list[(at + by + list.length) % list.length].doc.id); this.zoom.set(1); }
+  }
+  protected zoomBy(factor: number): void { this.zoom.update((z) => Math.min(8, Math.max(0.25, z * factor))); }
+  protected key(e: KeyboardEvent): void {
+    if (!this.viewing()) return;
+    const k = e.key;
+    if (k === 'Escape') this.viewing.set(null);
+    else if (k === 'ArrowRight') this.step(1);
+    else if (k === 'ArrowLeft') this.step(-1);
+    else if (k === '+' || k === '=') this.zoomBy(1.25);
+    else if (k === '-') this.zoomBy(0.8);
+    else return;
+    e.preventDefault();
+  }
   protected readonly problem = signal<'type' | 'size' | 'storage' | null>(null);
 
   constructor() {

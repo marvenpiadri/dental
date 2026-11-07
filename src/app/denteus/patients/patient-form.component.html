@@ -80,7 +80,7 @@
           <label class="field">
             <span class="label">{{ t('form.insurer') }}</span>
             <input class="input" name="insurer" list="insurers" autocomplete="off" [value]="values().insurer" (input)="set('insurer', $any($event.target).value)" />
-            <datalist id="insurers"><option value="CNSS"></option><option value="CNOPS"></option><option value="AMO"></option></datalist>
+            <datalist id="insurers"><option value="AMO"></option></datalist>
           </label>
           <label class="field">
             <span class="label">{{ t('form.insuranceNumber') }}</span>

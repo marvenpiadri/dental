@@ -1,4 +1,4 @@
-# Dentaleus: design and architecture notes
+# Dontalist: design and architecture notes
 
 ## The one idea
 

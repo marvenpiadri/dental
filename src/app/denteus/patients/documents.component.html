@@ -22,7 +22,7 @@
   <ul class="grid">
     @for (item of visible(); track item.doc.id) {
       <li>
-        <a class="thumb" [href]="item.url" target="_blank" rel="noopener" [attr.aria-label]="t('docs.open', { name: item.doc.name })">
+        <a class="thumb" [href]="item.url" target="_blank" rel="noopener" [attr.aria-label]="t('docs.open', { name: item.doc.name })" (click)="view(item, $event)">
           @if (item.image) { <img [src]="item.url" alt="" loading="lazy" /> } @else { <i class="fa-regular fa-file-pdf" aria-hidden="true"></i> }
         </a>
         <div class="meta">
@@ -39,4 +39,20 @@
   </ul>
 } @else if (!loading()) {
   <p class="empty-note">{{ t('docs.empty') }}</p>
+}
+
+@if (current(); as c) {
+  <div class="viewer" role="dialog" aria-modal="true" [attr.aria-label]="c.doc.name">
+    <div class="vbar">
+      <strong class="name">{{ c.doc.name }}</strong>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('view.prev')" (click)="step(-1)"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('view.next')" (click)="step(1)"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('view.zoomOut')" (click)="zoomBy(0.8)"><i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i></button>
+      <button type="button" class="btn" (click)="zoom.set(1)">{{ (zoom() * 100).toFixed(0) }}%</button>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('view.zoomIn')" (click)="zoomBy(1.25)"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
+      <button type="button" class="btn" [attr.aria-pressed]="invert()" (click)="invert.set(!invert())"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>{{ t('view.invert') }}</button>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('view.close')" (click)="viewing.set(null)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+    <div class="stage"><img [src]="c.url" [alt]="c.doc.name" [style.transform]="'scale(' + zoom() + ')'" [style.filter]="invert() ? 'invert(1)' : null" /></div>
+  </div>
 }

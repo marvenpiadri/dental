@@ -94,7 +94,7 @@ export class TodayComponent {
         const patient = this.store.patientMap().get(a.patientId);
         const vars = {
           name: patient?.fullName ?? '',
-          clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+          clinic: this.store.locations()[0]?.name ?? 'Dontalist',
           day: this.i18n.date(a.start, { weekday: 'long', day: 'numeric', month: 'long' }),
           time: this.i18n.time(a.start),
         };
@@ -117,7 +117,7 @@ export class TodayComponent {
     const now = this.now();
     if (!now) return { rows: [], count: 0 };
     const all = recallDue(this.store.patients(), this.store.appointments(), now);
-    const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
+    const clinic = this.store.locations()[0]?.name ?? 'Dontalist';
     const rows = all.slice(0, 5).map(({ patient, lastVisit }) => {
       const vars = { name: patient.fullName, clinic };
       const message = this.store.message('recall', this.t('recall.message', vars), vars);

@@ -31,7 +31,7 @@ export interface Patient {
   birthDate?: string;
   sex?: 'female' | 'male';
   city?: string;
-  /** Health insurer as the clinic writes it (CNSS, CNOPS, a private insurer…) and the patient's member number. Free text on purpose. */
+  /** Health insurer as the clinic writes it (AMO, a private insurer…) and the patient's member number. Free text on purpose. */
   insurer?: string;
   insuranceNumber?: string;
   /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
@@ -78,6 +78,17 @@ export interface VisitNote {
   at: string;
   appointmentId?: string;
   dentistId?: string;
+  complaint?: string;
+  findings?: string;
+  care?: string;
+  prescription?: PrescriptionLine[];
+  /** Earlier versions, oldest first. A correction keeps what was there before instead of overwriting it. */
+  revisions?: NoteRevision[];
+}
+
+export interface NoteRevision {
+  /** ISO timestamp the version was replaced. */
+  at: string;
   complaint?: string;
   findings?: string;
   care?: string;

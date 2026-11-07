@@ -15,13 +15,12 @@ import { LettersComponent } from './letters.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
 import { PROFILE_PAGES, Section } from './profile-pages';
-import { FormsComponent } from '../forms/forms.component';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, FormsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent],
+  imports: [RouterLink, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,7 +56,7 @@ export class PatientProfileComponent {
   protected readonly reminders = computed(() => {
     const p = this.patient();
     if (!p) return null;
-    const clinic = this.store.locations()[0]?.name ?? 'Dentaleus';
+    const clinic = this.store.locations()[0]?.name ?? 'Dontalist';
     const next = this.upcoming().find((a) => a.status === 'scheduled' || a.status === 'confirmed') ?? null;
     const due = this.money().due;
     const link = (m: string) => messageLink(p, m);

@@ -91,7 +91,7 @@ export class TreatmentPlanComponent {
     if (!lines.length) return;
     const t = this.t;
     const html = quoteHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       patient: this.patientName(),
       date: this.i18n.date(new Date(), { day: 'numeric', month: 'long', year: 'numeric' }),
       lines,

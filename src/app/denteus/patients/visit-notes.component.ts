@@ -86,6 +86,13 @@ export class VisitNotesComponent {
     const note: VisitNote = { id: old?.id ?? crypto.randomUUID(), at: old?.at ?? new Date().toISOString(), ...content };
     if (this.appointmentId()) note.appointmentId = this.appointmentId();
     if (this.dentistId()) note.dentistId = this.dentistId();
+    if (old) {
+      const before = { complaint: old.complaint, findings: old.findings, care: old.care, prescription: old.prescription };
+      const changed = (['complaint', 'findings', 'care'] as const).some((k) => (before[k] ?? '') !== (note[k] ?? '')) || JSON.stringify(before.prescription ?? []) !== JSON.stringify(note.prescription ?? []);
+      note.revisions = changed ? [...(old.revisions ?? []), { at: new Date().toISOString(), ...before }] : old.revisions;
+      if (!note.revisions) delete note.revisions;
+    }
+    this.askRemove.set(null);
     this.edit.emit((notes) => (old ? notes.map((n) => (n.id === old.id ? note : n)) : [...notes, note]));
     this.reset();
   }
@@ -112,8 +119,12 @@ export class VisitNotesComponent {
     this.open.set(true);
   }
 
+  protected readonly askRemove = signal<string | null>(null);
+  protected readonly showHistory = signal<string | null>(null);
+
   protected remove(note: VisitNote): void {
     this.edit.emit((notes) => notes.filter((n) => n.id !== note.id));
+    this.askRemove.set(null);
   }
 
   protected dentistName(note: VisitNote): string {
@@ -136,7 +147,7 @@ export class VisitNotesComponent {
   protected print(note: VisitNote): void {
     const t = this.t;
     const html = prescriptionHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       dentist: this.dentistName(note),
       patient: this.patientName(),
       date: this.day(note.at),

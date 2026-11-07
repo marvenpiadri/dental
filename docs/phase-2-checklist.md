@@ -19,7 +19,7 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 | WhatsApp (consent, templates, manual send, history) | Partially implemented | Consent, block, log and statuses done. Clinic-editable templates and scheduling missing; automation is Phase 3. |
 | Follow-ups and recall list | Implemented but needs validation | Today screen shows recalls; logs each message. |
 | Medical certificates and referral letters | Complete and verified | Create, validate, print, persist tested. |
-| CNSS/CNOPS forms (upload blank, fill, PDF) | Implemented but needs validation | Verified earlier with a sample PDF; not re-run after this phase. |
+| X | Implemented but needs validation | Verified earlier with a sample PDF; not re-run after this phase. |
 | Imaging and patient files | Implemented but needs validation | Upload per tooth and filter exist; no viewer tools (zoom, compare). |
 | Prosthesis cases / lab orders | Partially implemented | Lab orders with status and late flag exist; no case file linking to the chart. |
 | Inventory, sterilization, implant lots, expenses | Implemented but needs validation | Rules tested; screens exist. |
@@ -38,7 +38,6 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 3. **Reminder.** Set consent → prepare a reminder → WhatsApp opens with the text → the message appears in the patient's history as *Prepared*. Consent *declined* removes the links. *Run: yes (the WhatsApp page itself is blocked in the sandbox).*
 4. **Documents.** Write a certificate with rest days and a referral with a recipient → both print and survive a reload; empty or invalid input is refused. *Run: yes.*
 5. **Chart.** Edit a tooth in the overlay → the column and the periodontogram update → saving an examination freezes it → later edits do not change it. *Run: yes (earlier phases).*
-6. **Forms.** Upload a blank CNSS/CNOPS PDF → detected fields → fill from patient data → download PDF → reload keeps the template. *Run earlier; re-run before release.*
 
 ## Release gate
 

@@ -75,7 +75,7 @@ export class LettersComponent {
   protected print(l: Letter): void {
     const t = this.t;
     const html = letterHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus', dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist', dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
       date: this.day(l.at), lang: this.i18n.lang(), title: t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate'),
       details: [...(l.to ? [`${t('letter.to')}: ${l.to}`] : []), ...(l.restDays ? [t('letter.days', { n: l.restDays })] : [])], text: l.text,
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), signature: t('rx.signature') },

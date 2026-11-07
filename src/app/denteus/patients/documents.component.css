@@ -14,3 +14,10 @@
 
 .filter { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13px; color: var(--app-muted); }
 .tag { min-height: 30px; margin-top: 4px; font-size: 12px; }
+
+.viewer { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: auto minmax(0, 1fr); background: #000; color: #fff; }
+.vbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #333; }
+.vbar .name { flex: 1; min-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage { display: grid; place-items: center; overflow: auto; }
+.stage img { max-width: 100%; max-height: 100%; transform-origin: center; transition: transform .12s; }
+@media (prefers-reduced-motion: reduce) { .stage img { transition: none; } }

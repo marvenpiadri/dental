@@ -1,4 +1,4 @@
-"""Builds Dentaleus's own tooth library from the ToothFairy3 scan (CC BY-SA 4.0, case F_026).
+"""Builds Dontalist's own tooth library from the ToothFairy3 scan (CC BY-SA 4.0, case F_026).
 
   python3 build.py            -> ../../public/models/teeth/teeth.bin + teeth.json
   python3 build.py --glb      -> also teeth-preview.glb, openable in Blender

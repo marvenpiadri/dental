@@ -1,4 +1,4 @@
-# Dentaleus domain model and Phase 3 readiness
+# Dontalist domain model and Phase 3 readiness
 
 Phase 2 is local only (IndexedDB in the browser). This file records what each record is, who owns it, and what Phase 3 (PostgreSQL + API) must do about it. Nothing here is implemented as a backend.
 
@@ -18,7 +18,6 @@ Phase 2 is local only (IndexedDB in the browser). This file records what each re
 | Letter (certificate, referral) | `Patient.letters[]` | patient | `letters` |
 | WhatsApp message | `Patient.messages[]` | patient, optional `appointmentId` | `messages` |
 | Patient file (X-ray, photo, report) | `documents` store (binary) | patient, optional tooth | `documents` + object storage |
-| Filled CNSS/CNOPS form | `clinicalRecords` store | patient | `form_records` |
 | Expense, stock, lab order, sterilization cycle, implant record, task | practice store | clinic (implant record and lab order reference a patient) | one table each |
 
 ## Rules the code already enforces (keep them in SQL)
@@ -35,7 +34,7 @@ Phase 2 is local only (IndexedDB in the browser). This file records what each re
 
 1. **Patient is one fat record.** Plan, payments, invoices, visits, letters, messages, examinations and the whole chart are arrays inside the patient. Split into child tables with `patient_id` and `created_at`; keep `id`s as UUIDs (already generated client-side).
 2. **Chart is an opaque blob** (`odontogram?: unknown`, versioned by `PAYLOAD_VERSION`). Phase 3 can keep it as `jsonb` first and normalise teeth and perio sites later; the vendored FHIR export (`engine/vendor/fhir`) is the interchange format.
-3. **Two stores for clinical data:** `Patient.visits` and the `clinicalRecords` store. Decide: visits go to `encounters`; `clinicalRecords` is only for filled forms.
+3. **Clinical data lives in `Patient.visits`.** Visits map to `encounters`; there is no separate forms store.
 4. **Appointment to encounter link is one way** (`appointment.encounterId`, `visit.appointmentId`). Make `encounters.appointment_id` the single foreign key and drop the other.
 5. **Acts hold free text for the tooth** (`tooth`, scope text) next to structured scope fields. Normalise to `procedure_teeth(procedure_id, tooth)` and keep the text as display only.
 6. **Single currency (MAD) and no tax fields.** Add `currency` on payments and invoices and VAT per line before a second country goes live.
@@ -52,6 +51,6 @@ Phase 2 is local only (IndexedDB in the browser). This file records what each re
 
 ## Integrations (design only)
 
-**WhatsApp Business Cloud API, one account per clinic.** Table `clinic_whatsapp(clinic_id, waba_id, phone_number_id, access_token_ref, status)`. Tokens live in a secret store, never in the browser. Reminder sending becomes a server job reading `messages` rows in `prepared`/`queued`; delivery webhooks update `status`; inbound replies insert `messages` with direction `in`. Templates must be approved by Meta per clinic. Consent gate is `patients.whatsapp_consent = 'granted'`. No shared Dentaleus number.
+**WhatsApp Business Cloud API, one account per clinic.** Table `clinic_whatsapp(clinic_id, waba_id, phone_number_id, access_token_ref, status)`. Tokens live in a secret store, never in the browser. Reminder sending becomes a server job reading `messages` rows in `prepared`/`queued`; delivery webhooks update `status`; inbound replies insert `messages` with direction `in`. Templates must be approved by Meta per clinic. Consent gate is `patients.whatsapp_consent = 'granted'`. No shared Dontalist number.
 
 **Google Business Profile, one connection per clinic.** OAuth with the clinic's own Google account (Business Profile APIs). Store `clinic_google(clinic_id, account_id, location_id, refresh_token_ref, connected_at, last_sync_at)`. A sync job pulls name, address, hours, phone, categories, photos and reviews/ratings into `public_profile` tables; reviews are shown with Google attribution and refreshed per Google's display policy (no long-term copy beyond what the terms allow). The public SEO page `/c/:slug` renders from those tables and emits `Dentist`/`LocalBusiness` JSON-LD. The clinic can disconnect, which deletes tokens and cached Google content. Both integrations work with or without any marketing agency.

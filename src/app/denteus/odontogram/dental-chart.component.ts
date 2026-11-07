@@ -25,9 +25,9 @@ import { type CubeSurface } from './surface-cube.component';
 import { CrownTopComponent } from './crown-top.component';
 import { ToothTileComponent } from './tooth-tile.component';
 
-const NUMBERING_KEY = 'dentaleus.numbering';
+const NUMBERING_KEY = 'dontalist.numbering';
 function storedNumbering(): NumberingSystem {
-  try { return NUMBERING_SYSTEMS.find((s) => s === localStorage.getItem(NUMBERING_KEY)) ?? 'fdi'; } catch { return 'fdi'; }
+  try { return NUMBERING_SYSTEMS.find((s) => s === (localStorage.getItem(NUMBERING_KEY) ?? localStorage.getItem('dentaleus.numbering'))) ?? 'fdi'; } catch { return 'fdi'; }
 }
 
 type Tab = 'perio' | 'findings' | 'history';
@@ -337,7 +337,7 @@ export class DentalChartComponent {
       ix.meanPi !== null ? t('dc.ps.pi', { n: ix.meanPi }) : '', ix.meanGi !== null ? t('dc.ps.gi', { n: ix.meanGi }) : '',
     ].filter(Boolean);
     const html = reportHtml({
-      clinic: this.clinicName() || 'Dentaleus', patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
+      clinic: this.clinicName() || 'Dontalist', patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
       findings: findingRows(c, lang, undefined, (n) => this.num(n)), planned: this.viewing() ? [] : planRows(c, lang, (n) => this.num(n)),
       suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`), summary,
       labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'),

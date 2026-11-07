@@ -170,7 +170,7 @@ export class ClinicSetupComponent {
     const url = URL.createObjectURL(new Blob([makeBackup(data, now)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = `dentaleus-backup-${localIsoDay(now)}.json`;
+    link.download = `dontalist-backup-${localIsoDay(now)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -214,7 +214,7 @@ export class ClinicSetupComponent {
   /** Invalid input (a cleared time, closing before opening, no open day) is ignored: the stored hours stay as they were. */
   protected async setHours(patch: Partial<OpeningHours>): Promise<void> {
     // A new clinic has no location yet: the first hours change creates the default one.
-    const loc = this.store.locations()[0] ?? { id: crypto.randomUUID(), name: 'Dentaleus', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
+    const loc = this.store.locations()[0] ?? { id: crypto.randomUUID(), name: 'Dontalist', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
     const cur = { open: this.hoursText().open, close: this.hoursText().close, days: [...this.store.hours().days] };
     const next = { ...cur, ...patch };
     if (next.open >= next.close || next.days.length === 0 || !/^\d\d:\d\d$/.test(next.open) || !/^\d\d:\d\d$/.test(next.close)) return;
@@ -247,7 +247,7 @@ export class ClinicSetupComponent {
     if (patch.name !== undefined && !patch.name.trim()) { this.needName.set(true); return; }
     this.needName.set(false);
     const trimmed = Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])) as Partial<ClinicLocation>;
-    const base: ClinicLocation = this.clinic() ?? { id: crypto.randomUUID(), name: 'Dentaleus', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
+    const base: ClinicLocation = this.clinic() ?? { id: crypto.randomUUID(), name: 'Dontalist', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
     this.failed.set(false);
     try {
       await this.store.saveLocations([{ ...base, ...trimmed }, ...this.store.locations().slice(1)]);

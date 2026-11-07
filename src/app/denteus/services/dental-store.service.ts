@@ -136,7 +136,7 @@ export class DentalStore {
       this.database.loadLocations(),
       this.database.loadResources(),
     ]);
-    this.locations.set(locations);
+    this.locations.set(locations.map((l) => (l.name === 'Dentaleus' ? { ...l, name: 'Dontalist' } : l))); // the old default name, from before the product was named
     this.dentists.set(resources.dentists);
     this.chairs.set(resources.chairs);
     this.catalog.set((await this.database.loadSetting<CatalogEntry[]>('catalog')) ?? defaultCatalog());

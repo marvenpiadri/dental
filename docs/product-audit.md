@@ -10,7 +10,7 @@ Scope: every route, nav item, settings area and workflow reachable in the app to
 | `/calendar` | Strict calendar, dentists and chairs, appointment editor, statuses | Complete, kept as is |
 | `/patients` | List with search, filters (all, today, alerts, archived), sort | Complete |
 | `/patients/new`, `/:id/edit` | Registration and edit form with validation and duplicate check | Complete |
-| `/patients/:id` (+ 8 tabs) | Overview, chart (odontogram + periodontogram), appointments, payments and invoices, quotes, visit notes (+ letters), imaging and files, forms | Complete; imaging has no viewer tools |
+| `/patients/:id` (+ 7 tabs) | Overview, chart (odontogram + periodontogram), appointments, payments and invoices, quotes, visit notes (+ letters), imaging and files | Complete; imaging viewer (zoom, invert, browse) and visit-note revision history added, not yet browser-tested |
 | `/practice` | Tasks, implant lots, sterilization, expenses, stock, lab orders | Complete for current scope |
 | `/reports` | Revenue series, per dentist, per payment method, CSV | Complete |
 | `/setup/clinic` | Clinic name, address, phone, email | New, complete |
@@ -57,3 +57,7 @@ Google Business Profile sync and public clinic page, WhatsApp Cloud API sending 
 ## E. Checks run
 
 Unit tests 407 pass. Production build passes (SSR). No lint tool is configured in this project, so no lint result exists. Browser runs this session: odontogram, invoices and payments, consent and message log, letters, settings sections, archive and restore, French + dark + phone sweep of the eight patient tabs.
+
+## Direction change
+
+CNSS/CNOPS support was dropped permanently: no forms tab, generator, templates, PDF libraries or `clinicalRecords` store. The product name is Dontalist. Backend work stays paused.

@@ -44,7 +44,6 @@ export class ClinicDatabase {
           store.createIndex('chairId', 'chairId', { unique: false });
           store.createIndex('status', 'status', { unique: false });
         }
-        if (!db.objectStoreNames.contains('clinicalRecords')) db.createObjectStore('clinicalRecords', { keyPath: 'id' });
         const documents = db.objectStoreNames.contains('documents')
           ? request.transaction!.objectStore('documents')
           : db.createObjectStore('documents', { keyPath: 'id' });

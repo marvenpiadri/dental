@@ -114,7 +114,7 @@ export class BillingComponent {
     const st = invoiceState(inv, this.payments());
     const orig = inv.cancelsId ? this.invoices().find((i) => i.id === inv.cancelsId) : undefined;
     const html = invoiceHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
       cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
       date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
       lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.i18n.money(l.price) })),
@@ -138,7 +138,7 @@ export class BillingComponent {
     const t = this.t;
     const day = (iso?: string) => (iso ? this.i18n.date(new Date(iso), { day: 'numeric', month: 'short', year: 'numeric' }) : '');
     const html = statementHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus', patient: this.patientName(), insurer: this.insurer(), number: this.insuranceNumber(),
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), insurer: this.insurer(), number: this.insuranceNumber(),
       date: day(new Date().toISOString()), lang: this.i18n.lang(), total: this.i18n.money(this.sums().charged),
       lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? (i.scope ? scopeText(i, t) : ''), name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
       labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') },
@@ -155,7 +155,7 @@ export class BillingComponent {
     const t = this.t;
     const sums = this.sums();
     const html = receiptHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dentaleus',
+      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       patient: this.patientName(),
       number: payment.id.slice(0, 8).toUpperCase(),
       reference: payment.reference,

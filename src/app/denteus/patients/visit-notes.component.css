@@ -24,3 +24,4 @@ dd { margin: 0; white-space: pre-wrap; }
 .rx-list { margin: 0; padding: 0; list-style: none; }
 .empty-note { margin: 14px 0 0; color: var(--app-muted); }
 @media (max-width: 700px) { .pair { grid-template-columns: 1fr; } .line { flex-wrap: wrap; } .line .drug { flex-basis: 100%; } }
+.revs { margin: 0 0 12px; padding: 10px 14px; list-style: none; background: var(--app-subtle); border: 1px solid var(--app-line); } .revs li + li { margin-top: 10px; } .revs p { margin: 2px 0 0; font-size: 13px; }

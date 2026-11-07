@@ -21,14 +21,14 @@ export interface ClinicData {
 
 /** The file a clinic downloads. Dates are ISO strings, which is also what a PostgreSQL import wants. */
 export interface BackupFile extends Omit<ClinicData, 'appointments'> {
-  app: 'dentaleus';
+  app: 'dontalist' | 'dentaleus';
   version: 1;
   exportedAt: string;
   appointments: unknown[];
 }
 
 export function makeBackup(data: ClinicData, now: Date): string {
-  const file: BackupFile = { app: 'dentaleus', version: 1, exportedAt: now.toISOString(), ...data, appointments: data.appointments };
+  const file: BackupFile = { app: 'dontalist', version: 1, exportedAt: now.toISOString(), ...data, appointments: data.appointments };
   return JSON.stringify(file, null, 2);
 }
 
@@ -69,7 +69,7 @@ function reviveAppointment(raw: unknown): Appointment | null {
 export function parseBackup(source: string): BackupResult {
   let raw: unknown;
   try { raw = JSON.parse(source); } catch { return { ok: false, reason: 'not-json' }; }
-  if (!isRecord(raw) || raw['app'] !== 'dentaleus') return { ok: false, reason: 'not-a-backup' };
+  if (!isRecord(raw) || raw['app'] !== 'dontalist' && raw['app'] !== 'dentaleus') return { ok: false, reason: 'not-a-backup' };
   if (raw['version'] !== 1) return { ok: false, reason: 'newer-version' };
 
   const arrays = ['locations', 'dentists', 'chairs', 'patients', 'appointments'] as const;

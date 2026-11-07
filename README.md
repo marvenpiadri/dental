@@ -1,4 +1,4 @@
-# Dentaleus
+# Dontalist
 
 Dental clinic CRM. Angular 22, server-side rendered. Design and architecture rules: [DESIGN.md](DESIGN.md). Calendar contract and backend notes: [DENTEUS.md](DENTEUS.md).
 
