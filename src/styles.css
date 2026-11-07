@@ -2,7 +2,11 @@
 @import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 @import '@fortawesome/fontawesome-free/css/solid.min.css';
 @import '@fortawesome/fontawesome-free/css/regular.min.css';
-@import '@fortawesome/fontawesome-free/css/brands.min.css';
+/* Only two brand glyphs are used, so the 16 kB brands stylesheet is replaced by these rules. */
+@font-face { font-family: 'Font Awesome 7 Brands'; font-weight: 400; font-display: block; src: url('../node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2'); }
+.fa-brands { --fa-family: 'Font Awesome 7 Brands'; --fa-style: 400; }
+.fa-google { --fa: '\f1a0'; }
+.fa-whatsapp { --fa: '\f232'; }
 
 /* ---------------------------------------------------------------------------
    Dontalist design system. Rules and rationale: DESIGN.md.
