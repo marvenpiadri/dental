@@ -67,7 +67,7 @@ describe('seo', () => {
     expect(seoDescription(base({ intro: 'Hello' }), 'en')).toBe('Hello');
   });
   it('leaves unknown fields out of the structured data', () => {
-    const ld = jsonLd(base({ city: 'Salé', countryCode: 'MA' }), '/clinics/morocco/sale/dali', 'https://dontalist.com');
+    const ld = jsonLd(base({ city: 'Salé', countryCode: 'MA' }), '/clinics/morocco/sale/dali');
     expect(ld['@type']).toBe('Dentist');
     expect(ld).not.toHaveProperty('geo');
     expect(ld).not.toHaveProperty('telephone');

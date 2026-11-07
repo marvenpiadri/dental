@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ClinicProfileComponent } from './clinic-profile.component';
 import { ThemeService } from '../../core/theme.service';
 import { LANGS, Lang } from '../../core/i18n/i18n.service';
 import { ClinicLocation, Message } from '../models/dental.models';
@@ -28,7 +29,7 @@ const toDataUrl = (blob: Blob): Promise<string> => new Promise((done, fail) => {
 const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
 const SECTIONS = [
-  { id: 'clinic', icon: 'fa-hospital', key: 'set.clinic' },
+  { id: 'clinic', icon: 'fa-hospital', key: 'set.clinicProfile' },
   { id: 'team', icon: 'fa-user-doctor', key: 'set.team' },
   { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule' },
   { id: 'services', icon: 'fa-file-invoice', key: 'set.services' },
@@ -43,7 +44,7 @@ type SectionId = (typeof SECTIONS)[number]['id'];
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
-  imports: [RouterLink],
+  imports: [RouterLink, ClinicProfileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })

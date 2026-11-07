@@ -84,7 +84,7 @@ export const seoTitle = (c: ClinicLocation, lang: 'en' | 'fr'): string =>
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** schema.org Dentist. Fields the clinic did not fill in are left out rather than guessed. */
-export function jsonLd(c: ClinicLocation, url: string, origin: string): Record<string, unknown> {
+export function jsonLd(c: ClinicLocation, url: string, image?: string): Record<string, unknown> {
   const p = c.profile ?? ({ state: 'draft' } as ClinicProfile);
   const data: Record<string, unknown> = { '@context': 'https://schema.org', '@type': 'Dentist', name: displayName(c), url };
   if (p.intro || p.description) data['description'] = (p.intro || p.description)!.trim();
@@ -95,7 +95,7 @@ export function jsonLd(c: ClinicLocation, url: string, origin: string): Record<s
   if (c.hours?.days?.length) data['openingHoursSpecification'] = [{ '@type': 'OpeningHoursSpecification', dayOfWeek: c.hours.days.map((d) => DAY_NAMES[d]), opens: c.hours.open, closes: c.hours.close }];
   const same = [p.website, p.instagram, p.facebook].filter((x): x is string => !!x);
   if (same.length) data['sameAs'] = same;
-  if (p.cover) data['image'] = `${origin}${url}/cover`;
+  if (image) data['image'] = image;
   if (p.languages?.length) data['knowsLanguage'] = p.languages;
   return data;
 }

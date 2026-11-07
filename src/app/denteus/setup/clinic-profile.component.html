@@ -1,0 +1,140 @@
+@let c = clinic();
+@let pr = p();
+<section class="card" aria-labelledby="pub-title">
+  <header class="card-head">
+    <h2 class="card-title" id="pub-title"><i class="fa-solid fa-globe" aria-hidden="true"></i>{{ t('prof.public') }}</h2>
+    <span class="state" [attr.data-state]="pr.state">{{ t(stateKey[pr.state]) }}</span>
+  </header>
+  <p class="intro hint">{{ t('prof.public.hint') }}</p>
+  @if (pr.state !== 'published' && problems().length) {
+    <ul class="row needs" role="status">
+      @for (x of problems(); track x) { <li>{{ t(problemKey[x]) }}</li> }
+    </ul>
+  }
+  <div class="row actions">
+    @if (pr.state === 'published' || pr.state === 'closed') {
+      <button type="button" class="btn" (click)="setState('unpublished')">{{ t('prof.unpublish') }}</button>
+      @if (pr.state === 'published') { <button type="button" class="btn" (click)="setState('closed')">{{ t('prof.close') }}</button> }
+      @else { <button type="button" class="btn btn--primary" (click)="setState('published')">{{ t('prof.reopen') }}</button> }
+    } @else {
+      <button type="button" class="btn btn--primary" [disabled]="problems().length > 0" (click)="publish()">{{ t('prof.publish') }}</button>
+    }
+    <button type="button" class="btn" (click)="exportPublic()"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ t('prof.export') }}</button>
+    <a class="btn" routerLink="/preview" target="_blank" rel="noopener"><i class="fa-solid fa-eye" aria-hidden="true"></i>{{ t('prof.preview') }}</a>
+  </div>
+  <p class="row hint">{{ t('prof.backend') }} {{ t('prof.export.hint') }}</p>
+</section>
+
+<section class="card" aria-labelledby="idn-title">
+  <header class="card-head"><h2 class="card-title" id="idn-title"><i class="fa-solid fa-hospital" aria-hidden="true"></i>{{ t('set.identity') }}</h2></header>
+  <div class="grid">
+    @for (f of identity; track f.k) {
+      <label class="field">{{ t(f.label) }}<input class="input" [type]="f.type ?? 'text'" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" [attr.aria-invalid]="f.k === 'name' && status() === 'needName' ? 'true' : null" /></label>
+    }
+  </div>
+  @if (status() === 'needName') { <p class="row banner" role="alert">{{ t('set.needName') }}</p> }
+  <p class="row hint">{{ t('prof.display.hint') }}</p>
+  <div class="grid one">
+    <label class="field">{{ t('prof.intro') }}<input class="input" [value]="pr.intro ?? ''" maxlength="155" (change)="setProfile({ intro: $any($event.target).value.trim() || undefined })" /></label>
+    <label class="field">{{ t('prof.description') }}<textarea class="input" rows="4" maxlength="1500" [value]="pr.description ?? ''" (change)="setProfile({ description: $any($event.target).value.trim() || undefined })"></textarea></label>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="con-title">
+  <header class="card-head"><h2 class="card-title" id="con-title"><i class="fa-solid fa-address-book" aria-hidden="true"></i>{{ t('prof.contact') }}</h2></header>
+  <div class="grid">
+    @for (f of contact; track f.k) {
+      <label class="field">{{ t(f.label) }}<input class="input" [type]="f.type ?? 'text'" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
+    }
+  </div>
+</section>
+
+<section class="card" aria-labelledby="geo-title">
+  <header class="card-head"><h2 class="card-title" id="geo-title"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ t('prof.location') }}</h2></header>
+  @if (maps.available) {
+    <div class="grid one">
+      <label class="field">{{ t('prof.search') }}<input class="input" type="search" autocomplete="off" role="combobox" [attr.aria-expanded]="suggestions().length > 0" (input)="search($any($event.target).value)" /></label>
+      @if (suggestions().length) {
+        <ul class="sug" role="listbox">
+          @for (s of suggestions(); track s.placeId) { <li><button type="button" role="option" class="btn" (click)="pick(s)">{{ s.text }}</button></li> }
+        </ul>
+      }
+    </div>
+    <p class="row hint">{{ t('prof.search.hint') }}</p>
+  } @else {
+    <p class="row hint">{{ t('prof.search.off') }}</p>
+  }
+  <div class="grid one">
+    <label class="field">{{ t('set.address') }}<input class="input" [value]="c.address ?? ''" maxlength="160" (change)="setRoot({ address: $any($event.target).value.trim() })" /></label>
+  </div>
+  <div class="grid">
+    @for (f of place; track f.k) {
+      <label class="field">{{ t(f.label) }}<input class="input" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
+    }
+    <label class="field">{{ t('prof.lat') }}<input class="input" inputmode="decimal" [value]="pr.lat ?? ''" (change)="editCoord('lat', $any($event.target).value)" /></label>
+    <label class="field">{{ t('prof.lng') }}<input class="input" inputmode="decimal" [value]="pr.lng ?? ''" (change)="editCoord('lng', $any($event.target).value)" /></label>
+  </div>
+  <p class="row hint">
+    @if (pr.placeId) { {{ t('prof.placeId') }}: <code>{{ pr.placeId }}</code>. }
+    {{ t('prof.manual') }}
+    @if (mapUrl(); as u) { <a [href]="u" target="_blank" rel="noopener">{{ t('prof.checkMap') }}</a> }
+  </p>
+</section>
+
+<section class="card" aria-labelledby="url-title">
+  <header class="card-head"><h2 class="card-title" id="url-title"><i class="fa-solid fa-link" aria-hidden="true"></i>{{ t('prof.url') }}</h2></header>
+  <div class="grid one">
+    <label class="field">{{ t('prof.slug') }}<input class="input" [value]="pr.slug ?? ''" maxlength="60" (change)="editSlug($any($event.target).value)" [attr.aria-invalid]="slugBad() ? 'true' : null" /></label>
+  </div>
+  @if (!pr.slug) { <p class="row"><button type="button" class="btn" (click)="setProfile({ slug: suggested() })">{{ t('prof.slug.use', { slug: suggested() }) }}</button></p> }
+  @if (slugBad(); as bad) { <p class="row banner" role="alert">{{ t(bad === 'reserved' ? 'prof.slug.reserved' : 'prof.slug.bad') }}</p> }
+  @if (path(); as u) { <p class="row hint">dontalist.com<strong>{{ u }}</strong></p> }
+  @if (pendingSlug(); as next) {
+    <div class="row confirm" role="alertdialog" aria-labelledby="slug-ask">
+      <div class="grow"><strong id="slug-ask">{{ t('prof.slug.change', { slug: next }) }}</strong><span class="hint">{{ t('prof.slug.change.body') }}</span></div>
+      <button type="button" class="btn" (click)="pendingSlug.set(null)">{{ t('common.cancel') }}</button>
+      <button type="button" class="btn btn--primary" (click)="confirmSlug()">{{ t('prof.slug.change.yes') }}</button>
+    </div>
+  }
+  @if (pr.previousSlugs?.length) { <p class="row hint">{{ t('prof.slug.previous') }}: {{ pr.previousSlugs!.join(', ') }}</p> }
+  <p class="row hint">{{ t('prof.slug.backend') }}</p>
+</section>
+
+<section class="card" aria-labelledby="ops-title">
+  <header class="card-head"><h2 class="card-title" id="ops-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i>{{ t('prof.ops') }}</h2></header>
+  <div class="grid one">
+    @for (k of lists; track k) {
+      <label class="field">{{ t(listKey[k]) }}<input class="input" [value]="list(k)" (change)="editList(k, $any($event.target).value)" /></label>
+    }
+  </div>
+  <p class="row hint">{{ t('prof.list.hint') }} <a routerLink="/setup/schedule">{{ t('prof.hours.link') }}</a></p>
+  @for (x of pr.closures ?? []; track $index) {
+    <div class="row"><span class="grow">{{ x.from }} → {{ x.to }}{{ x.reason ? ' · ' + x.reason : '' }}</span>
+      <button type="button" class="btn btn--icon" [attr.aria-label]="t('common.delete')" (click)="removeClosure($index)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></div>
+  }
+  <div class="row">
+    <label class="field">{{ t('prof.closure.from') }}<input #cf class="input" type="date" /></label>
+    <label class="field">{{ t('prof.closure.to') }}<input #ct class="input" type="date" /></label>
+    <label class="field grow">{{ t('prof.closure.reason') }}<input #cr class="input" maxlength="80" /></label>
+    <button type="button" class="btn" (click)="addClosure(cf.value, ct.value, cr.value); cf.value = ''; ct.value = ''; cr.value = ''">{{ t('prof.closure.add') }}</button>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="img-title">
+  <header class="card-head"><h2 class="card-title" id="img-title"><i class="fa-regular fa-images" aria-hidden="true"></i>{{ t('prof.images') }}</h2></header>
+  <div class="row">
+    <label class="btn"><i class="fa-solid fa-image" aria-hidden="true"></i>{{ t('prof.cover') }}<input class="sr" type="file" accept="image/*" (change)="addImage($any($event.target).files?.[0], 'cover'); $any($event.target).value = ''" /></label>
+    <label class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('prof.gallery.add') }}<input class="sr" type="file" accept="image/*" (change)="addImage($any($event.target).files?.[0], 'gallery'); $any($event.target).value = ''" /></label>
+  </div>
+  @if (status() === 'image') { <p class="row banner" role="alert">{{ t('prof.image.bad') }}</p> }
+  <div class="thumbs">
+    @if (pr.cover) { <figure><img [src]="pr.cover" [alt]="t('prof.cover')" /><figcaption>{{ t('prof.cover') }}</figcaption></figure> }
+    @for (g of pr.gallery ?? []; track $index) {
+      <figure><img [src]="g" [alt]="t('prof.gallery.item', { n: $index + 1 })" /><button type="button" class="btn btn--icon" [attr.aria-label]="t('common.delete')" (click)="removeGallery($index)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></figure>
+    }
+  </div>
+  <p class="row hint">{{ t('prof.images.hint') }}</p>
+</section>
+
+@if (status() === 'saved') { <p class="ok" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('set.saved') }}</p> }
+@if (status() === 'failed') { <p class="banner" role="alert">{{ t('setup.error') }}</p> }

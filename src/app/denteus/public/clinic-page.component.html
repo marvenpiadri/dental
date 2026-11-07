@@ -1,0 +1,57 @@
+@let c = clinic();
+@let t = l();
+<article class="page" [attr.lang]="c.lang">
+  @if (preview() && c.state !== 'published' && c.state !== 'closed') { <p class="preview" role="status">{{ t.draft }}</p> }
+  @if (c.state === 'closed') { <p class="notice" role="status">{{ t.temp }}</p> }
+
+  <header class="hero" [class.has-cover]="cover()">
+    @if (cover(); as src) { <img class="cover" [src]="src" alt="" fetchpriority="high" width="1600" height="900" /> }
+    <div class="hero-text">
+      <p class="where">{{ place() }}</p>
+      <h1>{{ c.name }}</h1>
+      @if (c.intro) { <p class="lead">{{ c.intro }}</p> }
+      <nav class="actions" aria-label="Contact">
+        @if (tel(); as href) { <a class="act primary" [href]="href">{{ t.call }}</a> }
+        @if (wa(); as href) { <a class="act" [href]="href" rel="noopener">{{ t.whatsapp }}</a> }
+        @if (map(); as href) { <a class="act" [href]="href" rel="noopener">{{ t.directions }}</a> }
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    @if (c.description) { <section><h2>{{ t.about }}</h2><p class="long">{{ c.description }}</p></section> }
+    @if (c.services.length || c.specialties.length) {
+      <section class="cols">
+        @if (c.services.length) { <div><h2>{{ t.services }}</h2><ul>@for (x of c.services; track x) { <li>{{ x }}</li> }</ul></div> }
+        @if (c.specialties.length) { <div><h2>{{ t.specialties }}</h2><ul>@for (x of c.specialties; track x) { <li>{{ x }}</li> }</ul></div> }
+      </section>
+    }
+    @if (gallery().length) {
+      <section><h2>{{ t.gallery }}</h2>
+        <div class="gallery">@for (g of gallery(); track $index) { <img [src]="g" alt="" loading="lazy" width="1200" height="800" /> }</div>
+      </section>
+    }
+    <section class="cols">
+      @if (c.hours) {
+        <div><h2>{{ t.hours }}</h2>
+          <table><tbody>@for (d of days(); track d.name) { <tr [class.off]="!d.open"><th scope="row">{{ d.name }}</th><td>{{ d.open ? c.hours.open + ' – ' + c.hours.close : t.closed }}</td></tr> }</tbody></table>
+          @if (upcoming().length) { <h3>{{ t.closures }}</h3><ul>@for (x of upcoming(); track $index) { <li>{{ x.from }} → {{ x.to }}{{ x.reason ? ' · ' + x.reason : '' }}</li> }</ul> }
+        </div>
+      }
+      <div><h2>{{ t.find }}</h2>
+        <address>
+          @if (c.address) { <span>{{ c.address }}</span> }
+          <span>{{ place() }}</span>
+          @if (c.phone) { <a [href]="tel()">{{ c.phone }}</a> }
+          @if (c.email) { <a [href]="'mailto:' + c.email">{{ c.email }}</a> }
+          @if (c.website) { <a [href]="c.website" rel="noopener">{{ t.website }}</a> }
+          @if (c.instagram) { <a [href]="c.instagram" rel="noopener">Instagram</a> }
+          @if (c.facebook) { <a [href]="c.facebook" rel="noopener">Facebook</a> }
+        </address>
+        @if (c.languages.length) { <p class="small">{{ t.languages }}: {{ c.languages.join(', ') }}</p> }
+        @if (frame(); as src) { <iframe class="map" [src]="src" title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe> }
+      </div>
+    </section>
+  </main>
+  <footer><img src="/logo.png" alt="" width="20" height="20" /> {{ t.from }} <a href="https://dontalist.com">Dontalist</a></footer>
+</article>

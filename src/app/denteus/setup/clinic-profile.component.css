@@ -1,0 +1,29 @@
+:host { display: contents; }
+.row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--app-line); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding: 12px 16px; }
+.grid.one { grid-template-columns: 1fr; }
+.field { display: grid; gap: 4px; font-size: 12px; color: var(--app-muted); }
+.grow { flex: 1; }
+.hint { color: var(--app-muted); font-size: 13px; margin: 0; }
+.intro { padding: 14px 18px 0; }
+.banner { color: var(--app-danger); margin: 0; }
+.ok { display: flex; align-items: center; gap: 8px; color: var(--app-ok); }
+.state { padding: 2px 10px; border: 1px solid var(--app-line); border-radius: 999px; font-size: 12px; font-weight: 600; }
+.state[data-state='published'] { color: var(--app-ok); border-color: var(--app-ok); }
+.state[data-state='closed'] { color: var(--app-warn); border-color: var(--app-warn); }
+.needs { margin: 0; list-style: disc inside; flex-direction: column; align-items: flex-start; gap: 2px; color: var(--app-muted); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.actions { gap: 8px; }
+.sug { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sug .btn { width: 100%; justify-content: flex-start; text-align: start; }
+.confirm { border: 1px solid var(--app-warn); background: var(--app-subtle); }
+.confirm strong { display: block; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+.thumbs figure { position: relative; margin: 0; }
+.thumbs img { display: block; width: 160px; height: 100px; object-fit: cover; border: 1px solid var(--app-line); }
+.thumbs figcaption { font-size: 12px; color: var(--app-muted); }
+.thumbs .btn--icon { position: absolute; top: 4px; inset-inline-end: 4px; background: var(--app-panel); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+label.btn:focus-within { outline: 2px solid var(--app-text); outline-offset: 2px; }
+textarea.input { resize: vertical; }
+@media (max-width: 700px) { .row { align-items: stretch; } }

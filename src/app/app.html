@@ -1,4 +1,6 @@
-@if (auth.gate()) {
+@if (publicPage()) {
+  <router-outlet />
+} @else if (auth.gate()) {
   <den-sign-in />
 } @else {
 <div class="app-shell">

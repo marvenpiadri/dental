@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, effect, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth/auth.service';
 import { SignInComponent } from './core/auth/sign-in.component';
 import { I18n, LANGS, Lang } from './core/i18n/i18n.service';
@@ -33,6 +35,10 @@ export class App implements OnInit {
   protected nextLangShort(): string {
     return LANGS.find((l) => l.code === this.nextLang())!.short;
   }
+
+  private readonly router = inject(Router);
+  /** Public clinic pages and the preview have their own layout: no staff navigation and no sign-in gate. */
+  protected readonly publicPage = toSignal(this.router.events.pipe(filter((e) => e instanceof NavigationEnd), map(() => /^\/(clinics\/|preview)/.test(this.router.url))), { initialValue: false });
 
   protected readonly auth = inject(AuthService);
   /** Appointment history shows who did what: the signed-in person, or the front desk while the app is open. */

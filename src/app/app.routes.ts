@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from './core/auth/permission.guard';
+import { publicClinic } from './denteus/public/public-route';
 
 /** Every page is lazy: the first load carries the shell only. `titleKey` is translated by PageTitle. */
 export const routes: Routes = [
@@ -44,6 +45,17 @@ export const routes: Routes = [
       { path: '', loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent) },
       { path: ':section', loadComponent: () => import('./denteus/setup/clinic-setup.component').then((m) => m.ClinicSetupComponent) },
     ],
+  },
+  {
+    path: 'clinics/:country/:city/:slug',
+    resolve: { lookup: publicClinic },
+    loadComponent: () => import('./denteus/public/public-clinic.component').then((m) => m.PublicClinicComponent),
+  },
+  {
+    path: 'preview',
+    canActivate: [permissionGuard],
+    data: { permission: 'setup', titleKey: 'prof.preview' },
+    loadComponent: () => import('./denteus/public/clinic-preview.component').then((m) => m.ClinicPreviewComponent),
   },
   {
     path: '**',

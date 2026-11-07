@@ -22,19 +22,7 @@
     @if (!store.loaded()) {
       <span class="skeleton tall" aria-busy="true" [attr.aria-label]="t('common.loading')"></span>
     } @else {
-      @if (current() === 'clinic') {
-        <section class="card" aria-labelledby="ident-title">
-          <header class="card-head"><h2 class="card-title" id="ident-title"><i class="fa-solid fa-hospital" aria-hidden="true"></i>{{ t('set.identity') }}</h2></header>
-          <div class="row"><label class="hours-field grow">{{ t('set.name') }}<input class="input" [value]="clinic()?.name ?? ''" maxlength="80" (change)="patchClinic({ name: $any($event.target).value })" [attr.aria-invalid]="needName() ? 'true' : null" /></label></div>
-          <div class="row"><label class="hours-field grow">{{ t('set.address') }}<input class="input" [value]="clinic()?.address ?? ''" maxlength="160" (change)="patchClinic({ address: $any($event.target).value })" /></label></div>
-          <div class="row">
-            <label class="hours-field grow">{{ t('set.phone') }}<input class="input" type="tel" [value]="clinic()?.phone ?? ''" maxlength="30" (change)="patchClinic({ phone: $any($event.target).value })" /></label>
-            <label class="hours-field grow">{{ t('set.email') }}<input class="input" type="email" [value]="clinic()?.email ?? ''" maxlength="80" (change)="patchClinic({ email: $any($event.target).value })" /></label>
-          </div>
-          @if (needName()) { <p class="row banner" role="alert">{{ t('set.needName') }}</p> }
-          @if (savedAt()) { <p class="row ok" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('set.saved') }}</p> }
-        </section>
-      }
+      @if (current() === 'clinic') { <den-clinic-profile /> }
       @if (current() === 'services') {
         <section class="card" aria-labelledby="legal-title">
           <header class="card-head"><h2 class="card-title" id="legal-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i>{{ t('set.legal') }}</h2></header>
