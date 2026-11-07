@@ -1,0 +1,77 @@
+<section class="card" aria-labelledby="team-title">
+  <header class="card-head"><h2 class="card-title" id="team-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i>{{ t('team.title') }}</h2></header>
+  <p class="muted intro">{{ t('team.intro') }}</p>
+  @for (m of auth.staff(); track m.id) {
+    <div class="member" [class.off]="!isActive(m)">
+      <div class="row">
+        <span class="avatar" style="--size: 32px" aria-hidden="true">{{ m.name.slice(0, 2) }}</span>
+        <span class="grow"><strong>{{ m.name }}</strong>@if (m.jobTitle) { <span class="muted"> · {{ m.jobTitle }}</span> }</span>
+        @if (!isActive(m)) { <span class="chip" data-tone="danger">{{ t('team.suspended') }}</span> }
+        @if (changed(m)) { <span class="chip" data-tone="warning">{{ t('team.custom') }}</span> }
+        <span class="chip" data-tone="neutral">{{ t(roleKey[m.role]) }}</span>
+        @if (auth.canManage(m.role) && auth.can('team.edit')) {
+          <button type="button" class="btn" [attr.aria-expanded]="open() === m.id" (click)="toggle(m)">{{ t('team.manage') }}</button>
+        }
+      </div>
+      @if (open() === m.id) {
+        <div class="panel">
+          <div class="row">
+            <label class="field">{{ t('team.job') }}<input #job class="input" [value]="m.jobTitle ?? ''" maxlength="60" /></label>
+            <label class="field">{{ t('team.role') }}
+              <select #role class="input">@for (r of assignable(); track r) { <option [value]="r" [selected]="r === m.role">{{ t(roleKey[r]) }}</option> }</select>
+            </label>
+            <button type="button" class="btn" (click)="saveRole(m, role.value, job.value)">{{ t('common.save') }}</button>
+          </div>
+          <p class="muted small">{{ t('team.role.hint') }}</p>
+          <div class="scroll">
+            <table class="perms">
+              <caption class="sr">{{ t('team.perms', { name: m.name }) }}</caption>
+              <thead><tr><th scope="col"></th>@for (a of actions; track a) { <th scope="col">{{ t(actionKey[a]) }}</th> }</tr></thead>
+              <tbody>
+                @for (area of areas; track area) {
+                  <tr><th scope="row">{{ t(areaKey[area]) }}</th>
+                    @for (a of actions; track a) {
+                      <td><input type="checkbox" [checked]="has(perm(area, a))" [disabled]="locked(m, perm(area, a))" [attr.aria-label]="t(areaKey[area]) + ': ' + t(actionKey[a])" (change)="pick(perm(area, a), $any($event.target).checked)" /></td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (auth.role() === 'owner' && m.role !== 'owner') {
+            <div class="row"><button type="button" class="btn btn--primary" (click)="savePerms(m)">{{ t('team.perms.save') }}</button><button type="button" class="btn" (click)="reset(m)">{{ t('team.perms.reset') }}</button></div>
+          } @else { <p class="muted small">{{ t('team.perms.ownerOnly') }}</p> }
+          <div class="row danger">
+            @if (isActive(m)) {
+              <label class="field grow">{{ t('team.reason') }}<input #why class="input" maxlength="120" /></label>
+              <button type="button" class="btn" (click)="suspend(m, why.value)">{{ t('team.suspend') }}</button>
+            } @else {
+              <span class="grow muted">{{ m.suspendedReason }}</span>
+              <button type="button" class="btn" (click)="reactivate(m)">{{ t('team.reactivate') }}</button>
+            }
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('setup.remove', { name: m.name })" (click)="remove(m)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+  @if (!auth.locked() || (auth.can('team.create') && assignable().length)) {
+    <form class="row" (submit)="$event.preventDefault(); add(name.value, job2.value, role2.value, pin.value); name.value = ''; job2.value = ''; pin.value = ''">
+      <input class="input" #name [attr.aria-label]="t('team.name')" [placeholder]="t('team.name')" />
+      <input class="input" #job2 [attr.aria-label]="t('team.job')" [placeholder]="t('team.job')" maxlength="60" />
+      <select class="input role" #role2 [attr.aria-label]="t('team.role')">@for (r of assignable(); track r) { <option [value]="r">{{ t(roleKey[r]) }}</option> }</select>
+      <input class="input pin" #pin type="password" inputmode="numeric" maxlength="8" autocomplete="off" [attr.aria-label]="t('team.pin')" [placeholder]="t('team.pin')" />
+      <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('team.add') }}</button>
+    </form>
+  }
+  @if (problem(); as p) { <p class="error-text intro" role="alert">{{ t(p) }}</p> }
+</section>
+
+@if (recent().length) {
+  <section class="card" aria-labelledby="log-title">
+    <header class="card-head"><h2 class="card-title" id="log-title"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>{{ t('team.log') }}</h2></header>
+    <ol class="log">
+      @for (e of recent(); track e.at) { <li><time [attr.datetime]="e.at">{{ e.at.slice(0, 16).replace('T', ' ') }}</time> {{ e.by }} · {{ t(eventKey[e.action]) }}: <strong>{{ e.target }}</strong>@if (e.detail) { <span class="muted"> ({{ e.detail }})</span> }</li> }
+    </ol>
+  </section>
+}

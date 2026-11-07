@@ -45,7 +45,7 @@ export class PatientProfileComponent {
   protected readonly tab = signal<Tab>('upcoming');
   private readonly auth = inject(AuthService);
   /** Dentists don't see billing, reception doesn't see clinical records, and the clinic can hide pages in Setup. */
-  protected readonly sections = computed(() => PROFILE_PAGES.filter((x) => x.id === 'overview' || (!this.store.hiddenPages().includes(x.id) && (x.id === 'appointments' || this.auth.can(x.clinical ? 'clinical' : 'billing')))).map((x) => x.id as Section));
+  protected readonly sections = computed(() => PROFILE_PAGES.filter((x) => x.id === 'overview' || (!this.store.hiddenPages().includes(x.id) && (x.id === 'appointments' ? this.auth.can('appointments.view') : this.auth.can(x.clinical ? 'clinical.view' : 'billing.view')))).map((x) => x.id as Section));
   protected readonly sectionKey = Object.fromEntries(PROFILE_PAGES.map((x) => [x.id, x.key])) as Record<Section, Key>;
   protected readonly pageIcon = Object.fromEntries(PROFILE_PAGES.map((x) => [x.id, x.icon])) as Record<Section, string>;
   protected readonly section = computed<Section>(() => {

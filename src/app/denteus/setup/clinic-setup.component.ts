@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ClinicProfileComponent } from './clinic-profile.component';
+import { TeamComponent } from './team.component';
 import { ThemeService } from '../../core/theme.service';
 import { LANGS, Lang } from '../../core/i18n/i18n.service';
 import { ClinicLocation, Message } from '../models/dental.models';
 import { AuthService } from '../../core/auth/auth.service';
-import { ROLES, Role } from '../../core/auth/auth-rules';
-import { ROLE_KEY } from '../../core/auth/sign-in.component';
+import { Permission } from '../../core/auth/auth-rules';
 import { Key } from '../../core/i18n/i18n.service';
 import { I18n } from '../../core/i18n/i18n.service';
 import { fromMin, type OpeningHours } from '../rules/opening-hours';
@@ -29,14 +29,14 @@ const toDataUrl = (blob: Blob): Promise<string> => new Promise((done, fail) => {
 const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
 
 const SECTIONS = [
-  { id: 'clinic', icon: 'fa-hospital', key: 'set.clinicProfile' },
-  { id: 'team', icon: 'fa-user-doctor', key: 'set.team' },
-  { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule' },
-  { id: 'services', icon: 'fa-file-invoice', key: 'set.services' },
-  { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging' },
-  { id: 'integrations', icon: 'fa-plug', key: 'set.integrations' },
-  { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace' },
-] as const satisfies readonly { id: string; icon: string; key: Key }[];
+  { id: 'clinic', icon: 'fa-hospital', key: 'set.clinicProfile', need: 'profile.view' },
+  { id: 'team', icon: 'fa-user-doctor', key: 'set.team', need: 'team.view' },
+  { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule', need: 'settings.view' },
+  { id: 'services', icon: 'fa-file-invoice', key: 'set.services', need: 'settings.view' },
+  { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging', need: 'settings.view' },
+  { id: 'integrations', icon: 'fa-plug', key: 'set.integrations', need: 'settings.view' },
+  { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace', need: 'settings.view' },
+] as const satisfies readonly { id: string; icon: string; key: Key; need: Permission }[];
 type SectionId = (typeof SECTIONS)[number]['id'];
 
 /** Who treats and where: the dentists and chairs the calendar books against. Every change saves at once. */
@@ -44,14 +44,16 @@ type SectionId = (typeof SECTIONS)[number]['id'];
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
-  imports: [RouterLink, ClinicProfileComponent],
+  imports: [RouterLink, ClinicProfileComponent, TeamComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })
 export class ClinicSetupComponent {
   readonly section = input<string>();
   protected readonly sections = SECTIONS;
-  protected readonly current = computed<SectionId>(() => SECTIONS.find((x) => x.id === this.section())?.id ?? 'clinic');
+  /** Sections the signed-in role may open; a direct link to another one lands on the first allowed. */
+  protected readonly visible = computed(() => SECTIONS.filter((x) => this.auth.can(x.need)));
+  protected readonly current = computed<SectionId>(() => (this.visible().find((x) => x.id === this.section()) ?? this.visible()[0] ?? SECTIONS[0]).id);
   protected readonly clinic = computed<ClinicLocation | undefined>(() => this.store.locations()[0]);
   protected readonly theme = inject(ThemeService);
   protected readonly langs = LANGS;
@@ -70,17 +72,6 @@ export class ClinicSetupComponent {
   protected readonly t = this.i18n.t;
 
   protected readonly auth = inject(AuthService);
-  protected readonly roles = ROLES;
-  protected readonly roleKey = ROLE_KEY;
-  protected readonly teamProblem = signal<Key | null>(null);
-
-  protected async addMember(name: string, role: string, pin: string): Promise<void> {
-    this.teamProblem.set((await this.auth.addStaff(name, role as Role, pin)) ? null : 'team.invalid');
-  }
-
-  protected async removeMember(id: string): Promise<void> {
-    this.teamProblem.set((await this.auth.removeStaff(id)) ? null : 'team.last');
-  }
 
   private readonly practice = inject(PracticeStore);
   private readonly database = inject(ClinicDatabase);

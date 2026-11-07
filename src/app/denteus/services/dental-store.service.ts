@@ -5,6 +5,7 @@ import { ClinicData } from './backup';
 import { parseHours } from '../rules/opening-hours';
 import { I18n } from '../../core/i18n/i18n.service';
 import { STATUS_LABEL } from '../utils/domain-keys';
+import { AuthService } from '../../core/auth/auth.service';
 import { ClinicDatabase } from './clinic-database.service';
 import { defaultCatalog } from '../patients/treatment-rules';
 import type { Examination } from '../odontogram/engine/exam';
@@ -101,6 +102,7 @@ export class DentalStore {
   private initialization: Promise<void> | null = null;
   private persistQueue: Promise<void> = Promise.resolve();
   private readonly database = inject(ClinicDatabase);
+  private readonly auth = inject(AuthService);
   private readonly t = inject(I18n).t;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly persistenceError = signal<string | null>(null);
@@ -243,6 +245,7 @@ export class DentalStore {
 
   /** Edits a patient's treatment plan: `change` receives the current list and returns the new one. */
   changePlan(patientId: string, change: (plan: TreatmentItem[]) => TreatmentItem[]): void {
+    if (!this.auth.can('clinical.edit')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, plan: change(p.plan ?? []) } : p)));
   }
 
@@ -254,6 +257,7 @@ export class DentalStore {
 
   /** Same shape as `changePlan`, for the patient's letters. Callers only append. */
   changeLetters(patientId: string, change: (letters: Letter[]) => Letter[]): void {
+    if (!this.auth.can('clinical.edit')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, letters: change(p.letters ?? []) } : p)));
   }
 
@@ -266,32 +270,38 @@ export class DentalStore {
 
   /** Archiving hides a patient without deleting anything; restoring brings them back. */
   setArchived(patientId: string, on: boolean): void {
+    if (!this.auth.can('patients.manage')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, archivedAt: on ? new Date().toISOString() : undefined } : p)));
   }
 
   setWhatsappConsent(patientId: string, value: 'granted' | 'declined' | undefined): void {
+    if (!this.auth.can('patients.edit')) return; // the buttons are hidden too; this keeps every caller honest
     const at = value ? new Date().toISOString() : undefined;
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, whatsappConsent: value, whatsappConsentAt: at } : p)));
   }
 
   /** Appends an examination snapshot to this patient only (the record carries its own patientId; a mismatch is dropped). */
   addExamination(patientId: string, exam: Examination): void {
+    if (!this.auth.can('clinical.create')) return; // the buttons are hidden too; this keeps every caller honest
     if (exam.patientId !== patientId) return;
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, examinations: [...(p.examinations ?? []), exam] } : p)));
   }
 
   /** Same shape as `changePlan`, for the patient's visit notes. */
   changeVisits(patientId: string, change: (visits: VisitNote[]) => VisitNote[]): void {
+    if (!this.auth.can('clinical.edit')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, visits: change(p.visits ?? []) } : p)));
   }
 
   /** Same shape as `changePlan`, for the patient's payments. */
   changePayments(patientId: string, change: (payments: Payment[]) => Payment[]): void {
+    if (!this.auth.can('billing.create')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, payments: change(p.payments ?? []) } : p)));
   }
 
   /** Same shape as `changePlan`, for the patient's invoices. Callers only ever append (issue) or add a credit note (cancel). */
   changeInvoices(patientId: string, change: (invoices: Invoice[]) => Invoice[]): void {
+    if (!this.auth.can('billing.create')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, invoices: change(p.invoices ?? []) } : p)));
   }
 

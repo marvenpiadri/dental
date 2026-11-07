@@ -1,6 +1,7 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { PLACE_FIELDS, PlaceResult } from '../rules/places-rules';
+import { MapsLink, isShortLink, parseMapsLink } from '../rules/maps-link';
 
 export interface Suggestion { placeId: string; text: string }
 
@@ -30,6 +31,22 @@ export class MapsService {
       this.doc.head.appendChild(s);
     });
     return this.library;
+  }
+
+  /**
+   * Reads a pasted Google Maps link. The server follows short links and, when it has a geocoding key, adds the address;
+   * if the server can't be reached a full link is still read here, so coordinates always work.
+   */
+  async fromLink(raw: string, lang: string): Promise<{ link: MapsLink; geo?: PlaceResult } | null> {
+    try {
+      const res = await fetch(`/api/maps-link?u=${encodeURIComponent(raw)}&lang=${lang}`);
+      if (res.ok) { const { geo, address: _a, ...link } = (await res.json()) as MapsLink & { geo?: PlaceResult; address?: string }; return { link, geo }; }
+      if (res.status === 422 || res.status === 429) return null;
+    } catch { /* offline: fall through to the local reading */ }
+    let url: URL | null = null;
+    try { url = new URL(raw.trim()); } catch { return null; }
+    const link = isShortLink(url) ? null : parseMapsLink(raw);
+    return link ? { link } : null;
   }
 
   /** Autocomplete suggestions for establishments and addresses. One session token per search keeps billing to one session. */

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Appointment, PrescriptionLine, VisitNote } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
@@ -26,6 +27,9 @@ export class VisitNotesComponent {
   readonly edit = output<(notes: VisitNote[]) => VisitNote[]>();
 
   protected readonly store = inject(DentalStore);
+  private readonly auth = inject(AuthService);
+  protected readonly canVoid = computed(() => this.auth.can('clinical.void'));
+  protected readonly canEdit = computed(() => this.auth.can('clinical.edit'));
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly typeKey = typeKey;
@@ -122,8 +126,11 @@ export class VisitNotesComponent {
   protected readonly askRemove = signal<string | null>(null);
   protected readonly showHistory = signal<string | null>(null);
 
-  protected remove(note: VisitNote): void {
-    this.edit.emit((notes) => notes.filter((n) => n.id !== note.id));
+  /** Voiding keeps the note and its revisions. A reason is required. */
+  protected remove(note: VisitNote, reason: string): void {
+    if (!this.canVoid() || !reason.trim()) return;
+    const at = new Date().toISOString();
+    this.edit.emit((notes) => notes.map((n) => (n.id === note.id && !n.voidedAt ? { ...n, voidedAt: at, voidReason: reason.trim() } : n)));
     this.askRemove.set(null);
   }
 

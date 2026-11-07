@@ -35,3 +35,20 @@ export const mapsEmbed = (p: Pick<ClinicProfile, 'lat' | 'lng' | 'placeId'>, key
   const q = p.placeId ? `place_id:${p.placeId}` : `${p.lat},${p.lng}`;
   return `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent(q)}`;
 };
+
+/** Codes Intl still names (East Germany, USSR…) that no current address uses. */
+const RETIRED = ['DD', 'SU', 'YU', 'ZR', 'CS', 'NT', 'TP', 'FX', 'BU', 'AN', 'QO', 'EU', 'UN', 'XA', 'XB'];
+
+/** ISO country code from a country name in English or French, using the browser's own country names (no list to maintain). */
+export function countryCodeFor(name: string): string | undefined {
+  const wanted = name.trim().toLowerCase();
+  if (!wanted) return undefined;
+  const names = ['en', 'fr'].map((l) => new Intl.DisplayNames([l], { type: 'region' }));
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (const a of letters) for (const b of letters) {
+    const code = a + b;
+    if (RETIRED.includes(code)) continue;
+    if (names.some((n) => { try { return n.of(code)?.toLowerCase() === wanted; } catch { return false; } })) return code;
+  }
+  return undefined;
+}

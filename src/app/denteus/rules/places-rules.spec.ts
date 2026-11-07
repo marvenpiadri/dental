@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fromPlace, mapsEmbed, mapsLink } from './places-rules';
+import { countryCodeFor, fromPlace, mapsEmbed, mapsLink } from './places-rules';
 
 const place = { id: 'ChIJabc', formattedAddress: '12 Rue X, Salé, Morocco', location: { lat: 34.05, lng: -6.8 }, addressComponents: [
   { types: ['locality'], longText: 'Salé', shortText: 'Salé' }, { types: ['administrative_area_level_1'], longText: 'Rabat-Salé-Kénitra' }, { types: ['country'], longText: 'Morocco', shortText: 'MA' }] };
@@ -20,5 +20,15 @@ describe('map links', () => {
   it('never builds an embed without a key', () => {
     expect(mapsEmbed({ lat: 1, lng: 2 }, '')).toBeUndefined();
     expect(mapsEmbed({ lat: 1, lng: 2, placeId: 'p' }, 'K')).toContain('q=place_id%3Ap');
+  });
+});
+
+describe('countryCodeFor', () => {
+  it('finds the code from English or French names', () => {
+    expect(countryCodeFor('Morocco')).toBe('MA');
+    expect(countryCodeFor('maroc')).toBe('MA');
+    expect(countryCodeFor('Allemagne')).toBe('DE');
+    expect(countryCodeFor('Atlantis')).toBeUndefined();
+    expect(countryCodeFor('')).toBeUndefined();
   });
 });

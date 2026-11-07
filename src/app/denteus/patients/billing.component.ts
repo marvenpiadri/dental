@@ -1,3 +1,4 @@
+import { AuthService } from '../../core/auth/auth.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Invoice, PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
@@ -32,6 +33,7 @@ export class BillingComponent {
 
   protected readonly i18n = inject(I18n);
   private readonly store = inject(DentalStore);
+  private readonly auth = inject(AuthService);
   protected readonly t = this.i18n.t;
   protected readonly methods = PAYMENT_METHODS;
   protected readonly methodKey = METHOD_KEY;
@@ -79,12 +81,13 @@ export class BillingComponent {
     if (left && !this.amount()) this.amount.set(String(left));
   }
 
-  protected ask(kind: 'payment' | 'invoice', id: string): void { this.reason.set(''); this.asking.set({ kind, id }); }
+  protected readonly canVoid = computed(() => this.auth.can('billing.void'));
+  protected ask(kind: 'payment' | 'invoice', id: string): void { if (!this.canVoid()) return; this.reason.set(''); this.asking.set({ kind, id }); }
 
   /** Voiding keeps the payment in the history; cancelling an invoice issues a credit note. Both need a reason. */
   protected confirm(): void {
     const a = this.asking();
-    if (!a || !this.reason().trim()) return;
+    if (!a || !this.reason().trim() || !this.canVoid()) return;
     const now = new Date();
     if (a.kind === 'payment') {
       this.edit.emit((list) => list.map((p) => (p.id === a.id ? voidPayment(p, this.reason(), now) ?? p : p)));

@@ -7,6 +7,7 @@
   <nav class="rail" [attr.aria-label]="t('nav.main')">
     <a class="brand" routerLink="/today" [attr.aria-label]="t('app.home')"><img src="logo.png" alt="" width="36" height="36" /></a>
 
+    @if (auth.can('appointments.view')) {
     <a class="item" routerLink="/today" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
       <span>{{ t('nav.today') }}</span>
@@ -15,22 +16,26 @@
       <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
       <span>{{ t('nav.calendar') }}</span>
     </a>
+    }
+    @if (auth.can('patients.view')) {
     <a class="item" routerLink="/patients" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-user-group" aria-hidden="true"></i>
       <span>{{ t('nav.patients') }}</span>
     </a>
-
+    }
+    @if (auth.can('practice.view')) {
     <a class="item" routerLink="/practice" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
       <span>{{ t('nav.practice') }}</span>
     </a>
-    @if (auth.can('reports')) {
+    }
+    @if (auth.can('reports.view')) {
     <a class="item" routerLink="/reports" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
       <span>{{ t('nav.reports') }}</span>
     </a>
     }
-    @if (auth.can('setup')) {
+    @if (auth.canAny('settings.view', 'profile.view', 'team.view')) {
     <a class="item" routerLink="/setup" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-gear" aria-hidden="true"></i>
       <span>{{ t('nav.setup') }}</span>

@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import { loadPublicClinics, siteOrigin } from './public-source.server';
+import { importLink, rateLimited } from './maps-link.server';
 import { isLive } from './app/denteus/rules/public-record';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -33,6 +34,16 @@ app.get('/robots.txt', (_req, res) => {
 app.get('/sitemap.xml', async (_req, res) => {
   const urls = (await loadPublicClinics()).filter(isLive).map((r) => `  <url><loc>${siteOrigin()}${r.path}</loc></url>`).join('\n');
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
+});
+/** Reads a pasted Google Maps link for the clinic profile form. Stateless: nothing is stored on the server. */
+app.get('/api/maps-link', async (req, res) => {
+  if (rateLimited(req.ip ?? 'unknown')) { res.status(429).json({ error: 'rate' }); return; }
+  const raw = typeof req.query['u'] === 'string' ? req.query['u'].slice(0, 2000) : '';
+  const lang = req.query['lang'] === 'fr' ? 'fr' : 'en';
+  try {
+    const result = await importLink(raw, lang);
+    result ? res.set('Cache-Control', 'no-store').json(result) : res.status(422).json({ error: 'link' });
+  } catch { res.status(502).json({ error: 'google' }); }
 });
 /** Clinic photographs, decoded from the exported record. Only JPEG data URLs made by the app's own resizer are served. */
 app.get('/clinics/:country/:city/:slug/img/:n', async (req, res, next) => {

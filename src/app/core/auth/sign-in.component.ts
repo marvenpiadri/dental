@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { I18n } from '../i18n/i18n.service';
 import { Key } from '../i18n/i18n.service';
 import { AuthService } from './auth.service';
-import { Role } from './auth-rules';
+import { Role, isActive } from './auth-rules';
 
-export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', dentist: 'team.role.dentist', reception: 'team.role.reception' };
+export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', admin: 'team.role.admin', dentist: 'team.role.dentist', assistant: 'team.role.assistant', reception: 'team.role.reception', accountant: 'team.role.accountant' };
 
 @Component({
   selector: 'den-sign-in',
@@ -16,7 +16,7 @@ export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', dentist: 
       <label class="field">
         <span class="label">{{ t('auth.who') }}</span>
         <select class="input" #who>
-          @for (s of auth.staff(); track s.id) { <option [value]="s.id">{{ s.name }} · {{ t(roleKey[s.role]) }}</option> }
+          @for (s of active(); track s.id) { <option [value]="s.id">{{ s.name }} · {{ t(roleKey[s.role]) }}</option> }
         </select>
       </label>
       <label class="field">
@@ -37,6 +37,7 @@ export class SignInComponent {
   protected readonly t = inject(I18n).t;
   protected readonly roleKey = ROLE_KEY;
   protected readonly wrong = signal(false);
+  protected readonly active = computed(() => this.auth.staff().filter(isActive));
 
   protected async go(id: string, pin: string): Promise<void> {
     this.wrong.set(!(await this.auth.signIn(id, pin)));

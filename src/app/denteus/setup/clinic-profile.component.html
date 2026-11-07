@@ -1,3 +1,4 @@
+<fieldset class="fs" [disabled]="!editable()">
 @let c = clinic();
 @let pr = p();
 <section class="card" aria-labelledby="pub-title">
@@ -51,6 +52,15 @@
 
 <section class="card" aria-labelledby="geo-title">
   <header class="card-head"><h2 class="card-title" id="geo-title"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ t('prof.location') }}</h2></header>
+  <form class="row link" (submit)="$event.preventDefault(); importLink(link.value)">
+    <label class="field grow">{{ t('prof.link') }}<input #link class="input" type="url" inputmode="url" autocomplete="off" [placeholder]="t('prof.link.ph')" /></label>
+    <button type="submit" class="btn btn--primary" [disabled]="linkState() === 'busy'">{{ t('prof.link.go') }}</button>
+  </form>
+  @switch (linkState()) {
+    @case ('bad') { <p class="row banner" role="alert">{{ t('prof.link.bad') }}</p> }
+    @case ('ok') { <p class="row ok" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('prof.link.ok') }}</p> }
+  }
+  <p class="row hint">{{ t('prof.link.hint') }}</p>
   @if (maps.available) {
     <div class="grid one">
       <label class="field">{{ t('prof.search') }}<input class="input" type="search" autocomplete="off" role="combobox" [attr.aria-expanded]="suggestions().length > 0" (input)="search($any($event.target).value)" /></label>
@@ -60,25 +70,23 @@
         </ul>
       }
     </div>
-    <p class="row hint">{{ t('prof.search.hint') }}</p>
-  } @else {
-    <p class="row hint">{{ t('prof.search.off') }}</p>
   }
-  <div class="grid one">
-    <label class="field">{{ t('set.address') }}<input class="input" [value]="c.address ?? ''" maxlength="160" (change)="setRoot({ address: $any($event.target).value.trim() })" /></label>
-  </div>
-  <div class="grid">
-    @for (f of place; track f.k) {
-      <label class="field">{{ t(f.label) }}<input class="input" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
-    }
-    <label class="field">{{ t('prof.lat') }}<input class="input" inputmode="decimal" [value]="pr.lat ?? ''" (change)="editCoord('lat', $any($event.target).value)" /></label>
-    <label class="field">{{ t('prof.lng') }}<input class="input" inputmode="decimal" [value]="pr.lng ?? ''" (change)="editCoord('lng', $any($event.target).value)" /></label>
-  </div>
-  <p class="row hint">
-    @if (pr.placeId) { {{ t('prof.placeId') }}: <code>{{ pr.placeId }}</code>. }
-    {{ t('prof.manual') }}
-    @if (mapUrl(); as u) { <a [href]="u" target="_blank" rel="noopener">{{ t('prof.checkMap') }}</a> }
-  </p>
+  @if (needsPlace()) { <p class="row banner" role="status">{{ t('prof.needPlace') }}</p> }
+  <details class="more" [open]="needsPlace()">
+    <summary>{{ t('prof.details') }}</summary>
+    <div class="grid one">
+      <label class="field">{{ t('set.address') }}<input class="input" [value]="c.address ?? ''" maxlength="160" (change)="setRoot({ address: $any($event.target).value.trim() })" /></label>
+    </div>
+    <div class="grid">
+      @for (f of place; track f.k) {
+        <label class="field">{{ t(f.label) }}<input class="input" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
+      }
+      <label class="field">{{ t('prof.lat') }}<input class="input" inputmode="decimal" [value]="pr.lat ?? ''" (change)="editCoord('lat', $any($event.target).value)" /></label>
+      <label class="field">{{ t('prof.lng') }}<input class="input" inputmode="decimal" [value]="pr.lng ?? ''" (change)="editCoord('lng', $any($event.target).value)" /></label>
+    </div>
+    @if (pr.placeId) { <p class="row hint">{{ t('prof.placeId') }}: <code>{{ pr.placeId }}</code></p> }
+  </details>
+  @if (mapUrl(); as u) { <p class="row hint"><a [href]="u" target="_blank" rel="noopener">{{ t('prof.checkMap') }}</a></p> }
 </section>
 
 <section class="card" aria-labelledby="url-title">
@@ -138,3 +146,6 @@
 
 @if (status() === 'saved') { <p class="ok" role="status"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('set.saved') }}</p> }
 @if (status() === 'failed') { <p class="banner" role="alert">{{ t('setup.error') }}</p> }
+
+</fieldset>
+@if (!editable()) { <p class="hint ro" role="status">{{ t('prof.readonly') }}</p> }

@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { ClinicLocation, ClinicProfile, PublishState } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { MapsService, Suggestion } from '../services/maps.service';
 import { changeSlug, clinicPath, displayName, freeSlug, publishProblems, slugProblem, slugify } from '../rules/clinic-profile-rules';
-import { fromPlace, mapsLink } from '../rules/places-rules';
+import { countryCodeFor, fromPlace, mapsLink } from '../rules/places-rules';
 import { publicRecord } from '../rules/public-record';
 
 interface Field { k: string; label: Key; root?: boolean; type?: string; max?: number }
@@ -51,6 +52,9 @@ const resize = (file: File, max: number): Promise<string> => new Promise((done, 
 export class ClinicProfileComponent {
   private readonly store = inject(DentalStore);
   protected readonly maps = inject(MapsService);
+  /** Clinic identity belongs to the owner; everyone else sees it read-only. */
+  private readonly auth = inject(AuthService);
+  protected readonly editable = computed(() => this.auth.can('profile.edit'));
   protected readonly t = inject(I18n).t;
   private readonly i18n = inject(I18n);
   protected readonly identity = IDENTITY; protected readonly contact = CONTACT; protected readonly place = PLACE; protected readonly lists = LISTS;
@@ -63,6 +67,8 @@ export class ClinicProfileComponent {
   protected readonly slugBad = computed(() => this.p().slug ? slugProblem(this.p().slug) : null);
   protected readonly suggestions = signal<Suggestion[]>([]);
   protected readonly searching = signal(false);
+  protected readonly linkState = signal<'idle' | 'busy' | 'bad' | 'ok'>('idle');
+  protected readonly needsPlace = computed(() => !this.p().country || !this.p().city);
   protected readonly pendingSlug = signal<string | null>(null);
   protected readonly status = signal<'saved' | 'failed' | 'needName' | 'image' | null>(null);
   protected readonly stateKey: Record<PublishState, Key> = { draft: 'prof.state.draft', published: 'prof.state.published', unpublished: 'prof.state.unpublished', closed: 'prof.state.closed' };
@@ -82,6 +88,7 @@ export class ClinicProfileComponent {
   protected async setProfile(patch: Partial<ClinicProfile>): Promise<void> { await this.commit({ ...this.clinic(), profile: { ...this.p(), ...patch } }); }
   protected edit(f: Field, raw: string): Promise<void> {
     const v = raw.trim();
+    if (f.k === 'country') return this.setProfile({ country: v || undefined, ...(v && !this.p().countryCode ? { countryCode: countryCodeFor(v) } : {}) });
     return f.root ? this.setRoot({ [f.k]: v }) : this.setProfile({ [f.k]: f.k === 'countryCode' ? v.toUpperCase() : v || undefined });
   }
   protected editList(k: (typeof LISTS)[number], raw: string): Promise<void> {
@@ -90,6 +97,20 @@ export class ClinicProfileComponent {
   protected editCoord(k: 'lat' | 'lng', raw: string): Promise<void> {
     const n = Number(raw);
     return this.setProfile({ [k]: raw.trim() !== '' && Number.isFinite(n) && Math.abs(n) <= (k === 'lat' ? 90 : 180) ? n : undefined });
+  }
+
+  /** Paste a Google Maps link: coordinates, place id and (when the server can look it up) the address are filled in; the clinic only adds what's missing. */
+  protected async importLink(raw: string): Promise<void> {
+    if (!raw.trim()) return;
+    this.linkState.set('busy');
+    const found = await this.maps.fromLink(raw, this.lang());
+    if (!found) { this.linkState.set('bad'); return; }
+    const fill = found.geo ? fromPlace(found.geo) : { address: undefined, profile: {} as Partial<ClinicProfile> };
+    const { lat, lng, placeId, name } = found.link;
+    const profile: Partial<ClinicProfile> = { ...fill.profile, ...(lat !== undefined && lng !== undefined ? { lat, lng } : {}), ...(placeId ? { placeId } : {}) };
+    const have = this.clinic();
+    await this.commit({ ...have, name: have.name || name || have.name, address: have.address || fill.address, profile: { ...this.p(), ...profile, displayName: this.p().displayName || (have.name ? undefined : name) } });
+    this.linkState.set('ok');
   }
 
   protected async search(q: string): Promise<void> {

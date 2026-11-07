@@ -122,6 +122,9 @@ export interface VisitNote {
   prescription?: PrescriptionLine[];
   /** Earlier versions, oldest first. A correction keeps what was there before instead of overwriting it. */
   revisions?: NoteRevision[];
+  /** A voided note stays in the record, shown struck through with its reason; clinical history is never deleted. */
+  voidedAt?: string;
+  voidReason?: string;
 }
 
 export interface NoteRevision {
