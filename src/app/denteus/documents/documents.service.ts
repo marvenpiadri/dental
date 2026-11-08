@@ -2,9 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { ClinicDatabase } from '../services/clinic-database.service';
 import { WISDOM_TEETH, isBlankTooth, readChart } from '../odontogram/engine/chart';
-import { ToothSnap } from '../odontogram/tooth-snap.service';
 import { chartSvg } from './chart-svg';
-import { ToothImages, toothImages } from './tooth-images';
 import { DEFAULT_TEMPLATE, DOC_KINDS, DocKind, DocTemplate, PRESETS, normalizeTemplate } from './doc-engine';
 
 type Mode = 'status' | 'plan';
@@ -16,10 +14,6 @@ export class Documents {
   private readonly i18n = inject(I18n);
   readonly custom = signal<DocTemplate[]>([]);
   readonly defaults = signal<Partial<Record<DocKind, string>>>({});
-  private readonly snap = inject(ToothSnap);
-  /** The 3D tooth pictures, drawn once in the background the first time a chart is needed. */
-  private readonly images = signal<ToothImages | undefined>(undefined);
-  private started = false;
   readonly all = computed(() => [...PRESETS, ...this.custom()]);
 
   constructor() { void this.load(); }
@@ -63,9 +57,8 @@ export class Documents {
     const chart = readChart(raw).chart;
     const teeth = mode === 'plan' ? chart?.plan : chart?.status;
     if (!chart || !teeth) return undefined;
-    if (!this.started && typeof window !== 'undefined') { this.started = true; void toothImages(this.snap).then((m) => this.images.set(m)).catch(() => { this.started = false; }); }
     return chartSvg({
-      images: this.images(), teeth, hide: new Set(WISDOM_TEETH.filter((n) => isBlankTooth(chart, n))),
+      teeth, hide: new Set(WISDOM_TEETH.filter((n) => isBlankTooth(chart, n))),
       title: this.i18n.t(mode === 'plan' ? 'doc.chart.plan' : 'doc.chart.status'),
       label: (k) => this.i18n.t(`cs.${k}` as Key),
     });

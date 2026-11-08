@@ -1,10 +1,10 @@
 // The tooth chart as a still vector picture for documents. It only READS the existing chart data (the same teeth map the
-// interactive chart edits) and draws FDI numbers, surface marks, short codes and a legend. Black, white and hatching only,
-// so it reads the same in grayscale. It is not a third interactive chart.
+// interactive chart edits) and draws FDI numbers, surface marks, short codes and a legend. Tooth shapes and the arch layout come
+// from react-odontogram (MIT, see tooth-paths.LICENSE.txt). Black, white and hatching only, so it reads the same in grayscale.
+// Teeth print empty: only recorded findings are marked. It is not a third interactive chart.
 import type { TeethMap, ToothRecord } from '../odontogram/engine/chart';
 import { esc } from './doc-engine';
-import { OUTLINES } from './tooth-outlines';
-import type { ToothImages } from './tooth-images';
+import { TOOTH_PATHS } from './tooth-paths';
 
 export const UPPER: readonly number[] = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 export const LOWER: readonly number[] = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
@@ -40,51 +40,49 @@ export function toothCodes(r: Rec): Code[] {
   return c;
 }
 
-// Two arches seen from the biting side, like a dentist's chart: upper opens downward, lower opens upward.
-const W = 380, TOP = 30, A = 98, B = 124, P = 3.4, S = 2.9, LOW = TOP + B - 40; // the two arches are stacked, upper over lower // S: picture units per mm of real tooth
-const tw = (f: number) => OUTLINES[f].w * S, td = (f: number) => OUTLINES[f].d * S; // width along the arch and depth, from the real crown
+// Two arches in the library's oval layout: the upper right quadrant is drawn once, the others are mirrored copies.
+const VW = 409, VH = 694, X0 = -36, VBW = VW + 72, Y0 = -26;
+type Zone = 'occlusal' | 'buccal' | 'lingual' | 'mesial' | 'distal';
+const ZONES: readonly Zone[] = ['buccal', 'lingual', 'mesial', 'distal'];
+const wedge = (c: [number, number], a: [number, number], b: [number, number]) => `${c[0].toFixed(1)},${c[1].toFixed(1)} ${(c[0] + 100 * a[0]).toFixed(1)},${(c[1] + 100 * a[1]).toFixed(1)} ${(c[0] + 100 * b[0]).toFixed(1)},${(c[1] + 100 * b[1]).toFixed(1)}`;
 
-interface Spot { x: number; y: number; deg: number }
-/** Centre line of an arch (a squared half-ellipse), then one spot per tooth spread by tooth width along it. */
-function spots(list: readonly number[], upper: boolean, ox: number): Spot[] {
-  const top = upper ? TOP : LOW;
-  const pts: { x: number; y: number }[] = [];
-  for (let k = 0; k <= 400; k++) {
-    const t = Math.PI - (Math.PI * k) / 400;
-    pts.push({ x: A * Math.sign(Math.cos(t)) * Math.abs(Math.cos(t)) ** (2 / P), y: -B * Math.abs(Math.sin(t)) ** (2 / P) });
-  }
-  const len = [0];
-  for (let k = 1; k < pts.length; k++) len.push(len[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
-  const widths = list.map(tw), total = widths.reduce((s, w) => s + w, 0);
-  const k = (len[len.length - 1] - 16) / (total + list.length * 2); // squeeze or stretch so the arch is filled
-  let at = 8 + k;
-  return list.map((_, i) => {
-    const mid = at + (widths[i] * k) / 2; at += widths[i] * k + 2 * k;
-    let j = len.findIndex((l) => l >= mid); if (j < 1) j = 1;
-    const p = pts[j], q = pts[j - 1], n = pts[Math.min(j + 1, pts.length - 1)];
-    const deg = (Math.atan2((n.y - q.y) * (upper ? 1 : -1), n.x - q.x) * 180) / Math.PI;
-    return { x: ox + p.x, y: upper ? top + B + p.y : top - p.y, deg };
-  });
+interface Place { m: string; cx: number; cy: number; w: number; h: number; ox: number; oy: number; tx: number; ty: number; path: (typeof TOOTH_PATHS)[number] }
+function place(fdi: number): Place {
+  const q = Math.floor(fdi / 10), p = TOOTH_PATHS[fdi % 10];
+  const fx = q === 2 || q === 3, fy = q === 3 || q === 4;
+  const cx = fx ? VW - p.cx : p.cx, cy = fy ? VH - p.cy : p.cy;
+  const centre = [VW / 2, fy ? VH - 250 : 250], apex = [VW / 2, fy ? VH : 0];
+  const len = Math.hypot(cx - centre[0], cy - centre[1]) || 1, ox = (cx - centre[0]) / len, oy = (cy - centre[1]) / len;
+  let tx = -oy, ty = ox; // along the arch; mesial points toward the midline
+  if ((apex[0] - cx) * tx + (apex[1] - cy) * ty < 0) { tx = -tx; ty = -ty; }
+  return { m: `matrix(${fx ? -1 : 1} 0 0 ${fy ? -1 : 1} ${fx ? VW : 0} ${fy ? VH : 0})`, cx, cy, w: p.w, h: p.h, ox, oy, tx, ty, path: p };
 }
 
-function glyph(fdi: number, upper: boolean, r: ToothRecord, image?: { href: string; flipX: boolean; flipY: boolean }): string {
-  const o = OUTLINES[fdi], w = o.w * S, d = o.d * S, x = -w / 2, y = -d / 2, e = w / 2, b = d / 2;
-  const mark = (zone: 'occlusal' | 'buccal' | 'lingual' | 'mesial' | 'distal'): string => {
-    const key = zone, filled = r.fillingSurfaces.has(key), decay = r.caries.has('caries-' + key);
-    if (!filled && !decay) return '';
-    const p = o[zone];
-    return `<path d="${p}" fill="${filled ? '#0a0a0a' : 'url(#cs-hatch)'}" fill-rule="evenodd" stroke="#0a0a0a" stroke-width=".3"/>${filled && decay ? `<path d="${p}" fill="url(#cs-hatch-w)" fill-rule="evenodd"/>` : ''}`;
+const BAND = 'stroke="url(#cs-band)" stroke-width="6" stroke-linejoin="round" fill="none"';
+function glyph(fdi: number, pl: Place, r: ToothRecord): string {
+  const { path: p, m } = pl, missing = r.toothSelection === 'none', implant = r.toothSelection === 'implant';
+  const dash = missing || implant ? ' stroke-dasharray="4 3"' : '';
+  const base = `<path d="${p.outline}" transform="${m}" ${BAND}/><path d="${p.outline}" transform="${m}" fill="#fff" stroke="#0a0a0a" stroke-width="1.4"${dash}/>`;
+  if (missing) return base + `<path d="M${pl.cx - pl.w / 2} ${pl.cy - pl.h / 2}L${pl.cx + pl.w / 2} ${pl.cy + pl.h / 2}M${pl.cx + pl.w / 2} ${pl.cy - pl.h / 2}L${pl.cx - pl.w / 2} ${pl.cy + pl.h / 2}" stroke="#0a0a0a" stroke-width="3"/>`;
+  if (implant) return base + `<circle cx="${pl.cx}" cy="${pl.cy}" r="${Math.min(pl.w, pl.h) * 0.28}" fill="#fff" stroke="#0a0a0a" stroke-width="1.6"/><path d="M${pl.cx - 7} ${pl.cy - 4}H${pl.cx + 7}M${pl.cx - 7} ${pl.cy}H${pl.cx + 7}M${pl.cx - 7} ${pl.cy + 4}H${pl.cx + 7}" stroke="#0a0a0a"/>`;
+  const state = (z: Zone) => ({ filled: r.fillingSurfaces.has(z), decay: r.caries.has('caries-' + z) });
+  const fill = (z: Zone) => { const s = state(z); return s.filled ? '#0a0a0a' : s.decay ? 'url(#cs-hatch)' : ''; };
+  const both = (z: Zone) => state(z).filled && state(z).decay;
+  const o: [number, number] = [pl.ox, pl.oy], t: [number, number] = [pl.tx, pl.ty], c: [number, number] = [pl.cx, pl.cy];
+  const neg = (v: [number, number]): [number, number] => [-v[0], -v[1]], add = (a: [number, number], b: [number, number]): [number, number] => [a[0] + b[0], a[1] + b[1]];
+  const pts: Record<string, string> = {
+    buccal: wedge(c, add(o, neg(t)), add(o, t)), lingual: wedge(c, add(neg(o), neg(t)), add(neg(o), t)),
+    mesial: wedge(c, add(t, neg(o)), add(t, o)), distal: wedge(c, add(neg(t), neg(o)), add(neg(t), o)),
   };
-  const missing = r.toothSelection === 'none', implant = r.toothSelection === 'implant';
-  // Empty by default: a striped band around a white silhouette. Findings are drawn on top, never inferred.
-  const shape = `<path d="${o.all}" fill="none" stroke="url(#cs-band)" stroke-width="2" stroke-linejoin="round"/><path d="${o.all}" fill="#fff" stroke="#0a0a0a" stroke-width=".35"${missing || implant ? ' stroke-dasharray="1.2 .8"' : ''}/>`;
-  const pic = image && !missing && !implant ? `<image href="${image.href}" x="${-o.w / 2}" y="${-o.d / 2}" width="${o.w}" height="${o.d}" preserveAspectRatio="none" transform="scale(${image.flipX ? -1 : 1} ${image.flipY ? -1 : 1})"/><path d="${o.all}" fill="none" stroke="#0a0a0a" stroke-width=".35"/>` : '';
-  const zones = missing || implant ? '' : (['occlusal', 'buccal', 'lingual', 'mesial', 'distal'] as const).map(mark).join('');
-  const sym = missing ? `<path d="M${x / S} ${y / S}L${e / S} ${b / S}M${e / S} ${y / S}L${x / S} ${b / S}" stroke="#0a0a0a" stroke-width=".8"/>`
-    : implant ? `<circle r="${Math.min(o.w, o.d) * 0.3}" fill="#fff" stroke="#0a0a0a" stroke-width=".5"/><path d="M-1.6 -.8H1.6M-1.6 0H1.6M-1.6 .8H1.6" stroke="#0a0a0a" stroke-width=".3"/>` : '';
-  const crown = r.restorationType !== 'none' && !missing ? `<path d="${o.all}" fill="none" stroke="#0a0a0a" stroke-width="1.1" stroke-linejoin="round"/>` : '';
-  const slash = r.extractionPlan ? `<path d="M${(x - 3) / S} ${(b + 3) / S}L${(e + 3) / S} ${(y - 3) / S}" stroke="#0a0a0a" stroke-width=".9"/>` : '';
-  return `<g transform="scale(${upper ? S : `${S} -${S}`})">${shape}${pic}${zones}${sym}${crown}${slash}</g>`;
+  const ring = ZONES.filter((z) => fill(z)).map((z) => `<polygon points="${pts[z]}" fill="${fill(z)}"/>${both(z) ? `<polygon points="${pts[z]}" fill="url(#cs-hatch-w)"/>` : ''}`).join('');
+  const centre = fill('occlusal'), any = ring || centre;
+  const inner = `${m} translate(${p.cx} ${p.cy}) scale(.5) translate(${-p.cx} ${-p.cy})`;
+  const marks = any ? `<g clip-path="url(#cp-${fdi})">${ring}</g><path d="${p.outline}" transform="${inner}" fill="${centre || '#fff'}" stroke="#0a0a0a" stroke-width="1.2"/>${both('occlusal') ? `<path d="${p.outline}" transform="${inner}" fill="url(#cs-hatch-w)"/>` : ''}` : '';
+  const clip = ring ? `<clipPath id="cp-${fdi}"><path d="${p.outline}" transform="${m}"/></clipPath>` : '';
+  const shading = `<path d="${p.shadow}" transform="${m}" fill="#0a0a0a" fill-opacity=".1"/><path d="${p.highlight}" transform="${m}" fill="none" stroke="#0a0a0a" stroke-opacity=".45" stroke-width="1" stroke-linecap="round"/>`;
+  const crown = r.restorationType !== 'none' ? `<path d="${p.outline}" transform="${m}" fill="none" stroke="#0a0a0a" stroke-width="4" stroke-linejoin="round"/>` : '';
+  const slash = r.extractionPlan ? `<path d="M${pl.cx - pl.w / 2 - 6} ${pl.cy + pl.h / 2 + 6}L${pl.cx + pl.w / 2 + 6} ${pl.cy - pl.h / 2 - 6}" stroke="#0a0a0a" stroke-width="3"/>` : '';
+  return clip + base + shading + marks + crown + slash;
 }
 
 const text = (x: number, y: number, s: string, size: number, weight = 400, anchor = 'middle') =>
@@ -97,45 +95,38 @@ export interface ChartSvgOptions {
   /** Teeth left out (wisdom teeth nobody recorded anything on). */
   hide?: ReadonlySet<number>;
   tooth?: (fdi: number) => string;
-  /** Pictures of the real 3D teeth. Without them the teeth print as plain outlines. */
-  images?: ToothImages;
 }
 
 export function chartSvg(o: ChartSvgOptions): string {
   const num = o.tooth ?? String;
   const used = new Set<Code>();
   let caries = false, filling = false;
-  const arch = (list: readonly number[], upper: boolean, ox: number): string => {
-    const at = spots(list, upper, ox);
-    return list.map((fdi, i) => {
-      const r = o.teeth.get(fdi);
-      if (!r || o.hide?.has(fdi)) return '';
-      const codes = toothCodes(r), d = td(fdi), s = at[i], rad = (s.deg * Math.PI) / 180;
-      codes.forEach((k) => used.add(k));
-      if (r.toothSelection !== 'none' && r.toothSelection !== 'implant') { caries ||= r.caries.size > 0; filling ||= r.fillingSurfaces.size > 0; }
-      const out = upper ? { x: Math.sin(rad), y: -Math.cos(rad) } : { x: -Math.sin(rad), y: Math.cos(rad) }; // unit vector pointing away from the arch
-      const nx = s.x + out.x * (d / 2 + 11), ny = s.y + out.y * (d / 2 + 11) + 3.5;
-      const ix = s.x - out.x * (d / 2 + 9), iy = s.y - out.y * (d / 2 + 9) + 3;
-      return text(nx, ny, num(fdi), 10, 600) + `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) rotate(${s.deg.toFixed(1)})">${glyph(fdi, upper, r, o.images?.get(fdi))}</g>`
-        + codes.slice(0, 4).map((c, k) => text(ix, iy + k * 9, c, 8)).join('');
-    }).join('');
-  };
-  const body = arch(UPPER, true, W / 2) + arch(LOWER, false, W / 2);
+  const body = [...UPPER, ...LOWER].map((fdi) => {
+    const r = o.teeth.get(fdi);
+    if (!r || o.hide?.has(fdi)) return '';
+    const pl = place(fdi), codes = toothCodes(r);
+    codes.forEach((k) => used.add(k));
+    if (r.toothSelection !== 'none' && r.toothSelection !== 'implant') { caries ||= r.caries.size > 0; filling ||= r.fillingSurfaces.size > 0; }
+    const reach = Math.abs(pl.ox) * pl.w / 2 + Math.abs(pl.oy) * pl.h / 2;
+    const nx = pl.cx + pl.ox * (reach + 16), ny = pl.cy + pl.oy * (reach + 16) + 5;
+    const ix = pl.cx - pl.ox * (reach + 4), iy = pl.cy - pl.oy * (reach + 4);
+    return glyph(fdi, pl, r) + text(nx, ny, num(fdi), 15, 600) + codes.slice(0, 4).map((c, k) => text(ix, iy + 4 + k * 12 - (codes.length > 1 ? 6 : 0), c, 11)).join('');
+  }).join('');
   const items: string[] = [];
   if (caries) items.push('caries');
   if (filling) items.push('filling');
   CODES.filter((k) => used.has(k)).forEach((k) => items.push(k));
-  const colW = W / 2, legendTop = LOW + B + 48;
+  const colW = VBW / 2, legendTop = VH + 52;
   const legend = items.map((k, i) => {
-    const x = 10 + (i % 2) * colW, y = legendTop + 18 + Math.floor(i / 2) * 18;
-    const swatch = k === 'caries' ? `<rect x="${x}" y="${y - 10}" width="12" height="12" fill="url(#cs-hatch)" stroke="#0a0a0a"/>`
-      : k === 'filling' ? `<rect x="${x}" y="${y - 10}" width="12" height="12" fill="#0a0a0a"/>` : text(x + 6, y, k, 9, 700);
-    return swatch + text(x + 20, y, o.label(k as Code), 10, 400, 'start');
+    const x = X0 + 6 + (i % 2) * colW, y = legendTop + 24 + Math.floor(i / 2) * 22;
+    const swatch = k === 'caries' ? `<rect x="${x}" y="${y - 13}" width="15" height="15" fill="url(#cs-hatch)" stroke="#0a0a0a"/>`
+      : k === 'filling' ? `<rect x="${x}" y="${y - 13}" width="15" height="15" fill="#0a0a0a"/>` : text(x + 8, y, k, 12, 700);
+    return swatch + text(x + 26, y, o.label(k as Code), 13, 400, 'start');
   }).join('');
-  const H = legendTop + 24 + Math.ceil(items.length / 2) * 18;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>
-<defs><pattern id="cs-band" width="1" height="1" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="1" fill="#fff"/><line x1="0" y1="0" x2="0" y2="1" stroke="#0a0a0a" stroke-width=".45"/></pattern>
-<pattern id="cs-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#0a0a0a" stroke-width="1.6"/></pattern>
-<pattern id="cs-hatch-w" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#fff" stroke-width="1.6"/></pattern></defs>
-${body}${text(10, legendTop + 4, o.title, 11, 700, 'start')}${legend}</svg>`;
+  const H = legendTop + 30 + Math.ceil(items.length / 2) * 22 - Y0;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${X0} ${Y0} ${VBW} ${H}" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>
+<defs><pattern id="cs-band" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2.2" height="2.2" fill="#fff"/><line x1="0" y1="0" x2="0" y2="2.2" stroke="#0a0a0a" stroke-width="1"/></pattern>
+<pattern id="cs-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#fff"/><line x1="0" y1="0" x2="0" y2="5" stroke="#0a0a0a" stroke-width="1.8"/></pattern>
+<pattern id="cs-hatch-w" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#fff" stroke-width="1.8"/></pattern></defs>
+${body}${text(X0 + 6, legendTop, o.title, 14, 700, 'start')}${legend}</svg>`;
 }

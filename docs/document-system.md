@@ -10,6 +10,6 @@ Templates and per-kind defaults are stored in IndexedDB (`docTemplates`, `docDef
 - Data model: records are never changed by templates; only presentation is stored.
 
 ## Tooth chart artwork
-The printed chart draws two arches seen from the biting side. Each tooth is a grey picture of the real 3D tooth from our library (`tooth-images.ts`, drawn through `ToothSnap`, seen from the biting side) on its flat crown outline, which comes from the same library (`public/models/teeth`, CC BY-SA 4.0), flattened by `tools/tooth-lib/outlines.py` into `documents/tooth-outlines.ts` (re-run it if the library changes).
-Teeth are empty by default, with a striped band around the silhouette. Only recorded findings are drawn (hatching for caries, solid for fillings, letter codes, thick outline for crowns), in black and white.
-The 3D pictures are drawn in the browser in the background the first time a chart is needed; until then, or without WebGL, the teeth print as plain outlines. No third-party artwork is used.
+The printed chart uses the tooth shapes and the oval two-arch layout of react-odontogram (MIT, by biomathcode, the library behind dental.coolhead.in), kept in `documents/tooth-paths.ts` with its licence in `tooth-paths.LICENSE.txt`. Keep that notice if the file is copied or changed.
+Teeth are empty by default, with a striped band around each silhouette. Only recorded findings are drawn on top (hatching for caries, solid for fillings by surface, letter codes, a thick outline for crowns, an X for missing teeth), in black and white.
+It reads the same chart data as the interactive chart and adds no dependency (the shapes are copied as data, not the React package).

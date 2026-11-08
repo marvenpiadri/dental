@@ -1,6 +1,5 @@
 import { newChart } from '../odontogram/engine/chart';
 import { applyEdit } from '../odontogram/engine/edits';
-import { OUTLINES } from './tooth-outlines';
 import { CODES, chartSvg, toothCodes } from './chart-svg';
 
 const label = (k: string) => `L-${k}`;
@@ -44,10 +43,9 @@ describe('chart SVG', () => {
     expect(svg).toContain('>T11</text>');
   });
 
-  it('is empty by default: real crown outlines for all 32 teeth, nothing filled or hatched', () => {
-    expect(Object.keys(OUTLINES).length).toBe(32);
+  it('is empty by default: nothing filled or hatched', () => {
     const svg = chartSvg({ teeth: newChart().status, label, title: 'Chart' });
-    expect(svg).not.toMatch(/<path[^>]*fill="#0a0a0a"/);
+    expect(svg).not.toMatch(/<path[^>]*fill="#0a0a0a"(?![^>]*fill-opacity)/);
     expect(svg).not.toContain('fill="url(#cs-hatch)"');
     expect(svg).toContain('url(#cs-band)');
   });
