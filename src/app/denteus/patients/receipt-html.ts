@@ -1,3 +1,6 @@
+import { DEFAULT_TEMPLATE, DocContent, DocTemplate, renderDocument } from '../documents/doc-engine';
+export { esc } from '../documents/doc-engine';
+
 export interface ReceiptData {
   clinic: string;
   patient: string;
@@ -14,29 +17,13 @@ export interface ReceiptData {
   dir: 'ltr' | 'rtl';
 }
 
-const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-export const esc = (text: string) => text.replace(/[&<>"']/g, (c) => ESCAPES[c]);
-
-/** A single A5-friendly page the browser prints. Everything typed by staff is escaped: names end up inside HTML. */
-export function receiptHtml(r: ReceiptData): string {
-  const row = (label: string, value: string, strong = false) =>
-    `<tr${strong ? ' class="strong"' : ''}><th>${esc(label)}</th><td>${esc(value)}</td></tr>`;
-  return `<!doctype html><html lang="${esc(r.lang)}" dir="${r.dir}"><head><meta charset="utf-8"><title>${esc(r.labels.title)} ${esc(r.number)}</title>
-<style>
-  body { font: 15px/1.5 system-ui, sans-serif; color: #0a0a0a; margin: 0; padding: 32px; max-width: 520px; }
-  h1 { font-size: 22px; margin: 0 0 4px; } .clinic { font-size: 18px; font-weight: 700; margin: 0 0 24px; }
-  .meta { color: #555; margin: 0 0 20px; } table { width: 100%; border-collapse: collapse; }
-  th { text-align: start; font-weight: 500; color: #555; padding: 8px 0; border-top: 1px solid #ccc; } td { text-align: end; padding: 8px 0; border-top: 1px solid #ccc; font-variant-numeric: tabular-nums; }
-  tr.strong th, tr.strong td { font-size: 18px; font-weight: 700; color: #0a0a0a; border-top: 2px solid #0a0a0a; } .thanks { margin-top: 28px; color: #555; }
-  @media print { body { padding: 0; } }
-</style></head><body>
-<p class="clinic"><img src="/logo.png" alt="" width="28" height="28" style="vertical-align:middle;margin-inline-end:8px;border-radius:6px">${esc(r.clinic)}</p>
-<h1>${esc(r.labels.title)}</h1><p class="meta">N° ${esc(r.number)}</p>
-<table>
-${row(r.labels.patient, r.patient)}${row(r.labels.date, r.date)}${row(r.labels.method, r.method)}${r.reference ? row(r.labels.reference ?? '', r.reference) : ''}${row(r.labels.amount, r.amount, true)}
-${row(r.labels.charged, r.charged)}${row(r.labels.paid, r.paid)}${row(r.labels.due, r.due)}
-</table>
-<p class="thanks">${esc(r.labels.thanks)}</p>
-<script>window.addEventListener('load', function () { window.print(); });</script>
-</body></html>`;
+/** A single page the browser prints. Everything typed by staff is escaped by the document engine. */
+export function receiptDoc(r: ReceiptData): DocContent {
+  return {
+    kind: 'receipt', lang: r.lang, dir: r.dir, clinic: r.clinic, sender: [], title: r.labels.title, number: r.number, subtitle: [],
+    facts: [{ label: r.labels.patient, value: r.patient }, { label: r.labels.date, value: r.date }, { label: r.labels.method, value: r.method }, { label: r.labels.reference ?? '', value: r.reference ?? '' }],
+    blocks: [{ type: 'rows', rows: [{ label: r.labels.amount, value: r.amount, strong: true }, { label: r.labels.charged, value: r.charged }, { label: r.labels.paid, value: r.paid }, { label: r.labels.due, value: r.due }] }],
+    notes: [r.labels.thanks],
+  };
 }
+export const receiptHtml = (r: ReceiptData, tpl: DocTemplate = DEFAULT_TEMPLATE, chart?: string): string => renderDocument(receiptDoc(r), tpl, { chart });

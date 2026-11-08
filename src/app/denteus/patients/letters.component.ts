@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { I18n } from '../../core/i18n/i18n.service';
 import { Letter } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { Documents } from '../documents/documents.service';
 import { letterHtml } from './letter-html';
 
 /** Medical certificates and referral letters. Written once, printed as often as needed, never edited. */
@@ -50,6 +51,8 @@ export class LettersComponent {
   readonly edit = output<(letters: Letter[]) => Letter[]>();
   private readonly store = inject(DentalStore);
   private readonly i18n = inject(I18n);
+  private readonly docs = inject(Documents);
+  readonly chart = input<unknown>();
   protected readonly t = this.i18n.t;
 
   protected readonly kind = signal<Letter['kind']>('certificate');
@@ -74,16 +77,13 @@ export class LettersComponent {
 
   protected print(l: Letter): void {
     const t = this.t;
+    const tpl = this.docs.templateFor('letter');
     const html = letterHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
       date: this.day(l.at), lang: this.i18n.lang(), title: t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate'),
       details: [...(l.to ? [`${t('letter.to')}: ${l.to}`] : []), ...(l.restDays ? [t('letter.days', { n: l.restDays })] : [])], text: l.text,
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), signature: t('rx.signature') },
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('letter', tpl, this.chart(), 'status'));
+    this.docs.print(html);
   }
 }

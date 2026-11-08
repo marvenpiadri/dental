@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { I18n, type Key } from '../../core/i18n/i18n.service';
+import { Documents } from '../documents/documents.service';
 import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
 import { exportFhir, exportJson, importFhir, importJson } from './engine/io';
@@ -47,6 +48,7 @@ interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: 
 })
 export class DentalChartComponent {
   private readonly i18n = inject(I18n);
+  private readonly docs = inject(Documents);
   protected readonly store = inject(DentalStore);
   protected readonly t = this.i18n.t;
 
@@ -336,17 +338,15 @@ export class DentalChartComponent {
       ps.maxPd !== null ? t('dc.ps.maxPd', { n: ps.maxPd }) : '', ix.olearyPercent ? t('dc.ps.oleary', { n: ix.olearyPercent }) : '',
       ix.meanPi !== null ? t('dc.ps.pi', { n: ix.meanPi }) : '', ix.meanGi !== null ? t('dc.ps.gi', { n: ix.meanGi }) : '',
     ].filter(Boolean);
+    const tpl = this.docs.templateFor('report');
     const html = reportHtml({
       clinic: this.clinicName() || 'Dontalist', patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
       findings: findingRows(c, lang, undefined, (n) => this.num(n)), planned: this.viewing() ? [] : planRows(c, lang, (n) => this.num(n)),
       suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`), summary,
       labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'),
         suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), summary: t('dc.report.summary'), none: t('dc.report.none') },
-    });
-    const win = window.open('', '_blank');
-    if (!win) return; // blocked pop-up: the browser shows its own notice
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('report', tpl, this.raw(), 'status'));
+    this.docs.print(html);
   }
   protected async pickFile(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;

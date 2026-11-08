@@ -5,6 +5,7 @@ import { TeamComponent } from './team.component';
 import { ThemeService } from '../../core/theme.service';
 import { LANGS, Lang } from '../../core/i18n/i18n.service';
 import { APPOINTMENT_TYPES, ClinicLocation, Message, PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
+import { DocDesignerComponent } from '../documents/doc-designer.component';
 import { MAX_DURATION, MIN_DURATION, toggleMethod, typeMinutes } from './prefs-rules';
 import { typeKey } from '../utils/domain-keys';
 import { AuthService } from '../../core/auth/auth.service';
@@ -35,6 +36,7 @@ const SECTIONS = [
   { id: 'team', icon: 'fa-user-doctor', key: 'set.team', need: 'team.view' },
   { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule', need: 'settings.view' },
   { id: 'services', icon: 'fa-file-invoice', key: 'set.services', need: 'settings.view' },
+  { id: 'documents', icon: 'fa-file-lines', key: 'set.documents', need: 'settings.view' },
   { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging', need: 'settings.view' },
   { id: 'integrations', icon: 'fa-plug', key: 'set.integrations', need: 'settings.view' },
   { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace', need: 'settings.view' },
@@ -46,7 +48,7 @@ type SectionId = (typeof SECTIONS)[number]['id'];
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
-  imports: [RouterLink, ClinicProfileComponent, TeamComponent],
+  imports: [RouterLink, ClinicProfileComponent, TeamComponent, DocDesignerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })

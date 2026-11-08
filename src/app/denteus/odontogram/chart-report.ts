@@ -1,5 +1,5 @@
 import type { Lang } from '../../core/i18n/i18n.service';
-import { esc } from '../patients/receipt-html';
+import { DEFAULT_TEMPLATE, DocBlock, DocContent, DocTemplate, renderDocument } from '../documents/doc-engine';
 import { ALL_TEETH, newChart, writeChart, type Chart } from './engine/chart';
 import { plannedTeeth } from './engine/plan';
 import { label } from './labels';
@@ -45,25 +45,19 @@ export interface ReportData {
   labels: { title: string; patient: string; date: string; findings: string; planned: string; plannedNote: string; suggested: string; suggestedNote: string; summary: string; none: string };
 }
 
-export function reportHtml(r: ReportData): string {
-  const table = (rows: ReportRow[]) => rows.length
-    ? `<table>${rows.map((x) => `<tr><th>${esc(x.tooth)}</th><td>${x.items.map(esc).join(' · ')}</td></tr>`).join('')}</table>`
-    : `<p class="muted">${esc(r.labels.none)}</p>`;
-  const section = (title: string, note: string, body: string) => `<h2>${esc(title)}</h2>${note ? `<p class="muted">${esc(note)}</p>` : ''}${body}`;
-  return `<!doctype html><html lang="${esc(r.lang)}" dir="${r.dir}"><head><meta charset="utf-8"><title>${esc(r.labels.title)} – ${esc(r.patient)}</title>
-<style>
-  body { font: 14px/1.5 system-ui, sans-serif; color: #0a0a0a; margin: 0; padding: 32px; max-width: 760px; }
-  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #555; margin: 24px 0 6px; }
-  .clinic { font-size: 16px; font-weight: 700; margin: 0 0 16px; } .muted { color: #555; margin: 0 0 8px; }
-  table { width: 100%; border-collapse: collapse; } th { width: 64px; text-align: start; vertical-align: top; padding: 6px 0; border-top: 1px solid #ccc; } td { padding: 6px 0; border-top: 1px solid #ccc; }
-  ul { margin: 0; padding-inline-start: 18px; } @media print { body { padding: 0; } }
-</style></head><body>
-<p class="clinic">${esc(r.clinic)}</p><h1>${esc(r.labels.title)}</h1>
-<p class="muted">${esc(r.labels.patient)}: ${esc(r.patient)} · ${esc(r.labels.date)}: ${esc(r.date)}</p>
-${section(r.labels.findings, '', table(r.findings))}
-${section(r.labels.planned, r.labels.plannedNote, table(r.planned))}
-${section(r.labels.suggested, r.labels.suggestedNote, r.suggested.length ? `<ul>${r.suggested.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : `<p class="muted">${esc(r.labels.none)}</p>`)}
-${r.summary.length ? section(r.labels.summary, '', `<p>${r.summary.map(esc).join(' · ')}</p>`) : ''}
-<script>window.addEventListener('load', function () { window.print(); });</script>
-</body></html>`;
+export function reportDoc(r: ReportData): DocContent {
+  const rows = (list: ReportRow[]): DocBlock => list.length
+    ? { type: 'table', head: [], rows: list.map((x) => [x.tooth, x.items.join(' · ')]) }
+    : { type: 'text', text: r.labels.none };
+  const blocks: DocBlock[] = [
+    { type: 'heading', text: r.labels.findings }, rows(r.findings),
+    { type: 'heading', text: r.labels.planned, note: r.labels.plannedNote }, rows(r.planned),
+    { type: 'heading', text: r.labels.suggested, note: r.labels.suggestedNote }, r.suggested.length ? { type: 'list', items: r.suggested } : { type: 'text', text: r.labels.none },
+  ];
+  if (r.summary.length) blocks.push({ type: 'heading', text: r.labels.summary }, { type: 'text', text: r.summary.join(' · ') });
+  return {
+    kind: 'report', lang: r.lang, dir: r.dir, clinic: r.clinic, sender: [], title: r.labels.title, subtitle: [],
+    facts: [{ label: r.labels.patient, value: r.patient }, { label: r.labels.date, value: r.date }], blocks, notes: [], chartTitle: undefined,
+  };
 }
+export const reportHtml = (r: ReportData, tpl: DocTemplate = DEFAULT_TEMPLATE, chart?: string): string => renderDocument(reportDoc(r), tpl, { chart });

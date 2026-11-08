@@ -1,0 +1,91 @@
+<section class="card" aria-labelledby="doc-title">
+  <header class="card-head"><h2 class="card-title" id="doc-title"><i class="fa-solid fa-file-lines" aria-hidden="true"></i>{{ t('set.documents') }}</h2></header>
+  <p class="intro hint">{{ t('doc.hint') }}</p>
+  <div class="designer">
+    <div class="controls">
+      <div class="group">
+        <label class="field"><span class="label">{{ t('doc.kind') }}</span>
+          <select class="input" (change)="pickKind($any($event.target).value)">
+            @for (k of kinds; track k) { <option [value]="k" [selected]="kind() === k">{{ t(kindKey[k]) }}</option> }
+          </select></label>
+        <label class="field"><span class="label">{{ t('doc.template') }}</span>
+          <select class="input" (change)="pickTemplate($any($event.target).value)">
+            @for (p of docs.all(); track p.id) { <option [value]="p.id" [selected]="draft().id === p.id">{{ p.name }}{{ docs.templateFor(kind()).id === p.id ? ' ✓' : '' }}</option> }
+          </select></label>
+      </div>
+
+      <div class="group">
+        <span class="label" id="doc-style">{{ t('doc.style') }}</span>
+        <div class="seg" role="group" aria-labelledby="doc-style">
+          @for (s of styles; track s) { <button type="button" class="btn" [attr.aria-pressed]="draft().style === s" (click)="patch({ style: s })">{{ t(styleKey[s]) }}</button> }
+        </div>
+        <div class="two">
+          <label class="field"><span class="label">{{ t('doc.font') }}</span>
+            <select class="input" (change)="patch({ font: $any($event.target).value })">
+              <option value="sans" [selected]="draft().font === 'sans'">{{ t('doc.font.sans') }}</option>
+              <option value="serif" [selected]="draft().font === 'serif'">{{ t('doc.font.serif') }}</option>
+            </select></label>
+          <label class="field"><span class="label">{{ t('doc.paper') }}</span>
+            <select class="input" (change)="patch({ paper: $any($event.target).value })">
+              <option value="a4" [selected]="draft().paper === 'a4'">A4</option>
+              <option value="a5" [selected]="draft().paper === 'a5'">A5</option>
+              <option value="letter" [selected]="draft().paper === 'letter'">Letter</option>
+            </select></label>
+        </div>
+        <div class="field"><span class="label" id="doc-accent">{{ t('doc.accent') }}</span>
+          <div class="swatches" role="group" aria-labelledby="doc-accent">
+            @for (c of swatches; track c) { <button type="button" class="dot" [style.background]="c" [attr.aria-label]="c" [attr.aria-pressed]="draft().accent === c" (click)="patch({ accent: c })"></button> }
+            <input type="color" class="swatch" [value]="draft().accent" [attr.aria-label]="t('doc.accent')" (input)="patch({ accent: $any($event.target).value })" />
+          </div></div>
+      </div>
+
+      <div class="group">
+        <span class="label">{{ t('doc.logo') }}</span>
+        <div class="logo-row">
+          @if (draft().logo) { <img class="logo" [src]="draft().logo" alt="" /> }
+          <label class="btn"><input type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="logoFile($event)" />{{ t('doc.logo.upload') }}</label>
+          @if (draft().logo) { <button type="button" class="btn" (click)="patch({ logo: undefined })">{{ t('doc.logo.remove') }}</button> }
+        </div>
+        <label class="check"><input type="checkbox" [checked]="draft().showLogo" (change)="patch({ showLogo: $any($event.target).checked })" />{{ t('doc.logo.show') }}</label>
+        <label class="field"><span class="label">{{ t('doc.header') }}</span><input class="input" maxlength="300" [value]="draft().headerNote" (input)="patch({ headerNote: $any($event.target).value })" /></label>
+        <label class="field"><span class="label">{{ t('doc.footer') }}</span><input class="input" maxlength="300" [value]="draft().footerNote" (input)="patch({ footerNote: $any($event.target).value })" /></label>
+      </div>
+
+      <div class="group">
+        <span class="label">{{ t('doc.sections') }}</span>
+        <ul class="sections">
+          @for (s of draft().order; track s; let first = $first; let last = $last) {
+            <li>
+              <label class="check grow"><input type="checkbox" [checked]="!draft().hidden.includes(s)" (change)="toggleSection(s, $any($event.target).checked)" />{{ t(sectionKey[s]) }}</label>
+              <button type="button" class="btn icon" [disabled]="first" [attr.aria-label]="t('doc.moveUp') + ': ' + t(sectionKey[s])" (click)="move(s, -1)"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+              <button type="button" class="btn icon" [disabled]="last" [attr.aria-label]="t('doc.moveDown') + ': ' + t(sectionKey[s])" (click)="move(s, 1)"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button>
+            </li>
+          }
+        </ul>
+        <span class="label">{{ t('doc.chartIn') }}</span>
+        <div class="chips">
+          @for (k of kinds; track k) { <label class="check"><input type="checkbox" [checked]="draft().chartKinds.includes(k)" (change)="toggleChartKind(k, $any($event.target).checked)" />{{ t(kindKey[k]) }}</label> }
+        </div>
+      </div>
+
+      <div class="group">
+        @if (canEdit()) {
+          <label class="field"><span class="label">{{ t('doc.name') }}</span><input class="input" maxlength="40" [value]="name()" (input)="name.set($any($event.target).value)" [placeholder]="draft().name" /></label>
+          <div class="actions">
+            @if (isCustom()) { <button type="button" class="btn btn--primary" (click)="save(false)">{{ t('doc.save') }}</button> }
+            <button type="button" class="btn" [class.btn--primary]="!isCustom()" (click)="save(true)">{{ t('doc.saveAs') }}</button>
+            <button type="button" class="btn" [disabled]="isDefault()" (click)="useForKind()">{{ t('doc.useFor', { kind: t(kindKey[kind()]) }) }}</button>
+            @if (isCustom()) { <button type="button" class="btn" (click)="remove()">{{ t('doc.delete') }}</button> }
+          </div>
+        }
+        <button type="button" class="btn" (click)="printSample()"><i class="fa-solid fa-print" aria-hidden="true"></i>{{ t('doc.print') }}</button>
+        @if (saved()) { <p class="ok" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>{{ t('doc.saved') }}</p> }
+      </div>
+    </div>
+
+    <div class="preview">
+      <iframe [srcdoc]="preview()" sandbox="" [title]="t('doc.preview')"></iframe>
+      <p class="hint">{{ t('doc.preview.note') }}</p>
+    </div>
+  </div>
+</section>

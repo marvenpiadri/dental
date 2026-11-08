@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Invoice, PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { Documents } from '../documents/documents.service';
 import { statementHtml } from './statement-html';
 import { receiptHtml } from './receipt-html';
 import { balance, parsePrice, procedureName } from './treatment-rules';
@@ -32,6 +33,8 @@ export class BillingComponent {
   readonly editInvoices = output<(invoices: Invoice[]) => Invoice[]>();
 
   protected readonly i18n = inject(I18n);
+  private readonly docs = inject(Documents);
+  readonly chart = input<unknown>();
   private readonly store = inject(DentalStore);
   private readonly auth = inject(AuthService);
   protected readonly t = this.i18n.t;
@@ -118,6 +121,7 @@ export class BillingComponent {
     const t = this.t;
     const st = invoiceState(inv, this.payments());
     const orig = inv.cancelsId ? this.invoices().find((i) => i.id === inv.cancelsId) : undefined;
+    const tpl = this.docs.templateFor('invoice');
     const html = invoiceHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
       cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
@@ -126,12 +130,8 @@ export class BillingComponent {
       total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
       legal: this.legal(),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('invoice', tpl, this.chart(), 'status'));
+    this.docs.print(html);
   }
 
   protected readonly doneLines = computed(() => this.plan().filter((i) => i.status === 'done'));
@@ -142,23 +142,21 @@ export class BillingComponent {
     if (!done.length) return;
     const t = this.t;
     const day = (iso?: string) => (iso ? this.i18n.date(new Date(iso), { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+    const tpl = this.docs.templateFor('statement');
     const html = statementHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), insurer: this.insurer(), number: this.insuranceNumber(),
       date: day(new Date().toISOString()), lang: this.i18n.lang(), total: this.i18n.money(this.sums().charged),
       lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? (i.scope ? scopeText(i, t) : ''), name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
       labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') },
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('statement', tpl, this.chart(), 'status'));
+    this.docs.print(html);
   }
 
   /** Opens the receipt in a new window and prints it. A blocked pop-up simply does nothing: the browser shows its own notice. */
   protected print(payment: Payment): void {
     const t = this.t;
     const sums = this.sums();
+    const tpl = this.docs.templateFor('receipt');
     const html = receiptHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       patient: this.patientName(),
@@ -173,12 +171,8 @@ export class BillingComponent {
       labels: { reference: t('bill.reference'), title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') },
       lang: this.i18n.lang(),
       dir: 'ltr', // shortcut: receipts are left-to-right until an RTL language is added
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('receipt', tpl, this.chart(), 'status'));
+    this.docs.print(html);
   }
 
   protected when(at: string): string {

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, ou
 import { I18n } from '../../core/i18n/i18n.service';
 import { Payment, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { Documents } from '../documents/documents.service';
 import { quoteHtml } from './quote-html';
 import { allocate, parsePrice, planTotals, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
@@ -30,6 +31,8 @@ export class TreatmentPlanComponent {
   readonly edit = output<(plan: TreatmentItem[]) => TreatmentItem[]>();
 
   protected readonly i18n = inject(I18n);
+  private readonly docs = inject(Documents);
+  readonly chart = input<unknown>();
   protected readonly t = this.i18n.t;
   protected readonly store = inject(DentalStore);
   protected readonly catalog = this.store.catalog;
@@ -90,6 +93,7 @@ export class TreatmentPlanComponent {
     const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? (i.scope ? scopeText(i, this.t) : ''), name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price) }));
     if (!lines.length) return;
     const t = this.t;
+    const tpl = this.docs.templateFor('quote');
     const html = quoteHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       patient: this.patientName(),
@@ -98,12 +102,8 @@ export class TreatmentPlanComponent {
       total: this.i18n.money(this.totals().planned),
       labels: { title: t('quote.title'), patient: t('receipt.patient'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('quote.note') },
       lang: this.i18n.lang(),
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('quote', tpl, this.chart(), 'plan'));
+    this.docs.print(html);
   }
 
   protected remove(item: TreatmentItem): void {

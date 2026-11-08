@@ -195,7 +195,7 @@
                   </section>
                   <section class="card" aria-labelledby="plan-title">
                     <header class="card-head"><h2 class="card-title" id="plan-title"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>{{ t('procedure.list') }}</h2></header>
-                    <den-treatment-plan [readonlyAdd]="true" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                    <den-treatment-plan [readonlyAdd]="true" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" [chart]="p.odontogram" (edit)="store.changePlan(p.id, $event)" />
                   </section>
               }
               @case ('appointments') {
@@ -246,11 +246,11 @@
               @case ('visits') {
                 <section class="card" aria-labelledby="visits-title">
                   <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
-                  <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
+                  <den-visit-notes [patientName]="p.fullName" [chart]="p.odontogram" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
                 </section>
                 <section class="card" aria-labelledby="letters-title">
                   <header class="card-head"><h2 class="card-title" id="letters-title"><i class="fa-solid fa-file-signature" aria-hidden="true"></i>{{ t('profile.letters') }}</h2></header>
-                  <den-letters [patientName]="p.fullName" [letters]="p.letters ?? []" (edit)="store.changeLetters(p.id, $event)" />
+                  <den-letters [patientName]="p.fullName" [chart]="p.odontogram" [letters]="p.letters ?? []" (edit)="store.changeLetters(p.id, $event)" />
                 </section>
               }
               @case ('documents') {
@@ -262,14 +262,14 @@
               @case ('quotes') {
                 <section class="card" aria-labelledby="quote-title">
                   <header class="card-head"><h2 class="card-title" id="quote-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i>{{ t('page.quotes') }}</h2></header>
-                  <den-treatment-plan [readonlyAdd]="true" only="planned" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                  <den-treatment-plan [readonlyAdd]="true" only="planned" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" [chart]="p.odontogram" (edit)="store.changePlan(p.id, $event)" />
                   <den-quote-versions [patientId]="p.id" [plan]="p.plan ?? []" [proposals]="p.proposals ?? []" />
                 </section>
               }
               @case ('billing') {
                 <section class="card" aria-labelledby="bill-title">
                   <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
-                  <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
+                  <den-billing [patientName]="p.fullName" [chart]="p.odontogram" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
                 </section>
               }
             }

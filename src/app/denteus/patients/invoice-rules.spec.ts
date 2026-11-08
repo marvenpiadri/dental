@@ -62,6 +62,6 @@ describe('invoice legal footer', () => {
     const html = invoiceHtml({ clinic: 'C', patient: 'P', number: 'FA-2026-0001', date: 'd', title: 'Invoice', lang: 'en', lines: [], total: '0', paid: '0', remaining: '0', legal: ['Atlas <SARL>', '', 'ICE: 1'],
       labels: { patient: 'p', date: 'd', where: 'w', act: 'a', price: 'p', total: 't', paid: 'p', remaining: 'r' } });
     expect(html).toContain('Atlas &lt;SARL&gt;');
-    expect(html.match(/class="legal"/g)?.length).toBe(2);
+    expect(html.match(/<section class="notes">[\s\S]*?<\/section>/)![0].match(/<p>/g)).toHaveLength(2);
   });
 });

@@ -4,6 +4,7 @@ import { I18n } from '../../core/i18n/i18n.service';
 import { Appointment, PrescriptionLine, VisitNote } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { typeKey } from '../utils/appointment-labels';
+import { Documents } from '../documents/documents.service';
 import { MEDICATIONS } from './medications';
 import { prescriptionHtml } from './prescription-html';
 import { noteContent } from './visit-rules';
@@ -31,6 +32,8 @@ export class VisitNotesComponent {
   protected readonly canVoid = computed(() => this.auth.can('clinical.void'));
   protected readonly canEdit = computed(() => this.auth.can('clinical.edit'));
   protected readonly i18n = inject(I18n);
+  private readonly docs = inject(Documents);
+  readonly chart = input<unknown>();
   protected readonly t = this.i18n.t;
   protected readonly typeKey = typeKey;
   protected readonly medications = MEDICATIONS;
@@ -153,6 +156,7 @@ export class VisitNotesComponent {
   /** Opens the prescription in a new window and prints it. A blocked pop-up simply does nothing: the browser shows its own notice. */
   protected print(note: VisitNote): void {
     const t = this.t;
+    const tpl = this.docs.templateFor('prescription');
     const html = prescriptionHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       dentist: this.dentistName(note),
@@ -161,11 +165,7 @@ export class VisitNotesComponent {
       lines: note.prescription ?? [],
       labels: { title: t('rx.title'), patient: t('receipt.patient'), date: t('receipt.date'), dentist: t('rx.dentist'), signature: t('rx.signature') },
       lang: this.i18n.lang(),
-    });
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    }, tpl, this.docs.chartFor('prescription', tpl, this.chart(), 'status'));
+    this.docs.print(html);
   }
 }
