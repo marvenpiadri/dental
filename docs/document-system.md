@@ -8,3 +8,8 @@ Templates and per-kind defaults are stored in IndexedDB (`docTemplates`, `docDef
 - PDF: browser print-to-PDF (no server, no new dependency). A server renderer would be a backend task.
 - Reference: x-facture.com (Modern/Classic/Bold, header with logo and sender opposite metadata). Classic maps to Minimal.
 - Data model: records are never changed by templates; only presentation is stored.
+
+## Tooth chart artwork
+The printed chart draws two arches seen from the biting side. Each tooth is a grey picture of the real 3D tooth from our library (`tooth-images.ts`, drawn through `ToothSnap`, seen from the biting side) on its flat crown outline, which comes from the same library (`public/models/teeth`, CC BY-SA 4.0), flattened by `tools/tooth-lib/outlines.py` into `documents/tooth-outlines.ts` (re-run it if the library changes).
+Teeth are empty by default, with a striped band around the silhouette. Only recorded findings are drawn (hatching for caries, solid for fillings, letter codes, thick outline for crowns), in black and white.
+The 3D pictures are drawn in the browser in the background the first time a chart is needed; until then, or without WebGL, the teeth print as plain outlines. No third-party artwork is used.

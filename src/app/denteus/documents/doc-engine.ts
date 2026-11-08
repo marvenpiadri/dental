@@ -126,7 +126,7 @@ function css(t: DocTemplate): string {
   table { width: 100%; border-collapse: collapse; margin: 0 0 12px; } th { text-align: start; font-weight: 600; padding: 8px 6px; } td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
   .n { text-align: end; font-variant-numeric: tabular-nums; } tfoot td { font-weight: 700; border-bottom: 0; }
   h2 { font-size: 15px; margin: 18px 0 4px; } ul.list { margin: 0; padding-inline-start: 18px; } .text { margin: 0 0 8px; }
-  .chart { break-inside: avoid; } .chart svg { display: block; width: 100%; height: auto; }
+  .chart { break-inside: avoid; } .chart svg { display: block; width: 100%; max-width: 460px; margin: 0 auto; height: auto; }
   .notes p { margin: 0 0 4px; font-size: 12px; color: var(--mut); } .footer { margin-top: 28px; padding-top: 8px; font-size: 12px; color: var(--mut); text-align: center; }
   .sign { margin-top: 48px; text-align: end; color: var(--mut); } .sign span { display: inline-block; min-width: 190px; border-top: 1px solid var(--ink); padding-top: 4px; }
   @media print { body { padding: 0; max-width: none; } }`;

@@ -3,6 +3,8 @@
 // so it reads the same in grayscale. It is not a third interactive chart.
 import type { TeethMap, ToothRecord } from '../odontogram/engine/chart';
 import { esc } from './doc-engine';
+import { OUTLINES } from './tooth-outlines';
+import type { ToothImages } from './tooth-images';
 
 export const UPPER: readonly number[] = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
 export const LOWER: readonly number[] = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
@@ -39,15 +41,13 @@ export function toothCodes(r: Rec): Code[] {
 }
 
 // Two arches seen from the biting side, like a dentist's chart: upper opens downward, lower opens upward.
-const ARCH_W = 300, GAP = 20, W = 2 * ARCH_W + GAP, TOP = 34, A = 98, B = 138, P = 3.4;
-const TW = [15, 12, 16, 18, 18, 26, 25, 24], TD = [13, 13, 16, 19, 19, 25, 24, 22]; // width along the arch and depth, tooth 1 to 8
-
-/** Mesial faces the midline, so it is the right side of a tooth in quadrants 1 and 4 and the left side in 2 and 3. */
-const mesialRight = (fdi: number) => fdi < 30 ? fdi < 20 : fdi >= 40;
+const W = 380, TOP = 30, A = 98, B = 124, P = 3.4, S = 2.9, LOW = TOP + B - 40; // the two arches are stacked, upper over lower // S: picture units per mm of real tooth
+const tw = (f: number) => OUTLINES[f].w * S, td = (f: number) => OUTLINES[f].d * S; // width along the arch and depth, from the real crown
 
 interface Spot { x: number; y: number; deg: number }
 /** Centre line of an arch (a squared half-ellipse), then one spot per tooth spread by tooth width along it. */
 function spots(list: readonly number[], upper: boolean, ox: number): Spot[] {
+  const top = upper ? TOP : LOW;
   const pts: { x: number; y: number }[] = [];
   for (let k = 0; k <= 400; k++) {
     const t = Math.PI - (Math.PI * k) / 400;
@@ -55,7 +55,7 @@ function spots(list: readonly number[], upper: boolean, ox: number): Spot[] {
   }
   const len = [0];
   for (let k = 1; k < pts.length; k++) len.push(len[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
-  const widths = list.map((f) => TW[(f % 10) - 1]), total = widths.reduce((s, w) => s + w, 0);
+  const widths = list.map(tw), total = widths.reduce((s, w) => s + w, 0);
   const k = (len[len.length - 1] - 16) / (total + list.length * 2); // squeeze or stretch so the arch is filled
   let at = 8 + k;
   return list.map((_, i) => {
@@ -63,32 +63,28 @@ function spots(list: readonly number[], upper: boolean, ox: number): Spot[] {
     let j = len.findIndex((l) => l >= mid); if (j < 1) j = 1;
     const p = pts[j], q = pts[j - 1], n = pts[Math.min(j + 1, pts.length - 1)];
     const deg = (Math.atan2((n.y - q.y) * (upper ? 1 : -1), n.x - q.x) * 180) / Math.PI;
-    return { x: ox + p.x, y: upper ? TOP + B + p.y : TOP - p.y, deg };
+    return { x: ox + p.x, y: upper ? top + B + p.y : top - p.y, deg };
   });
 }
 
-function glyph(fdi: number, upper: boolean, r: ToothRecord, w: number, d: number): string {
-  const x = -w / 2, y = -d / 2, e = w / 2, b = d / 2, i = Math.max(3, Math.min(w, d) * 0.28);
-  // Only marked surfaces are drawn on top of a plain rounded tooth, so a clean tooth stays clean.
-  const face = (s: string, pts: string): string => {
-    const filled = r.fillingSurfaces.has(s), decay = r.caries.has('caries-' + s);
+function glyph(fdi: number, upper: boolean, r: ToothRecord, image?: { href: string; flipX: boolean; flipY: boolean }): string {
+  const o = OUTLINES[fdi], w = o.w * S, d = o.d * S, x = -w / 2, y = -d / 2, e = w / 2, b = d / 2;
+  const mark = (zone: 'occlusal' | 'buccal' | 'lingual' | 'mesial' | 'distal'): string => {
+    const key = zone, filled = r.fillingSurfaces.has(key), decay = r.caries.has('caries-' + key);
     if (!filled && !decay) return '';
-    return `<polygon points="${pts}" fill="${filled ? '#0a0a0a' : 'url(#cs-hatch)'}" stroke="#0a0a0a" stroke-width=".8"/>${filled && decay ? `<polygon points="${pts}" fill="url(#cs-hatch-w)"/>` : ''}`;
+    const p = o[zone];
+    return `<path d="${p}" fill="${filled ? '#0a0a0a' : 'url(#cs-hatch)'}" fill-rule="evenodd" stroke="#0a0a0a" stroke-width=".3"/>${filled && decay ? `<path d="${p}" fill="url(#cs-hatch-w)" fill-rule="evenodd"/>` : ''}`;
   };
-  const rx = Math.min(w, d) * 0.4;
-  const base = `<rect x="${x}" y="${y}" width="${w}" height="${d}" rx="${rx}" fill="#fff" stroke="#0a0a0a" stroke-width="1.1"/><rect x="${x + i}" y="${y + i}" width="${w - 2 * i}" height="${d - 2 * i}" rx="${rx * 0.6}" fill="none" stroke="#0a0a0a" stroke-width=".6"/>`;
-  const outer = 'buccal', inner = 'lingual', up = upper ? outer : inner, down = upper ? inner : outer; // cheek side is up in the upper arch, down in the lower
-  const right = mesialRight(fdi) ? 'mesial' : 'distal', left = mesialRight(fdi) ? 'distal' : 'mesial';
-  const box = `<rect x="${x}" y="${y}" width="${w}" height="${d}" rx="${rx}" fill="#fff" stroke="#0a0a0a" stroke-dasharray="3 2"/>`;
-  const missing = r.toothSelection === 'none';
-  const parts = missing ? `${box}<path d="M${x} ${y}L${e} ${b}M${e} ${y}L${x} ${b}" stroke="#0a0a0a" stroke-width="2"/>`
-    : r.toothSelection === 'implant' ? `${box}<circle r="${Math.min(w, d) * 0.3}" fill="#fff" stroke="#0a0a0a" stroke-width="1.4"/><path d="M-4 -2H4M-4 0H4M-4 2H4" stroke="#0a0a0a"/>`
-    : base + face(up, `${x},${y} ${e},${y} ${e - i},${y + i} ${x + i},${y + i}`) + face(down, `${x},${b} ${e},${b} ${e - i},${b - i} ${x + i},${b - i}`)
-      + face(left, `${x},${y} ${x + i},${y + i} ${x + i},${b - i} ${x},${b}`) + face(right, `${e},${y} ${e - i},${y + i} ${e - i},${b - i} ${e},${b}`)
-      + face('occlusal', `${x + i},${y + i} ${e - i},${y + i} ${e - i},${b - i} ${x + i},${b - i}`);
-  const crown = r.restorationType !== 'none' && !missing ? `<rect x="${x - 1.5}" y="${y - 1.5}" width="${w + 3}" height="${d + 3}" rx="${rx}" fill="none" stroke="#0a0a0a" stroke-width="2.6"/>` : '';
-  const slash = r.extractionPlan ? `<path d="M${x - 3} ${b + 3}L${e + 3} ${y - 3}" stroke="#0a0a0a" stroke-width="2.2"/>` : '';
-  return parts + crown + slash;
+  const missing = r.toothSelection === 'none', implant = r.toothSelection === 'implant';
+  // Empty by default: a striped band around a white silhouette. Findings are drawn on top, never inferred.
+  const shape = `<path d="${o.all}" fill="none" stroke="url(#cs-band)" stroke-width="2" stroke-linejoin="round"/><path d="${o.all}" fill="#fff" stroke="#0a0a0a" stroke-width=".35"${missing || implant ? ' stroke-dasharray="1.2 .8"' : ''}/>`;
+  const pic = image && !missing && !implant ? `<image href="${image.href}" x="${-o.w / 2}" y="${-o.d / 2}" width="${o.w}" height="${o.d}" preserveAspectRatio="none" transform="scale(${image.flipX ? -1 : 1} ${image.flipY ? -1 : 1})"/><path d="${o.all}" fill="none" stroke="#0a0a0a" stroke-width=".35"/>` : '';
+  const zones = missing || implant ? '' : (['occlusal', 'buccal', 'lingual', 'mesial', 'distal'] as const).map(mark).join('');
+  const sym = missing ? `<path d="M${x / S} ${y / S}L${e / S} ${b / S}M${e / S} ${y / S}L${x / S} ${b / S}" stroke="#0a0a0a" stroke-width=".8"/>`
+    : implant ? `<circle r="${Math.min(o.w, o.d) * 0.3}" fill="#fff" stroke="#0a0a0a" stroke-width=".5"/><path d="M-1.6 -.8H1.6M-1.6 0H1.6M-1.6 .8H1.6" stroke="#0a0a0a" stroke-width=".3"/>` : '';
+  const crown = r.restorationType !== 'none' && !missing ? `<path d="${o.all}" fill="none" stroke="#0a0a0a" stroke-width="1.1" stroke-linejoin="round"/>` : '';
+  const slash = r.extractionPlan ? `<path d="M${(x - 3) / S} ${(b + 3) / S}L${(e + 3) / S} ${(y - 3) / S}" stroke="#0a0a0a" stroke-width=".9"/>` : '';
+  return `<g transform="scale(${upper ? S : `${S} -${S}`})">${shape}${pic}${zones}${sym}${crown}${slash}</g>`;
 }
 
 const text = (x: number, y: number, s: string, size: number, weight = 400, anchor = 'middle') =>
@@ -101,6 +97,8 @@ export interface ChartSvgOptions {
   /** Teeth left out (wisdom teeth nobody recorded anything on). */
   hide?: ReadonlySet<number>;
   tooth?: (fdi: number) => string;
+  /** Pictures of the real 3D teeth. Without them the teeth print as plain outlines. */
+  images?: ToothImages;
 }
 
 export function chartSvg(o: ChartSvgOptions): string {
@@ -112,31 +110,32 @@ export function chartSvg(o: ChartSvgOptions): string {
     return list.map((fdi, i) => {
       const r = o.teeth.get(fdi);
       if (!r || o.hide?.has(fdi)) return '';
-      const codes = toothCodes(r), n = (fdi % 10) - 1, w = TW[n], d = TD[n], s = at[i], rad = (s.deg * Math.PI) / 180;
+      const codes = toothCodes(r), d = td(fdi), s = at[i], rad = (s.deg * Math.PI) / 180;
       codes.forEach((k) => used.add(k));
       if (r.toothSelection !== 'none' && r.toothSelection !== 'implant') { caries ||= r.caries.size > 0; filling ||= r.fillingSurfaces.size > 0; }
       const out = upper ? { x: Math.sin(rad), y: -Math.cos(rad) } : { x: -Math.sin(rad), y: Math.cos(rad) }; // unit vector pointing away from the arch
       const nx = s.x + out.x * (d / 2 + 11), ny = s.y + out.y * (d / 2 + 11) + 3.5;
       const ix = s.x - out.x * (d / 2 + 9), iy = s.y - out.y * (d / 2 + 9) + 3;
-      return text(nx, ny, num(fdi), 10, 600) + `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) rotate(${s.deg.toFixed(1)})">${glyph(fdi, upper, r, w, d)}</g>`
+      return text(nx, ny, num(fdi), 10, 600) + `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) rotate(${s.deg.toFixed(1)})">${glyph(fdi, upper, r, o.images?.get(fdi))}</g>`
         + codes.slice(0, 4).map((c, k) => text(ix, iy + k * 9, c, 8)).join('');
     }).join('');
   };
-  const body = arch(UPPER, true, ARCH_W / 2) + arch(LOWER, false, ARCH_W + GAP + ARCH_W / 2);
+  const body = arch(UPPER, true, W / 2) + arch(LOWER, false, W / 2);
   const items: string[] = [];
   if (caries) items.push('caries');
   if (filling) items.push('filling');
   CODES.filter((k) => used.has(k)).forEach((k) => items.push(k));
-  const colW = W / 3, legendTop = TOP + B + 44;
+  const colW = W / 2, legendTop = LOW + B + 48;
   const legend = items.map((k, i) => {
-    const x = 10 + (i % 3) * colW, y = legendTop + 18 + Math.floor(i / 3) * 18;
+    const x = 10 + (i % 2) * colW, y = legendTop + 18 + Math.floor(i / 2) * 18;
     const swatch = k === 'caries' ? `<rect x="${x}" y="${y - 10}" width="12" height="12" fill="url(#cs-hatch)" stroke="#0a0a0a"/>`
       : k === 'filling' ? `<rect x="${x}" y="${y - 10}" width="12" height="12" fill="#0a0a0a"/>` : text(x + 6, y, k, 9, 700);
     return swatch + text(x + 20, y, o.label(k as Code), 10, 400, 'start');
   }).join('');
-  const H = legendTop + 24 + Math.ceil(items.length / 3) * 18;
+  const H = legendTop + 24 + Math.ceil(items.length / 2) * 18;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title)}"><title>${esc(o.title)}</title>
-<defs><pattern id="cs-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#0a0a0a" stroke-width="1.6"/></pattern>
+<defs><pattern id="cs-band" width="1" height="1" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="1" fill="#fff"/><line x1="0" y1="0" x2="0" y2="1" stroke="#0a0a0a" stroke-width=".45"/></pattern>
+<pattern id="cs-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#0a0a0a" stroke-width="1.6"/></pattern>
 <pattern id="cs-hatch-w" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#fff" stroke-width="1.6"/></pattern></defs>
 ${body}${text(10, legendTop + 4, o.title, 11, 700, 'start')}${legend}</svg>`;
 }
