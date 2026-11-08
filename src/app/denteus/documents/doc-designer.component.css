@@ -3,9 +3,9 @@
 .group { display: grid; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--app-line); } .group:first-child { border-top: 0; }
 .field { display: grid; gap: 4px; } .label { font-size: 12px; color: var(--app-muted); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); } .seg .btn[aria-pressed='true'] { background: var(--app-ink, #0a0a0a); color: var(--app-bg, #fff); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); } .seg .btn[aria-pressed='true'] { background: var(--app-text); color: var(--app-bg); }
 .swatches { display: flex; align-items: center; gap: 8px; }
-.dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--app-line); cursor: pointer; } .dot[aria-pressed='true'] { outline: 2px solid var(--app-ink, #0a0a0a); outline-offset: 2px; }
+.dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--app-line); cursor: pointer; } .dot[aria-pressed='true'] { outline: 2px solid var(--app-text); outline-offset: 2px; }
 .swatch { width: 36px; height: 36px; padding: 2px; border: 1px solid var(--app-line); border-radius: var(--radius-control); background: none; cursor: pointer; }
 .logo-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .logo { max-height: 40px; max-width: 120px; object-fit: contain; border: 1px solid var(--app-line); padding: 2px; background: #fff; }
 .check { display: flex; align-items: center; gap: 8px; cursor: pointer; } .grow { flex: 1; }
