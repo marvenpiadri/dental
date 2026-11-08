@@ -281,6 +281,7 @@ den-calendar *::after {
 
 .chip[data-tone='ok'] { color: var(--app-ok); }
 .chip[data-tone='warn'] { color: var(--app-warn); }
+button.chip { background: transparent; }
 .chip[data-tone='info'] { color: var(--app-info); }
 .chip[data-tone='danger'] { color: var(--app-danger); }
 .chip[data-tone='neutral'] { color: var(--app-muted); }
