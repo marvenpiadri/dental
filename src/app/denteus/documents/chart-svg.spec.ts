@@ -25,6 +25,7 @@ describe('chart SVG', () => {
     const svg = chartSvg({ teeth: sample().status, label, title: 'Chart' });
     expect(toothCodes(sample().status.get(36)!)).toContain('Cr');
     for (const k of ['caries', 'filling', 'Cr', 'X', 'Ex']) expect(svg).toContain(`L-${k}`);
+    expect(svg.split('fill="url(#cs-hatch)"').length - 1).toBeGreaterThan(1); // the tooth itself, not only the legend swatch
     expect(svg).not.toContain('L-Im');
     expect(svg).not.toContain('L-Br');
   });
