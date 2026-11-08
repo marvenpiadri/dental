@@ -1,3 +1,4 @@
+import { CONDITIONS } from '../patients/patient-rules';
 import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
@@ -20,6 +21,7 @@ import {
   Dentist,
   Patient,
   PatientInput,
+  PlanProposal,
   CatalogEntry,
   Invoice,
   Letter,
@@ -50,8 +52,13 @@ function tidy(input: PatientInput): PatientInput {
   const out: PatientInput = { fullName: input.fullName.trim(), phone: input.phone.trim() };
   for (const key of ['email', 'birthDate', 'sex', 'city', 'insurer', 'insuranceNumber', 'alert', 'notes'] as const) {
     const value = input[key]?.trim();
-    if (value) (out as Record<string, string>)[key] = value;
+    if (value) (out as unknown as Record<string, string>)[key] = value;
   }
+  const m = input.medical;
+  const conditions = (m?.conditions ?? []).filter((c) => CONDITIONS.includes(c as never));
+  const allergies = m?.allergies?.trim();
+  const medications = m?.medications?.trim();
+  if (conditions.length || allergies || medications) out.medical = { ...(conditions.length && { conditions }), ...(allergies && { allergies }), ...(medications && { medications }) };
   return out;
 }
 
@@ -236,7 +243,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -262,6 +269,12 @@ export class DentalStore {
   markReminded(appointmentId: string): void {
     const at = new Date().toISOString();
     this.appointments.update((list) => list.map((a) => (a.id === appointmentId ? { ...a, remindedAt: at } : a)));
+  }
+
+  /** Same shape as `changePlan`, for the patient's quote versions. */
+  changeProposals(patientId: string, change: (list: PlanProposal[]) => PlanProposal[]): void {
+    if (!this.auth.can('clinical.edit')) return;
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, proposals: change(p.proposals ?? []) } : p)));
   }
 
   /** Same shape as `changePlan`, for the patient's letters. Callers only append. */

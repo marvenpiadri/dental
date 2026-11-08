@@ -78,12 +78,15 @@
         }
       </section>
 
-      @if (p.alert) {
+      @if (hasAlert(p)) {
         <section class="card alert" role="note" aria-labelledby="alert-title">
           <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
           <div>
             <h2 class="card-title" id="alert-title">{{ t('profile.alert.title') }}</h2>
-            <p class="alert-text">{{ p.alert }}</p>
+            @if (p.alert) { <p class="alert-text">{{ p.alert }}</p> }
+            @if (p.medical?.conditions?.length) { <p class="alert-text">@for (c of p.medical!.conditions!; track c) { <span class="chip" data-tone="danger">{{ t($any('med.' + c)) }}</span> }</p> }
+            @if (p.medical?.allergies) { <p class="alert-text"><strong>{{ t('med.allergies') }}:</strong> {{ p.medical!.allergies }}</p> }
+            @if (p.medical?.medications) { <p class="alert-text"><strong>{{ t('med.medications') }}:</strong> {{ p.medical!.medications }}</p> }
           </div>
         </section>
       }
@@ -260,6 +263,7 @@
                 <section class="card" aria-labelledby="quote-title">
                   <header class="card-head"><h2 class="card-title" id="quote-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i>{{ t('page.quotes') }}</h2></header>
                   <den-treatment-plan [readonlyAdd]="true" only="planned" [payments]="p.payments ?? []" [plan]="p.plan ?? []" [patientName]="p.fullName" (edit)="store.changePlan(p.id, $event)" />
+                  <den-quote-versions [patientId]="p.id" [plan]="p.plan ?? []" [proposals]="p.proposals ?? []" />
                 </section>
               }
               @case ('billing') {

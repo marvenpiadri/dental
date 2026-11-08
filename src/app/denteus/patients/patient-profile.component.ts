@@ -5,7 +5,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
-import { ageOn, initials, parseIsoDate } from './patient-rules';
+import { ageOn, hasAlert, initials, parseIsoDate } from './patient-rules';
 import { balance, procedureName } from './treatment-rules';
 import { messageLink, whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
@@ -14,13 +14,14 @@ import { DocumentsComponent } from './documents.component';
 import { LettersComponent } from './letters.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
+import { QuoteVersionsComponent } from './quote-versions.component';
 import { PROFILE_PAGES, Section } from './profile-pages';
 
 type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent],
+  imports: [RouterLink, QuoteVersionsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +38,7 @@ export class PatientProfileComponent {
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
+  protected readonly hasAlert = hasAlert;
   protected readonly STATUS_KEY = STATUS_KEY;
   protected readonly STATUS_TONE = STATUS_TONE;
   protected readonly typeKey = typeKey;

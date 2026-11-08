@@ -13,7 +13,7 @@ import {
 import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
 import { dentistHours } from '../../rules/opening-hours';
 import { findFreeSlots, type Slot } from '../../rules/slot-finder';
-import { I18n } from '../../../core/i18n/i18n.service';
+import { I18n, Key } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
 import { DateTimeFieldComponent } from '../../../calendar/components/datetime-field/datetime-field.component';
 import { formatDateTimeInput, formatTime, addMinutes } from '../../../calendar/utils/date.utils';
@@ -68,7 +68,12 @@ export class AppointmentEditorComponent implements OnInit {
   protected readonly createStatuses: AppointmentStatus[] = ['scheduled', 'confirmed'];
 
   protected readonly patientId = signal<string | null>(null);
-  protected readonly patientAlert = computed(() => this.store.patientMap().get(this.patientId() ?? '')?.alert ?? null);
+  protected readonly patientAlert = computed(() => {
+    const p = this.store.patientMap().get(this.patientId() ?? '');
+    if (!p) return null;
+    const parts = [p.alert, ...(p.medical?.conditions ?? []).map((c) => this.t(`med.${c}` as Key)), p.medical?.allergies, p.medical?.medications].filter(Boolean);
+    return parts.length ? parts.join(' · ') : null;
+  });
   protected readonly start = signal(new Date());
   protected readonly bookable = computed(() => this.store.patients().filter((p) => !p.archivedAt || p.id === this.patientId()));
   protected readonly duration = signal(30);

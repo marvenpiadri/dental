@@ -69,7 +69,7 @@
                     <span class="who">
                       <span class="name">
                         {{ row.patient.fullName }}
-                        @if (row.patient.alert) { <i class="fa-solid fa-triangle-exclamation alert-icon" aria-hidden="true" [attr.title]="row.patient.alert"></i><span class="sr-only">{{ t('profile.alert.title') }}</span> }
+                        @if (hasAlert(row.patient)) { <i class="fa-solid fa-triangle-exclamation alert-icon" aria-hidden="true" [attr.title]="row.patient.alert ?? null"></i><span class="sr-only">{{ t('profile.alert.title') }}</span> }
                       </span>
                       <span class="sub muted">{{ age(row.patient) }}{{ age(row.patient) && row.patient.city ? ' · ' : '' }}{{ row.patient.city }}</span>
                     </span>

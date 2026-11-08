@@ -32,9 +32,9 @@ Done: appointment lengths per type, enabled payment methods, Today notification 
 
 Already complete and untouched: calendar conflicts, dentist and chair assignment, waiting room, statuses; Practice task list (a plain checklist, enough for the front desk).
 
-Still missing in the frontend:
-- Treatment-plan acceptance and version history (plan is one live list; no accepted/declined state or dated versions).
-- Structured medical history (conditions, allergies, medications); today it is one free-text alert.
+Also done (second pass): structured medical history (ticked conditions, allergies, medications) shown on the profile, the patient list alert filter and the booking form; quote versions per patient with accepted/declined and the replaced older quote kept. Nothing left from the gap list in the frontend.
+
+Limits to know: conditions are a fixed list (no custom entries); a quote records the planned items and total at that moment, it does not freeze the plan itself.
 
 Google Business: the clinic's Google data is imported from a Maps link. A live Business Profile connection needs OAuth and a server, so Settings → Integrations says "not connected". Nothing simulates a connection.
 

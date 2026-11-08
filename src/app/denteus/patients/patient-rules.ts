@@ -77,3 +77,15 @@ export function initials(fullName: string): string {
   const [first, second] = fullName.trim().split(/\s+/).filter(Boolean).map((word) => Array.from(word)[0]);
   return (first ?? '?') + (second ?? '');
 }
+
+/** The ticked conditions a dentist needs to see before treating; translated as `med.<id>`. */
+export const CONDITIONS = ['diabetes', 'hypertension', 'heart', 'bloodThinners', 'asthma', 'pregnancy', 'epilepsy', 'kidney', 'liver', 'smoker'] as const;
+
+/** True when the patient has anything the clinic should be warned about. */
+export const hasAlert = (p: { alert?: string; medical?: { conditions?: string[]; allergies?: string; medications?: string } }): boolean =>
+  !!(p.alert || p.medical?.conditions?.length || p.medical?.allergies || p.medical?.medications);
+
+/** The next version number for a quote, and the list with the unanswered older quote marked as replaced. */
+export function addProposal<T extends { version: number; status: string }>(list: T[], make: (version: number) => T): T[] {
+  return [...list.map((x) => (x.status === 'proposed' ? { ...x, status: 'superseded' } : x)), make(Math.max(0, ...list.map((x) => x.version)) + 1)];
+}

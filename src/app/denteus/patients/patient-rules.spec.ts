@@ -1,5 +1,5 @@
 import { Patient } from '../models/dental.models';
-import { ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient } from './patient-rules';
+import { addProposal, hasAlert, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient } from './patient-rules';
 
 const TODAY = new Date(2026, 9, 22); // 22 Oct 2026
 const patient = (over: Partial<Patient> = {}): Patient => ({ id: 'p1', fullName: 'Hélène Benali', phone: '+212 600-000-001', ...over });
@@ -67,5 +67,21 @@ describe('dates and names', () => {
     expect(initials('Sara')).toBe('S');
     expect(initials('  ')).toBe('?');
     expect(initials('محمد العلوي')).toBe('ما'); // first letter of each word; "ال" is the article, not skipped
+  });
+});
+
+describe('medical history and quote versions', () => {
+  it('flags a patient with a condition, allergy or medication, not an empty record', () => {
+    expect(hasAlert({})).toBe(false);
+    expect(hasAlert({ medical: { conditions: [] } })).toBe(false);
+    expect(hasAlert({ medical: { allergies: 'penicillin' } })).toBe(true);
+    expect(hasAlert({ alert: 'x' })).toBe(true);
+  });
+  it('numbers quotes and replaces only the unanswered one', () => {
+    const v1 = addProposal<{ version: number; status: string }>([], (version) => ({ version, status: 'proposed' }));
+    const list = addProposal([{ version: 1, status: 'accepted' }, { version: 2, status: 'proposed' }], (version) => ({ version, status: 'proposed' }));
+    expect(v1).toEqual([{ version: 1, status: 'proposed' }]);
+    expect(list.map((x) => x.status)).toEqual(['accepted', 'superseded', 'proposed']);
+    expect(list[2].version).toBe(3);
   });
 });

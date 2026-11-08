@@ -39,3 +39,7 @@
 
 .form-grid { align-items: stretch; }
 .form-grid > .banner { grid-column: 1 / -1; }
+
+.conditions { display: flex; flex-wrap: wrap; gap: 8px 16px; border: 0; padding: 0; margin: 0; }
+.conditions .label { width: 100%; }
+.page-opt { display: inline-flex; align-items: center; gap: 6px; }

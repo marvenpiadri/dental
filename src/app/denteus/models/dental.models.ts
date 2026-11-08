@@ -74,6 +74,8 @@ export interface Patient {
   insuranceNumber?: string;
   /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
   alert?: string;
+  /** Structured medical history; `alert` stays the free-text note beside it. */
+  medical?: MedicalHistory;
   notes?: string;
   /** ISO timestamp. Absent on records created before this field existed. */
   createdAt?: string;
@@ -99,8 +101,30 @@ export interface Patient {
   messages?: Message[];
   /** What was found and done at each visit, newest last. */
   visits?: VisitNote[];
+  /** Dated versions of the quote given to the patient, oldest first, with the patient's answer. */
+  proposals?: PlanProposal[];
   /** Small JPEG data URL (see the profile's photo picker). Optional, added whenever the clinic likes. */
   photo?: string;
+}
+
+/** Ticked conditions are ids from `CONDITIONS` (patient-rules.ts); allergies and medications are free text the dentist reads, never interpreted. */
+export interface MedicalHistory {
+  conditions?: string[];
+  allergies?: string;
+  medications?: string;
+}
+
+/** One quote given to the patient. A newer quote supersedes an unanswered older one; nothing is deleted. */
+export interface PlanProposal {
+  id: string;
+  version: number;
+  /** ISO timestamp the quote was recorded. */
+  at: string;
+  lines: { tooth?: string; name: string; price: number }[];
+  total: number;
+  status: 'proposed' | 'accepted' | 'declined' | 'superseded';
+  /** ISO timestamp of the patient's answer. */
+  decidedAt?: string;
 }
 
 export interface PrescriptionLine {
@@ -247,7 +271,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals'>;
 
 export interface Dentist {
   id: string;

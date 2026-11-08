@@ -98,6 +98,20 @@
               [value]="values().alert" (input)="set('alert', $any($event.target).value)"></textarea>
             <span class="hint muted" id="alert-hint">{{ t('form.alert.hint') }}</span>
           </label>
+          <fieldset class="field wide conditions">
+            <legend class="label">{{ t('med.conditions') }}</legend>
+            @for (c of conditionList; track c) {
+              <label class="page-opt"><input type="checkbox" [checked]="conditions().includes(c)" (change)="toggleCondition(c, $any($event.target).checked)" />{{ t($any('med.' + c)) }}</label>
+            }
+          </fieldset>
+          <label class="field">
+            <span class="label">{{ t('med.allergies') }}</span>
+            <input class="input" name="allergies" maxlength="200" [value]="allergies()" (input)="allergies.set($any($event.target).value)" />
+          </label>
+          <label class="field">
+            <span class="label">{{ t('med.medications') }}</span>
+            <input class="input" name="medications" maxlength="200" [value]="medications()" (input)="medications.set($any($event.target).value)" />
+          </label>
           <label class="field wide">
             <span class="label">{{ t('form.notes') }}</span>
             <textarea class="input" name="notes" rows="4" [value]="values().notes" (input)="set('notes', $any($event.target).value)"></textarea>

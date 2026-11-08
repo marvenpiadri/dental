@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PatientInput } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
-import { PatientProblem, validatePatient } from './patient-rules';
+import { CONDITIONS, PatientProblem, validatePatient } from './patient-rules';
 
 type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'city' | 'insurer' | 'insuranceNumber' | 'alert' | 'notes', string>;
 type Field = keyof Values;
@@ -31,6 +31,11 @@ export class PatientFormComponent {
 
   protected readonly values = signal<Values>({ ...EMPTY });
   protected readonly submitted = signal(false);
+  protected readonly conditionList = CONDITIONS;
+  protected readonly conditions = signal<string[]>([]);
+  protected readonly allergies = signal('');
+  protected readonly medications = signal('');
+  protected toggleCondition(id: string, on: boolean): void { this.conditions.update((l) => (on ? [...l, id] : l.filter((x) => x !== id))); }
   protected readonly saving = signal(false);
   protected readonly saveFailed = signal(false);
   private loadedFor: string | null = null;
@@ -64,6 +69,9 @@ export class PatientFormComponent {
           alert: patient.alert ?? '',
           notes: patient.notes ?? '',
         });
+        this.conditions.set(patient.medical?.conditions ?? []);
+        this.allergies.set(patient.medical?.allergies ?? '');
+        this.medications.set(patient.medical?.medications ?? '');
       });
     });
   }
@@ -118,6 +126,7 @@ export class PatientFormComponent {
       insuranceNumber: v.insuranceNumber,
       alert: v.alert,
       notes: v.notes,
+      medical: { conditions: this.conditions(), allergies: this.allergies(), medications: this.medications() },
     };
   }
 }
