@@ -30,6 +30,8 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 | Accessibility (keyboard, labels) | Partially implemented | Labels and aria on new forms; no full keyboard audit. |
 | Public clinic page and profile | Implemented | Settings → Clinic profile, preview, SSR page with SEO, sitemap, robots, slug redirects, Google Maps link import. Business Profile OAuth and sync need the backend. |
 | Backend, database, authentication | Blocked | Phase 3 by decision. |
+| Medical history | Implemented | Conditions checklist, allergies, medications; visible on profile, list filter and booking. |
+| Quote acceptance and versions | Implemented | Quotes page records dated versions with accepted, declined or replaced. |
 
 ## End-to-end acceptance criteria
 
@@ -42,6 +44,3 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 ## Release gate
 
 Phase 2 can close when: no row above is *Missing* except items marked Phase 3; every *Implemented but needs validation* row has been run once in a browser; the build and all tests pass; criteria 1–6 pass in a single recorded run in both languages and both themes.
-
-| Medical history | Implemented | Conditions checklist, allergies, medications; visible on profile, list filter and booking. |
-| Quote acceptance and versions | Implemented | Quotes page records dated versions with accepted, declined or replaced. |
