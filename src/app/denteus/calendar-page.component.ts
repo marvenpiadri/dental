@@ -28,6 +28,7 @@ import { DentalStore } from './services/dental-store.service';
         [bookForPatient]="patient()"
         (openPatient)="openPatient($event)"
         (openEncounter)="openVisitNote($event)"
+        (openFile)="openFile($event)"
       />
     } @placeholder {
       <div class="skeleton" style="height: 100%" aria-busy="true"></div>
@@ -46,6 +47,11 @@ export class CalendarPageComponent {
 
   protected openPatient(patientId: string): void {
     void this.router.navigate(['/patients', patientId]);
+  }
+
+  /** Straight to one page of the patient's file (the chart, billing) from the appointment panel. */
+  protected openFile(target: { patientId: string; page: string }): void {
+    void this.router.navigate(['/patients', target.patientId, target.page]);
   }
 
   /** The panel's "visit note" button: the note is written on the patient's file, linked to this appointment. */

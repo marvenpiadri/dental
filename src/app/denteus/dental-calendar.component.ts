@@ -79,6 +79,7 @@ export class DentalCalendarComponent implements OnInit {
   readonly bookForPatient = input<string>();
   readonly openPatient = output<string>();
   readonly openEncounter = output<string>();
+  readonly openFile = output<{ patientId: string; page: string }>();
 
   protected readonly groupBy = signal<GroupBy>('chair');
   protected readonly showCancelled = signal(false);

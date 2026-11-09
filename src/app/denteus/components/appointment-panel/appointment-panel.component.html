@@ -84,6 +84,10 @@
     }
   </div>
 
+  @if (encounterAvailable()) {
+    <den-visit-acts [appointment]="appointment()" (openFile)="openFile.emit($event)" />
+  }
+
   <h3 class="history-title"><cal-icon name="history" [size]="14" /> {{ t('pn.history') }}</h3>
   <ol class="history">
     @for (h of history(); track $index) {

@@ -267,6 +267,8 @@ export interface TreatmentItem {
   date?: string;
   /** ISO timestamp the item was marked done. */
   doneAt?: string;
+  /** The appointment this act was recorded from, when it was recorded at the visit. Display and de-duplication only: it never bills or completes anything. */
+  appointmentId?: string;
 }
 
 

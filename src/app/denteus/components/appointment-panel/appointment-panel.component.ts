@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { VisitActsComponent } from './visit-acts.component';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
 import { formatTime } from '../../../calendar/utils/date.utils';
 import { Appointment, AppointmentStatus, STATUS_META } from '../../models/dental.models';
@@ -22,7 +23,7 @@ interface HistoryLine {
 /** Right-hand detail panel: everything about one appointment and the actions that apply to it. */
 @Component({
   selector: 'den-appointment-panel',
-  imports: [CalIconComponent],
+  imports: [CalIconComponent, VisitActsComponent],
   templateUrl: './appointment-panel.component.html',
   styleUrl: './appointment-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,7 @@ export class AppointmentPanelComponent {
   readonly transition = output<AppointmentStatus>();
   readonly openPatient = output<string>();
   readonly openEncounter = output<string>();
+  readonly openFile = output<{ patientId: string; page: string }>();
 
   protected readonly store = inject(DentalStore);
   private readonly i18n = inject(I18n);
