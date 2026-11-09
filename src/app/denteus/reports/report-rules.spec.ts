@@ -64,3 +64,12 @@ describe('buildReport (year, empty)', () => {
     expect(report.noShowRate).toBeNull();
   });
 });
+
+describe('reports and voided payments', () => {
+  it('leaves a voided payment out of revenue and the method split', () => {
+    const p: Patient = { ...patient, payments: [{ id: 'x', amount: 700, method: 'card', at: new Date(2026, 9, 10, 9).toISOString(), voidedAt: new Date(2026, 9, 11).toISOString(), voidReason: 'Typo' }] };
+    const r = buildReport({ patients: [p], appointments: [], dentists: [dentist] }, 'month', now);
+    expect(r.revenue).toBe(0);
+    expect(r.byMethod.card).toBe(0);
+  });
+});
