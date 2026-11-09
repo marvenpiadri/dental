@@ -55,3 +55,22 @@ describe('backup extras', () => {
     expect(parseBackup(JSON.stringify({ ...base, documents: [{ id: 'd', patientId: 'p' }] }))).toEqual({ ok: false, reason: 'damaged' });
   });
 });
+
+describe('backup settings', () => {
+  const owner = { id: 's1', name: 'Dr A', role: 'owner', salt: 'x', pinHash: 'y' };
+  const settings = { prefs: { slot: 30 }, docTemplates: [{ id: 't1', name: 'Mine' }], docDefaults: { quote: 't1' }, waTemplates: { reminder: 'Hi' }, hiddenPages: ['imaging'], view3d: false, staff: [owner], staffLog: [] };
+  it('carries preferences, templates, defaults, staff and the staff log, and ignores unknown keys', () => {
+    const result = parseBackup(makeBackup({ ...data, settings: { ...settings, evil: 1 } as never }, when));
+    expect(result.ok && result.data.settings).toEqual(settings);
+  });
+  it('leaves settings alone for a backup that has none', () => {
+    const result = parseBackup(makeBackup(data, when));
+    expect(result.ok && result.data.settings).toBeUndefined();
+  });
+  it('refuses a staff list nobody can sign in with, and a settings block that is not one', () => {
+    expect(parseBackup(makeBackup({ ...data, settings: { staff: [{ ...owner, suspendedAt: 'x' }] } }, when))).toEqual({ ok: false, reason: 'damaged' });
+    expect(parseBackup(makeBackup({ ...data, settings: { staff: [{ ...owner, role: 'dentist' }] } }, when))).toEqual({ ok: false, reason: 'damaged' });
+    const broken = JSON.parse(makeBackup(data, when)); broken.settings = 'x';
+    expect(parseBackup(JSON.stringify(broken))).toEqual({ ok: false, reason: 'damaged' });
+  });
+});

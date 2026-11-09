@@ -4,6 +4,10 @@ import { Appointment, CatalogEntry, Chair, ClinicLocation, Dentist, Patient } fr
 export const PRACTICE_KEYS = ['expenses', 'stock', 'lab', 'tasks', 'implants', 'steril'] as const;
 export type PracticeData = Record<(typeof PRACTICE_KEYS)[number], unknown[]>;
 
+/** Settings rows kept next to the records: preferences, message templates, document templates, staff and the staff log. */
+export const SETTING_KEYS = ['prefs', 'waTemplates', 'hiddenPages', 'view3d', 'docTemplates', 'docDefaults', 'staff', 'staffLog'] as const;
+export type BackupSettings = Partial<Record<(typeof SETTING_KEYS)[number], unknown>>;
+
 /** A patient file (X-ray, scan) as it travels in a backup: the bytes are a data URL. */
 export interface BackupDocument { id: string; patientId: string; name: string; type: string; size: number; addedAt: string; tooth?: string; data: string }
 
@@ -17,6 +21,8 @@ export interface ClinicData {
   /** Optional: backups made before the Practice page or document backups don't have them. */
   practice?: PracticeData;
   documents?: BackupDocument[];
+  /** Optional: backups made before settings were included leave this clinic's settings as they are. */
+  settings?: BackupSettings;
 }
 
 /** The file a clinic downloads. Dates are ISO strings, which is also what a PostgreSQL import wants. */
@@ -88,6 +94,14 @@ export function parseBackup(source: string): BackupResult {
   const rawDocs = raw['documents'];
   if (rawDocs !== undefined && !(Array.isArray(rawDocs) && rawDocs.every((d) => isRecord(d) && text(d['id']) && text(d['patientId']) && text(d['data'])))) return { ok: false, reason: 'damaged' };
 
+  const rawSettings = raw['settings'];
+  if (rawSettings !== undefined && !isRecord(rawSettings)) return { ok: false, reason: 'damaged' };
+  const settings: BackupSettings | undefined = isRecord(rawSettings) ? Object.fromEntries(SETTING_KEYS.filter((k) => rawSettings[k] !== undefined).map((k) => [k, rawSettings[k]])) : undefined;
+  if (settings && SETTING_KEYS.some((k) => k !== 'view3d' && k !== 'docDefaults' && k !== 'prefs' && k in settings && !Array.isArray(settings[k]) && k !== 'waTemplates')) return { ok: false, reason: 'damaged' };
+  // A staff list with nobody able to sign in as owner would lock the clinic out: refuse the whole file, as for any damage.
+  const staff = settings?.['staff'];
+  if (Array.isArray(staff) && !staff.some((x) => isRecord(x) && x['role'] === 'owner' && !x['suspendedAt'])) return { ok: false, reason: 'damaged' };
+
   return {
     ok: true,
     exportedAt: typeof raw['exportedAt'] === 'string' ? raw['exportedAt'] : '',
@@ -100,6 +114,7 @@ export function parseBackup(source: string): BackupResult {
       // backups made before the catalog existed have none: start from the built-in acts
       practice,
       documents: rawDocs as BackupDocument[] | undefined,
+      settings,
       catalog: Array.isArray(raw['catalog']) && withId(raw['catalog'] as unknown[]) ? (raw['catalog'] as CatalogEntry[]) : defaultCatalog(),
     },
   };

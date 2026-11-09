@@ -17,7 +17,7 @@ import { CatalogEntry, Chair, Dentist } from '../models/dental.models';
 import { parsePrice, procedureName } from '../patients/treatment-rules';
 import { PracticeStore } from '../practice/practice-store.service';
 import { ClinicDatabase } from '../services/clinic-database.service';
-import { BackupDocument, BackupResult, makeBackup, parseBackup } from '../services/backup';
+import { BackupDocument, BackupSettings, SETTING_KEYS, BackupResult, makeBackup, parseBackup } from '../services/backup';
 import { PROFILE_PAGES } from '../patients/profile-pages';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
@@ -183,7 +183,9 @@ export class ClinicSetupComponent {
   protected async exportBackup(): Promise<void> {
     const now = new Date();
     const documents = await Promise.all((await this.database.allDocuments()).map(async ({ blob, ...doc }): Promise<BackupDocument> => ({ ...doc, data: await toDataUrl(blob) })));
-    const data = { ...this.store.snapshot(), practice: await this.practice.snapshot(), documents };
+    const settings: BackupSettings = {};
+    for (const k of SETTING_KEYS) { const v = await this.database.loadSetting(k); if (v !== undefined) settings[k] = v; }
+    const data = { ...this.store.snapshot(), practice: await this.practice.snapshot(), documents, settings };
     const url = URL.createObjectURL(new Blob([makeBackup(data, now)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
@@ -212,8 +214,10 @@ export class ClinicSetupComponent {
       // backups from before these existed leave them as they are
       if (backup.data.practice) await this.practice.restore(backup.data.practice);
       if (backup.data.documents) await this.database.replaceDocuments(await Promise.all(backup.data.documents.map(async ({ data, ...doc }) => ({ ...doc, blob: await (await fetch(data)).blob() }))));
+      for (const [k, v] of Object.entries(backup.data.settings ?? {})) await this.database.saveSetting(k, v);
       this.restored.set(true);
       this.pending.set(null);
+      if (backup.data.settings) setTimeout(() => location.reload(), 1500); // preferences, templates and staff are read at start-up
     } catch {
       this.importProblem.set('setup.backup.error.save');
     }
