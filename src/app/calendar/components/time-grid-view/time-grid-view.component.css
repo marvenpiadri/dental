@@ -295,3 +295,76 @@
   background: var(--cal-accent);
   transform: translate(-50%, -50%);
 }
+
+/* ---- drag polish ------------------------------------------------------------------ */
+/* the original stays as a faint placeholder; its copy floats and never re-flows the neighbours */
+.slot-event.ghosted {
+  opacity: 0.35;
+  transition: opacity 0.12s ease;
+}
+
+.float {
+  position: absolute;
+  left: 2px;
+  right: 3px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: flex-start;
+  column-gap: 8px;
+  padding: 5px 8px 4px 12px;
+  border-radius: 7px;
+  border: 1.5px solid var(--cal-text);
+  background: var(--cal-bg);
+  color: var(--cal-text);
+  font-size: 12.5px;
+  line-height: 1.25;
+  overflow: hidden;
+  pointer-events: none;
+  /* snapping glides instead of jumping a slot at a time */
+  transition: top 0.09s ease-out, height 0.09s ease-out;
+}
+
+.float span {
+  font-variant-numeric: tabular-nums;
+  color: var(--cal-text-2);
+}
+
+.float em {
+  flex-basis: 100%;
+  font-style: normal;
+  font-size: 11.5px;
+}
+
+/* refused drop: dashed, hatched, and it says why */
+.float.invalid {
+  min-height: 48px; /* room for the reason even on a short block */
+  border-style: dashed;
+  background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--cal-text) 14%, transparent) 5px 6px);
+}
+
+/* the block that just landed flashes once so the eye finds it */
+.slot-event.landed {
+  animation: cal-landed 0.6s ease-out;
+}
+
+@keyframes cal-landed {
+  from { outline: 2px solid var(--cal-text); outline-offset: 1px; }
+  to { outline: 2px solid transparent; outline-offset: 1px; }
+}
+
+/* a new day or lane fades in; unchanged columns keep their element and do not replay it */
+.day-col {
+  animation: cal-col-in 0.14s ease-out;
+}
+
+@keyframes cal-col-in {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float, .slot-event.ghosted { transition: none; }
+  .slot-event.landed, .day-col { animation: none; }
+}

@@ -150,6 +150,8 @@ export class DentalCalendarComponent implements OnInit {
     this.applyHandOff();
 
     this.cal.gateway.set({
+      validate: (event: CalendarEvent) =>
+        this.dental.rescheduleProblem(event.id, { start: event.start, end: event.end, dentistId: event.resources?.['dentist'], chairId: event.resources?.['chair'] }),
       update: async (event: CalendarEvent): Promise<CommitResult> => {
         const result = await this.dental.reschedule(event.id, {
           start: event.start,

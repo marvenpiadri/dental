@@ -23,6 +23,7 @@ import {
   formatTime,
   isSameDay,
   minutesOfDay,
+  startOfDay,
   pad2,
   weekdayLabel,
   withMinutes,
@@ -124,6 +125,8 @@ interface Preview {
   start: Date;
   end: Date;
   resources?: Record<string, string>;
+  /** Set while moving: the block floats over the grid instead of re-flowing its neighbours. */
+  move?: { dayIndex: number; invalid: string | null };
 }
 
 const snap = (minutes: number) => Math.round(minutes / SNAP_MIN) * SNAP_MIN;
@@ -181,7 +184,7 @@ export class TimeGridViewComponent {
   private readonly displayEvents = computed(() => {
     const p = this.preview();
     const events = this.store.visibleEvents();
-    return p
+    return p && !p.move
       ? events.map((e) => (e.id === p.id ? { ...e, start: p.start, end: p.end, resources: p.resources ?? e.resources } : e))
       : events;
   });
@@ -351,8 +354,35 @@ export class TimeGridViewComponent {
   }
 
   protected isDragging(id: string): boolean {
-    return this.preview()?.id === id;
+    const p = this.preview();
+    return p?.id === id && !p.move;
   }
+
+  /** The original stays put as a faint placeholder while its copy floats. */
+  protected isMoving(id: string): boolean {
+    const p = this.preview();
+    return p?.id === id && !!p.move;
+  }
+
+  /** The event that just landed, so its block can flash once. */
+  protected readonly landedId = signal<string | null>(null);
+
+  /** The floating copy: where it is, what it says, and whether dropping here is refused. */
+  protected readonly floating = computed(() => {
+    const p = this.preview();
+    if (!p?.move) return null;
+    const e = this.store.visibleEvents().find((x) => x.id === p.id);
+    const day = this.slots()[p.move.dayIndex]?.day;
+    if (!e || !day) return null;
+    const base = startOfDay(day).getTime();
+    const startMin = Math.min(1440 - MIN_DURATION, Math.max(0, (p.start.getTime() - base) / 60_000));
+    const endMin = Math.min(1440, Math.max(startMin + MIN_DURATION, (p.end.getTime() - base) / 60_000));
+    return {
+      dayIndex: p.move.dayIndex, invalid: p.move.invalid, title: e.title, color: this.store.colorOf(e.calendarId),
+      top: startMin * this.pxPerMin + 1, height: Math.max((endMin - startMin) * this.pxPerMin - 2, 18),
+      time: `${formatTime(p.start)} - ${formatTime(p.end)}`,
+    };
+  });
 
   private beginDrag(state: DragState): void {
     this.endDrag();
@@ -410,12 +440,10 @@ export class TimeGridViewComponent {
         const slot = this.slots()[p.dayIndex];
         const deltaDays = slot.lane ? 0 : p.dayIndex - d.anchorDay;
         const resources = slot.lane ? { ...(d.event.resources ?? {}), [this.laneDimension()]: slot.lane.id } : undefined;
-        this.preview.set({
-          id: d.event.id,
-          start: addMinutes(addDays(d.event.start, deltaDays), deltaMin),
-          end: addMinutes(addDays(d.event.end, deltaDays), deltaMin),
-          resources,
-        });
+        const start = addMinutes(addDays(d.event.start, deltaDays), deltaMin);
+        const end = addMinutes(addDays(d.event.end, deltaDays), deltaMin);
+        const invalid = this.store.dropProblem({ ...d.event, start, end, resources: resources ?? d.event.resources });
+        this.preview.set({ id: d.event.id, start, end, resources, move: { dayIndex: p.dayIndex, invalid } });
         break;
       }
       case 'resize-end': {
@@ -480,6 +508,10 @@ export class TimeGridViewComponent {
       return;
     }
     if (!preview) return;
+    if (preview.move?.invalid) {
+      this.store.notify(preview.move.invalid);
+      return;
+    }
 
     const next: CalendarEvent = {
       ...d.event,
@@ -491,7 +523,10 @@ export class TimeGridViewComponent {
       next.start.getTime() === d.event.start.getTime() &&
       next.end.getTime() === d.event.end.getTime() &&
       JSON.stringify(next.resources ?? {}) === JSON.stringify(d.event.resources ?? {});
-    if (!unchanged) void this.store.commitUpdate(next);
+    if (unchanged) return;
+    this.landedId.set(next.id);
+    setTimeout(() => this.landedId.set(null), 700);
+    void this.store.commitUpdate(next);
   };
 
   private readonly onPointerCancel = (): void => this.endDrag();

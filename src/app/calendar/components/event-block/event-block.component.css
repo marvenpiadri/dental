@@ -19,6 +19,10 @@
   transition: box-shadow 0.12s ease, filter 0.12s ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  :host { transition: none; }
+}
+
 /* inset rounded rule on the left, as in the reference design */
 :host::before {
   content: '';
@@ -36,14 +40,14 @@
 }
 
 :host(:focus-visible) {
-  box-shadow: 0 0 0 2px var(--cal-focus, #3b82f6);
+  box-shadow: 0 0 0 2px var(--cal-focus);
 }
 
 :host(.is-dragging) {
   z-index: 20;
   cursor: grabbing;
   filter: none;
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.28), 0 0 0 1px color-mix(in srgb, var(--c, #64748b) 40%, transparent);
+  box-shadow: 0 0 0 1.5px var(--cal-focus);
 }
 
 :host(.is-locked) {

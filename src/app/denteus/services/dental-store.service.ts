@@ -386,6 +386,15 @@ export class DentalStore {
     return { ok: true, value: next };
   }
 
+  /** What `reschedule` would refuse, without changing anything: lets the calendar warn while the block is still being dragged. */
+  rescheduleProblem(id: string, change: RescheduleChange): string | null {
+    const current = this.find(id);
+    if (!current) return this.t('er.gone');
+    if (!isMovable(current.status)) return this.t('er.nomove', { s: this.t(STATUS_LABEL[current.status]) });
+    const problem = this.check({ id, patientId: current.patientId, dentistId: change.dentistId ?? current.dentistId, chairId: change.chairId ?? current.chairId, start: change.start, end: change.end });
+    return problem && !problem.ok ? problem.message : null;
+  }
+
   /** Drag and drop / resize. Only the schedule changes. */
   async reschedule(id: string, change: RescheduleChange): Promise<ApiResult<Appointment>> {
     const current = this.find(id);

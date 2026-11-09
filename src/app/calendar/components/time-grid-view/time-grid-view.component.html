@@ -92,6 +92,8 @@
               [continuesBefore]="item.cutStart"
               [continuesAfter]="item.cutEnd"
               [dragging]="isDragging(item.event.id)"
+              [class.ghosted]="isMoving(item.event.id)"
+              [class.landed]="landedId() === item.event.id"
               [style.top.px]="item.top"
               [style.height.px]="item.height"
               [style.left]="item.left"
@@ -106,6 +108,18 @@
                 <span class="handle bottom" (pointerdown)="onItemPointerDown($event, item, 'resize-end')"></span>
               }
             </cal-event-block>
+          }
+
+          @if (floating(); as f) {
+            @if (f.dayIndex === i) {
+              <div class="float" [class.invalid]="f.invalid" [style.--c]="f.color" [style.top.px]="f.top" [style.height.px]="f.height" [attr.role]="f.invalid ? 'alert' : null">
+                <strong>{{ f.title }}</strong>
+                <span>{{ f.time }}</span>
+                @if (f.invalid) {
+                  <em>{{ f.invalid }}</em>
+                }
+              </div>
+            }
           }
 
           @if (ghost(); as g) {

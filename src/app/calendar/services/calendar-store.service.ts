@@ -180,6 +180,11 @@ export class CalendarStore {
     return result;
   }
 
+  /** Why dropping this event here would be refused, or null. Lets the UI warn before the pointer is released. */
+  dropProblem(event: CalendarEvent): string | null {
+    return this.gateway()?.validate?.(event) ?? null;
+  }
+
   /* -------------------------------- toasts -------------------------------- */
 
   notify(text: string, kind: 'error' | 'info' = 'error'): void {

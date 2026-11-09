@@ -74,6 +74,8 @@ export type CommitResult =
  */
 export interface CalendarGateway {
   update(event: CalendarEvent, previous: CalendarEvent): Promise<CommitResult>;
+  /** Optional synchronous pre-check used while dragging: a reason the drop would be refused, or null. */
+  validate?(event: CalendarEvent): string | null;
 }
 
 export interface CalendarToast {
