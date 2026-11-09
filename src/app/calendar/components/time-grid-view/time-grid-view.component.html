@@ -1,6 +1,7 @@
 <div
   class="scroller"
   #scroller
+  cdkScrollable
   [style.--cols]="slots().length"
   [style.--hour-h]="hourHeight + 'px'"
   [style.--col-min]="lanesMode() ? '168px' : null"
@@ -75,7 +76,7 @@
       }
     </div>
 
-    <div class="cols" #cols (pointerdown)="onColsPointerDown($event)">
+    <div class="cols" #cols cdkDropList cdkDropListSortingDisabled (pointerdown)="onColsPointerDown($event)">
       @for (col of columns(); track col.key; let i = $index) {
         <div class="day-col" [class.today]="col.today">
           @for (item of col.items; track item.key) {
@@ -92,20 +93,27 @@
               [continuesBefore]="item.cutStart"
               [continuesAfter]="item.cutEnd"
               [dragging]="isDragging(item.event.id)"
-              [class.ghosted]="isMoving(item.event.id)"
               [class.landed]="landedId() === item.event.id"
-              [style.top.px]="item.top"
+              [style.--ev-top.px]="item.top"
               [style.height.px]="item.height"
-              [style.left]="item.left"
+              [style.--ev-left]="item.left"
               [style.width]="item.width"
+              cdkDrag
+              [cdkDragData]="item.event"
+              [cdkDragDisabled]="item.event.locked === true"
+              cdkDragPreviewClass="cal-drag-preview"
+              (cdkDragStarted)="cdkStarted($event)"
+              (cdkDragMoved)="cdkMoved($event)"
+              (cdkDragReleased)="cdkReleased($event)"
               (pointerdown)="onItemPointerDown($event, item, 'move')"
+              (click)="item.event.locked ? null : openEvent(item.event)"
               (keydown.enter)="eventClick.emit(item.event)"
             >
               @if (item.showTopHandle) {
-                <span class="handle top" (pointerdown)="onItemPointerDown($event, item, 'resize-start')"></span>
+                <span class="handle top" (pointerdown)="onItemPointerDown($event, item, 'resize-start')" (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()" (click)="$event.stopPropagation()"></span>
               }
               @if (item.showBottomHandle) {
-                <span class="handle bottom" (pointerdown)="onItemPointerDown($event, item, 'resize-end')"></span>
+                <span class="handle bottom" (pointerdown)="onItemPointerDown($event, item, 'resize-end')" (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()" (click)="$event.stopPropagation()"></span>
               }
             </cal-event-block>
           }

@@ -12,6 +12,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CdkDrag, CdkDragMove, CdkDragRelease, CdkDragStart, CdkDropList } from '@angular/cdk/drag-drop';
+import { CdkScrollable } from '@angular/cdk/scrolling';
 import { CalendarEvent, CalendarLane, EventDraft, EventTone } from '../../models/calendar.models';
 import { CalendarStore } from '../../services/calendar-store.service';
 import {
@@ -138,7 +140,7 @@ const floorSnap = (minutes: number) => Math.floor(minutes / SNAP_MIN) * SNAP_MIN
  */
 @Component({
   selector: 'cal-time-grid-view',
-  imports: [EventBlockComponent, EventChipComponent],
+  imports: [EventBlockComponent, EventChipComponent, CdkDrag, CdkDropList, CdkScrollable],
   templateUrl: './time-grid-view.component.html',
   styleUrl: './time-grid-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -328,6 +330,10 @@ export class TimeGridViewComponent {
     if (ev.button !== 0) return;
     ev.stopPropagation();
     const p = this.gridPoint(ev);
+    if (kind === 'move' && !item.event.locked) {
+      this.grab = { dayIndex: p.dayIndex, min: p.min };
+      return; // CDK DragDrop takes it from here
+    }
     this.beginDrag({
       kind,
       event: item.event,
@@ -353,15 +359,66 @@ export class TimeGridViewComponent {
     });
   }
 
+  /** Where inside the grid the pointer took hold of the event being moved. */
+  private grab: { dayIndex: number; min: number } | null = null;
+  private movedAt = 0;
+
+  /** A click that ends a drag must not also open the event. */
+  protected openEvent(event: CalendarEvent): void {
+    if (Date.now() - this.movedAt > 250) this.eventClick.emit(event);
+  }
+
+  protected cdkStarted(_e: CdkDragStart): void {
+    this.movedAt = Date.now();
+    document.body.classList.add('cal-dragging');
+  }
+
+  /** CDK follows the pointer; the grid turns that position into a snapped slot and asks the scheduling rules about it. */
+  protected cdkMoved(e: CdkDragMove<CalendarEvent>): void {
+    const g = this.grab;
+    if (!g) return;
+    this.movedAt = Date.now();
+    const event = e.source.data;
+    const p = this.gridPointAt(e.pointerPosition.x - window.scrollX, e.pointerPosition.y - window.scrollY);
+    const deltaMin = snap(p.min - g.min);
+    const slot = this.slots()[p.dayIndex];
+    const deltaDays = slot.lane ? 0 : p.dayIndex - g.dayIndex;
+    const resources = slot.lane ? { ...(event.resources ?? {}), [this.laneDimension()]: slot.lane.id } : undefined;
+    const start = addMinutes(addDays(event.start, deltaDays), deltaMin);
+    const end = addMinutes(addDays(event.end, deltaDays), deltaMin);
+    const invalid = this.store.dropProblem({ ...event, start, end, resources: resources ?? event.resources });
+    this.preview.set({ id: event.id, start, end, resources, move: { dayIndex: p.dayIndex, invalid } });
+    document.querySelector('.cdk-drag-preview')?.classList.toggle('refused', !!invalid);
+  }
+
+  /** On release a valid drop is saved and the preview lands without a flight; a refused one flies back and says why. */
+  protected cdkReleased(e: CdkDragRelease<CalendarEvent>): void {
+    const event = e.source.data;
+    const preview = this.preview();
+    this.movedAt = Date.now();
+    document.body.classList.remove('cal-dragging');
+    this.preview.set(null);
+    this.grab = null;
+    if (!preview?.move) return;
+    if (preview.move.invalid) {
+      this.store.notify(preview.move.invalid);
+      return;
+    }
+    const next: CalendarEvent = { ...event, start: preview.start, end: preview.end, resources: preview.resources ?? event.resources };
+    const unchanged =
+      next.start.getTime() === event.start.getTime() &&
+      next.end.getTime() === event.end.getTime() &&
+      JSON.stringify(next.resources ?? {}) === JSON.stringify(event.resources ?? {});
+    if (unchanged) return;
+    document.querySelector<HTMLElement>('.cdk-drag-preview')?.classList.add('landing');
+    this.landedId.set(next.id);
+    setTimeout(() => this.landedId.set(null), 700);
+    void this.store.commitUpdate(next);
+  }
+
   protected isDragging(id: string): boolean {
     const p = this.preview();
     return p?.id === id && !p.move;
-  }
-
-  /** The original stays put as a faint placeholder while its copy floats. */
-  protected isMoving(id: string): boolean {
-    const p = this.preview();
-    return p?.id === id && !!p.move;
   }
 
   /** The event that just landed, so its block can flash once. */
@@ -435,17 +492,6 @@ export class TimeGridViewComponent {
     const p = this.gridPoint(ev);
 
     switch (d.kind) {
-      case 'move': {
-        const deltaMin = snap(p.min - d.anchorMin);
-        const slot = this.slots()[p.dayIndex];
-        const deltaDays = slot.lane ? 0 : p.dayIndex - d.anchorDay;
-        const resources = slot.lane ? { ...(d.event.resources ?? {}), [this.laneDimension()]: slot.lane.id } : undefined;
-        const start = addMinutes(addDays(d.event.start, deltaDays), deltaMin);
-        const end = addMinutes(addDays(d.event.end, deltaDays), deltaMin);
-        const invalid = this.store.dropProblem({ ...d.event, start, end, resources: resources ?? d.event.resources });
-        this.preview.set({ id: d.event.id, start, end, resources, move: { dayIndex: p.dayIndex, invalid } });
-        break;
-      }
       case 'resize-end': {
         let end = addMinutes(d.event.end, snap(p.min - d.anchorMin));
         const minEnd = addMinutes(d.event.start, MIN_DURATION);
@@ -508,10 +554,6 @@ export class TimeGridViewComponent {
       return;
     }
     if (!preview) return;
-    if (preview.move?.invalid) {
-      this.store.notify(preview.move.invalid);
-      return;
-    }
 
     const next: CalendarEvent = {
       ...d.event,
@@ -524,19 +566,21 @@ export class TimeGridViewComponent {
       next.end.getTime() === d.event.end.getTime() &&
       JSON.stringify(next.resources ?? {}) === JSON.stringify(d.event.resources ?? {});
     if (unchanged) return;
-    this.landedId.set(next.id);
-    setTimeout(() => this.landedId.set(null), 700);
     void this.store.commitUpdate(next);
   };
 
   private readonly onPointerCancel = (): void => this.endDrag();
 
   private gridPoint(ev: PointerEvent): { dayIndex: number; min: number } {
+    return this.gridPointAt(ev.clientX, ev.clientY);
+  }
+
+  private gridPointAt(clientX: number, clientY: number): { dayIndex: number; min: number } {
     const rect = this.cols().nativeElement.getBoundingClientRect();
     const n = this.slots().length;
-    const x = Math.min(Math.max(ev.clientX - rect.left, 0), rect.width - 1);
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width - 1);
     const dayIndex = Math.floor(x / (rect.width / n));
-    const min = Math.min(Math.max((ev.clientY - rect.top) / this.pxPerMin, 0), 1440);
+    const min = Math.min(Math.max((clientY - rect.top) / this.pxPerMin, 0), 1440);
     return { dayIndex, min };
   }
 

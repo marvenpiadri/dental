@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18n } from './core/i18n/i18n.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -8,15 +9,17 @@ import { RouterLink } from '@angular/router';
   host: { class: 'ds-page' },
   template: `
     <header class="ds-head">
-      <h1 class="ds-title">Page not found</h1>
+      <h1 class="ds-title">{{ t('notFound.title') }}</h1>
     </header>
     <div class="ds-body">
       <div class="ds-empty">
-        <h2>This page doesn’t exist</h2>
-        <p>The link may be old or mistyped.</p>
-        <a class="ds-btn ds-btn--primary" routerLink="/today">Go to Today</a>
+        <h2>{{ t('notFound.heading') }}</h2>
+        <p>{{ t('notFound.body') }}</p>
+        <a class="ds-btn ds-btn--primary" routerLink="/today">{{ t('notFound.cta') }}</a>
       </div>
     </div>
   `,
 })
-export class NotFoundComponent {}
+export class NotFoundComponent {
+  protected readonly t = inject(I18n).t;
+}

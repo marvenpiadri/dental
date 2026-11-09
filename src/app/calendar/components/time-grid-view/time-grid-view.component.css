@@ -221,6 +221,9 @@
 
 .slot-event {
   position: absolute;
+  /* position comes from variables: CDK clears inline top/left when a dragged element returns */
+  top: var(--ev-top);
+  left: var(--ev-left);
   z-index: 2;
 }
 
@@ -297,10 +300,30 @@
 }
 
 /* ---- drag polish ------------------------------------------------------------------ */
-/* the original stays as a faint placeholder; its copy floats and never re-flows the neighbours */
-.slot-event.ghosted {
+/* CDK keeps a faint placeholder in the original slot while the preview follows the pointer */
+.slot-event.cdk-drag-placeholder {
   opacity: 0.35;
-  transition: opacity 0.12s ease;
+}
+
+.slot-event.cdk-drag-preview {
+  z-index: 1000;
+  box-shadow: 0 0 0 1.5px var(--cal-focus);
+  cursor: grabbing;
+}
+
+/* a refused drop flies back; an accepted one lands where it was dropped */
+.slot-event.cdk-drag-preview.cdk-drag-animating {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.slot-event.cdk-drag-preview.landing.cdk-drag-animating {
+  transition: none;
+}
+
+.slot-event.cdk-drag-preview.refused {
+  opacity: 0.65;
+  outline: 2px dashed var(--cal-text);
+  outline-offset: -2px;
 }
 
 .float {
@@ -365,6 +388,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .float, .slot-event.ghosted { transition: none; }
+  .float, .slot-event.cdk-drag-preview.cdk-drag-animating { transition: none; }
   .slot-event.landed, .day-col { animation: none; }
 }
