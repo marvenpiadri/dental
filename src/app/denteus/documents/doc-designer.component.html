@@ -55,16 +55,18 @@
         <span class="label">{{ t('doc.sections') }}</span>
         <ul class="sections">
           @for (s of draft().order; track s; let first = $first; let last = $last) {
+            @if (s !== 'chart' || chartKinds.includes(kind())) {
             <li>
               <label class="check grow"><input type="checkbox" [checked]="!draft().hidden.includes(s)" (change)="toggleSection(s, $any($event.target).checked)" />{{ t(sectionKey[s]) }}</label>
               <button type="button" class="btn icon" [disabled]="first" [attr.aria-label]="t('doc.moveUp') + ': ' + t(sectionKey[s])" (click)="move(s, -1)"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
               <button type="button" class="btn icon" [disabled]="last" [attr.aria-label]="t('doc.moveDown') + ': ' + t(sectionKey[s])" (click)="move(s, 1)"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button>
             </li>
+            }
           }
         </ul>
         <span class="label">{{ t('doc.chartIn') }}</span>
         <div class="chips">
-          @for (k of kinds; track k) { <label class="check"><input type="checkbox" [checked]="draft().chartKinds.includes(k)" (change)="toggleChartKind(k, $any($event.target).checked)" />{{ t(kindKey[k]) }}</label> }
+          @for (k of chartKinds; track k) { <label class="check"><input type="checkbox" [checked]="draft().chartKinds.includes(k)" (change)="toggleChartKind(k, $any($event.target).checked)" />{{ t(kindKey[k]) }}</label> }
         </div>
       </div>
 

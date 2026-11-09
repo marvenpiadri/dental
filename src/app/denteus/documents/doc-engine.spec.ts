@@ -1,4 +1,4 @@
-import { DEFAULT_TEMPLATE, DocContent, DocTemplate, PRESETS, SectionId, normalizeTemplate, onAccent, renderDocument } from './doc-engine';
+import { DEFAULT_TEMPLATE, DOC_KINDS, DocContent, DocTemplate, PRESETS, SectionId, normalizeTemplate, onAccent, renderDocument } from './doc-engine';
 
 const doc = (over: Partial<DocContent> = {}): DocContent => ({
   kind: 'invoice', lang: 'en', dir: 'ltr', clinic: 'Clinic <One>', sender: ['Dr Amal'], title: 'Invoice', number: 'FA-1', subtitle: [],
@@ -40,9 +40,19 @@ describe('document engine', () => {
     expect(renderDocument(doc({ kind: 'invoice' }), DEFAULT_TEMPLATE, { chart: svg, preview: true })).not.toContain('id="chart"');
     const html = renderDocument(doc({ kind: 'report' }), DEFAULT_TEMPLATE, { chart: svg, preview: true });
     expect(html).toContain('id="chart"');
-    const t: DocTemplate = { ...DEFAULT_TEMPLATE, chartKinds: ['invoice'], order: ['chart', ...DEFAULT_TEMPLATE.order.filter((s): s is SectionId => s !== 'chart')] };
-    const first = renderDocument(doc(), t, { chart: svg, preview: true });
+    const t: DocTemplate = { ...DEFAULT_TEMPLATE, chartKinds: ['report'], order: ['chart', ...DEFAULT_TEMPLATE.order.filter((s): s is SectionId => s !== 'chart')] };
+    const first = renderDocument(doc({ kind: 'report' }), t, { chart: svg, preview: true });
     expect(at(first, 'id="chart"')).toBeLessThan(at(first, 'class="top"'));
+  });
+
+  it('never puts the tooth chart on a financial document, whatever the template says', () => {
+    const svg = '<svg id="chart"></svg>', all: DocTemplate = { ...DEFAULT_TEMPLATE, chartKinds: [...DOC_KINDS], hidden: [] };
+    for (const kind of ['invoice', 'receipt', 'statement', 'prescription'] as const) expect(renderDocument(doc({ kind }), all, { chart: svg, preview: true })).not.toContain('id="chart"');
+    for (const kind of ['report', 'letter', 'quote'] as const) expect(renderDocument(doc({ kind }), all, { chart: svg, preview: true })).toContain('id="chart"');
+  });
+
+  it('drops financial kinds from a saved template when it is read back', () => {
+    expect(normalizeTemplate({ id: 'x', name: 'Old', chartKinds: ['invoice', 'receipt', 'report', 'statement'] })!.chartKinds).toEqual(['report']);
   });
 
   it('prints with the page size and opens the print dialog; the preview does not', () => {

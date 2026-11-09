@@ -17,7 +17,7 @@ describe('Documents', () => {
   it('keeps a saved template and the choice of default per kind', async () => {
     const docs = setup();
     await new Promise((r) => setTimeout(r)); // let the first load finish
-    await docs.save({ ...PRESETS[0], id: 'mine', name: 'Mine', builtin: undefined, chartKinds: ['invoice'] });
+    await docs.save({ ...PRESETS[0], id: 'mine', name: 'Mine', builtin: undefined, chartKinds: ['report'] });
     await docs.setDefault('invoice', 'mine');
     expect(docs.templateFor('invoice').name).toBe('Mine');
     expect(docs.templateFor('quote').id).toBe(DEFAULT_TEMPLATE.id);

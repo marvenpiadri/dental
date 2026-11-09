@@ -3,7 +3,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
-import { DOC_KINDS, DOC_STYLES, DocKind, DocTemplate, PRESETS, SECTIONS, SectionId, normalizeTemplate, renderDocument } from './doc-engine';
+import { CHART_KINDS, DOC_KINDS, DOC_STYLES, DocKind, DocTemplate, PRESETS, SECTIONS, SectionId, normalizeTemplate, renderDocument } from './doc-engine';
 import { Documents } from './documents.service';
 import { sampleChart, sampleDoc } from './sample';
 
@@ -27,7 +27,7 @@ export class DocDesignerComponent {
   private readonly auth = inject(AuthService);
   private readonly sanitizer = inject(DomSanitizer);
 
-  protected readonly kinds = DOC_KINDS; protected readonly styles = DOC_STYLES; protected readonly sections = SECTIONS; protected readonly presets = PRESETS;
+  protected readonly kinds = DOC_KINDS; protected readonly chartKinds = CHART_KINDS; protected readonly styles = DOC_STYLES; protected readonly sections = SECTIONS; protected readonly presets = PRESETS;
   protected readonly kindKey = KIND_KEY; protected readonly sectionKey = SECTION_KEY; protected readonly styleKey = STYLE_KEY; protected readonly swatches = SWATCHES;
   protected readonly canEdit = computed(() => this.auth.can('settings.edit'));
 

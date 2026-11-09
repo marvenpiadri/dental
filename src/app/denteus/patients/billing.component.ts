@@ -34,7 +34,6 @@ export class BillingComponent {
 
   protected readonly i18n = inject(I18n);
   private readonly docs = inject(Documents);
-  readonly chart = input<unknown>();
   private readonly store = inject(DentalStore);
   private readonly auth = inject(AuthService);
   protected readonly t = this.i18n.t;
@@ -130,7 +129,7 @@ export class BillingComponent {
       total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
       legal: this.legal(),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
-    }, tpl, this.docs.chartFor('invoice', tpl, this.chart(), 'status'));
+    }, tpl);
     this.docs.print(html);
   }
 
@@ -148,7 +147,7 @@ export class BillingComponent {
       date: day(new Date().toISOString()), lang: this.i18n.lang(), total: this.i18n.money(this.sums().charged),
       lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? (i.scope ? scopeText(i, t) : ''), name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
       labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') },
-    }, tpl, this.docs.chartFor('statement', tpl, this.chart(), 'status'));
+    }, tpl);
     this.docs.print(html);
   }
 
@@ -171,7 +170,7 @@ export class BillingComponent {
       labels: { reference: t('bill.reference'), title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') },
       lang: this.i18n.lang(),
       dir: 'ltr', // shortcut: receipts are left-to-right until an RTL language is added
-    }, tpl, this.docs.chartFor('receipt', tpl, this.chart(), 'status'));
+    }, tpl);
     this.docs.print(html);
   }
 

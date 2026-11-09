@@ -246,7 +246,7 @@
               @case ('visits') {
                 <section class="card" aria-labelledby="visits-title">
                   <header class="card-head"><h2 class="card-title" id="visits-title"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>{{ t('profile.visits') }}</h2></header>
-                  <den-visit-notes [patientName]="p.fullName" [chart]="p.odontogram" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
+                  <den-visit-notes [patientName]="p.fullName" [notes]="p.visits ?? []" [appointments]="appointments()" [startFor]="note() ?? null" (edit)="store.changeVisits(p.id, $event)" />
                 </section>
                 <section class="card" aria-labelledby="letters-title">
                   <header class="card-head"><h2 class="card-title" id="letters-title"><i class="fa-solid fa-file-signature" aria-hidden="true"></i>{{ t('profile.letters') }}</h2></header>
@@ -269,7 +269,7 @@
               @case ('billing') {
                 <section class="card" aria-labelledby="bill-title">
                   <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
-                  <den-billing [patientName]="p.fullName" [chart]="p.odontogram" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
+                  <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
                 </section>
               }
             }

@@ -5,6 +5,8 @@ export type DocKind = 'invoice' | 'quote' | 'receipt' | 'statement' | 'prescript
 export const DOC_KINDS: readonly DocKind[] = ['invoice', 'quote', 'receipt', 'statement', 'prescription', 'report', 'letter'];
 
 export type SectionId = 'sender' | 'title' | 'facts' | 'body' | 'chart' | 'notes' | 'signature';
+/** The only documents that may carry the tooth chart: a clinical report, a referral letter and a treatment plan. Invoices, receipts, statements and prescriptions never do. */
+export const CHART_KINDS: readonly DocKind[] = ['report', 'letter', 'quote'];
 export const SECTIONS: readonly SectionId[] = ['sender', 'title', 'facts', 'body', 'chart', 'notes', 'signature'];
 
 export type DocStyle = 'modern' | 'minimal' | 'bold';
@@ -94,7 +96,7 @@ export function normalizeTemplate(raw: unknown): DocTemplate | null {
     headerNote: String(r.headerNote ?? '').slice(0, 300), footerNote: String(r.footerNote ?? '').slice(0, 300),
     order,
     hidden: (Array.isArray(r.hidden) ? r.hidden : []).filter((s): s is SectionId => (SECTIONS as readonly string[]).includes(s)),
-    chartKinds: (Array.isArray(r.chartKinds) ? r.chartKinds : []).filter((k): k is DocKind => DOC_KINDS.includes(k as DocKind)),
+    chartKinds: (Array.isArray(r.chartKinds) ? r.chartKinds : []).filter((k): k is DocKind => CHART_KINDS.includes(k as DocKind)),
   };
 }
 
@@ -168,7 +170,7 @@ export interface RenderOptions {
 export function renderDocument(c: DocContent, t: DocTemplate = DEFAULT_TEMPLATE, o: RenderOptions = {}): string {
   const senderHtml = `<div class="sender"><div class="brand">${t.showLogo && t.logo ? `<img src="${esc(t.logo)}" alt="">` : ''}<p class="clinic">${esc(c.clinic)}</p></div>${c.sender.filter(Boolean).map((l) => `<p>${esc(l)}</p>`).join('')}${t.headerNote ? `<p class="header-note">${esc(t.headerNote)}</p>` : ''}</div>`;
   const titleHtml = `<div class="title"><h1>${esc(c.title)}${c.number ? ` N° ${esc(c.number)}` : ''}</h1>${c.subtitle.filter(Boolean).map((l) => `<p>${esc(l)}</p>`).join('')}</div>`;
-  const shown = (s: SectionId): boolean => !t.hidden.includes(s) && (s !== 'chart' || (!!o.chart && t.chartKinds.includes(c.kind)))
+  const shown = (s: SectionId): boolean => !t.hidden.includes(s) && (s !== 'chart' || (!!o.chart && CHART_KINDS.includes(c.kind) && t.chartKinds.includes(c.kind)))
     && (s !== 'signature' || !!c.signature) && (s !== 'notes' || c.notes.some(Boolean)) && (s !== 'facts' || c.facts.some((f) => f.value));
   const order = t.order.filter(shown);
   const out: string[] = [];

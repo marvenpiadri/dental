@@ -33,7 +33,6 @@ export class VisitNotesComponent {
   protected readonly canEdit = computed(() => this.auth.can('clinical.edit'));
   protected readonly i18n = inject(I18n);
   private readonly docs = inject(Documents);
-  readonly chart = input<unknown>();
   protected readonly t = this.i18n.t;
   protected readonly typeKey = typeKey;
   protected readonly medications = MEDICATIONS;
@@ -165,7 +164,7 @@ export class VisitNotesComponent {
       lines: note.prescription ?? [],
       labels: { title: t('rx.title'), patient: t('receipt.patient'), date: t('receipt.date'), dentist: t('rx.dentist'), signature: t('rx.signature') },
       lang: this.i18n.lang(),
-    }, tpl, this.docs.chartFor('prescription', tpl, this.chart(), 'status'));
+    }, tpl);
     this.docs.print(html);
   }
 }

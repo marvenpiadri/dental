@@ -3,7 +3,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { ClinicDatabase } from '../services/clinic-database.service';
 import { WISDOM_TEETH, isBlankTooth, newChart, readChart } from '../odontogram/engine/chart';
 import { chartSvg } from './chart-svg';
-import { DEFAULT_TEMPLATE, DOC_KINDS, DocKind, DocTemplate, PRESETS, normalizeTemplate } from './doc-engine';
+import { DEFAULT_TEMPLATE, DOC_KINDS, DocKind, DocTemplate, PRESETS, normalizeTemplate, CHART_KINDS } from './doc-engine';
 
 type Mode = 'status' | 'plan';
 
@@ -53,7 +53,7 @@ export class Documents {
 
   /** The chart picture for a document, or nothing when this template does not carry it or the patient has no readable chart. */
   chartFor(kind: DocKind, tpl: DocTemplate, raw: unknown, mode: Mode = 'status'): string | undefined {
-    if (!tpl.chartKinds.includes(kind)) return undefined;
+    if (!CHART_KINDS.includes(kind) || !tpl.chartKinds.includes(kind)) return undefined;
     const chart = readChart(raw).chart ?? newChart(); // a patient with nothing recorded still gets the empty chart
     const teeth = mode === 'plan' ? chart?.plan : chart?.status;
     if (!chart || !teeth) return undefined;
