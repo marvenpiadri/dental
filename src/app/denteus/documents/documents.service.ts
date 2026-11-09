@@ -64,6 +64,15 @@ export class Documents {
     });
   }
 
+  /** The chart on its own, for export: independent of templates and billing. `blank` draws an empty chart whatever is recorded. */
+  standaloneChart(raw: unknown, blank = false): string {
+    const chart = blank ? newChart() : (readChart(raw).chart ?? newChart());
+    return chartSvg({
+      teeth: chart.status, hide: blank ? undefined : new Set(WISDOM_TEETH.filter((n) => isBlankTooth(chart, n))), // a blank form shows all 32 teeth
+      title: this.i18n.t('doc.chart.status'), label: (k) => this.i18n.t(`cs.${k}` as Key),
+    });
+  }
+
   /** Opens the document in a new tab, which prints itself. Silent when the browser blocks the pop-up. */
   print(html: string): void {
     const win = window.open('', '_blank');

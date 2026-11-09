@@ -3,6 +3,7 @@ import { I18n, type Key } from '../../core/i18n/i18n.service';
 import { Documents } from '../documents/documents.service';
 import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
+import { chartPageHtml } from '../documents/chart-export';
 import { exportFhir, exportJson, importFhir, importJson } from './engine/io';
 import { compareExaminations, makeExamination, suggestedDiagnoses, type Examination, type SuggestedDiagnosis } from './engine/exam';
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
@@ -329,6 +330,17 @@ export class DentalChartComponent {
     const a = document.createElement('a');
     a.href = url; a.download = `dental-chart-${this.patientId()}.${kind === 'json' ? 'json' : 'fhir.json'}`; a.click();
     URL.revokeObjectURL(url);
+  }
+  protected exportSvg(blank: boolean): void {
+    const url = URL.createObjectURL(new Blob([this.docs.standaloneChart(this.raw(), blank)], { type: 'image/svg+xml' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `dental-chart-${blank ? 'blank' : this.patientId()}.svg`; a.click();
+    URL.revokeObjectURL(url);
+  }
+  protected printChart(blank: boolean): void {
+    this.docs.print(chartPageHtml(this.docs.standaloneChart(this.raw(), blank), {
+      title: this.t('dc.export.title'), patient: blank ? '' : this.patientName(), date: blank ? '' : (this.viewing()?.date ?? new Date().toISOString().slice(0, 10)), lang: this.i18n.lang(),
+    }));
   }
   protected printReport(): void {
     const t = this.t, c = this.shown(), lang = this.i18n.lang();
