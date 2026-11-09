@@ -65,3 +65,33 @@ describe('invoice legal footer', () => {
     expect(html.match(/<section class="notes">[\s\S]*?<\/section>/)![0].match(/<p>/g)).toHaveLength(2);
   });
 });
+
+describe('invoice rules: clinic-wide and edge cases', () => {
+  it('never reuses a number across patients, even after a cancellation', () => {
+    const a = issueInvoice([item('a', 100)], label, [], now)!;
+    const b = issueInvoice([item('b', 50)], label, [a], now)!; // a second patient: all invoices are passed in
+    expect([a.number, b.number]).toEqual(['FA-2026-0001', 'FA-2026-0002']);
+    const { creditNote } = cancelInvoice(a, 'Wrong patient', [a, b], now)!;
+    expect(creditNote.number).toBe('AV-2026-0001');
+    expect(issueInvoice([item('c', 10)], label, [a, b, creditNote], now)!.number).toBe('FA-2026-0003');
+  });
+  it('adds decimals without float noise', () => {
+    const inv = issueInvoice([item('a', 0.1), item('b', 0.2)], label, [], now)!;
+    expect(inv.total).toBe(0.3);
+    expect(invoiceState(inv, [pay('p', 0.1, { invoiceId: inv.id }), pay('q', 0.2, { invoiceId: inv.id })])).toEqual({ paid: 0.3, remaining: 0, state: 'paid' });
+  });
+  it('points the credit note at its invoice, with negated lines, and cannot be cancelled again', () => {
+    const inv = issueInvoice([item('a', 100)], label, [], now)!;
+    const { marked, creditNote } = cancelInvoice(inv, 'Error', [inv], now)!;
+    expect(creditNote).toMatchObject({ cancelsId: inv.id, total: -100, kind: 'credit-note' });
+    expect(creditNote.lines[0].price).toBe(-100);
+    expect(cancelInvoice(marked, 'Again', [marked, creditNote], now)).toBeNull();
+    expect(cancelInvoice(creditNote, 'Nope', [marked, creditNote], now)).toBeNull();
+    expect(uninvoiced([item('a', 100)], [marked, creditNote]).length).toBe(1); // billable again after cancellation
+  });
+  it('refuses a blank reason and a second void', () => {
+    expect(voidPayment(pay('p', 5), '   ', now)).toBeNull();
+    const v = voidPayment(pay('p', 5), 'Typo', now)!;
+    expect(voidPayment(v, 'Again', now)).toBeNull();
+  });
+});
