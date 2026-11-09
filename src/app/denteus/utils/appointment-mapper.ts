@@ -13,6 +13,8 @@ export interface MapContext {
   /** What the day view uses as columns; the other dimension is written on the card instead. */
   groupBy: GroupBy;
   t: (key: Key) => string;
+  /** The calendar tint of a chair, so a block says which chair it is in. */
+  chairTint: (chairId: string) => string;
 }
 
 /** One appointment, drawn once: the colour is the dentist, the lane is the chair or the dentist. */
@@ -34,6 +36,7 @@ export function toCalendarEvent(a: Appointment, ctx: MapContext): CalendarEvent 
     // "Scheduled" is the default state, so it gets no badge; every other state does
     badge: a.status === 'scheduled' ? undefined : { icon: meta.icon, label: ctx.t(STATUS_LABEL[a.status]) },
     tone: meta.tone,
+    tint: ctx.chairTint(a.chairId),
     locked: !movable,
     lockedReason: STATUS_LOCK[a.status] && ctx.t(STATUS_LOCK[a.status]!),
   };

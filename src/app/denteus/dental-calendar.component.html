@@ -3,6 +3,14 @@
     <cal-sidebar brand="" [heading]="t('dcal.dentists')">
       <den-waiting-room [appointments]="waiting()" [inTreatment]="inTreatment()" (select)="openFromWaiting($event)" />
 
+      @if (chairLegend().length > 1) {
+        <ul class="chairs" [attr.aria-label]="t('dcal.chairs')">
+          @for (c of chairLegend(); track c.id) {
+            <li><span class="swatch" [style.background]="c.color"></span>{{ c.name }}</li>
+          }
+        </ul>
+      }
+
       <label class="filter">
         <input type="checkbox" [checked]="showCancelled()" (change)="showCancelled.set($any($event.target).checked)" />
         {{ t('dcal.showCancelled') }}

@@ -21,6 +21,7 @@ import { isSameDay } from '../calendar/utils/date.utils';
 import { I18n } from '../core/i18n/i18n.service';
 import { ThemeService } from '../core/theme.service';
 import { parseIsoDate } from './patients/patient-rules';
+import { chairTint } from './utils/chair-tint';
 import { AppointmentEditorComponent, EditorProblem } from './components/appointment-editor/appointment-editor.component';
 import { AppointmentPanelComponent } from './components/appointment-panel/appointment-panel.component';
 import { WaitingRoomComponent } from './components/waiting-room/waiting-room.component';
@@ -85,6 +86,7 @@ export class DentalCalendarComponent implements OnInit {
   protected readonly showCancelled = signal(false);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly editor = signal<EditorState | null>(null);
+  protected readonly chairLegend = computed(() => this.dental.chairs().map((c) => ({ id: c.id, name: c.name, color: chairTint(this.dental.chairs(), c.id) })));
   protected readonly sidebarOpen = signal(false);
 
   protected readonly selected = computed(() => this.dental.appointments().find((a) => a.id === this.selectedId()) ?? null);
@@ -113,6 +115,7 @@ export class DentalCalendarComponent implements OnInit {
         dentists: this.dental.dentistMap(),
         chairs: this.dental.chairMap(),
         groupBy: this.groupBy(),
+        chairTint: (id: string) => chairTint(this.dental.chairs(), id),
         t: this.t,
       };
       const showCancelled = this.showCancelled();

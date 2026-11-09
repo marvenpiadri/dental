@@ -290,6 +290,8 @@ export interface Chair {
   id: string;
   locationId?: string;
   name: string;
+  /** Optional: overrides the default tint this chair gets in the calendar. */
+  color?: string;
 }
 
 export type AppointmentStatus =

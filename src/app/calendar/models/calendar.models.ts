@@ -37,6 +37,8 @@ export interface CalendarEvent {
   /** Small status marker; always an icon plus a text label so it never relies on colour alone. */
   badge?: { icon: IconName; label: string };
   tone?: EventTone;
+  /** Fills the block when it should differ from the calendar colour (which stays the left bar). */
+  tint?: string;
   /** Locked events can be opened but not dragged or resized. */
   locked?: boolean;
   lockedReason?: string;

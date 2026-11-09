@@ -52,6 +52,7 @@ interface GridItem {
   key: string;
   event: CalendarEvent;
   color: string;
+  tint: string | null;
   top: number;
   height: number;
   left: string;
@@ -207,6 +208,7 @@ export class TimeGridViewComponent {
           key: `${s.event.id}@${slot.key}`,
           event: s.event,
           color: this.store.colorOf(s.event.calendarId),
+          tint: s.event.tint ?? null,
           top: s.startMin * this.pxPerMin + 1,
           height,
           left: `calc(${(s.col / s.cols) * 100}% + 2px)`,

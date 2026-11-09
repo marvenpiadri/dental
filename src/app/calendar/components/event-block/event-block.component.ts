@@ -20,6 +20,7 @@ import { CalIconComponent, IconName } from '../cal-icon/cal-icon.component';
     '[class.tone-attention]': "tone() === 'attention'",
     '[class.tone-active]': "tone() === 'active'",
     '[style.--c]': 'color()',
+    '[style.--t]': 'tint()',
     '[attr.aria-label]': 'ariaLabel()',
     role: 'button',
     tabindex: '0',
@@ -28,6 +29,7 @@ import { CalIconComponent, IconName } from '../cal-icon/cal-icon.component';
 export class EventBlockComponent {
   readonly title = input.required<string>();
   readonly color = input.required<string>();
+  readonly tint = input<string | null>(null);
   readonly time = input('');
   readonly subtitle = input('');
   readonly badge = input<{ icon: IconName; label: string } | null>(null);
