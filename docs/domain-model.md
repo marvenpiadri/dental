@@ -55,11 +55,18 @@ Phase 2 is local only (IndexedDB in the browser). This file records what each re
 
 **Google Business Profile, one connection per clinic.** OAuth with the clinic's own Google account (Business Profile APIs). Store `clinic_google(clinic_id, account_id, location_id, refresh_token_ref, connected_at, last_sync_at)`. A sync job pulls name, address, hours, phone, categories, photos and reviews/ratings into `public_profile` tables; reviews are shown with Google attribution and refreshed per Google's display policy (no long-term copy beyond what the terms allow). The public SEO page `/c/:slug` renders from those tables and emits `Dentist`/`LocalBusiness` JSON-LD. The clinic can disconnect, which deletes tokens and cached Google content. Both integrations work with or without any marketing agency.
 
-## Added since this note was written (frontend, for the backend design)
 
-- Visit notes: `id`, `date`, `appointmentId?`, `content`, `revisions[]` (previous contents with timestamps), `voided?` with reason. Prescription lines: drug, dosage, duration, free text allowed.
-- Appointment-to-act link: `TreatmentItem.appointmentId?` ties a planned or done act to the visit it was recorded in. Routine acts need no tooth or chart.
-- Chair colour (`Chair.color?`) is a display field.
-- Payments are offline records (method, reference, voided with reason); invoices are cancelled by credit note, numbers are never reused.
-- Roles, permissions and the staff activity log are frontend-only today. The backend must own authentication, authorisation and an append-only audit log.
-- This file remains a design note for a backend that does not exist yet.
+## Country-aware model (design only; no backend implementation yet)
+
+Dontalist is international by architecture and Morocco-first in delivery. Keep one universal CRM schema and add country-specific capabilities behind a country-pack boundary.
+
+- Add an ISO 3166-1 alpha-2 `country_code` to the clinic record. Country is a clinic attribute, not a dentist profile attribute.
+- Keep country, interface language, currency and time zone separate. Do not infer one from another.
+- If geographic selectors are backed by imported reference data, use a compact hierarchy model (country plus parent-linked administrative areas with a level/type), not a separate table for each country's province/city hierarchy. Preserve source identifiers and licence/attribution metadata.
+- The geographic dataset mentioned as "2piclock" has not yet been identified. Do not choose or import it until the exact URL, data coverage, update policy and licence are verified.
+- Do not create one database table for every country feature. Country pack availability can be represented through a small configuration/registry and country-specific modules; the exact persistence model should follow the actual workflows.
+- Moroccan insurance workflows (CNSS, CNOPS, FAR and other relevant mutuelles) are intended for the Morocco pack only. This supersedes the earlier product decision to remove them permanently. Individual forms and rules remain subject to current requirements research before implementation.
+- The current model assumes MAD and lacks invoice/payment tax fields. Before enabling a second country, introduce explicit currency codes for monetary records and verify country-specific invoice/tax requirements. Do not silently reinterpret historical MAD amounts.
+- Country selection is not a compliance guarantee. Each pack needs a documented scope, source references, verification date and known limitations.
+
+See [product-direction-country-packs.md](product-direction-country-packs.md). This section is a planning note, not a migration or instruction to start Phase 3.

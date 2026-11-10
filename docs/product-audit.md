@@ -1,63 +1,74 @@
-# Product audit (frontend), 6 November 2026
+# Dontalist product audit — current frontend snapshot
 
-Scope: every route, nav item, settings area and workflow reachable in the app today. Backend, database and online payments are out of scope by decision.
+**Updated:** 10 November 2026  
+**Repository:** `marvenpiadri/dental`  
+**Branch:** `feat/patient-file-acts`
 
-## A. Inventory
+This document is a source-level product inventory, not a release certification. It consolidates the repository audit and the later calendar changes. It does not claim that a fresh local build, full test run or browser acceptance pass was performed by this audit. See [repository-audit-2026-11-10.md](repository-audit-2026-11-10.md) for evidence and limits.
 
-| Route | What it does | Status |
-|---|---|---|
-| `/today` | Day dashboard: booked, waiting room, upcoming list, WhatsApp reminders and recall list (logged) | Complete |
-| `/calendar` | Strict calendar, dentists and chairs, appointment editor, statuses | Complete, kept as is |
-| `/patients` | List with search, filters (all, today, alerts, archived), sort | Complete |
-| `/patients/new`, `/:id/edit` | Registration and edit form with validation and duplicate check | Complete |
-| `/patients/:id` (+ 7 tabs) | Overview, chart (odontogram + periodontogram), appointments, payments and invoices, quotes, visit notes (+ letters), imaging and files | Complete; imaging viewer (zoom, invert, browse) and visit-note revision history added, not yet browser-tested |
-| `/practice` | Tasks, implant lots, sterilization, expenses, stock, lab orders | Complete for current scope |
-| `/reports` | Revenue series, per dentist, per payment method, CSV | Complete |
-| `/setup/clinic` | Clinic name, address, phone, email | New, complete |
-| `/setup/team` | Six roles, grouped permissions, per-person changes, suspension, activity log | Complete (frontend-only security) |
-| `/setup/schedule` | Opening hours, chairs | Complete |
-| `/setup/services` | Act catalog and prices, invoice legal details | Complete |
-| `/setup/messaging` | Clinic wording for the three WhatsApp messages | New, complete |
-| `/setup/integrations` | Google Business Profile, WhatsApp Cloud API: honest "Not connected, needs the online version" | New; informational only |
-| `/setup/workspace` | Theme, language, patient-file tabs, 3D toggle, backup and restore | Complete |
-| sign-in gate, 404 | Role sign-in; not-found page | Complete |
+## 1. Product areas represented in the frontend
 
-## B. Gaps found and what was done
-
-| Gap | Result |
+| Area | Current scope |
 |---|---|
-| No clinic identity or contact settings | Added `/setup/clinic`; name feeds every printed document |
-| No invoice legal details (ICE, bank, note) | Added; printed on invoices |
-| WhatsApp wording fixed in code | Editable per clinic with placeholders; falls back to built-ins |
-| Integrations not visible | Status screen, no fake connect button |
-| Settings was one long page, nav said "Clinic" | Seven sections; nav says Settings |
-| No way to remove a patient | Archive and restore; records kept; hidden from list and appointment search |
-| No invoices, payment voiding or references | Built and verified (earlier in this phase) |
-| No consent or message history | Built and verified |
-| No certificates or referral letters | Built and verified |
-| Logo | Official logo in rail, sign-in, favicon, app icons, printed documents |
+| Today | Day dashboard, waiting-room state, upcoming appointments, reminders/recalls and unpaid-balance visibility |
+| Calendar | Day/week/month/year views, dentists/chairs, appointment editing, statuses, drag movement, resize/create interactions and waiting room |
+| Patients | Search, filters, registration, editing, archive/restore and patient-file navigation |
+| Patient file | Overview, odontogram/periodontogram, appointments, acts/treatment plan, billing, quotes, visits, letters, imaging and documents |
+| Practice | Tasks, stock, sterilisation, implant traceability, expenses and lab orders |
+| Reports | Revenue and payment reporting, including CSV export |
+| Settings | Clinic identity, team/roles, schedule, services/billing, messaging, integrations and workspace preferences |
+| Public clinic profile | Clinic profile preview and server-rendered public-page/SEO structure; live Google Business Profile synchronisation requires backend/OAuth work |
 
-## C. Still open (frontend)
+## 2. Source-confirmed functionality
 
-1. ~~Appointment durations~~ Done: Settings → Schedule sets the starting length per appointment type.
-2. ~~Payment methods~~ Done: Settings → Services & billing enables methods (at least one stays on). Currency stays MAD.
-3. ~~Notification preferences~~ Done in the only form that is real today: Settings → Messaging chooses which Today lists show (visit reminders 1–3 days ahead or off, unpaid balances, check-up recall). Nothing is sent automatically; the clinic presses send in WhatsApp.
-4. Clinical preferences (default chart numbering is on the chart; no clinic-wide default).
-5. Stock thresholds are per item on the Practice page; no Settings entry (intentional).
-6. Periodontogram row-visibility settings and perio PDF export from the reference library.
-7. Imaging viewer tools (zoom, side-by-side), prosthesis case file.
-8. ~~Visit-note corrections overwrite the note~~ Fixed: corrections keep the note id and date and store the previous content as a revision; notes can be voided with a reason.
-9. Keyboard and screen-reader audit of the whole app; dark mode check of Practice, Reports and Settings.
-10. Clinic logo upload (the Dontalist logo is fixed).
+- Routine dental acts can be recorded from an appointment without selecting a tooth or opening a chart; they link to the appointment and patient treatment plan.
+- Planned treatment can be marked done without duplicating the treatment item.
+- Calendar event movement uses Angular CDK; custom pointer handling remains for resize, drag-to-create and all-day movement.
+- Visit-note corrections preserve prior content in revisions; notes can be voided with a reason.
+- Prescription lines support free-text medication entry, basic suggestions, dosage/duration fields and printing. The current static suggestions are not a maintained national medication catalogue.
+- Basic stock quantity/minimum-threshold tracking and low-stock alerts exist.
+- The Practice task list is a simple checklist.
+- The clinic store uses IndexedDB. The Angular service worker caches the production app shell/assets.
+- Patient file sections include overview, acts/chart, appointments, billing, quotes, visits and documents.
 
-## D. Needs backend or external accounts
+## 3. Remaining validation and product gaps
 
-Google Business Profile sync and public clinic page, WhatsApp Cloud API sending and delivery status, real staff authentication, multi-device sync, server backups. See `docs/domain-model.md`.
+These are gaps or validation candidates, not automatic instructions to expand scope.
 
-## E. Checks run
+| Area | Current limitation / next check |
+|---|---|
+| Calendar | Verify CDK movement does not conflict with custom resize/create gestures; test invalid-drop rollback, overlap rules, keyboard use and reduced motion |
+| End-to-end clinic day | Run a complete patient → appointment → visit → act → invoice → payment workflow in the browser |
+| Printing | Inspect real print/PDF output for invoices, quotes, certificates/referrals and other clinic documents, not only generated HTML |
+| Accessibility | Complete keyboard, focus, labels and screen-reader review |
+| Themes/locales | Check all routes in light/dark and EN/FR; Arabic needs a separate RTL and terminology pass before being offered |
+| Inventory | Current implementation is basic; do not expand into ERP without validated clinic demand |
+| Tasks | Current implementation is a checklist; add assignment/workflow complexity only if required |
+| Public clinic data | Google Business Profile OAuth/synchronisation and server-readable publishing require backend work |
+| Backend | Authentication, server-side authorisation, tenant isolation, PostgreSQL persistence, multi-device sync, secure file storage and server backups remain deferred |
 
-Unit tests 407 pass. Production build passes (SSR). No lint tool is configured in this project, so no lint result exists. Browser runs this session: odontogram, invoices and payments, consent and message log, letters, settings sections, archive and restore, French + dark + phone sweep of the eight patient tabs.
+## 4. Product boundaries
 
-## Direction change
+- Desktop and tablet are the V1 targets; a separate phone app can come later.
+- One clinic/location per account.
+- The only chart modules are odontogram and periodontogram.
+- Routine acts must remain recordable without chart/tooth selection.
+- Payments are offline/manual; no online payment processing.
+- Do not add separate endodontic, orthodontic, implant, occlusion, TMJ or soft-tissue chart modules.
+- Do not turn the Practice stock list into a full pharmacy or purchasing ERP.
 
-CNSS/CNOPS support was dropped permanently: no forms tab, generator, templates, PDF libraries or `clinicalRecords` store. The product name is Dontalist. Backend work stays paused.
+## 5. Country strategy
+
+Dontalist is international by architecture and Morocco-first in delivery. The universal CRM remains shared; country-specific capabilities are delivered through country packs.
+
+The previous decision to permanently exclude CNSS/CNOPS/FAR reimbursement workflows has been superseded. Relevant insurance administration is now planned for the **Morocco country pack only**. The exact insurer forms, fields, supporting documents, nomenclature and update requirements still need research and validation before implementation.
+
+See [product-direction-country-packs.md](product-direction-country-packs.md).
+
+## 6. Work split
+
+**Good independent work before backend:** documentation reconciliation, product requirements, country-pack definitions, data-source/licence checks, document inventories, acceptance criteria and scope decisions.
+
+**Keep with Claude:** complex Angular changes, local browser validation, visual regression, test/build execution, SSR verification and difficult debugging.
+
+No statement in this document should be interpreted as a claim that a backend or country-specific insurance integration already exists.

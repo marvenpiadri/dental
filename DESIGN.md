@@ -2,25 +2,25 @@
 
 ## The one idea
 
-A clinic app should feel like a ruled ledger: white against black, structure drawn with 1px lines, almost no decoration. Two zones keep that honest without making every page look like a spreadsheet.
+A clinic app should feel like a ruled ledger: black and white, structure drawn with 1px lines, minimal decoration. The grid is the visual foundation; controls remain usable and may have their own corner treatment.
 
-| Zone | What | Rules |
-|---|---|---|
-| **Strict** | The nav rail, every page header, page edges, **the calendar** | 1px borders only. No padding outside boxes. 100% width and height. The header is always 64px so its bottom line runs into the rail's logo cell. |
-| **Free** | The content of a page (cards, forms, lists) | Tinted canvas, rounded cards (`--radius-card`), padding, icons, status chips. |
+| Rule | Application |
+|---|---|
+| **Strict grid** | Page frame, navigation rail, headers, panel boundaries and calendar structure use clear 1px divisions and aligned edges. |
+| **Flexible controls** | Buttons, inputs, selects, popovers, chips, tooltips, selected states and event controls may use controlled corner radii when it improves usability. |
+| **Monochrome primary** | Primary actions and active navigation use black/white theme tokens. Green is not the default accent. |
+| **Semantic status** | Success, warning, information and danger colours are reserved for small status indicators and always have a text/icon cue. |
 
-The calendar is the exception inside the exception: its grid keeps the strict ruled structure even though it is page content. Its controls and appointment blocks use the shared control radius (`--radius-control`, 8px); the grid lines, gutters and headers stay square.
+The page header is 64px and aligns with the navigation rail. Calendar structure stays square, while each event and interactive control owns its own corner treatment. Do not apply blanket radius resets to every descendant of the calendar.
 
-### The standard for the free zone (Dentisto-style: simple and calm)
+### Layout and controls
 
-Every page follows the same recipe, set once in `src/styles.css` so new pages inherit it:
-
-- **Grid, not floating cards**: pages have no outer padding and no gaps. Panels (`.card`) sit edge to edge, separated only by 1px lines, square corners. Wide pages use `.grid-wide` (two columns) or `.grid-2`/`.grid-kpi`; tab strips are edge to edge with an underline on the open tab.
-- **Panel title** 16px bold (`.card-title`), no rule under it. The page title lives in the 64px header, not in a panel.
-- **Forms**: bold 13px label above a 44px field (`.field`, `.label`, `.input`), one column, full width, two columns only for short pairs. Border `--app-field`.
-- **Tables**: grey header row, zebra rows, no vertical lines (`.zebra` on any grid of rows).
-- **One accent** (`--app-accent`) for primary actions and the active state. It is monochrome (near-black in light, near-white in dark), so billing and other primary actions are never green by default. Change the variable and the whole app follows.
-- Patient file: social-style cover, stats strip and edge-to-edge bordered cells (strict-style grid) for the page body.
+- **Grid, not floating cards**: panels sit edge to edge and are separated by 1px borders. Avoid decorative floating-card layouts and unnecessary gaps.
+- **Panel title**: 16px bold (`.card-title`). The page title lives in the 64px header.
+- **Forms**: clear labels above fields; standard inputs are at least 44px high. Use one column by default and two columns for short related fields.
+- **Tables**: clear header row, restrained zebra rows where useful, and avoid unnecessary vertical rules.
+- **Controls**: use the shared `--radius-control` token for appropriate controls. Do not force cards or page structure to become rounded.
+- **Patient file**: retain the social-style profile header and stats, with clinical sections organised on the same disciplined grid.
 
 Colour: otherwise monochrome. The status colours (`--app-ok/warn/info/danger`) tint small things only (dots, icons, chips, one alert border), never a surface, and a status is never colour alone: it always has a text label.
 
@@ -56,7 +56,7 @@ The server renders per request (`RenderMode.Server`), not prerendered: pages wil
 2. **Markup never branches on theme.** The server can't know the system theme, and a mismatch breaks hydration. Swap theme-dependent icons with CSS (`.icon-to-dark` / `.icon-to-light`).
 3. **Nothing that depends on the clock, the time zone or IndexedDB renders on the server.** Pages show a skeleton until `DentalStore.loaded()`, which only becomes true in the browser. The calendar sits in `@defer (on immediate)`, so the server sends only its placeholder.
 4. Never call `inject()` inside `afterNextRender`/`setTimeout` callbacks; take what you need in the constructor.
-5. `angular.json` has `security.allowedHosts` (a legacy `dentaleus.com` entry remains and must be replaced with the real production host when it is chosen). To run the built server locally: `NG_ALLOWED_HOSTS=localhost npm run serve:ssr:calendar-app`.
+5. `angular.json` has `security.allowedHosts` (`dentaleus.com`). To run the built server locally: `NG_ALLOWED_HOSTS=localhost npm run serve:ssr:calendar-app`.
 
 ## Languages
 
@@ -64,7 +64,7 @@ The server renders per request (`RenderMode.Server`), not prerendered: pages wil
 
 **Add a language:** create `src/app/core/i18n/<code>.ts` typed `Record<keyof typeof en, string>` (the compiler lists every missing key), then add one line to `LANGS`. Right-to-left (Arabic) additionally needs a layout pass: the new pages already use logical properties (`inset-inline-start`, `margin-inline`) where they matter, but the calendar does not.
 
-**Not translated yet:** the calendar's own buttons and labels (Day/Week/Month/Year, Today, the booking form, the appointment panel, the waiting-room block) and the seed demo data. Its month and weekday names and dates do follow the language.
+**Localization follow-up:** verify the calendar's own buttons and labels (Day/Week/Month/Year, Today, booking form, appointment panel and waiting-room block) in both supported languages. Month and weekday names follow the calendar locale. Arabic requires a separate RTL layout and terminology pass before it is offered.
 
 Copy rules (`en.ts` header): sentence case, buttons start with a verb, empty states say what/why/what to do, errors say what happened and how to fix it.
 
@@ -72,7 +72,7 @@ Copy rules (`en.ts` header): sentence case, buttons start with a verb, empty sta
 
 `DentalStore` is still the browser-side stand-in for the API (IndexedDB). Patient fields beyond name and phone are optional; the old records keep working. Patient rules (validation, accent-insensitive search, age) are pure functions in `patients/patient-rules.ts`, tested in `patient-rules.spec.ts`.
 
-Backup and restore (Clinic page) is the safety net while data lives only in the browser. Visit notes with printable prescriptions are on the patient file, started from the calendar panel. Documents and X-rays are stored per patient in IndexedDB (database version 3), outside the backup file. Still not built: the real API and database, real authentication, multi-clinic accounts (one clinic per account by decision), automated WhatsApp/SMS sending (messages are prepared and sent manually), and online payments (offline clinic payments only).
+Backup and restore is the safety net while clinic data lives in the browser. The current clinic store uses IndexedDB. The production app registers Angular's service worker to cache the app shell and assets; this is not a substitute for server-side persistence or backups. The frontend includes clinic setup, team/role UI, patient files, visit records, charts, billing, reports, documents, manual WhatsApp preparation/history and practice tools. These remain local-first frontend capabilities until a real backend, authentication and server-side file storage are implemented. See [docs/repository-audit-2026-11-10.md](docs/repository-audit-2026-11-10.md) for the source-level feature inventory and verification limits.
 
 ## Dental chart (CRM-native engine)
 
@@ -81,14 +81,19 @@ The Clinical tab uses our own chart (`src/app/denteus/odontogram/`), not an embe
 - **Engine (pure, no Angular/DOM, no globals):** `chart.ts` validated read/write per patient; `edits.ts` validated tooth edits; `plan.ts` findings vs plan kept separate (a planned restoration is never a finding; status edits on planned teeth ask first, and "planned" is derived from plan≠status so it survives reloads); `exam.ts` dated frozen examination records, comparison, suggested diagnoses (never confirmed automatically); `render.ts` paints SVG layers from state.
 - **UI:** `dental-chart` (modes Findings/Plan, tabs Tooth/Periodontal/Diagnoses/History), `tooth-tile`, `tooth-editor`, `perio-editor`; labels EN/FR in `labels.ts` and `core/i18n/dental-chart.ts`. Artwork in `public/odontogram/teeth`, loaded lazily in the browser.
 - **Integrity:** an unreadable stored chart locks the chart instead of being overwritten; unrecognised stored values are reported, not silently accepted.
-- **Not done:** deciduous-only chart, occlusal view, measured anatomy, FHIR/PDF export UI, perio classification and charts, notes per tooth, numbering systems.
+- **Later/needs separate validation:** any additional chart capabilities should be justified by routine dental workflows. The repository has since added an occlusal view for premolars/molars, primary-tooth numbering (51–85), whole-mouth probing-depth graphing and chart display options; do not treat older notes about these as current gaps.
 
 ## Team sign-in (roles)
-Optional. No staff = open app. Adding an owner on the Clinic page (Team and access) turns on a PIN sign-in. Owner sees everything, dentist sees Overview + Clinical, reception sees Overview + Billing; Reports and Clinic are owner-only (`permissionGuard`, route `data.permission`). Staff live in IndexedDB `settings` (salted SHA-256), session in `sessionStorage`, and are not part of backups. This is a UI lock, not security (frontend-only): real access control arrives with the backend.
+Optional. No staff = open app. Adding an owner on the Clinic page (Team and access) turns on a PIN sign-in. Owner sees everything, dentist sees Overview + Clinical, reception sees Overview + Billing; Reports and Clinic are owner-only (`permissionGuard`, route `data.permission`). Staff live in IndexedDB `settings` (salted SHA-256), session in `sessionStorage`, and are not part of backups. This is a UI lock, not security: real access control arrives with the Postgres backend.
 
 ## Practice page, notes, install
-`/practice`: tasks, implant and sterilization traceability (find patients by implant lot), expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; included in backups. Visit notes can be corrected (id and date kept, previous content stored as a revision) or voided with a reason. `manifest.webmanifest` + icons make the app installable; an Angular service worker caches the app shell in production builds, so it opens offline.
+`/practice`: tasks, implant and sterilization traceability (find patients by implant lot), expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; included in backups. Visit notes can be edited (keep id and date). `manifest.webmanifest` + icons make the app installable. Angular's service worker caches the production app shell and assets; clinic data remains local in IndexedDB until backend migration.
 
 ## Recall and quotes
 Today lists patients whose last completed visit is 6+ months old with nothing booked (`recall-rules.ts`), each with a WhatsApp invite. The treatment plan prints a quote (devis) for planned work (`quote-html.ts`).
 
+
+
+## Product and country configuration
+
+Dontalist follows a universal-core, country-pack model. Morocco is the first supported market; country-specific rules and workflows belong in a Morocco pack rather than being hardcoded into universal components. See [docs/product-direction-country-packs.md](docs/product-direction-country-packs.md). Country, language, currency and time zone are separate settings.
