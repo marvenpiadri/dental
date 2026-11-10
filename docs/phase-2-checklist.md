@@ -1,3 +1,5 @@
+> **Historical snapshot — do not use as the current task list.** This report records an earlier review and contains statuses that have since changed. For the current source-level inventory and known gaps, see [product-audit.md](product-audit.md) and [repository-audit-2026-11-10.md](repository-audit-2026-11-10.md). Current country-pack decisions are in [product-direction-country-packs.md](product-direction-country-packs.md).
+
 # Phase 2 completion checklist
 
 Status classes: **Complete and verified** (workflow run in a browser and covered by tests), **Implemented but needs validation**, **Partially implemented**, **Missing**, **Blocked**.
