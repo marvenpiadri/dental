@@ -38,7 +38,7 @@ export class App implements OnInit {
 
   private readonly router = inject(Router);
   /** Public clinic pages and the preview have their own layout: no staff navigation and no sign-in gate. */
-  protected readonly publicPage = toSignal(this.router.events.pipe(filter((e) => e instanceof NavigationEnd), map(() => /^\/(clinics\/|preview)/.test(this.router.url))), { initialValue: false });
+  protected readonly publicPage = toSignal(this.router.events.pipe(filter((e) => e instanceof NavigationEnd), map(() => /^\/(\?.*)?$|^\/(clinics\/|preview)/.test(this.router.url))), { initialValue: false });
 
   protected readonly auth = inject(AuthService);
   /** Appointment history shows who did what: the signed-in person, or the front desk while the app is open. */

@@ -1,0 +1,59 @@
+<header class="bar">
+  <a class="brand" routerLink="/" aria-label="Dontalist"><img src="logo.png" alt="" width="32" height="32" /><span>Dontalist</span></a>
+  <nav class="links" aria-label="Dontalist">
+    <a href="#tour">{{ c().nav.product }}</a>
+    <a href="#why">{{ c().nav.facts }}</a>
+  </nav>
+  <button type="button" class="tool" (click)="i18n.setLang(nextLang())" [attr.aria-label]="nextLang().toUpperCase()"><i class="fa-solid fa-globe" aria-hidden="true"></i>{{ nextLang().toUpperCase() }}</button>
+  <button type="button" class="tool" (click)="themeService.toggle()" aria-label="Theme"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>
+  <a class="cta" routerLink="/today">{{ c().nav.open }}</a>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>{{ c().hero.title }}</h1>
+    <p class="lead">{{ c().hero.lead }}</p>
+    <p class="actions"><a class="cta big" routerLink="/today">{{ c().hero.cta }}</a><a class="ghost" href="#tour">{{ c().hero.more }}</a></p>
+  </section>
+  <figure class="frame hero-shot">
+    <img class="light" [src]="src('calendar', 'light')" [alt]="c().hero.alt" width="1440" height="900" fetchpriority="high" />
+    <img class="dark" [src]="src('calendar', 'dark')" [alt]="c().hero.alt" width="1440" height="900" fetchpriority="high" />
+  </figure>
+
+  <section class="tour" id="tour" aria-labelledby="tour-title">
+    <h2 id="tour-title">{{ c().tourTitle }}</h2>
+    <div class="tabs" role="tablist" [attr.aria-label]="c().nav.product" (keydown)="key($event)">
+      @for (id of shots; track id) {
+        <button type="button" role="tab" class="tab" [attr.data-shot]="id" [attr.id]="'tab-' + id" [attr.aria-selected]="shot() === id" [attr.aria-controls]="'panel'" [attr.tabindex]="shot() === id ? 0 : -1" (click)="shot.set(id)">{{ c().tour[id].tab }}</button>
+      }
+    </div>
+    <div class="panel" role="tabpanel" id="panel" [attr.aria-labelledby]="'tab-' + shot()">
+      <div class="copy">
+        <h3>{{ current().title }}</h3>
+        <p>{{ current().body }}</p>
+        <ul>@for (p of current().points; track p) { <li>{{ p }}</li> }</ul>
+      </div>
+      @for (id of [shot()]; track id) {
+        <figure class="frame">
+          <img class="light" [src]="src(id, 'light')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
+          <img class="dark" [src]="src(id, 'dark')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
+        </figure>
+      }
+    </div>
+    <p class="note">{{ c().demoNote }}</p>
+  </section>
+
+  <section class="why" id="why">
+    @for (f of c().facts; track f.title) {
+      <div class="fact"><h3>{{ f.title }}</h3><p>{{ f.body }}</p></div>
+    }
+  </section>
+
+  <section class="closing">
+    <h2>{{ c().closing.title }}</h2>
+    <p>{{ c().closing.body }}</p>
+    <a class="cta big" routerLink="/today">{{ c().closing.cta }}</a>
+  </section>
+</main>
+
+<footer class="foot">{{ c().foot }}</footer>
