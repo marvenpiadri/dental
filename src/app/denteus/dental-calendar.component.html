@@ -40,6 +40,10 @@
       }
     </cal-toolbar>
 
+    @if (dental.loaded() && (!dental.dentists().length || !dental.chairs().length)) {
+      <p class="setup-first" role="status">{{ t('dcal.setupFirst') }} <a routerLink="/setup/schedule">{{ t('dcal.setupLink') }}</a></p>
+    }
+
     @switch (cal.view()) {
       @case ('day') {
         <cal-time-grid-view mode="day" (eventClick)="selectedId.set($event.id)" (createRequest)="openCreate($event)" />

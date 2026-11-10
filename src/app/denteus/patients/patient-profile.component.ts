@@ -130,7 +130,7 @@ export class PatientProfileComponent {
 
   protected readonly stats = computed(() => {
     const all = this.appointments();
-    const completed = all.filter((a) => a.status === 'completed' && a.start <= this.now);
+    const completed = all.filter((a) => a.status === 'completed');
     const last = completed.reduce<Appointment | null>((best, a) => (!best || a.start > best.start ? a : best), null);
     return {
       visits: completed.length,

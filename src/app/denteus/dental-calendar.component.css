@@ -111,3 +111,16 @@
   height: 10px;
   border-radius: 3px;
 }
+
+.setup-first {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--cal-line, var(--app-line));
+  background: var(--cal-hover, var(--app-subtle));
+  font-size: 13px;
+}
+
+.setup-first a {
+  font-weight: 600;
+  color: inherit;
+}

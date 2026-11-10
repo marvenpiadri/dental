@@ -212,6 +212,8 @@ const D = {
   'dcal.sidebar': ['Dentists and waiting room', 'Dentistes et salle d’attente'],
   'dcal.dentists': ['Dentists', 'Dentistes'],
   'dcal.chairs': ['Chairs', 'Fauteuils'],
+  'dcal.setupFirst': ['Add at least one dentist and one chair before booking.', 'Ajoutez au moins un dentiste et un fauteuil avant de prendre rendez-vous.'],
+  'dcal.setupLink': ['Open schedule settings', 'Ouvrir les réglages du planning'],
   'dcal.showCancelled': ['Show cancelled appointments', 'Afficher les rendez-vous annulés'],
   'dcal.search': ['Search patients', 'Rechercher un patient'],
   'dcal.new': ['New appointment', 'Nouveau rendez-vous'],

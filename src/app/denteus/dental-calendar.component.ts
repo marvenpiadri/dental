@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -54,6 +55,7 @@ interface EditorState {
     AppointmentEditorComponent,
     AppointmentPanelComponent,
     WaitingRoomComponent,
+    RouterLink,
   ],
   providers: [CalendarStore],
   templateUrl: './dental-calendar.component.html',

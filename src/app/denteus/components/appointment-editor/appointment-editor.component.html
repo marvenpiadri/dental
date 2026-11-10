@@ -72,7 +72,7 @@
       <label class="label" for="ap-dentist">{{ t('ap.dentist') }}</label>
       <select id="ap-dentist" class="input" [disabled]="scheduleLocked()" (change)="dentistId.set($any($event.target).value)">
         @for (d of store.dentists(); track d.id) {
-          <option [value]="d.id" [selected]="d.id === dentistId()">{{ d.name }} · {{ d.specialty }}</option>
+          <option [value]="d.id" [selected]="d.id === dentistId()">{{ d.name }}@if (d.specialty) { · {{ d.specialty }} }</option>
         }
       </select>
     </div>
