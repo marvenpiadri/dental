@@ -31,12 +31,6 @@
   font-weight: 600;
 }
 
-@media (max-width: 600px) {
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 .form-grid { align-items: stretch; }
 .form-grid > .banner { grid-column: 1 / -1; }
 

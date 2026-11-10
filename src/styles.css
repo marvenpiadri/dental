@@ -452,16 +452,6 @@ body.cal-dragging * {
   user-select: none !important;
 }
 
-@media (max-width: 700px) {
-  .ds-head {
-    padding: 0 14px;
-  }
-
-  .canvas {
-    padding: 14px;
-  }
-}
-
 /* components set display on their own wrappers, which would otherwise beat the hidden attribute */
 [hidden] { display: none !important; }
 

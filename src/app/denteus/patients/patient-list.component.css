@@ -207,8 +207,3 @@
   }
 }
 
-@media (max-width: 700px) {
-  .hide-sm {
-    display: none;
-  }
-}

@@ -250,20 +250,9 @@
   }
 }
 
-@media (max-width: 700px) {
-  .hide-sm {
-    display: none;
-  }
-
-  .hero {
-    align-items: flex-start;
-  }
-}
 .sections { margin: 0; }
 .due-dot { display: inline-block; width: 7px; height: 7px; margin-inline-start: 6px; border-radius: 50%; background: var(--app-danger); vertical-align: middle; }
 .pane { display: grid; gap: 16px; align-content: start; min-width: 0; }
-@media (max-width: 700px) { .grid-kpi { grid-template-columns: 1fr 1fr; } }
-
 /* Social-style file: cover and avatar on top, then edge-to-edge cells separated by 1px lines, like the calendar grid. */
 .flush { padding: 0; }
 .flush .stack { max-width: none; gap: 0; }

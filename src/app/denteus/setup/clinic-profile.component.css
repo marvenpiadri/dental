@@ -26,7 +26,6 @@
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 label.btn:focus-within { outline: 2px solid var(--app-text); outline-offset: 2px; }
 textarea.input { resize: vertical; }
-@media (max-width: 700px) { .row { align-items: stretch; } }
 .more { border-top: 1px solid var(--app-line); }
 .more summary { padding: 12px 16px; cursor: pointer; font-weight: 600; }
 .link { align-items: end; }

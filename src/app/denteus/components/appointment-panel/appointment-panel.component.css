@@ -20,12 +20,6 @@
   }
 }
 
-@media (max-width: 700px) {
-  :host {
-    width: 100%;
-  }
-}
-
 .top {
   display: flex;
   align-items: center;
