@@ -70,7 +70,7 @@ The current `src/styles.css` uses a monochrome primary accent (`#0a0a0a` in ligh
 | `docs/release-gap-report.md` | Says settings durations/payment methods/notifications are missing and roles are only three coarse permissions; these statements need comparison against the later implementation and current source before being retained. |
 | `docs/phase-2-checklist.md` | Says note corrections overwrite without revision history; contradicts current source. Its phone/mobile verification scope should be reconciled with the current desktop/tablet-only V1 decision. |
 | `docs/domain-model.md` | Needs prescription/visit revision fields and the current appointment-to-act link reflected accurately. It should remain a future backend design note, not imply a backend exists. |
-| `README.md`, `package.json`, `angular.json`, `DENTEUS.md` | Internal project/build naming still includes `calendar-app` and Denteus/Dentaleus-era terminology. `angular.json` still allows `dentaleus.com` and `www.dentaleus.com`. Review these under the branding cleanup step; preserve migration compatibility where required. |
+| `package.json`, `angular.json`, `DENTEUS.md` | Internal project/build naming still includes `calendar-app` and some source paths retain Denteus-era names. The SSR allowed-host entries have now been changed to `dontalist.com` and `www.dontalist.com`. Treat project/build renaming as a separate verified cleanup because Angular target names, output paths and SSR scripts are coupled. |
 
 ## 4. Calendar implementation assessment
 
@@ -104,9 +104,6 @@ The remaining audit should verify:
 **Good independent work for ChatGPT:** documentation reconciliation, product decision records, country-pack requirements, data-source/licence research, feature inventories and acceptance criteria.
 
 **Keep with Claude:** complex Angular implementation, local browser workflows, visual regression checks, test/build execution, production debugging and changes that require running the application locally.
-
-**Keep with Claude:** complex Angular implementation, local browser workflows, visual regression checks, test/build execution, and difficult debugging.
-
 
 ## 7. Follow-up review of the current branch
 
