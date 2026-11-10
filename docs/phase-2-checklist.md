@@ -11,7 +11,7 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 | Odontogram (grid chart, overlay editor, 3D overlay) | Complete and verified | Screenshots in light, dark, French, phone; 400+ unit tests. |
 | Periodontogram (2D, one column per tooth) and all library perio fields | Complete and verified | Added CEJ, root concavity, thickness, Miller, keratinized gingiva, implant mPI/mBI. Not built: row-visibility settings, perio PDF export. |
 | Examinations and compare | Implemented but needs validation | Snapshots are frozen; compare view exists. |
-| Visit notes and prescriptions | Implemented but needs validation | Notes, prescription print exist; correction path overwrites a note (no revision history). |
+| Visit notes and prescriptions | Implemented but needs validation | Notes, prescription print exist; corrections keep a revision history and notes can be voided with a reason. |
 | Procedures and treatment plan (scopes, planned vs done, pricing) | Implemented but needs validation | Shared panel verified earlier; free-text tooth field remains (see domain-model.md item 5). |
 | Invoices (numbering, issue, cancel by credit note, print) | Complete and verified | Browser flow tested; 5 unit tests. Printed layout checked only as generated HTML. x-facture.com code is not in the repo, so invoices are native. |
 | Offline payments (methods, reference, advance, partial, void with reason, receipt) | Complete and verified | Browser flow tested; balances ignore voided payments. |
@@ -26,7 +26,7 @@ Status classes: **Complete and verified** (workflow run in a browser and covered
 | Staff and clinic configuration | Partially implemented | Locations, chairs, dentists set up; roles exist, no real authentication (Phase 3). |
 | French pass | Implemented but needs validation | 406 keys match in both languages; spot-checked profile, billing, chart. |
 | Dark mode | Implemented but needs validation | Chart, billing, profile checked; other modules not re-checked. |
-| Phone and tablet layout | Implemented but needs validation | No page-level horizontal overflow on the 8 patient tabs at 390 and 820 px; chart scrolls inside its frame. |
+| Desktop and tablet layout | Implemented | V1 is desktop and tablet only; phone-only layouts were removed. Tablet (820 px) checked light and dark for Today, Calendar and Patients with no horizontal overflow. |
 | Accessibility (keyboard, labels) | Partially implemented | Labels and aria on new forms; no full keyboard audit. |
 | Public clinic page and profile | Implemented | Settings → Clinic profile, preview, SSR page with SEO, sitemap, robots, slug redirects, Google Maps link import. Business Profile OAuth and sync need the backend. |
 | Backend, database, authentication | Blocked | Phase 3 by decision. |

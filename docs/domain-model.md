@@ -54,3 +54,12 @@ Phase 2 is local only (IndexedDB in the browser). This file records what each re
 **WhatsApp Business Cloud API, one account per clinic.** Table `clinic_whatsapp(clinic_id, waba_id, phone_number_id, access_token_ref, status)`. Tokens live in a secret store, never in the browser. Reminder sending becomes a server job reading `messages` rows in `prepared`/`queued`; delivery webhooks update `status`; inbound replies insert `messages` with direction `in`. Templates must be approved by Meta per clinic. Consent gate is `patients.whatsapp_consent = 'granted'`. No shared Dontalist number.
 
 **Google Business Profile, one connection per clinic.** OAuth with the clinic's own Google account (Business Profile APIs). Store `clinic_google(clinic_id, account_id, location_id, refresh_token_ref, connected_at, last_sync_at)`. A sync job pulls name, address, hours, phone, categories, photos and reviews/ratings into `public_profile` tables; reviews are shown with Google attribution and refreshed per Google's display policy (no long-term copy beyond what the terms allow). The public SEO page `/c/:slug` renders from those tables and emits `Dentist`/`LocalBusiness` JSON-LD. The clinic can disconnect, which deletes tokens and cached Google content. Both integrations work with or without any marketing agency.
+
+## Added since this note was written (frontend, for the backend design)
+
+- Visit notes: `id`, `date`, `appointmentId?`, `content`, `revisions[]` (previous contents with timestamps), `voided?` with reason. Prescription lines: drug, dosage, duration, free text allowed.
+- Appointment-to-act link: `TreatmentItem.appointmentId?` ties a planned or done act to the visit it was recorded in. Routine acts need no tooth or chart.
+- Chair colour (`Chair.color?`) is a display field.
+- Payments are offline records (method, reference, voided with reason); invoices are cancelled by credit note, numbers are never reused.
+- Roles, permissions and the staff activity log are frontend-only today. The backend must own authentication, authorisation and an append-only audit log.
+- This file remains a design note for a backend that does not exist yet.

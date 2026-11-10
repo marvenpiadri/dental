@@ -6,8 +6,8 @@ Baseline: commit 264247b plus the clinic-profile rules below. Statuses use the b
 |---|---|---|
 | Patients, archive, medical alert | Complete and verified | Browser-tested earlier this phase |
 | Odontogram and periodontogram | Complete and verified | Browser-tested, shared layout |
-| Visit notes and revisions | Complete and verified | Browser-tested light, dark, phone (7 Nov) |
-| Imaging viewer | Complete and verified | Browser-tested light, dark, phone (7 Nov) |
+| Visit notes and revisions | Complete and verified | Browser-tested light, dark (7 Nov); phone dropped from V1 scope |
+| Imaging viewer | Complete and verified | Browser-tested light, dark (7 Nov); phone dropped from V1 scope |
 | Invoices, credit notes, voids, receipts | Complete and verified | Browser-tested; real print layout not yet checked |
 | WhatsApp (manual, consent, log) | Complete and verified | No integration claimed |
 | CNSS/CNOPS | Removed | Legacy stores left inert, tested on a v3 database |
@@ -15,9 +15,9 @@ Baseline: commit 264247b plus the clinic-profile rules below. Statuses use the b
 | Print layouts (invoice, letters, quote) | Implemented but insufficiently tested | Unit-tested HTML; not rendered to paper/PDF |
 | Dark mode of Practice, Reports, Settings | Implemented but insufficiently tested | |
 | Keyboard / accessibility audit | Missing | |
-| Settings: appointment durations, payment methods, notifications | Missing | Next after this brief's profile work |
+| Settings: appointment durations, payment methods, notifications | Complete | Done in the frontend gap review below |
 | Prosthesis case file (tooth, shade) | Missing | Lab orders have work, lab, due date only |
-| Roles | Partially implemented | 3 roles, 4 coarse permissions; brief needs 6 roles with grouped actions |
+| Roles | Implemented, frontend-only | 6 roles with grouped permissions and an activity log. UI lock over browser storage, not security |
 | Tasks | Partially implemented | Practice page has a task list; no assignee, patient link or history |
 | Clinic profile and slug rules | Partially implemented | Model and rules with 12 tests; no screen yet |
 | Google Places, public pages, sitemap | Missing | Needs a Maps key and a server-readable data source |

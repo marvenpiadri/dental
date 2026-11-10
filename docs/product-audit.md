@@ -46,7 +46,7 @@ Scope: every route, nav item, settings area and workflow reachable in the app to
 5. Stock thresholds are per item on the Practice page; no Settings entry (intentional).
 6. Periodontogram row-visibility settings and perio PDF export from the reference library.
 7. Imaging viewer tools (zoom, side-by-side), prosthesis case file.
-8. Visit-note corrections overwrite the note: no revision history.
+8. ~~Visit-note corrections overwrite the note~~ Fixed: corrections keep the note id and date and store the previous content as a revision; notes can be voided with a reason.
 9. Keyboard and screen-reader audit of the whole app; dark mode check of Practice, Reports and Settings.
 10. Clinic logo upload (the Dontalist logo is fixed).
 

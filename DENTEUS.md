@@ -1,25 +1,22 @@
-# Denteus appointment calendar
+# Dontalist: scheduling module and backend requirements
 
-`<den-calendar>` is the generic calendar (day / week / month / year) wired to patients, dentists and chairs.
-
-```html
-<den-calendar (openPatient)="..." (openEncounter)="..." (themeChange)="..." />
-```
+`<den-calendar>` is the generic calendar (day / week / month / year). In the app it is wrapped by `DentalCalendarComponent` and wired to patients, dentists and chairs. The app is a **desktop and tablet** product (phones are out of V1 scope). Dontalist is one clinic per account.
 
 ## What is real and what is a stand-in
 
 | Area | Status |
 |---|---|
-| Scheduling rules (`denteus/rules/scheduling-rules.ts`): overlap across dentist, chair and patient, 15 min to 8 h, status transition table, movable statuses | Real, pure functions. **No unit tests yet** (the earlier note claiming 28 did not match the repository) |
-| UI: lane day view (by chair or by dentist), week, month, drag/resize with 15-min snap, rollback with explanation, editor, panel, waiting room, light/dark | Real, driven end-to-end in Chromium (30 checks) |
-| `DentalStore` (`denteus/services/dental-store.service.ts`) | **Stand-in.** In-memory + localStorage. Replace with HTTP calls to the Denteus API. |
-| Seed data (`denteus/data/dental-seed.ts`) | **Demo only.** Use `<den-calendar [seed]="false">` in production. |
-| Conflict authority and race protection | **Not in the frontend.** The frontend check is a convenience; the backend must be authoritative (below). |
-| Authorization, breaks / unavailable time, clinic hours | Not implemented. |
-| Patient file / clinical encounter screens | Not in the calendar. It emits `openPatient(patientId)` and `openEncounter(appointmentId)`. |
-| Billing | Intentionally excluded. |
+| Scheduling rules (`denteus/rules/scheduling-rules.ts`): overlap across dentist, chair and patient, 15 min to 8 h, status transitions, movable statuses | Real, pure functions, unit-tested |
+| Calendar UI: chair/dentist lanes, week, month, year; move with Angular CDK drag-drop (pre-drop validation, refused drops snap back with the reason); custom pointer code only for resize, drag-to-create and all-day events; chair tint plus dentist bar colours; light/dark | Real |
+| Patient file, quick acts from the appointment panel, treatment plan, invoices, payments, quotes, visit notes, prescriptions, imaging, practice, reports | Real, local only |
+| `DentalStore` and clinic database (`denteus/services/`) | **Local persistence.** IndexedDB in the browser; backups are explicit JSON files. Replace with API calls when the backend exists. |
+| Offline | Angular service worker caches the shell in production builds (`ngsw-config.json`). Data is local, so the app works offline; there is no sync. |
+| Seed data (`denteus/data/dental-seed.ts`) | Demo only; turn off with `<den-calendar [seed]="false">`. |
+| Roles and PIN sign-in | **Frontend-only convenience, not security.** PINs are salted hashes in browser storage; anyone with devtools can read or edit the data. Real access control needs the backend. |
+| Conflict authority and race protection | Not in the frontend. The frontend check is a convenience; the backend must be authoritative (below). |
+| Billing | Offline clinic payments only. No online payment processing, and no CNSS/CNOPS/FAR or mutual-insurance forms (permanently out of scope). |
 
-## Contract the real API must satisfy
+## Contract the real API must satisfy (backend requirement)
 
 Every method returns `ApiResult<T>`: `{ok:true,value}` or `{ok:false, code, message, details?}` with `code` one of `conflict | invalid | forbidden | not-found | error`.
 

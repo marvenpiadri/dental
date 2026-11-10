@@ -6,10 +6,10 @@ A clinic app should feel like a ruled ledger: white against black, structure dra
 
 | Zone | What | Rules |
 |---|---|---|
-| **Strict** | The nav rail, every page header, page edges, **the calendar** | 1px borders only. No border radius. No padding outside boxes. 100% width and height. The header is always 64px so its bottom line runs into the rail's logo cell. |
+| **Strict** | The nav rail, every page header, page edges, **the calendar** | 1px borders only. No padding outside boxes. 100% width and height. The header is always 64px so its bottom line runs into the rail's logo cell. |
 | **Free** | The content of a page (cards, forms, lists) | Tinted canvas, rounded cards (`--radius-card`), padding, icons, status chips. |
 
-The calendar is the exception inside the exception: it stays strict even though it is page content. `den-calendar, den-calendar *` forces `border-radius: 0` in `src/styles.css`.
+The calendar is the exception inside the exception: its grid keeps the strict ruled structure even though it is page content. Its controls and appointment blocks use the shared control radius (`--radius-control`, 8px); the grid lines, gutters and headers stay square.
 
 ### The standard for the free zone (Dentisto-style: simple and calm)
 
@@ -19,7 +19,7 @@ Every page follows the same recipe, set once in `src/styles.css` so new pages in
 - **Panel title** 16px bold (`.card-title`), no rule under it. The page title lives in the 64px header, not in a panel.
 - **Forms**: bold 13px label above a 44px field (`.field`, `.label`, `.input`), one column, full width, two columns only for short pairs. Border `--app-field`.
 - **Tables**: grey header row, zebra rows, no vertical lines (`.zebra` on any grid of rows).
-- **One accent** (`--app-accent`, green) for primary actions and the active state. Change the variable and the whole app follows. Everything else stays neutral.
+- **One accent** (`--app-accent`) for primary actions and the active state. It is monochrome (near-black in light, near-white in dark), so billing and other primary actions are never green by default. Change the variable and the whole app follows.
 - Patient file: social-style cover, stats strip and edge-to-edge bordered cells (strict-style grid) for the page body.
 
 Colour: otherwise monochrome. The status colours (`--app-ok/warn/info/danger`) tint small things only (dots, icons, chips, one alert border), never a surface, and a status is never colour alone: it always has a text label.
@@ -56,7 +56,7 @@ The server renders per request (`RenderMode.Server`), not prerendered: pages wil
 2. **Markup never branches on theme.** The server can't know the system theme, and a mismatch breaks hydration. Swap theme-dependent icons with CSS (`.icon-to-dark` / `.icon-to-light`).
 3. **Nothing that depends on the clock, the time zone or IndexedDB renders on the server.** Pages show a skeleton until `DentalStore.loaded()`, which only becomes true in the browser. The calendar sits in `@defer (on immediate)`, so the server sends only its placeholder.
 4. Never call `inject()` inside `afterNextRender`/`setTimeout` callbacks; take what you need in the constructor.
-5. `angular.json` has `security.allowedHosts` (`dentaleus.com`). To run the built server locally: `NG_ALLOWED_HOSTS=localhost npm run serve:ssr:calendar-app`.
+5. `angular.json` has `security.allowedHosts` (a legacy `dentaleus.com` entry remains and must be replaced with the real production host when it is chosen). To run the built server locally: `NG_ALLOWED_HOSTS=localhost npm run serve:ssr:calendar-app`.
 
 ## Languages
 
@@ -72,7 +72,7 @@ Copy rules (`en.ts` header): sentence case, buttons start with a verb, empty sta
 
 `DentalStore` is still the browser-side stand-in for the API (IndexedDB). Patient fields beyond name and phone are optional; the old records keep working. Patient rules (validation, accent-insensitive search, age) are pure functions in `patients/patient-rules.ts`, tested in `patient-rules.spec.ts`.
 
-Backup and restore (Clinic page) is the safety net while data lives only in the browser. Visit notes with printable prescriptions are on the patient file, started from the calendar panel. Documents and X-rays are stored per patient in IndexedDB (database version 3), outside the backup file. Not built yet, and the biggest gaps for a real clinic: **opening hours and multiple sites** in clinic setup (dentists, chairs and the act catalog are done), sign-in and roles, per-visit clinical notes, printable invoices and a full finance report (Today lists unpaid balances; the odontogram, a priced treatment plan and per-patient payments with a balance exist), billing, reminders (WhatsApp/SMS), and the real API.
+Backup and restore (Clinic page) is the safety net while data lives only in the browser. Visit notes with printable prescriptions are on the patient file, started from the calendar panel. Documents and X-rays are stored per patient in IndexedDB (database version 3), outside the backup file. Still not built: the real API and database, real authentication, multi-clinic accounts (one clinic per account by decision), automated WhatsApp/SMS sending (messages are prepared and sent manually), and online payments (offline clinic payments only).
 
 ## Dental chart (CRM-native engine)
 
@@ -84,10 +84,10 @@ The Clinical tab uses our own chart (`src/app/denteus/odontogram/`), not an embe
 - **Not done:** deciduous-only chart, occlusal view, measured anatomy, FHIR/PDF export UI, perio classification and charts, notes per tooth, numbering systems.
 
 ## Team sign-in (roles)
-Optional. No staff = open app. Adding an owner on the Clinic page (Team and access) turns on a PIN sign-in. Owner sees everything, dentist sees Overview + Clinical, reception sees Overview + Billing; Reports and Clinic are owner-only (`permissionGuard`, route `data.permission`). Staff live in IndexedDB `settings` (salted SHA-256), session in `sessionStorage`, and are not part of backups. This is a UI lock, not security: real access control arrives with the Postgres backend.
+Optional. No staff = open app. Adding an owner on the Clinic page (Team and access) turns on a PIN sign-in. Owner sees everything, dentist sees Overview + Clinical, reception sees Overview + Billing; Reports and Clinic are owner-only (`permissionGuard`, route `data.permission`). Staff live in IndexedDB `settings` (salted SHA-256), session in `sessionStorage`, and are not part of backups. This is a UI lock, not security (frontend-only): real access control arrives with the backend.
 
 ## Practice page, notes, install
-`/practice`: tasks, implant and sterilization traceability (find patients by implant lot), expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; included in backups. Visit notes can be edited (keep id and date). `manifest.webmanifest` + icons make the app installable; there is no service worker, so it still needs the server to open.
+`/practice`: tasks, implant and sterilization traceability (find patients by implant lot), expenses (monthly total), stock (alert level), lab work (late when still at the lab after its due day). Lists live in IndexedDB `settings` (`expenses`, `stock`, `lab`) through `PracticeStore`; included in backups. Visit notes can be corrected (id and date kept, previous content stored as a revision) or voided with a reason. `manifest.webmanifest` + icons make the app installable; an Angular service worker caches the app shell in production builds, so it opens offline.
 
 ## Recall and quotes
 Today lists patients whose last completed visit is 6+ months old with nothing booked (`recall-rules.ts`), each with a WhatsApp invite. The treatment plan prints a quote (devis) for planned work (`quote-html.ts`).
