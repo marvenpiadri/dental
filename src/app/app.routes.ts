@@ -30,6 +30,12 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'doctors/:id',
+    canActivate: [permissionGuard],
+    data: { permission: 'appointments.view', titleKey: 'dr.title' },
+    loadComponent: () => import('./denteus/doctors/doctor-profile.component').then((m) => m.DoctorProfileComponent),
+  },
+  {
     path: 'practice',
     canActivate: [permissionGuard],
     data: { permission: 'practice.view', titleKey: 'nav.practice' },

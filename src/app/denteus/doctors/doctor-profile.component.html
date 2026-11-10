@@ -1,0 +1,115 @@
+<header class="ds-head">
+  <div class="ds-head-main">
+    <a class="btn btn--icon" routerLink="/setup/schedule" [attr.aria-label]="t('profile.back')"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>
+    <h1 class="ds-title">{{ doctor()?.name ?? t('dr.title') }}</h1>
+  </div>
+  @if (doctor(); as d) {
+    <div class="ds-actions">
+      @if (canEdit()) { <button type="button" class="btn" (click)="editing.set(!editing())"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></button> }
+      <a class="btn btn--primary" routerLink="/calendar"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><span class="hide-sm">{{ t('nav.calendar') }}</span></a>
+    </div>
+  }
+</header>
+
+<div class="ds-body canvas flush">
+  @if (!store.loaded()) { }
+  @else if (!doctor()) {
+    <div class="card empty narrow">
+      <span class="icon-tile"><i class="fa-solid fa-user-slash" aria-hidden="true"></i></span>
+      <h2>{{ t('dr.missing') }}</h2>
+      <a class="btn" routerLink="/setup/schedule">{{ t('dr.missing.cta') }}</a>
+    </div>
+  } @else if (doctor(); as d) {
+    <div class="stack">
+      <section class="cover-wrap">
+        <div class="cover" aria-hidden="true"></div>
+        <div class="idrow">
+          <div class="photo">
+            @if (d.photo) { <img class="photo-img" [src]="d.photo" [alt]="d.name" /> }
+            @else { <span class="avatar" style="--size: 104px" aria-hidden="true">{{ initials(d.name) }}</span> }
+            @if (canEdit()) {
+              <label class="photo-btn btn btn--icon" [attr.title]="t('profile.photo.add')">
+                <i class="fa-solid fa-camera" aria-hidden="true"></i><span class="sr-only">{{ t('profile.photo.add') }}</span>
+                <input type="file" accept="image/*" class="sr-only" (change)="pickPhoto($event, d)" />
+              </label>
+            }
+          </div>
+          <div class="hero-main">
+            <h2 class="hero-name">{{ d.name }}</h2>
+            <ul class="facts">
+              @if (d.specialty) { <li><i class="fa-solid fa-stethoscope" aria-hidden="true"></i>{{ d.specialty }}</li> }
+              @if (d.phone) { <li><i class="fa-solid fa-phone" aria-hidden="true"></i><a [href]="'tel:' + d.phone">{{ d.phone }}</a></li> }
+              @if (d.email) { <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><a [href]="'mailto:' + d.email">{{ d.email }}</a></li> }
+              @if (hours(); as h) { <li><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ h }}</li> }
+            </ul>
+            <div class="tags">
+              <span class="chip" data-tone="neutral"><i class="fa-solid fa-circle" [style.color]="d.color" aria-hidden="true"></i>{{ t('dr.colour') }}</span>
+              @if (d.registration) { <span class="chip" data-tone="info"><i class="fa-solid fa-id-card" aria-hidden="true"></i>{{ d.registration }}</span> }
+            </div>
+          </div>
+        </div>
+        <dl class="stats">
+          <div><dt>{{ t('dr.stat.upcoming') }}</dt><dd>{{ stats().upcoming }}</dd></div>
+          <div><dt>{{ t('dr.stat.month') }}</dt><dd>{{ stats().completedMonth }}</dd></div>
+          <div><dt>{{ t('profile.stat.visits') }}</dt><dd>{{ stats().completedTotal }}</dd></div>
+          <div><dt>{{ t('dr.stat.patients') }}</dt><dd>{{ stats().patients }}</dd></div>
+          @if (auth.can('billing.view')) { <div><dt>{{ t('dr.stat.revenue') }}</dt><dd>{{ i18n.money(stats().revenueMonth) }}</dd></div> }
+        </dl>
+      </section>
+
+      @if (editing()) {
+        <form class="card" #f (submit)="$event.preventDefault(); save(d, { name: n.value, specialty: sp.value, phone: ph.value, email: em.value, registration: rg.value })" style="padding: 16px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: end">
+          <label class="field">{{ t('setup.name') }}<input #n class="input" [value]="d.name" maxlength="80" required /></label>
+          <label class="field">{{ t('setup.specialty') }}<input #sp class="input" [value]="d.specialty" maxlength="80" /></label>
+          <label class="field">{{ t('dr.registration') }}<input #rg class="input" [value]="d.registration ?? ''" maxlength="60" /></label>
+          <label class="field">{{ t('dr.phone') }}<input #ph class="input" type="tel" [value]="d.phone ?? ''" maxlength="40" /></label>
+          <label class="field">{{ t('dr.email') }}<input #em class="input" type="email" [value]="d.email ?? ''" maxlength="120" /></label>
+          <span><button type="submit" class="btn btn--primary">{{ t('common.save') }}</button> <button type="button" class="btn" (click)="editing.set(false)">{{ t('common.cancel') }}</button></span>
+        </form>
+      }
+
+      <div class="file">
+        <nav class="pages" [attr.aria-label]="t('dr.sections')">
+          @for (x of tabs; track x.id) {
+            <a class="page-link" href="javascript:void(0)" role="button" [class.on]="tab() === x.id" [attr.aria-current]="tab() === x.id ? 'page' : null" (click)="tab.set(x.id)">
+              <i [class]="'fa-solid ' + x.icon" aria-hidden="true"></i><span>{{ t(x.key) }}</span>
+            </a>
+          }
+        </nav>
+        <div class="stack page-body">
+          @switch (tab()) {
+            @case ('overview') {
+              <section class="card">
+                <header class="card-head"><h2 class="card-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('dr.next') }}</h2></header>
+                @for (a of next(); track a.id) {
+                  <a class="row-link" [routerLink]="['/patients', a.patientId]" style="display: flex; gap: 16px; padding: 12px 20px; border-top: 1px solid var(--app-line); color: inherit; text-decoration: none">
+                    <strong style="min-width: 170px">{{ i18n.date(a.start, { weekday: 'short', day: 'numeric', month: 'short' }) }} · {{ i18n.time(a.start) }}</strong><span>{{ name(a.patientId) }}</span>
+                  </a>
+                } @empty { <p class="muted" style="padding: 16px 20px; margin: 0">{{ t('dr.next.empty') }}</p> }
+              </section>
+            }
+            @case ('patients') {
+              <section class="card">
+                @for (r of patients(); track r.patient!.id) {
+                  <a [routerLink]="['/patients', r.patient!.id]" style="display: flex; gap: 16px; padding: 12px 20px; border-top: 1px solid var(--app-line); color: inherit; text-decoration: none">
+                    <strong style="min-width: 220px">{{ r.patient!.fullName }}</strong><span class="muted">{{ i18n.date(r.when, { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+                  </a>
+                } @empty { <p class="muted" style="padding: 16px 20px; margin: 0">{{ t('dr.patients.empty') }}</p> }
+              </section>
+            }
+            @case ('acts') {
+              <section class="card">
+                <p class="muted" style="padding: 12px 20px 0; margin: 0">{{ t('dr.acts.note') }}</p>
+                @for (a of stats().acts; track a.name) {
+                  <div style="display: flex; gap: 16px; padding: 12px 20px; border-top: 1px solid var(--app-line)">
+                    <strong style="flex: 1">{{ a.name }}</strong><span>× {{ a.count }}</span>@if (auth.can('billing.view')) { <span style="min-width: 110px; text-align: end">{{ i18n.money(a.amount) }}</span> }
+                  </div>
+                } @empty { <p class="muted" style="padding: 16px 20px; margin: 0">{{ t('dr.acts.empty') }}</p> }
+              </section>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

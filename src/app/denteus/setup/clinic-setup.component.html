@@ -98,6 +98,7 @@
         </header>
         @for (d of store.dentists(); track d.id) {
           <div class="row">
+            <a class="btn btn--icon" [routerLink]="['/doctors', d.id]" [attr.aria-label]="t('dr.open') + ': ' + d.name" [title]="t('dr.open')"><i class="fa-regular fa-id-card" aria-hidden="true"></i></a>
             <input class="swatch" type="color" [value]="d.color" [attr.aria-label]="t('setup.color')" (change)="editDentist(d, { color: $any($event.target).value })" />
             <input class="input" [value]="d.name" [attr.aria-label]="t('setup.name')" (change)="editDentist(d, { name: $any($event.target).value.trim() })" />
             <input class="input" [value]="d.specialty" [attr.aria-label]="t('setup.specialty')" [placeholder]="t('setup.specialty')" (change)="editDentist(d, { specialty: $any($event.target).value.trim() })" />

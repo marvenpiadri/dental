@@ -284,6 +284,13 @@ export interface Dentist {
   color: string;
   /** Own working times (the clinic's open days still apply). Unset means the clinic's hours. */
   hours?: { open?: string; close?: string };
+  /** Contact and professional details shown on the doctor's profile and printed on documents they sign. */
+  phone?: string;
+  email?: string;
+  /** Professional registration number, exactly as the dentist writes it. */
+  registration?: string;
+  /** Small square JPEG data URL. */
+  photo?: string;
 }
 
 export interface Chair {
