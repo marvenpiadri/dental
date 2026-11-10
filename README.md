@@ -1,6 +1,6 @@
 # Dontalist
 
-Dental clinic CRM. Angular 22, server-side rendered. Product direction: [country packs and Morocco-first scope](docs/product-direction-country-packs.md). Current product audit: [docs/product-audit.md](docs/product-audit.md). Backend/domain planning: [docs/domain-model.md](docs/domain-model.md). Design rules: [DESIGN.md](DESIGN.md). Calendar contract: [DENTEUS.md](DENTEUS.md). Claude handoff: [docs/claude-handoff-2026-11-10.md](docs/claude-handoff-2026-11-10.md).
+Dental clinic CRM. Angular 22, server-side rendered. Product direction: [country packs and Morocco-first scope](docs/product-direction-country-packs.md). Current product audit: [docs/product-audit.md](docs/product-audit.md). Backend/domain planning: [docs/domain-model.md](docs/domain-model.md). Design rules: [DESIGN.md](DESIGN.md). Calendar contract: [DENTEUS.md](DENTEUS.md). Claude handoff: [docs/claude-handoff-2026-11-10.md](docs/claude-handoff-2026-11-10.md). Database readiness handoff: [docs/database-readiness-handoff.md](docs/database-readiness-handoff.md).
 
 Needs Node `^22.22.3`, `^24.15.0` or newer (Angular 22's requirement).
 
