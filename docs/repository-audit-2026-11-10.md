@@ -5,7 +5,7 @@
 **Audited snapshot:** `8c2cd7a375a769e73b15b9b21a73f19b579d120a`  
 **Scope:** frontend and product-state reconciliation only. No backend, database, auth-provider, or deployment work.
 
-This is a source/documentation audit. GitHub source was inspected, but no local Angular build, unit-test run, or browser session was available during this audit. Reported test counts and browser checks below therefore remain reported evidence, not independently reproduced results.
+This is a source/documentation audit. GitHub source was inspected, but no local Angular build, unit-test run, or browser session was available during this audit. Reported test counts and browser checks therefore remain reported evidence, not independently reproduced results.
 
 ## 1. Confirmed in source
 
@@ -29,19 +29,13 @@ Current implementation is a general prescription editor inside visit notes. It i
 
 Potential next scope, based on clinic feedback:
 - Let a dentist start a prescription from a recorded act or visit.
-- Offer editable templates by act (for example, extraction may show antibiotic, analgesic and mouthwash categories).
+- Offer editable templates by act (for example, extraction may show optional antibiotic, analgesic and mouthwash categories).
 - Treat suggestions as optional starting points only. Never auto-prescribe a drug, dose, frequency or duration.
 - The dentist must choose and confirm every medication and instruction.
-- Save the signed/printed prescription in the patient file and link it to the relevant visit/act.
+- Save the prescription in the patient file and link it to the relevant visit/act.
 - Keep the existing standalone prescription path for cases not associated with a catalog act.
 
 Medication names currently come from a small static list in `medications.ts`; free text is accepted. This is not a validated medication database or a clinical decision-support system.
-
-### Mutual-insurance documents — discovery reopened, implementation not approved
-
-Older product documentation says CNSS/CNOPS forms were permanently dropped. New clinic feedback asks for digitized CNSS, CNOPS and FAR paperwork because the current process is inconvenient.
-
-Do not restore the old hardcoded/scanned-PDF implementation blindly. First identify the exact current forms, who completes each section, required attachments, signature/stamp requirements, accepted export format, and whether FAR has a distinct process. Prefer a configurable document/template workflow if the real forms support it.
 
 ### Inventory — basic, not full stock management
 
@@ -72,7 +66,7 @@ Current tasks are text plus a done flag. Not evidenced: assignee, due date, prio
 |---|---|
 | `DESIGN.md` | Describes a blanket square-corner rule for all calendar descendants, while current global styles explicitly leave controls/events to their own corner treatment. It also describes a green global accent and rounded free-zone cards that do not match current `src/styles.css` exactly. |
 | `DENTEUS.md` | Describes an earlier generic calendar, a stand-in store using in-memory/localStorage, and says patient file/clinical screens are outside the calendar. It is no longer an accurate overview of the integrated Dontalist application. |
-| `docs/product-audit.md` | Says visit-note revision history is not built, contradicted by current source. Its statement that CNSS/CNOPS were permanently dropped needs to become “not implemented; discovery reopened”. |
+| `docs/product-audit.md` | Says visit-note revision history is not built, contradicted by current source. |
 | `docs/release-gap-report.md` | Says settings durations/payment methods/notifications are missing and roles are only three coarse permissions; these statements need comparison against the later implementation and current source before being retained. |
 | `docs/phase-2-checklist.md` | Says note corrections overwrite without revision history; contradicts current source. Its phone/mobile verification scope should be reconciled with the current desktop/tablet-only V1 decision. |
 | `docs/domain-model.md` | Needs prescription/visit revision fields and the current appointment-to-act link reflected accurately. It should remain a future backend design note, not imply a backend exists. |
@@ -98,8 +92,8 @@ The remaining audit should verify:
 - Keep odontogram and periodontogram as the only chart modules; do not add separate endodontic, orthodontic, implant, occlusion, TMJ or soft-tissue chart modules.
 - Routine procedures must remain recordable without opening a chart or selecting a tooth.
 - Clinic payment records remain offline/manual; no online payment processing.
+- Do not build or maintain CNSS, CNOPS, FAR or other mutual-insurance reimbursement forms/workflows in Dontalist.
 - Backend, PostgreSQL, Supabase, Cloudflare API/auth and production migration remain deferred until the frontend is accepted.
-- CNSS/CNOPS/FAR are a discovery item, not permission to revive the old implementation.
 
 ## 6. Verification limits and next owners
 
@@ -107,6 +101,6 @@ The remaining audit should verify:
 
 **Not independently verified in this audit:** current test count, production build, SSR runtime, browser rendering, role-specific UI behavior, actual print output, and the complete end-to-end clinic-day workflows.
 
-**Good independent work for ChatGPT next:** reconcile the documentation; write a precise prescription-template and insurance-document requirements brief; define a right-sized inventory/task scope; perform a second product gap audit against the confirmed V1 boundary.
+**Good independent work for ChatGPT next:** reconcile the documentation; write a precise prescription-template requirements brief; define a right-sized inventory/task scope; perform a second product gap audit against the confirmed V1 boundary.
 
 **Keep with Claude:** complex Angular implementation, local browser workflows, visual regression checks, test/build execution, and difficult debugging.
