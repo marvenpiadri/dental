@@ -12,11 +12,6 @@
 }
 
 /* Keep the calendar embedded in the page grid, not styled as a rounded card. */
-.shell,
-.shell * {
-  border-radius: 0 !important;
-}
-
 .shell {
   width: 100%;
   min-width: 0;
@@ -40,7 +35,7 @@
   gap: 10px;
   margin: 8px 12px 12px;
   padding: 8px 8px;
-  border-radius: 0;
+  border-radius: 8px;
   font-size: 13.5px;
   color: var(--cal-text-2);
   cursor: pointer;
@@ -61,8 +56,9 @@
 /* "Chairs | Dentists" switch shown next to the search box in the day view */
 .group {
   display: flex;
-  padding: 2px;
-  border-radius: 0;
+  padding: 3px;
+  border: 1px solid var(--cal-border);
+  border-radius: 9px;
   background: var(--cal-segment-bg);
 }
 
@@ -70,7 +66,7 @@
   height: 28px;
   padding: 0 12px;
   border: 0;
-  border-radius: 0;
+  border-radius: 6px;
   background: transparent;
   font: inherit;
   font-size: 13px;

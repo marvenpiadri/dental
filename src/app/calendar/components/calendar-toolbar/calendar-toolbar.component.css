@@ -24,6 +24,7 @@
   height: 32px;
   padding: 0 14px 0 10px;
   border: 1px solid var(--cal-accent);
+  border-radius: 8px;
   background: var(--cal-accent);
   color: var(--cal-accent-text);
   font: inherit;
