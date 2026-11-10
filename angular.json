@@ -56,8 +56,8 @@
             "outputMode": "server",
             "security": {
               "allowedHosts": [
-                "dentaleus.com",
-                "www.dentaleus.com"
+                "dontalist.com",
+                "www.dontalist.com"
               ]
             },
             "ssr": {
