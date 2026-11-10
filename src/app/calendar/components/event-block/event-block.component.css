@@ -1,6 +1,7 @@
 @import '../../styles/event-color.css';
 
 :host {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -15,8 +16,8 @@
   user-select: none;
   touch-action: pan-y;
   outline: none;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c, #64748b) 8%, transparent);
-  transition: box-shadow 0.12s ease, filter 0.12s ease;
+  border: 1px solid color-mix(in srgb, var(--ev-bar) 18%, var(--cal-border));
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -36,7 +37,8 @@
 }
 
 :host(:hover) {
-  filter: brightness(0.97);
+  border-color: color-mix(in srgb, var(--ev-bar) 42%, var(--cal-border));
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ev-bar) 12%, transparent);
 }
 
 :host(:focus-visible) {
@@ -80,16 +82,17 @@
 }
 
 :host(.tone-done) {
-  filter: saturate(0.65);
+  --cal-ev-bg-pct: 12%;
+  --cal-ev-bg-strong-pct: 18%;
 }
 
 :host(.tone-attention) {
-  outline: 1.5px dashed var(--ev-bar);
+  outline: 1.5px dashed var(--cal-status-warn);
   outline-offset: -1.5px;
 }
 
 :host(.tone-active) {
-  outline: 1.5px solid var(--ev-bar);
+  outline: 1.5px solid var(--cal-status-info);
   outline-offset: -1.5px;
   background: var(--ev-bg-strong);
 }
@@ -153,4 +156,9 @@
   font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
+  color: var(--cal-text-2);
 }
+
+:host(.tone-attention) .status { color: var(--cal-status-warn); }
+:host(.tone-active) .status { color: var(--cal-status-info); }
+:host(.tone-done) .status { color: var(--cal-status-ok); }

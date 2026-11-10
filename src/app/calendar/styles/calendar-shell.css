@@ -20,6 +20,11 @@
   --cal-segment-bg: var(--app-hover);
   --cal-segment-active: var(--app-bg);
   --cal-danger: #dc2626;
+  /* Semantic status colours stay separate from dentist and chair identity colours. */
+  --cal-status-ok: var(--app-ok);
+  --cal-status-warn: var(--app-warn);
+  --cal-status-info: var(--app-info);
+  --cal-status-danger: var(--app-danger);
   --cal-focus: var(--app-text);
   --cal-focus-ring: color-mix(in srgb, var(--app-text) 22%, transparent);
   --cal-drop: color-mix(in srgb, var(--app-text) 8%, transparent);

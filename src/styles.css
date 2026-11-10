@@ -89,13 +89,7 @@ body {
   overflow: hidden;
 }
 
-/* The calendar is strict: no rounded surface anywhere inside it. */
-den-calendar,
-den-calendar *,
-den-calendar *::before,
-den-calendar *::after {
-  border-radius: 0 !important;
-}
+/* Calendar structure stays square; each control and event owns its own corner treatment. */
 
 /* Focus is drawn inside the box: strict layouts leave no outer space for an outline to live in. */
 :focus-visible {
