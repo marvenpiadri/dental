@@ -1,6 +1,6 @@
 # Dontalist
 
-Dental clinic CRM. Angular 22, server-side rendered. Design and architecture rules: [DESIGN.md](DESIGN.md). Calendar contract and backend notes: [DENTEUS.md](DENTEUS.md).
+Dental clinic CRM. Angular 22, server-side rendered. Product direction: [country packs and Morocco-first scope](docs/product-direction-country-packs.md). Design rules: [DESIGN.md](DESIGN.md). Calendar contract and backend notes: [DENTEUS.md](DENTEUS.md).
 
 Needs Node `^22.22.3`, `^24.15.0` or newer (Angular 22's requirement).
 
