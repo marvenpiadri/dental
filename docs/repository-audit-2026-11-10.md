@@ -56,9 +56,9 @@ These are candidate gaps, not a recommendation to build a full ERP module. Confi
 
 Current tasks are text plus a done flag. Not evidenced: assignee, due date, priority, patient/appointment link, comments, or activity history. Decide whether the current checklist is sufficient for V1 or whether a small assigned follow-up workflow is required.
 
-### Design token mismatch
+### Design token review — previous finding superseded
 
-`src/styles.css` still defines a green global primary accent (`--app-accent: #15803d`, dark mode `#4ade80`). This conflicts with the product direction for a monochrome default. Status colours can remain semantic; the primary action/active accent should be reconsidered separately.
+The current `src/styles.css` uses a monochrome primary accent (`#0a0a0a` in light mode and `#fafafa` in dark mode). Green is used only as a semantic success/status colour (`--app-ok`), not as the global primary accent. The earlier claim that the global accent was green was incorrect for the current branch.
 
 ## 3. Documentation that needs reconciliation
 
@@ -92,7 +92,7 @@ The remaining audit should verify:
 - Keep odontogram and periodontogram as the only chart modules; do not add separate endodontic, orthodontic, implant, occlusion, TMJ or soft-tissue chart modules.
 - Routine procedures must remain recordable without opening a chart or selecting a tooth.
 - Clinic payment records remain offline/manual; no online payment processing.
-- Do not build or maintain CNSS, CNOPS, FAR or other mutual-insurance reimbursement forms/workflows in Dontalist.
+- Country-specific insurance workflows are no longer a universal CRM feature. The product owner has reversed the earlier permanent exclusion: relevant CNSS, CNOPS, FAR and other Moroccan mutuelle workflows are now intended for the Morocco country pack only. Exact forms and workflows still require current source and requirements validation before implementation.
 - Backend, PostgreSQL, Supabase, Cloudflare API/auth and production migration remain deferred until the frontend is accepted.
 
 ## 6. Verification limits and next owners
@@ -101,6 +101,23 @@ The remaining audit should verify:
 
 **Not independently verified in this audit:** current test count, production build, SSR runtime, browser rendering, role-specific UI behavior, actual print output, and the complete end-to-end clinic-day workflows.
 
-**Good independent work for ChatGPT next:** reconcile the documentation; write a precise prescription-template requirements brief; define a right-sized inventory/task scope; perform a second product gap audit against the confirmed V1 boundary.
+**Good independent work for ChatGPT:** documentation reconciliation, product decision records, country-pack requirements, data-source/licence research, feature inventories and acceptance criteria.
+
+**Keep with Claude:** complex Angular implementation, local browser workflows, visual regression checks, test/build execution, production debugging and changes that require running the application locally.
 
 **Keep with Claude:** complex Angular implementation, local browser workflows, visual regression checks, test/build execution, and difficult debugging.
+
+
+## 7. Follow-up review of the current branch
+
+A later GitHub comparison found that `feat/patient-file-acts` had advanced **7 commits beyond** Claude's known `ac3fa33` commit. The intervening changes include calendar interaction and presentation updates across the time-grid, event blocks, toolbar, calendar wrapper, appointment mapping, chair-tint utility and its test, plus the calendar polish dependencies/configuration and not-found page. The branch includes the routine appointment-to-act workflow introduced by `ac3fa33`.
+
+The current branch source was also checked for the design tokens: the primary accent is monochrome, and semantic status colours are separate.
+
+This review did not run the Angular build, tests or browser. Do not treat the presence of commits or source files as proof of a fresh end-to-end release verification.
+
+## 8. New product direction recorded after this audit
+
+See [product-direction-country-packs.md](product-direction-country-packs.md). The agreed direction is one universal CRM with a Morocco-first country pack. The clinic's operating country selects applicable country-specific capabilities. Geographic reference data is to be imported locally only after the exact source referred to as "2piclock" is identified and its licence/reuse terms are checked.
+
+The earlier insurance exclusion in this audit is superseded: insurance workflows belong in the Moroccan pack, not in the universal product. Their individual requirements remain to be researched and validated.
