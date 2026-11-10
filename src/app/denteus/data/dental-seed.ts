@@ -2,7 +2,7 @@
  * DEMO DATA ONLY.
  *
  * Lets the calendar be tried without a backend. In the real application the clinic's dentists,
- * chairs, patients and appointments come from the Denteus API; turn the seed off with
+ * chairs, patients and appointments are sample data; turn the seed off with
  * `<den-calendar [seed]="false" />` and load real data instead.
  */
 import { addDays, addMinutes, startOfWeek, withMinutes } from '../../calendar/utils/date.utils';
