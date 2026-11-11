@@ -75,6 +75,12 @@ describe('backup settings', () => {
     const result = parseBackup(makeBackup({ ...data, settings: { ...settings, evil: 1 } as never }, when));
     expect(result.ok && result.data.settings).toEqual(settings);
   });
+  it('drops a retired insurer statement default from older backups', () => {
+    const old = makeBackup({ ...data, settings: { ...settings, docDefaults: { statement: 'old-template', quote: 'current-template' } } as never }, when);
+    const result = parseBackup(old);
+    expect(result.ok && result.data.settings?.docDefaults).toEqual({ quote: 'current-template' });
+  });
+
   it('leaves settings alone for a backup that has none', () => {
     const result = parseBackup(makeBackup(data, when));
     expect(result.ok && result.data.settings).toBeUndefined();
