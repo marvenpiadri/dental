@@ -1,8 +1,10 @@
 <header class="bar">
   <a class="brand" routerLink="/" aria-label="Dontalist"><img src="logo.png" alt="" width="32" height="32" /><span>Dontalist</span></a>
-  <nav class="links" aria-label="Dontalist">
-    <a href="#tour">{{ c().nav.product }}</a>
-    <a href="#why">{{ c().nav.facts }}</a>
+  <nav class="links" [attr.aria-label]="'Dontalist'">
+    <a href="#day">{{ c().nav.day }}</a>
+    <a href="#modules">{{ c().nav.modules }}</a>
+    <a href="#data">{{ c().nav.data }}</a>
+    <a href="#faq">{{ c().nav.faq }}</a>
     <a routerLink="/partnerships">{{ c().nav.partners }}</a>
   </nav>
   <button type="button" class="tool" (click)="i18n.setLang(nextLang())" [attr.aria-label]="nextLang().toUpperCase()"><i class="fa-solid fa-globe" aria-hidden="true"></i>{{ nextLang().toUpperCase() }}</button>
@@ -14,40 +16,93 @@
   <section class="hero">
     <h1>{{ c().hero.title }}</h1>
     <p class="lead">{{ c().hero.lead }}</p>
-    <p class="actions"><a class="cta big" routerLink="/today">{{ c().hero.cta }}</a><a class="ghost" href="#tour">{{ c().hero.more }}</a></p>
+    <p class="actions"><a class="cta big" routerLink="/today">{{ c().hero.cta }}</a><a class="ghost" href="#day">{{ c().hero.more }}</a></p>
+    <ul class="proof">@for (p of c().hero.proof; track p) { <li>{{ p }}</li> }</ul>
   </section>
   <figure class="frame hero-shot">
     <img class="light" [src]="src('calendar', 'light')" [alt]="c().hero.alt" width="1440" height="900" fetchpriority="high" />
     <img class="dark" [src]="src('calendar', 'dark')" [alt]="c().hero.alt" width="1440" height="900" fetchpriority="high" />
   </figure>
 
-  <section class="tour" id="tour" aria-labelledby="tour-title">
-    <h2 id="tour-title">{{ c().tourTitle }}</h2>
-    <div class="tabs" role="tablist" [attr.aria-label]="c().nav.product" (keydown)="key($event)">
-      @for (id of shots; track id) {
-        <button type="button" role="tab" class="tab" [attr.data-shot]="id" [attr.id]="'tab-' + id" [attr.aria-selected]="shot() === id" [attr.aria-controls]="'panel'" [attr.tabindex]="shot() === id ? 0 : -1" (click)="shot.set(id)">{{ c().tour[id].tab }}</button>
-      }
-    </div>
-    <div class="panel" role="tabpanel" id="panel" [attr.aria-labelledby]="'tab-' + shot()">
-      <div class="copy">
-        <h3>{{ current().title }}</h3>
-        <p>{{ current().body }}</p>
-        <ul>@for (p of current().points; track p) { <li>{{ p }}</li> }</ul>
+  <section class="day wrap" id="day" aria-labelledby="day-title">
+    <h2 id="day-title">{{ c().day.title }}</h2>
+    <p class="sub">{{ c().day.lead }}</p>
+    <div class="day-grid">
+      <div class="steps" role="tablist" aria-orientation="vertical" [attr.aria-label]="c().day.title" (keydown)="key($event)">
+        @for (id of steps; track id; let i = $index) {
+          <button type="button" role="tab" class="step" [attr.data-step]="id" [attr.id]="'tab-' + id" [attr.aria-selected]="step() === id" aria-controls="panel" [attr.tabindex]="step() === id ? 0 : -1" (click)="step.set(id)">
+            <span class="n" aria-hidden="true">{{ i + 1 }}</span>{{ c().day.steps[id].tab }}
+          </button>
+        }
       </div>
-      @for (id of [shot()]; track id) {
-        <figure class="frame">
-          <img class="light" [src]="src(id, 'light')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
-          <img class="dark" [src]="src(id, 'dark')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
-        </figure>
-      }
+      <div class="panel" role="tabpanel" id="panel" [attr.aria-labelledby]="'tab-' + step()">
+        <div class="copy">
+          <h3>{{ current().title }}</h3>
+          <p>{{ current().body }}</p>
+          <ul>@for (p of current().points; track p) { <li>{{ p }}</li> }</ul>
+        </div>
+        @for (id of [stepShot()]; track id) {
+          <figure class="frame">
+            <img class="light" [src]="src(id, 'light')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
+            <img class="dark" [src]="src(id, 'dark')" [alt]="current().alt" width="1440" height="900" loading="lazy" />
+          </figure>
+        }
+      </div>
     </div>
     <p class="note">{{ c().demoNote }}</p>
   </section>
 
-  <section class="why" id="why">
-    @for (f of c().facts; track f.title) {
-      <div class="fact"><h3>{{ f.title }}</h3><p>{{ f.body }}</p></div>
-    }
+  <section class="split wrap" aria-labelledby="file-title">
+    <div class="split-copy">
+      <h2 id="file-title">{{ c().file.title }}</h2>
+      <p>{{ c().file.body }}</p>
+      <ul class="rule-list">@for (p of c().file.points; track p) { <li>{{ p }}</li> }</ul>
+    </div>
+    <figure class="frame"><img class="light" [src]="src('patient', 'light')" [alt]="c().file.alt" width="1440" height="900" loading="lazy" /><img class="dark" [src]="src('patient', 'dark')" [alt]="c().file.alt" width="1440" height="900" loading="lazy" /></figure>
+  </section>
+
+  <section class="split flip wrap" aria-labelledby="team-title">
+    <div class="split-copy">
+      <h2 id="team-title">{{ c().team.title }}</h2>
+      <p>{{ c().team.body }}</p>
+      <ul class="rule-list">@for (p of c().team.points; track p) { <li>{{ p }}</li> }</ul>
+    </div>
+    <figure class="frame"><img class="light" [src]="src('doctor', 'light')" [alt]="c().team.alt" width="1440" height="900" loading="lazy" /><img class="dark" [src]="src('doctor', 'dark')" [alt]="c().team.alt" width="1440" height="900" loading="lazy" /></figure>
+  </section>
+
+  <section class="modules wrap" id="modules" aria-labelledby="modules-title">
+    <h2 id="modules-title">{{ c().modules.title }}</h2>
+    <p class="sub">{{ c().modules.lead }}</p>
+    <div class="mod-grid">
+      @for (g of c().modules.groups; track g.name) {
+        <div class="mod">
+          <h3>{{ g.name }}</h3>
+          <ul>@for (m of g.items; track m.name) { <li><strong>{{ m.name }}</strong><span>{{ m.body }}</span></li> }</ul>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="data wrap" id="data" aria-labelledby="data-title">
+    <h2 id="data-title">{{ c().data.title }}</h2>
+    <p class="sub">{{ c().data.lead }}</p>
+    <div class="facts">@for (f of c().data.items; track f.title) { <div class="fact"><h3>{{ f.title }}</h3><p>{{ f.body }}</p></div> }</div>
+  </section>
+
+  <section class="start wrap" aria-labelledby="start-title">
+    <h2 id="start-title">{{ c().start.title }}</h2>
+    <ol class="start-steps">@for (s of c().start.steps; track s.title) { <li><h3>{{ s.title }}</h3><p>{{ s.body }}</p></li> }</ol>
+    <p class="note">{{ c().start.note }}</p>
+  </section>
+
+  <section class="faq wrap" id="faq" aria-labelledby="faq-title">
+    <h2 id="faq-title">{{ c().faq.title }}</h2>
+    <div class="faq-list">@for (f of c().faq.items; track f.q) { <details><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details> }</div>
+  </section>
+
+  <section class="band wrap" aria-labelledby="partners-title">
+    <div><h2 id="partners-title">{{ c().partners.title }}</h2><p>{{ c().partners.body }}</p></div>
+    <a class="ghost" routerLink="/partnerships">{{ c().partners.cta }}</a>
   </section>
 
   <section class="closing">
@@ -57,4 +112,4 @@
   </section>
 </main>
 
-<footer class="foot">{{ c().foot }}</footer>
+<footer class="foot"><span>{{ c().foot }}</span><a routerLink="/partnerships">{{ c().nav.partners }}</a></footer>

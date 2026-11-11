@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { ThemeService } from '../core/theme.service';
 import { I18n } from '../core/i18n/i18n.service';
-import { COPY, SHOTS, ShotId } from './landing-copy';
+import { COPY, STEPS, STEP_SHOT, ShotId, StepId } from './landing-copy';
 
 /**
  * `/`: the public landing page. Every screenshot is a capture of the real application (tools/capture-landing.mjs).
@@ -23,9 +23,10 @@ export class LandingComponent {
   private readonly meta = inject(Meta);
 
   protected readonly c = computed(() => COPY[this.i18n.lang()]);
-  protected readonly shots = SHOTS;
-  protected readonly shot = signal<ShotId>('calendar');
-  protected readonly current = computed(() => this.c().tour[this.shot()]);
+  protected readonly steps = STEPS;
+  protected readonly step = signal<StepId>('book');
+  protected readonly current = computed(() => this.c().day.steps[this.step()]);
+  protected readonly stepShot = computed(() => STEP_SHOT[this.step()]);
   protected readonly nextLang = computed(() => (this.i18n.lang() === 'en' ? 'fr' : 'en'));
 
   constructor() {
@@ -41,12 +42,12 @@ export class LandingComponent {
 
   /** Arrow keys move between the tabs, as in a native tab list. */
   protected key(e: KeyboardEvent): void {
-    const i = SHOTS.indexOf(this.shot());
+    const i = STEPS.indexOf(this.step());
     const to = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : null;
     if (to === null) return;
     e.preventDefault();
-    const id = SHOTS[(to + SHOTS.length) % SHOTS.length];
-    this.shot.set(id);
-    (e.currentTarget as HTMLElement).querySelector<HTMLElement>(`[data-shot="${id}"]`)?.focus();
+    const id = STEPS[(to + STEPS.length) % STEPS.length];
+    this.step.set(id);
+    (e.currentTarget as HTMLElement).querySelector<HTMLElement>(`[data-step="${id}"]`)?.focus();
   }
 }
