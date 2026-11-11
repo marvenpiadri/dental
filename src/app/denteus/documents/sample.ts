@@ -7,7 +7,6 @@ import { letterDoc } from '../patients/letter-html';
 import { prescriptionDoc } from '../patients/prescription-html';
 import { quoteDoc } from '../patients/quote-html';
 import { receiptDoc } from '../patients/receipt-html';
-import { statementDoc } from '../patients/statement-html';
 import { DocContent, DocKind } from './doc-engine';
 
 type T = (key: Key, params?: Record<string, string | number>) => string;
@@ -36,8 +35,6 @@ export function sampleDoc(kind: DocKind, t: T, clinic: string, lang: string, mon
       labels: { title: t('quote.title'), patient: t('receipt.patient'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('quote.note') } });
     case 'receipt': return receiptDoc({ ...common, number: 'R-0042', method: t('pay.cash'), amount: money(500), charged: money(900), paid: money(500), due: money(400), dir: 'ltr',
       labels: { title: t('receipt.title'), patient: t('receipt.patient'), date: t('receipt.date'), method: t('bill.method'), amount: t('receipt.amount'), charged: t('bill.charged'), paid: t('bill.paid'), due: t('bill.due'), thanks: t('receipt.thanks') } });
-    case 'statement': return statementDoc({ ...common, insurer: '', number: '', total: money(900), lines: lines.map((l) => ({ date, tooth: l.where, name: l.name, price: l.price })),
-      labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') } });
     case 'prescription': return prescriptionDoc({ ...common, dentist: t('doc.sample.dentist'), lines: [{ drug: 'Amoxicillin 1 g', dosage: '1 + 1 + 1', duration: t('doc.sample.days') }],
       labels: { title: t('rx.title'), patient: t('receipt.patient'), date: t('receipt.date'), dentist: t('rx.dentist'), signature: t('rx.signature') } } as Parameters<typeof prescriptionDoc>[0]);
     case 'letter': return letterDoc({ ...common, dentist: t('doc.sample.dentist'), title: t('letter.referral'), details: [`${t('letter.to')}: Dr Benjelloun`], text: t('doc.sample.letter'),

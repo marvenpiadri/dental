@@ -7,7 +7,7 @@ import { CHART_KINDS, DOC_KINDS, DOC_STYLES, DocKind, DocTemplate, PRESETS, SECT
 import { Documents } from './documents.service';
 import { sampleChart, sampleDoc } from './sample';
 
-const KIND_KEY: Record<DocKind, Key> = { invoice: 'doc.kind.invoice', quote: 'doc.kind.quote', receipt: 'doc.kind.receipt', statement: 'doc.kind.statement', prescription: 'doc.kind.prescription', report: 'doc.kind.report', letter: 'doc.kind.letter' };
+const KIND_KEY: Record<DocKind, Key> = { invoice: 'doc.kind.invoice', quote: 'doc.kind.quote', receipt: 'doc.kind.receipt', prescription: 'doc.kind.prescription', report: 'doc.kind.report', letter: 'doc.kind.letter' };
 const SECTION_KEY: Record<SectionId, Key> = { sender: 'doc.sec.sender', title: 'doc.sec.title', facts: 'doc.sec.facts', body: 'doc.sec.body', chart: 'doc.sec.chart', notes: 'doc.sec.notes', signature: 'doc.sec.signature' };
 const STYLE_KEY = { modern: 'doc.style.modern', minimal: 'doc.style.minimal', bold: 'doc.style.bold' } as const satisfies Record<string, Key>;
 const SWATCHES = ['#0a0a0a', '#1d4ed8', '#047857', '#b45309', '#9f1239'];
