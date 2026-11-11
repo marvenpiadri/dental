@@ -5,7 +5,7 @@ export const PRACTICE_KEYS = ['expenses', 'stock', 'lab', 'tasks', 'implants', '
 export type PracticeData = Record<(typeof PRACTICE_KEYS)[number], unknown[]>;
 
 /** Settings rows kept next to the records: preferences, message templates, document templates, staff and the staff log. */
-export const SETTING_KEYS = ['prefs', 'waTemplates', 'hiddenPages', 'view3d', 'docTemplates', 'docDefaults', 'staff', 'staffLog'] as const;
+export const SETTING_KEYS = ['prefs', 'waTemplates', 'hiddenPages', 'view3d', 'docTemplates', 'docDefaults', 'staff', 'staffLog', 'medications', 'rxTemplates'] as const;
 export type BackupSettings = Partial<Record<(typeof SETTING_KEYS)[number], unknown>>;
 
 /** A patient file (X-ray, scan) as it travels in a backup: the bytes are a data URL. */

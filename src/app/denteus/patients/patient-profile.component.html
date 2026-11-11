@@ -253,6 +253,12 @@
                   <den-letters [patientName]="p.fullName" [chart]="p.odontogram" [letters]="p.letters ?? []" (edit)="store.changeLetters(p.id, $event)" />
                 </section>
               }
+              @case ('rx') {
+                <section class="card" aria-labelledby="rx-title">
+                  <header class="card-head"><h2 class="card-title" id="rx-title"><i class="fa-solid fa-file-prescription" aria-hidden="true"></i>{{ t('rx.tab') }}</h2></header>
+                  <den-rx-page [patient]="p" />
+                </section>
+              }
               @case ('documents') {
                 <section class="card" aria-labelledby="docs-title">
                   <header class="card-head"><h2 class="card-title" id="docs-title"><i class="fa-solid fa-x-ray" aria-hidden="true"></i>{{ t('profile.documents') }}</h2></header>

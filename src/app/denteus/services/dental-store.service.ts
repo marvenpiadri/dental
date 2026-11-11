@@ -25,6 +25,7 @@ import {
   CatalogEntry,
   Invoice,
   Letter,
+  Prescription,
   Message,
   Payment,
   VisitNote,
@@ -243,7 +244,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -281,6 +282,12 @@ export class DentalStore {
   changeLetters(patientId: string, change: (letters: Letter[]) => Letter[]): void {
     if (!this.auth.can('clinical.edit')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, letters: change(p.letters ?? []) } : p)));
+  }
+
+  /** Same shape as `changeLetters`, for the patient's prescriptions. Issued ones are changed only by the rules in rx-rules.ts. */
+  changePrescriptions(patientId: string, change: (list: Prescription[]) => Prescription[]): void {
+    if (!this.auth.can('clinical.edit')) return;
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, prescriptions: change(p.prescriptions ?? []) } : p)));
   }
 
   /** Records that a WhatsApp message was prepared for the patient; for a visit reminder it also marks the visit as reminded. */

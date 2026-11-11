@@ -22,6 +22,8 @@ export interface ClinicLocation {
   invoiceNote?: string;
   /** Public page content and location, all owned by the clinic. Absent until the owner fills it in. */
   profile?: ClinicProfile;
+  /** Printed at the top of prescriptions. Resized in the browser and kept as a data URL. */
+  logo?: string;
 }
 
 export type PublishState = 'draft' | 'published' | 'unpublished' | 'closed';
@@ -93,6 +95,8 @@ export interface Patient {
   archivedAt?: string;
   /** Certificates and referral letters, oldest first. */
   letters?: Letter[];
+  /** Prescriptions (drafts, issued, voided, superseded), oldest first. Issued ones are never edited. */
+  prescriptions?: Prescription[];
   /** Whether the patient agreed to WhatsApp messages from the clinic. Unset means not asked yet; `declined` blocks every message. */
   whatsappConsent?: 'granted' | 'declined';
   /** ISO timestamp the consent answer was recorded. */
@@ -433,4 +437,88 @@ export interface PatientDocument {
   /** FDI number of the tooth this image is about, when it is about one. */
   tooth?: string;
   blob: Blob;
+}
+
+/* ------------------------------ prescriptions ------------------------------ */
+
+/** One entry of the clinic's own medication list. Nothing is built in: the dentist adds what they prescribe. */
+export interface Medication {
+  id: string;
+  name: string;
+  brand?: string;
+  /** Active ingredient. */
+  generic?: string;
+  strength?: string;
+  form?: string;
+  route?: string;
+  /** Default patient instructions, copied to a prescription line and editable there. */
+  instructions?: string;
+  /** Other names or the drug family (for example "penicillin") an allergy note might use. Matched against the patient's allergies. */
+  aliases?: string;
+  /** Medical-condition codes (the patient file's own list) the dentist wants flagged for review when this drug is prescribed. */
+  reviewConditions?: string[];
+  archivedAt?: string;
+}
+
+/** A medication line on a prescription. Copies the medication's text so later edits to the list never change it. */
+export interface RxItem {
+  id: string;
+  medicationId?: string;
+  name: string;
+  brand?: string;
+  generic?: string;
+  strength?: string;
+  form?: string;
+  route?: string;
+  dosage?: string;
+  frequency?: string;
+  duration?: string;
+  quantity?: string;
+  refills?: string;
+  instructions?: string;
+  /** Copied from the medication record when the line was added; used only for the safety notes. */
+  aliases?: string;
+  reviewConditions?: string[];
+}
+
+export interface RxTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  items: RxItem[];
+  updatedAt: string;
+}
+
+export type PrescriptionStatus = 'draft' | 'issued' | 'voided' | 'superseded';
+
+/** Who wrote and for whom, frozen when the prescription is issued so later profile edits never change it. */
+export interface RxSnapshot {
+  clinic: { name: string; address?: string; phone?: string; email?: string; logo?: string };
+  dentist: { name: string; specialty?: string; registration?: string; phone?: string; email?: string };
+  patient: { name: string; birthDate?: string; sex?: 'female' | 'male'; phone?: string };
+}
+
+export interface Prescription {
+  id: string;
+  /** Set when issued, `RX-2026-0001`. Drafts have none. */
+  number?: string;
+  status: PrescriptionStatus;
+  createdAt: string;
+  updatedAt: string;
+  issuedAt?: string;
+  dentistId?: string;
+  appointmentId?: string;
+  templateId?: string;
+  items: RxItem[];
+  /** Free text for the patient, printed under the medications. */
+  notes?: string;
+  snapshot?: RxSnapshot;
+  /** The safety notes the dentist confirmed they had reviewed before issuing. */
+  acknowledged?: string[];
+  /** A correction is a new prescription pointing at the one it replaces; the original stays, marked superseded once the correction is issued. */
+  correctsId?: string;
+  correctionReason?: string;
+  supersededById?: string;
+  voidedAt?: string;
+  voidReason?: string;
 }

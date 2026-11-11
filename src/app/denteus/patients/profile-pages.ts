@@ -8,6 +8,7 @@ export const PROFILE_PAGES = [
   { id: 'billing', key: 'page.payments', icon: 'fa-wallet', clinical: false },
   { id: 'quotes', key: 'page.quotes', icon: 'fa-file-invoice', clinical: true },
   { id: 'visits', key: 'profile.visits', icon: 'fa-notes-medical', clinical: true },
+  { id: 'rx', key: 'rx.tab', icon: 'fa-file-prescription', clinical: true },
   { id: 'documents', key: 'page.imaging', icon: 'fa-x-ray', clinical: true },
 ] as const satisfies readonly { id: string; key: Key; icon: string; clinical: boolean }[];
 export type Section = (typeof PROFILE_PAGES)[number]['id'];
