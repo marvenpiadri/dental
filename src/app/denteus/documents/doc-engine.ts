@@ -1,11 +1,11 @@
 // One renderer for every printed document. A document says WHAT it contains (DocContent); a template says HOW it looks
 // and which sections appear in which order (DocTemplate). Nothing here knows about invoices or patients.
 
-export type DocKind = 'invoice' | 'quote' | 'receipt' | 'statement' | 'prescription' | 'report' | 'letter';
-export const DOC_KINDS: readonly DocKind[] = ['invoice', 'quote', 'receipt', 'statement', 'prescription', 'report', 'letter'];
+export type DocKind = 'invoice' | 'quote' | 'receipt' | 'prescription' | 'report' | 'letter';
+export const DOC_KINDS: readonly DocKind[] = ['invoice', 'quote', 'receipt', 'prescription', 'report', 'letter'];
 
 export type SectionId = 'sender' | 'title' | 'facts' | 'body' | 'chart' | 'notes' | 'signature';
-/** The only documents that may carry the tooth chart: a clinical report, a referral letter and a treatment plan. Invoices, receipts, statements and prescriptions never do. */
+/** The only documents that may carry the tooth chart: a clinical report, a referral letter and a treatment plan. Invoices, receipts and prescriptions never do. */
 export const CHART_KINDS: readonly DocKind[] = ['report', 'letter', 'quote'];
 export const SECTIONS: readonly SectionId[] = ['sender', 'title', 'facts', 'body', 'chart', 'notes', 'signature'];
 
