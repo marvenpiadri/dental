@@ -87,7 +87,7 @@ Patient files currently store document bytes in browser IndexedDB/data URLs.
 Use one universal CRM schema with a Morocco-first country-pack layer.
 
 - **Tenant root:** clinic/account is the security boundary. Every clinic-owned record must be scoped to that tenant, directly or through a parent relationship.
-- **Country:** clinic's ISO country code determines available country-specific capabilities; Morocco-only insurance workflows stay out of the universal CRM interface.
+- **Country:** clinic's ISO country code may control verified local configuration only. CNSS, CNOPS and insurer reimbursement workflows are out of scope and must not be introduced as country-specific modules.
 - **Core entities:** clinic, staff/membership, patients, appointments, encounters/visits, treatment-plan items, charts/examinations, invoices/lines, payments, documents and practice records.
 - **Configuration:** clinic preferences, services/catalogue, chairs, staff permissions and templates.
 - **Country packs:** country-specific fields, reference data and workflows, with documented source, verification date and limitations.
@@ -112,7 +112,7 @@ Do not create a table for every setting or every country. Derive the final table
 - Completing another calendar animation or visual polish pass.
 - Re-running every UI route through a broad browser audit.
 - Adding speculative country packs beyond Morocco.
-- Implementing every Moroccan insurer form before designing the universal schema.
+- Designing or implementing CNSS, CNOPS or insurer reimbursement workflows; they are out of scope.
 - Building a full pharmacy catalogue before the prescription model is agreed.
 - Choosing a final table count before mapping all current entities.
 
@@ -122,7 +122,7 @@ Do not create a table for every setting or every country. Derive the final table
 2. Confirm the authentication provider and server-side membership model.
 3. Confirm whether PostgreSQL + Supabase is the chosen backend platform, after checking file storage, auth, RLS and deployment needs.
 4. Confirm the exact country/geographic reference dataset and licence before importing it.
-5. Confirm the minimum Morocco V1 country-pack scope; do not block the universal schema on unfinished insurer research.
+5. Confirm only the Moroccan legal, document and tax configuration actually required for ordinary clinic operations; do not create an insurer or reimbursement module.
 
 ## Ownership and handoff
 
