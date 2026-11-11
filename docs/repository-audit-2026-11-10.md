@@ -92,7 +92,7 @@ The remaining audit should verify:
 - Keep odontogram and periodontogram as the only chart modules; do not add separate endodontic, orthodontic, implant, occlusion, TMJ or soft-tissue chart modules.
 - Routine procedures must remain recordable without opening a chart or selecting a tooth.
 - Clinic payment records remain offline/manual; no online payment processing.
-- Country-specific insurance workflows are no longer a universal CRM feature. The product owner has reversed the earlier permanent exclusion: relevant CNSS, CNOPS, FAR and other Moroccan mutuelle workflows are now intended for the Morocco country pack only. Exact forms and workflows still require current source and requirements validation before implementation.
+- CNSS, CNOPS and insurer reimbursement workflows are out of scope. Do not add insurer-specific forms, PDF templates, claims, reimbursement tracking, chart annotations or dedicated settings. Normal treatment billing and manual patient payments remain in the universal CRM.
 - Backend, PostgreSQL, Supabase, Cloudflare API/auth and production migration remain deferred until the frontend is accepted.
 
 ## 6. Verification limits and next owners
@@ -117,4 +117,4 @@ This review did not run the Angular build, tests or browser. Do not treat the pr
 
 See [product-direction-country-packs.md](product-direction-country-packs.md). The agreed direction is one universal CRM with a Morocco-first country pack. The clinic's operating country selects applicable country-specific capabilities. Geographic reference data is to be imported locally only after the exact source referred to as "2piclock" is identified and its licence/reuse terms are checked.
 
-The earlier insurance exclusion in this audit is superseded: insurance workflows belong in the Moroccan pack, not in the universal product. Their individual requirements remain to be researched and validated.
+The current product decision is to exclude CNSS, CNOPS and insurer reimbursement workflows entirely. Country-specific configuration must not be used as a route to reintroduce them.
