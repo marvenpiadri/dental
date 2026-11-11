@@ -82,7 +82,11 @@ export function parseBackup(source: string): BackupResult {
   if (!arrays.every((key) => Array.isArray(raw[key]))) return { ok: false, reason: 'damaged' };
 
   const withId = (list: unknown[]) => list.every((item) => isRecord(item) && text(item['id']));
-  const patients = raw['patients'] as unknown[];
+  const patients = (raw['patients'] as unknown[]).map((patient) => {
+    if (!isRecord(patient)) return patient;
+    const { insurer: _insurer, insuranceNumber: _insuranceNumber, ...clinicPatient } = patient;
+    return clinicPatient;
+  });
   if (!withId(raw['locations'] as unknown[]) || !withId(raw['dentists'] as unknown[]) || !withId(raw['chairs'] as unknown[]) || !withId(patients)) return { ok: false, reason: 'damaged' };
   if (!patients.every((p) => text((p as Record<string, unknown>)['fullName']))) return { ok: false, reason: 'damaged' };
 
