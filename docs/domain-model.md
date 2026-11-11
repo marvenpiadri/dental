@@ -65,7 +65,7 @@ Dontalist is international by architecture and Morocco-first in delivery. Keep o
 - If geographic selectors are backed by imported reference data, use a compact hierarchy model (country plus parent-linked administrative areas with a level/type), not a separate table for each country's province/city hierarchy. Preserve source identifiers and licence/attribution metadata.
 - The geographic dataset mentioned as "2piclock" has not yet been identified. Do not choose or import it until the exact URL, data coverage, update policy and licence are verified.
 - Do not create one database table for every country feature. Country pack availability can be represented through a small configuration/registry and country-specific modules; the exact persistence model should follow the actual workflows.
-- Moroccan insurance workflows (CNSS, CNOPS, FAR and other relevant mutuelles) are intended for the Morocco pack only. This supersedes the earlier product decision to remove them permanently. Individual forms and rules remain subject to current requirements research before implementation.
+- CNSS, CNOPS and insurer reimbursement workflows are out of scope. Do not add insurer-specific entities, forms, claims, reimbursement tracking or chart annotations. Ordinary invoices, credit notes and manually recorded patient payments remain core billing records.
 - The current model assumes MAD and lacks invoice/payment tax fields. Before enabling a second country, introduce explicit currency codes for monetary records and verify country-specific invoice/tax requirements. Do not silently reinterpret historical MAD amounts.
 - Country selection is not a compliance guarantee. Each pack needs a documented scope, source references, verification date and known limitations.
 

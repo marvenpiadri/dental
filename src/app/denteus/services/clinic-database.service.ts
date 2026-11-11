@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Appointment, Chair, Dentist, Patient, PatientDocument } from '../models/dental.models';
 
 const DATABASE_NAME = 'dental-clinic';
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 
 interface StoredRecord {
   id: string;
@@ -50,6 +50,22 @@ export class ClinicDatabase {
         if (!documents.indexNames.contains('patientId')) documents.createIndex('patientId', 'patientId', { unique: false }); // added in v3
         if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('auditEvents')) db.createObjectStore('auditEvents', { keyPath: 'id' });
+
+        // v4: remove retired insurer/member-number fields from existing patient records.
+        // Preserve every clinical, scheduling and ordinary billing field.
+        const patientStore = request.transaction!.objectStore('patients');
+        const cursorRequest = patientStore.openCursor();
+        cursorRequest.onsuccess = () => {
+          const cursor = cursorRequest.result;
+          if (!cursor) return;
+          const patient = cursor.value as Record<string, unknown>;
+          if ('insurer' in patient || 'insuranceNumber' in patient) {
+            delete patient['insurer'];
+            delete patient['insuranceNumber'];
+            cursor.update(patient);
+          }
+          cursor.continue();
+        };
       };
       request.onsuccess = () => {
         const db = request.result;

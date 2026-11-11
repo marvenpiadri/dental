@@ -21,6 +21,18 @@ describe('backup', () => {
     expect(result.data.appointments[0].history[0].at).toEqual(when);
   });
 
+  it('strips legacy insurer fields from imported patient records without changing the rest of the file', () => {
+    const old = JSON.parse(makeBackup(data, when));
+    old.patients[0].insurer = 'AMO';
+    old.patients[0].insuranceNumber = '123456';
+    const result = parseBackup(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.patients[0]).toEqual(patient);
+    expect(result.data.patients[0]).not.toHaveProperty('insurer');
+    expect(result.data.patients[0]).not.toHaveProperty('insuranceNumber');
+  });
+
   it('gives a backup from before the catalog existed the built-in acts', () => {
     const old = JSON.parse(makeBackup(data, when));
     delete old.catalog;
@@ -63,6 +75,12 @@ describe('backup settings', () => {
     const result = parseBackup(makeBackup({ ...data, settings: { ...settings, evil: 1 } as never }, when));
     expect(result.ok && result.data.settings).toEqual(settings);
   });
+  it('drops a retired insurer statement default from older backups', () => {
+    const old = makeBackup({ ...data, settings: { ...settings, docDefaults: { statement: 'old-template', quote: 'current-template' } } as never }, when);
+    const result = parseBackup(old);
+    expect(result.ok && result.data.settings?.docDefaults).toEqual({ quote: 'current-template' });
+  });
+
   it('leaves settings alone for a backup that has none', () => {
     const result = parseBackup(makeBackup(data, when));
     expect(result.ok && result.data.settings).toBeUndefined();

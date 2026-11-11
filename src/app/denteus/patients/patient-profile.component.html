@@ -57,7 +57,6 @@
               @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
             </ul>
             <div class="tags">
-              @if (p.insurer) { <span class="chip" data-tone="info"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i>{{ p.insurer }}@if (p.insuranceNumber) { · {{ p.insuranceNumber }} }</span> }
               @if (p.createdAt) { <span class="chip" data-tone="neutral">{{ t('profile.since', { date: since() }) }}</span> }
             </div>
           </div>
@@ -283,7 +282,7 @@
               @case ('billing') {
                 <section class="card" aria-labelledby="bill-title">
                   <header class="card-head"><h2 class="card-title" id="bill-title"><i class="fa-solid fa-wallet" aria-hidden="true"></i>{{ t('profile.billing') }}</h2></header>
-                  <den-billing [patientName]="p.fullName" [insurer]="p.insurer ?? ''" [insuranceNumber]="p.insuranceNumber ?? ''" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
+                  <den-billing [patientName]="p.fullName" [plan]="p.plan ?? []" [payments]="p.payments ?? []" [invoices]="p.invoices ?? []" (edit)="store.changePayments(p.id, $event)" (editInvoices)="store.changeInvoices(p.id, $event)" />
                 </section>
               }
             }

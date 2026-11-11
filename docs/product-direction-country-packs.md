@@ -12,7 +12,7 @@ Do not create separate CRM codebases for each country. Maintain one universal de
 ## Three configuration layers
 
 1. **Universal CRM core** — patients, appointments, calendar, clinical records, odontogram and periodontogram, dental acts, treatment plans, quotes, invoices, offline/manual payment records, staff, documents and reporting.
-2. **Country pack** — jurisdiction-specific legal fields, document formats, terminology, tax/invoice rules, prescription conventions, insurance workflows and reference datasets, only where verified and supported.
+2. **Country configuration** — jurisdiction-specific legal fields, document formats, terminology, tax/invoice rules, prescription conventions and reference data, only where verified and supported. This is not an insurance-claims or reimbursement module.
 3. **Clinic configuration** — clinic identity, services and prices, appointment durations, enabled payment methods, staff access, templates, preferences and branding.
 
 Country-specific rules must not be scattered through universal components as ad hoc checks. Keep them behind a country configuration/feature boundary.
@@ -28,21 +28,13 @@ Country-specific rules must not be scattered through universal components as ad 
 - The geographic dataset source mentioned by the product owner as "2piclock" has not yet been identified or licence-checked. Do not select or import a dataset until its exact source URL, data freshness and reuse terms are confirmed.
 - Preserve source attribution and licence obligations for any imported country/region/city dataset.
 
-## Morocco country pack
+## Morocco-specific configuration
 
-Morocco is the first fully supported country pack.
+Morocco is the first supported market. Dontalist may use verified Moroccan business, language, currency, document and regulatory configuration where it is genuinely needed.
 
-The Moroccan pack is intended to contain country-specific workflows requested by Moroccan clinics, including:
-- CNSS-related dental reimbursement administration;
-- CNOPS-related dental reimbursement administration;
-- FAR-related dental reimbursement administration;
-- other relevant Moroccan mutuelles/insurers as their requirements are researched;
-- Moroccan clinic, practitioner and document requirements;
-- Moroccan reference datasets where official sources and reuse terms permit.
+**CNSS, CNOPS and insurer reimbursement workflows are permanently out of scope unless the product owner explicitly reverses this decision.** Do not build or retain insurer-specific forms, PDF templates, claim workflows, reimbursement tracking, insurer-specific chart annotations, or dedicated insurer fields and settings. Do not create a placeholder country module for them.
 
-**This supersedes the earlier decision to permanently exclude CNSS/CNOPS/FAR forms.** The new direction is to make relevant insurance workflows available only to Moroccan clinics, not to expose them in the universal CRM or other countries' interfaces.
-
-This decision does not mean every insurer's workflow is already specified or legally validated. Before implementing an insurer-specific form, verify the current form, required fields, act nomenclature, supporting documents, submission process and update/maintenance requirements. Do not claim electronic submission or official integration unless it exists and is authorised.
+This does not remove ordinary clinic billing: treatment plans, invoices, credit notes, receipts and manually recorded patient payments remain part of the universal CRM. Those are not insurance claims.
 
 ## Future country packs
 
@@ -66,10 +58,9 @@ This decision does not mean every insurer's workflow is already specified or leg
 
 **Good preparation work before backend:** product requirements, country-pack boundaries, field definitions, source/licence research, document inventories, test scenarios and documentation.
 
-**Reserve for complex implementation and verification:** country-pack runtime architecture, tenant isolation, backend authorization, migrations, import/synchronisation jobs, insurer-specific form generation, local browser validation, production builds and regression debugging.
+**Reserve for complex implementation and verification:** country-configuration runtime architecture, tenant isolation, backend authorization, migrations, import/synchronisation jobs, local browser validation, production builds and regression debugging.
 
 ## Open inputs
 
 1. Exact URL for the geographic dataset referred to as "2piclock".
-2. The first Moroccan insurers and exact document workflows to support in V1.
-3. Current official forms/specifications and their permitted reuse/update mechanisms.
+2. Any future country-specific requirement must be justified by a real clinic workflow and separately approved before implementation.

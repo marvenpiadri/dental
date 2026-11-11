@@ -12,7 +12,7 @@ Baseline: commit 264247b plus the clinic-profile rules below. Statuses use the b
 | Imaging viewer | Complete and verified | Browser-tested light, dark (7 Nov); phone dropped from V1 scope |
 | Invoices, credit notes, voids, receipts | Complete and verified | Browser-tested; real print layout not yet checked |
 | WhatsApp (manual, consent, log) | Complete and verified | No integration claimed |
-| CNSS/CNOPS | Removed | Legacy stores left inert, tested on a v3 database |
+| Insurer reimbursement workflows | Out of scope | Do not reintroduce insurer-specific forms, claims, PDFs or reimbursement tracking |
 | Calendar and waiting room end-to-end | Implemented but insufficiently tested | Smoke-tested only |
 | Print layouts (invoice, letters, quote) | Implemented but insufficiently tested | Unit-tested HTML; not rendered to paper/PDF |
 | Dark mode of Practice, Reports, Settings | Implemented but insufficiently tested | |
