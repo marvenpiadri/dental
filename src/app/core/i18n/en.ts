@@ -558,7 +558,6 @@ export const en = {
   'doc.kind.invoice': 'Invoice',
   'doc.kind.quote': 'Quote',
   'doc.kind.receipt': 'Receipt',
-  'doc.kind.statement': 'Care statement',
   'doc.kind.prescription': 'Prescription',
   'doc.kind.report': 'Tooth chart report',
   'doc.kind.letter': 'Letters and referrals',
