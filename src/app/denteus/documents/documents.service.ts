@@ -22,7 +22,10 @@ export class Documents {
     const list = await this.db.loadSetting<unknown[]>('docTemplates').catch(() => undefined);
     this.custom.set((Array.isArray(list) ? list : []).map(normalizeTemplate).filter((t): t is DocTemplate => !!t));
     const d = await this.db.loadSetting<Record<string, string>>('docDefaults').catch(() => undefined);
-    this.defaults.set(Object.fromEntries(Object.entries(d ?? {}).filter(([k]) => DOC_KINDS.includes(k as DocKind))));
+    const defaults = Object.fromEntries(Object.entries(d ?? {}).filter(([k]) => DOC_KINDS.includes(k as DocKind)));
+    this.defaults.set(defaults);
+    // Drop retired document kinds from saved clinic preferences as well as from the UI.
+    if (d && Object.keys(defaults).length !== Object.keys(d).length) await this.db.saveSetting('docDefaults', defaults);
   }
 
   /** The template a document of this kind prints with; Minimal when none was chosen or the chosen one was deleted. */
