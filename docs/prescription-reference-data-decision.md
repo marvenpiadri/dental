@@ -1,3 +1,5 @@
+> **SUPERSEDED.** The product direction changed to a universal, clinic-managed library. RxNorm, AMMPS and external drug catalogues are not used. Kept for history only.
+
 # Prescription reference data: current architecture and source decision
 
 Status: proposal for approval. Nothing in this document has been implemented. No drug, allergen or safety record has been created.

@@ -1,4 +1,5 @@
 import { Appointment, Patient } from '../models/dental.models';
+import { readMedications } from '../rx/med-library';
 import { makeBackup, parseBackup } from './backup';
 
 const when = new Date('2026-10-23T09:00:00.000Z');
@@ -11,6 +12,17 @@ const appointment: Appointment = {
 const data = { locations: [], dentists: [{ id: 'd1', name: 'Dr. A', specialty: '', color: '#000' }], chairs: [{ id: 'c1', name: 'Chair 1' }], patients: [patient], appointments: [appointment], catalog: [{ id: 'crown', name: 'Zirconia crown', price: 3000 }] };
 
 describe('backup', () => {
+  it('carries the medication and allergy libraries, and an old flat medication list still migrates', () => {
+    const b = JSON.parse(makeBackup({ ...data, settings: { medications: [{ id: 'm1', name: 'Amoxicillin', strength: '500 mg' }], allergyDefs: [{ id: 'g1', name: 'Penicillin' }], rxTemplates: [] } }, when));
+    const result = parseBackup(JSON.stringify(b));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.settings?.['allergyDefs']).toEqual([{ id: 'g1', name: 'Penicillin' }]);
+    const { list, migrated } = readMedications(result.data.settings?.['medications'], () => 'new');
+    expect(migrated).toBe(true);
+    expect(list.find((m) => m.id === 'm1')?.kind).toBe('generic');
+  });
+
   it('round-trips a clinic, dates included', () => {
     const result = parseBackup(makeBackup(data, when));
     expect(result.ok).toBe(true);
