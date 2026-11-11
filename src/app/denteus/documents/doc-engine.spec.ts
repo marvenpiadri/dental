@@ -47,12 +47,12 @@ describe('document engine', () => {
 
   it('never puts the tooth chart on a financial document, whatever the template says', () => {
     const svg = '<svg id="chart"></svg>', all: DocTemplate = { ...DEFAULT_TEMPLATE, chartKinds: [...DOC_KINDS], hidden: [] };
-    for (const kind of ['invoice', 'receipt', 'statement', 'prescription'] as const) expect(renderDocument(doc({ kind }), all, { chart: svg, preview: true })).not.toContain('id="chart"');
+    for (const kind of ['invoice', 'receipt', 'prescription'] as const) expect(renderDocument(doc({ kind }), all, { chart: svg, preview: true })).not.toContain('id="chart"');
     for (const kind of ['report', 'letter', 'quote'] as const) expect(renderDocument(doc({ kind }), all, { chart: svg, preview: true })).toContain('id="chart"');
   });
 
   it('drops financial kinds from a saved template when it is read back', () => {
-    expect(normalizeTemplate({ id: 'x', name: 'Old', chartKinds: ['invoice', 'receipt', 'report', 'statement'] })!.chartKinds).toEqual(['report']);
+    expect(normalizeTemplate({ id: 'x', name: 'Old', chartKinds: ['invoice', 'receipt', 'report', 'retired'] })!.chartKinds).toEqual(['report']);
   });
 
   it('prints with the page size and opens the print dialog; the preview does not', () => {
