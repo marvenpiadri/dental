@@ -61,7 +61,7 @@ These are gaps or validation candidates, not automatic instructions to expand sc
 
 Dontalist is international by architecture and Morocco-first in delivery. The universal CRM remains shared; country-specific capabilities are delivered through country packs.
 
-The previous decision to permanently exclude CNSS/CNOPS/FAR reimbursement workflows has been superseded. Relevant insurance administration is now planned for the **Morocco country pack only**. The exact insurer forms, fields, supporting documents, nomenclature and update requirements still need research and validation before implementation.
+CNSS, CNOPS and insurer reimbursement workflows are **out of scope**. Do not add insurer-specific forms, PDF templates, claim or reimbursement tracking, dedicated chart annotations, or insurer-specific settings. Ordinary treatment billing and manually recorded payments remain in scope.
 
 See [product-direction-country-packs.md](product-direction-country-packs.md).
 
