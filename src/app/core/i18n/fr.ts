@@ -556,7 +556,6 @@ export const fr: Record<keyof typeof en, string> = {
   'doc.kind.invoice': 'Facture',
   'doc.kind.quote': 'Devis',
   'doc.kind.receipt': 'Reçu',
-  'doc.kind.statement': 'Relevé de soins',
   'doc.kind.prescription': 'Ordonnance',
   'doc.kind.report': 'Rapport du schéma dentaire',
   'doc.kind.letter': 'Courriers et adressages',
