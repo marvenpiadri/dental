@@ -1,0 +1,137 @@
+<header class="bar">
+  <a class="brand" routerLink="/partnerships" aria-label="Dontalist"><img src="logo.png" alt="" width="32" height="32" /><span>Dontalist</span></a>
+  <nav class="links" aria-label="Dontalist">
+    <a routerLink="/">{{ c().nav.crm }}</a>
+  </nav>
+  <button type="button" class="tool" (click)="i18n.setLang(nextLang())" [attr.aria-label]="nextLang().toUpperCase()"><i class="fa-solid fa-globe" aria-hidden="true"></i>{{ nextLang().toUpperCase() }}</button>
+  <button type="button" class="tool" (click)="themeService.toggle()" aria-label="Theme"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>
+  <button type="button" class="cta" (click)="scrollTo('apply')">{{ c().nav.apply }}</button>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>{{ c().hero.title }}</h1>
+    <p class="lead">{{ c().hero.lead }}</p>
+    <p class="actions"><button type="button" class="cta big" (click)="scrollTo('apply')">{{ c().hero.cta }}</button><button type="button" class="ghost" (click)="scrollTo('offers')">{{ c().hero.more }}</button></p>
+  </section>
+
+  <section class="band identity" aria-labelledby="identity-title">
+    <h2 id="identity-title">{{ c().identity.title }}</h2>
+    <div class="cols">@for (p of c().identity.body; track p) { <p>{{ p }}</p> }</div>
+  </section>
+
+  <section class="band" aria-labelledby="why-title">
+    <h2 id="why-title">{{ c().why.title }}</h2>
+    <div class="grid4">@for (w of c().why.items; track w.title) { <div class="cell"><h3>{{ w.title }}</h3><p>{{ w.body }}</p></div> }</div>
+  </section>
+
+  <section class="band offers" id="offers" aria-labelledby="offers-title">
+    <h2 id="offers-title">{{ c().offers.title }}</h2>
+    <p class="intro">{{ c().offers.intro }}</p>
+    @for (p of pathways; track p) {
+      @let o = c().offers.rows[p];
+      <article class="offer" [attr.data-level]="o.n" [attr.aria-labelledby]="'offer-' + p">
+        <div class="offer-head">
+          <span class="num" aria-hidden="true">{{ o.n }}</span>
+          <div><h3 id="offer-{{ p }}">{{ o.name }}</h3><p class="kind">{{ o.kind }}</p></div>
+        </div>
+        <dl class="facts">
+          <div><dt>{{ c().offers.labels.forWho }}</dt><dd>{{ o.forWho }}</dd></div>
+          <div><dt>{{ c().offers.labels.commitment }}</dt><dd>{{ o.commitment }}</dd></div>
+          <div><dt>{{ c().offers.labels.brand }}</dt><dd>{{ o.brand }}</dd></div>
+        </dl>
+        <div class="incl">
+          <p class="incl-title">{{ o.carries || c().offers.labels.includes }}</p>
+          <ul>@for (i of o.includes; track i) { <li>{{ i }}</li> }</ul>
+          <button type="button" class="cta" (click)="apply(p)">{{ o.cta }}</button>
+        </div>
+      </article>
+    }
+  </section>
+
+  <section class="band" aria-labelledby="pillars-title">
+    <h2 id="pillars-title">{{ c().pillars.title }}</h2>
+    <ol class="pillars">@for (x of c().pillars.items; track x.title) { <li><h3>{{ x.title }}</h3><p>{{ x.body }}</p></li> }</ol>
+  </section>
+
+  <section class="band" aria-labelledby="process-title">
+    <h2 id="process-title">{{ c().process.title }}</h2>
+    <ol class="steps">@for (s of c().process.steps; track s.title) { <li><h3>{{ s.title }}</h3><p>{{ s.body }}</p></li> }</ol>
+    <p class="note">{{ c().process.note }}</p>
+  </section>
+
+  <section class="band founding" aria-labelledby="founding-title">
+    <h2 id="founding-title">{{ c().founding.title }}</h2>
+    <p class="big">{{ c().founding.body }}</p>
+    <p class="note">{{ c().founding.note }}</p>
+  </section>
+
+  <section class="band" aria-labelledby="faq-title">
+    <h2 id="faq-title">{{ c().faq.title }}</h2>
+    <div class="faq">@for (f of c().faq.items; track f.q) { <details><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details> }</div>
+  </section>
+
+  <section class="band apply" id="apply" aria-labelledby="apply-title" tabindex="-1">
+    <h2 id="apply-title">{{ c().closing.title }}</h2>
+    <p class="intro">{{ c().closing.body }}</p>
+
+    @if (ready()) {
+      <div class="review" role="status">
+        <h3>{{ c().form.reviewTitle }}</h3>
+        <p>{{ c().form.reviewBody }}</p>
+        <p class="actions"><button type="button" class="cta big" (click)="download()">{{ c().form.download }}</button><button type="button" class="ghost" (click)="ready.set(false)">{{ c().form.edit }}</button><button type="button" class="ghost" (click)="restart()">{{ c().form.newOne }}</button></p>
+      </div>
+    } @else {
+      <form class="form" novalidate (submit)="$event.preventDefault(); submit()">
+        <h3 class="form-title">{{ c().form.title }}</h3>
+        <p class="note wide">{{ c().form.lead }}</p>
+        <div class="wide segs" role="radiogroup" [attr.aria-label]="c().form.pathway">
+          @for (p of pathways; track p) {
+            <button type="button" role="radio" class="seg" [attr.aria-checked]="app().pathway === p" (click)="choose(p)">{{ c().offers.rows[p].n }} · {{ c().offers.rows[p].name }}</button>
+          }
+        </div>
+        @for (f of fields(); track f) {
+          @switch (f) {
+            @case ('applicant') {
+              <label class="field wide"><span class="label">{{ c().form.applicant }}</span>
+                <select class="input" [attr.aria-invalid]="isBad('applicant') ? 'true' : null" (change)="set('applicant', $any($event.target).value)">
+                  <option value="" [selected]="!app().applicant">—</option>
+                  @for (a of applicants(); track a) { <option [value]="a" [selected]="app().applicant === a">{{ c().form.applicants[a] }}</option> }
+                </select></label>
+            }
+            @case ('project') {
+              <label class="field wide"><span class="label">{{ c().form.f.project }}</span>
+                <select class="input" [attr.aria-invalid]="isBad('project') ? 'true' : null" (change)="set('project', $any($event.target).value)">
+                  <option value="" [selected]="!app().project">—</option>
+                  <option value="new" [selected]="app().project === 'new'">{{ c().form.projects.new }}</option>
+                  <option value="convert" [selected]="app().project === 'convert'">{{ c().form.projects.convert }}</option>
+                </select></label>
+            }
+            @case ('interests') {
+              <fieldset class="field wide boxes"><legend class="label">{{ c().form.interests }} ({{ c().form.optional }})</legend>
+                @for (o of interests(); track o) { <label class="check"><input type="checkbox" [checked]="app().interests.includes(o)" (change)="toggle(o, $any($event.target).checked)" />{{ o }}</label> }
+              </fieldset>
+            }
+            @case ('message') {
+              <label class="field wide"><span class="label">{{ c().form.f.message }} ({{ c().form.optional }})</span>
+                <textarea class="input" rows="3" maxlength="1000" [value]="app().message" (input)="text('message', $event)"></textarea></label>
+            }
+            @case ('consent') {
+              <label class="check wide consent" [class.bad]="isBad('consent')"><input type="checkbox" [checked]="app().consent" [attr.aria-invalid]="isBad('consent') ? 'true' : null" (change)="set('consent', $any($event.target).checked)" />{{ c().form.consent }}</label>
+            }
+            @default {
+              <label class="field"><span class="label">{{ label(f) }}@if (!isRequired(f)) { ({{ c().form.optional }}) }</span>
+                <input class="input" [type]="f === 'email' ? 'email' : f === 'phone' ? 'tel' : 'text'" maxlength="120" [value]="value(f)" [attr.aria-invalid]="isBad(f) ? 'true' : null" [attr.autocomplete]="f === 'email' ? 'email' : f === 'phone' ? 'tel' : f === 'name' ? 'name' : null" (input)="text(f, $event)" /></label>
+            }
+          }
+        }
+        @if (bad().length) { <p class="error wide" role="alert">{{ bad().includes('email') && bad().length === 1 ? c().form.invalid : c().form.missing }}</p> }
+        <p class="wide"><button type="submit" class="cta big">{{ c().form.submit }}</button></p>
+      </form>
+    }
+  </section>
+
+  <p class="legal">{{ c().legal }}</p>
+</main>
+
+<footer class="foot">{{ c().foot }} <a routerLink="/">{{ c().nav.crm }}</a></footer>

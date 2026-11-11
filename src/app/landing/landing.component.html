@@ -3,6 +3,7 @@
   <nav class="links" aria-label="Dontalist">
     <a href="#tour">{{ c().nav.product }}</a>
     <a href="#why">{{ c().nav.facts }}</a>
+    <a routerLink="/partnerships">{{ c().nav.partners }}</a>
   </nav>
   <button type="button" class="tool" (click)="i18n.setLang(nextLang())" [attr.aria-label]="nextLang().toUpperCase()"><i class="fa-solid fa-globe" aria-hidden="true"></i>{{ nextLang().toUpperCase() }}</button>
   <button type="button" class="tool" (click)="themeService.toggle()" aria-label="Theme"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i></button>

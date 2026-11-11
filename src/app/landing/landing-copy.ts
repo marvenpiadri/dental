@@ -3,7 +3,7 @@ import type { Lang } from '../core/i18n/i18n.service';
 export type ShotId = 'today' | 'calendar' | 'patient' | 'chart' | 'billing' | 'doctor' | 'reports';
 
 interface Copy {
-  nav: { product: string; facts: string; open: string };
+  nav: { product: string; facts: string; partners: string; open: string };
   hero: { title: string; lead: string; cta: string; more: string; alt: string };
   tourTitle: string;
   tour: Record<ShotId, { tab: string; title: string; body: string; points: [string, string, string]; alt: string }>;
@@ -19,7 +19,7 @@ export const SHOTS: readonly ShotId[] = ['today', 'calendar', 'patient', 'chart'
 
 export const COPY: Record<Lang, Copy> = {
   en: {
-    nav: { product: 'Product', facts: 'Why Dontalist', open: 'Open Dontalist' },
+    nav: { product: 'Product', facts: 'Why Dontalist', partners: 'Partnerships', open: 'Open Dontalist' },
     hero: {
       title: 'Dental clinic software that stays out of your way.',
       lead: 'Appointments, patient files, a 3D dental chart, billing and reminders in one calm workspace. Runs in your browser, in French and English.',
@@ -49,7 +49,7 @@ export const COPY: Record<Lang, Copy> = {
     demoNote: 'Screens show a demo clinic with invented patients.',
   },
   fr: {
-    nav: { product: 'Produit', facts: 'Pourquoi Dontalist', open: 'Ouvrir Dontalist' },
+    nav: { product: 'Produit', facts: 'Pourquoi Dontalist', partners: 'Partenariats', open: 'Ouvrir Dontalist' },
     hero: {
       title: 'Le logiciel de cabinet dentaire qui ne vous ralentit pas.',
       lead: 'Rendez-vous, dossiers patients, schéma dentaire 3D, facturation et rappels dans un espace de travail clair. Fonctionne dans votre navigateur, en français et en anglais.',

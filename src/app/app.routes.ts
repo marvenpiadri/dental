@@ -5,6 +5,7 @@ import { publicClinic } from './denteus/public/public-route';
 /** Every page is lazy: the first load carries the shell only. `titleKey` is translated by PageTitle. */
 export const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: () => import('./landing/landing.component').then((m) => m.LandingComponent) },
+  { path: 'partnerships', loadComponent: () => import('./partnerships/partnerships.component').then((m) => m.PartnershipsComponent) },
   {
     path: 'today',
     canActivate: [permissionGuard],
