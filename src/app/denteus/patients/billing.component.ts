@@ -4,7 +4,6 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Invoice, PAYMENT_METHODS, Payment, PaymentMethod, TreatmentItem } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { Documents } from '../documents/documents.service';
-import { statementHtml } from './statement-html';
 import { receiptHtml } from './receipt-html';
 import { balance, parsePrice, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
@@ -26,8 +25,6 @@ export class BillingComponent {
   readonly payments = input<Payment[]>([]);
   /** Name on the receipt. */
   readonly patientName = input('');
-  readonly insurer = input('');
-  readonly insuranceNumber = input('');
   readonly invoices = input<Invoice[]>([]);
   readonly edit = output<(payments: Payment[]) => Payment[]>();
   readonly editInvoices = output<(invoices: Invoice[]) => Invoice[]>();
@@ -129,24 +126,6 @@ export class BillingComponent {
       total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
       legal: this.legal(),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
-    }, tpl);
-    this.docs.print(html);
-  }
-
-  protected readonly doneLines = computed(() => this.plan().filter((i) => i.status === 'done'));
-
-  /** Care actually done and its fees, for the patient to send to their insurer. Planned work never appears. */
-  protected printStatement(): void {
-    const done = [...this.doneLines()].sort((a, b) => (a.doneAt ?? '').localeCompare(b.doneAt ?? ''));
-    if (!done.length) return;
-    const t = this.t;
-    const day = (iso?: string) => (iso ? this.i18n.date(new Date(iso), { day: 'numeric', month: 'short', year: 'numeric' }) : '');
-    const tpl = this.docs.templateFor('statement');
-    const html = statementHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), insurer: this.insurer(), number: this.insuranceNumber(),
-      date: day(new Date().toISOString()), lang: this.i18n.lang(), total: this.i18n.money(this.sums().charged),
-      lines: done.map((i) => ({ date: day(i.doneAt), tooth: i.tooth ?? (i.scope ? scopeText(i, t) : ''), name: procedureName(t, i.procedure, i.name), price: this.i18n.money(i.price) })),
-      labels: { title: t('stmt.title'), patient: t('receipt.patient'), insurer: t('stmt.insurer'), number: t('stmt.number'), date: t('receipt.date'), tooth: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('quote.total'), note: t('stmt.note') },
     }, tpl);
     this.docs.print(html);
   }
