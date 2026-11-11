@@ -21,6 +21,18 @@ describe('backup', () => {
     expect(result.data.appointments[0].history[0].at).toEqual(when);
   });
 
+  it('strips legacy insurer fields from imported patient records without changing the rest of the file', () => {
+    const old = JSON.parse(makeBackup(data, when));
+    old.patients[0].insurer = 'AMO';
+    old.patients[0].insuranceNumber = '123456';
+    const result = parseBackup(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.patients[0]).toEqual(patient);
+    expect(result.data.patients[0]).not.toHaveProperty('insurer');
+    expect(result.data.patients[0]).not.toHaveProperty('insuranceNumber');
+  });
+
   it('gives a backup from before the catalog existed the built-in acts', () => {
     const old = JSON.parse(makeBackup(data, when));
     delete old.catalog;
