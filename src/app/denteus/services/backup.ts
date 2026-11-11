@@ -101,6 +101,10 @@ export function parseBackup(source: string): BackupResult {
   const rawSettings = raw['settings'];
   if (rawSettings !== undefined && !isRecord(rawSettings)) return { ok: false, reason: 'damaged' };
   const settings: BackupSettings | undefined = isRecord(rawSettings) ? Object.fromEntries(SETTING_KEYS.filter((k) => rawSettings[k] !== undefined).map((k) => [k, rawSettings[k]])) : undefined;
+  if (settings && isRecord(settings['docDefaults'])) {
+    const { statement: _retiredStatement, ...docDefaults } = settings['docDefaults'];
+    settings['docDefaults'] = docDefaults;
+  }
   if (settings && SETTING_KEYS.some((k) => k !== 'view3d' && k !== 'docDefaults' && k !== 'prefs' && k in settings && !Array.isArray(settings[k]) && k !== 'waTemplates')) return { ok: false, reason: 'damaged' };
   // A staff list with nobody able to sign in as owner would lock the clinic out: refuse the whole file, as for any damage.
   const staff = settings?.['staff'];
