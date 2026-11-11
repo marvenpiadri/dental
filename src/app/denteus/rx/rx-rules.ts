@@ -1,18 +1,22 @@
 import type { Key } from '../../core/i18n/i18n.service';
-import { MedicalHistory, Medication, Prescription, RxItem, RxSnapshot, RxTemplate } from '../models/dental.models';
+import { AllergyDef, LibMedication, MedicalHistory, PatientAllergy, PatientMedication, Prescription, RxItem, RxSnapshot, RxTemplate } from '../models/dental.models';
+import { genericOf } from './med-library';
 
 const blank = (v: string | undefined): v is string => !!v && !!v.trim();
 export const clean = (v: string | undefined): string | undefined => (blank(v) ? v.trim() : undefined);
 
-export function itemFromMedication(m: Medication, id: string): RxItem {
-  return { id, medicationId: m.id, name: m.name, brand: m.brand, generic: m.generic, strength: m.strength, form: m.form, route: m.route, instructions: m.instructions, aliases: m.aliases, reviewConditions: m.reviewConditions };
+/** A prescription line from a library entry. A brand prints as "Brand (generic)"; the line copies the names, so later library edits never change it. */
+export function itemFromMedication(m: LibMedication, meds: readonly LibMedication[], id: string): RxItem {
+  const g = genericOf(meds, m.id);
+  const review = [...new Set([...(g?.reviewConditions ?? []), ...(m.reviewConditions ?? [])])];
+  return { id, medicationId: m.id, name: m.name, ...(m.kind === 'brand' && g ? { generic: g.name } : {}), ...(review.length ? { reviewConditions: review } : {}) };
 }
 
 /** A line for a drug that is not in the list: the dentist types it. */
 export const freeItem = (id: string, name = ''): RxItem => ({ id, name });
 
 /** A template's lines as new, independent lines (fresh ids) so editing the prescription never touches the template. */
-export const itemsFromTemplate = (t: RxTemplate, newId: () => string): RxItem[] => t.items.map((i) => ({ ...i, id: newId() }));
+export const itemsFromTemplate = (t: RxTemplate, newId: () => string): RxItem[] => t.items.map((i) => ({ ...i, id: newId(), ...(i.alerts ? { alerts: i.alerts.map((a) => ({ ...a })) } : {}), ...(i.reviewConditions ? { reviewConditions: [...i.reviewConditions] } : {}) }));
 
 export function move<T>(list: readonly T[], from: number, to: number): T[] {
   if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return [...list];
@@ -30,41 +34,68 @@ export type RxLevel = 'critical' | 'warning' | 'info';
 export interface RxWarning { id: string; level: RxLevel; key: Key; params: Record<string, string>; }
 
 /**
- * Words that carry no identity: forms and connectors. Without them "clavulanic acid" would match any allergy to an "acid".
- * shortcut: a short fixed list for English and French; extend it if a clinic sees a false match.
+ * Words that carry no identity: forms and connectors. shortcut: a short fixed list for English and French; extend it if a clinic sees a false match.
+ * Used only for the patient's old free-text notes that nobody has turned into a record yet.
  */
 const STOP = new Set(['acid', 'acide', 'mouthwash', 'bain', 'bouche', 'gel', 'cream', 'creme', 'tablet', 'tablets', 'capsule', 'capsules', 'comprime', 'comprimes', 'solution', 'oral', 'plus', 'avec', 'with', 'and', 'pour', 'sans', 'sodium', 'sodique', 'hydrochloride', 'chlorhydrate', 'allergy', 'allergic', 'allergie', 'allergique', 'sensitivity', 'sensible', 'intolerance', 'known', 'reaction', 'drug', 'medication', 'aux', 'des', 'les', 'une', 'the']);
-
 const fold = (s: string): string => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 export const tokens = (s: string | undefined): string[] => (s ? fold(s).split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !STOP.has(w)) : []);
-/** Equal words, or one the start of the other (penicillin / penicilline), at least six letters long. */
 const same = (a: string, b: string): boolean => a === b || (Math.min(a.length, b.length) >= 6 && (a.startsWith(b) || b.startsWith(a)));
-const overlap = (a: readonly string[], b: readonly string[]): string | null => { for (const x of a) for (const y of b) if (same(x, y)) return x.length >= y.length ? x : y; return null; };
-const identity = (i: RxItem): string[] => [...tokens(i.name), ...tokens(i.brand), ...tokens(i.generic), ...tokens(i.aliases)];
+const overlap = (a: readonly string[], b: readonly string[]): boolean => a.some((x) => b.some((y) => same(x, y)));
+const names = (i: RxItem): string[] => [...tokens(i.name), ...tokens(i.brand), ...tokens(i.generic)];
+
+/** The pieces of a free-text note (split on commas, semicolons, slashes and line breaks) that no record has been confirmed from yet. */
+export const legacyPieces = (text: string | undefined): string[] => (text ?? '').split(/[,;\n/]+/).map((x) => x.trim()).filter(Boolean);
+export const unmatchedPieces = (text: string | undefined, matched: readonly string[] | undefined): string[] => legacyPieces(text).filter((p) => !(matched ?? []).includes(p.toLowerCase()));
+
+/** Everything the safety notes read: the patient's structured records, the libraries they point into, and the old free text. */
+export interface RxContext {
+  medical?: MedicalHistory;
+  alert?: string;
+  allergies: readonly PatientAllergy[];
+  medications: readonly PatientMedication[];
+  allergyDefs: readonly AllergyDef[];
+  meds: readonly LibMedication[];
+}
 
 /**
- * What the dentist should look at before issuing, from what the patient file already says. It only compares text the clinic wrote:
- * there is no interaction or contraindication database, so no note never means safe. `conditionName` turns a condition code into its label.
+ * What the dentist should look at before issuing. Everything comes from records the clinic made: an allergy the dentist linked to a medication,
+ * alerts the dentist configured on the line or template, conditions the dentist marked for review. There is no pharmacology database here,
+ * and no family or class rule: so no note never means safe. `conditionName` turns a condition code into its label.
  */
-export function rxWarnings(medical: MedicalHistory | undefined, alert: string | undefined, items: readonly RxItem[], conditionName: (code: string) => string): RxWarning[] {
+export function rxWarnings(ctx: RxContext, items: readonly RxItem[], conditionName: (code: string) => string): RxWarning[] {
   const out: RxWarning[] = [];
-  const allergy = tokens(medical?.allergies);
-  const current = tokens(medical?.medications);
-  const conditions = medical?.conditions ?? [];
+  const conditions = ctx.medical?.conditions ?? [];
+  const nameOf = (id: string) => ctx.meds.find((m) => m.id === id)?.name ?? '';
+  const allergyNote = unmatchedPieces(ctx.medical?.allergies, ctx.medical?.legacyMatched).join(', ');
+  const medNote = unmatchedPieces(ctx.medical?.medications, ctx.medical?.legacyMatched).join(', ');
   for (const item of items) {
     if (!blank(item.name)) continue;
-    const id = identity(item);
-    const a = overlap(id, allergy);
-    if (a) out.push({ id: `allergy:${item.id}:${a}`, level: 'critical', key: 'rx.w.allergy', params: { drug: itemTitle(item), allergy: medical!.allergies!.trim() } });
-    const c = overlap(id, current);
-    if (c) out.push({ id: `current:${item.id}:${c}`, level: 'warning', key: 'rx.w.current', params: { drug: itemTitle(item), current: medical!.medications!.trim() } });
+    const drug = itemTitle(item);
+    const g = item.medicationId ? genericOf(ctx.meds, item.medicationId)?.id : undefined;
+    if (g) {
+      for (const a of ctx.allergies) {
+        const def = ctx.allergyDefs.find((d) => d.id === a.allergyId);
+        if (def?.medicationId && genericOf(ctx.meds, def.medicationId)?.id === g) out.push({ id: `allergy:${item.id}:${a.id}`, level: 'critical', key: 'rx.w.allergyLinked', params: { drug, allergy: def.name, linked: nameOf(def.medicationId) } });
+      }
+      for (const m of ctx.medications) if (genericOf(ctx.meds, m.medicationId)?.id === g) out.push({ id: `current:${item.id}:${m.id}`, level: 'warning', key: 'rx.w.current', params: { drug, current: m.label } });
+    }
+    for (const al of item.alerts ?? []) {
+      const hit = al.type === 'allergy' ? ctx.allergies.some((a) => a.allergyId === al.refId)
+        : al.type === 'medication' ? ctx.medications.some((m) => genericOf(ctx.meds, m.medicationId)?.id === genericOf(ctx.meds, al.refId)?.id && !!genericOf(ctx.meds, al.refId))
+        : conditions.includes(al.refId);
+      if (hit) out.push({ id: `alert:${item.id}:${al.id}`, level: al.severity === 'critical' ? 'critical' : 'warning', key: al.type === 'allergy' ? 'rx.w.tplAllergy' : al.type === 'medication' ? 'rx.w.tplMedication' : 'rx.w.tplProblem', params: { drug, label: al.type === 'problem' ? conditionName(al.refId) : al.label, extra: blank(al.message) ? ` ${al.message!.trim()}` : '' } });
+    }
     const hit = (item.reviewConditions ?? []).filter((x) => conditions.includes(x));
-    if (hit.length) out.push({ id: `condition:${item.id}`, level: 'warning', key: 'rx.w.condition', params: { drug: itemTitle(item), conditions: hit.map(conditionName).join(', ') } });
+    if (hit.length) out.push({ id: `condition:${item.id}`, level: 'warning', key: 'rx.w.condition', params: { drug, conditions: hit.map(conditionName).join(', ') } });
+    if (allergyNote && overlap(names(item), tokens(allergyNote))) out.push({ id: `legacyAllergy:${item.id}`, level: 'warning', key: 'rx.w.legacyAllergy', params: { drug, text: allergyNote } });
+    if (!g && medNote && overlap(names(item), tokens(medNote))) out.push({ id: `legacyCurrent:${item.id}`, level: 'warning', key: 'rx.w.legacyCurrent', params: { drug, text: medNote } });
   }
-  if (blank(medical?.allergies)) out.push({ id: 'info:allergies', level: 'info', key: 'rx.w.allergies', params: { text: medical!.allergies!.trim() } });
+  if (ctx.allergies.length) out.push({ id: 'info:allergies', level: 'info', key: 'rx.w.allergies', params: { text: ctx.allergies.map((a) => a.label).join(', ') } });
   if (conditions.length) out.push({ id: 'info:conditions', level: 'info', key: 'rx.w.conditions', params: { text: conditions.map(conditionName).join(', ') } });
-  if (blank(medical?.medications)) out.push({ id: 'info:current', level: 'info', key: 'rx.w.currentList', params: { text: medical!.medications!.trim() } });
-  if (blank(alert)) out.push({ id: 'info:alert', level: 'info', key: 'rx.w.alert', params: { text: alert!.trim() } });
+  if (ctx.medications.length) out.push({ id: 'info:current', level: 'info', key: 'rx.w.currentList', params: { text: ctx.medications.map((m) => m.label).join(', ') } });
+  if (allergyNote || medNote) out.push({ id: 'info:legacy', level: 'info', key: 'rx.w.legacyNotes', params: { text: [allergyNote, medNote].filter(Boolean).join('; ') } });
+  if (blank(ctx.alert)) out.push({ id: 'info:alert', level: 'info', key: 'rx.w.alert', params: { text: ctx.alert!.trim() } });
   return out;
 }
 
@@ -89,7 +120,7 @@ export const nextRxNumber = (all: readonly Prescription[], year: number): string
 /** Trims text fields and drops empty ones, so what is issued is exactly what was typed. */
 export const tidyItem = (i: RxItem): RxItem => ({
   ...i, name: i.name.trim(), brand: clean(i.brand), generic: clean(i.generic), strength: clean(i.strength), form: clean(i.form), route: clean(i.route), dosage: clean(i.dosage),
-  frequency: clean(i.frequency), duration: clean(i.duration), quantity: clean(i.quantity), refills: clean(i.refills), instructions: clean(i.instructions), aliases: clean(i.aliases),
+  frequency: clean(i.frequency), duration: clean(i.duration), quantity: clean(i.quantity), refills: clean(i.refills), instructions: clean(i.instructions), internalNotes: clean(i.internalNotes),
 });
 
 /**

@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { ClinicProfileComponent } from './clinic-profile.component';
 import { TeamComponent } from './team.component';
 import { RxSetupComponent } from '../rx/rx-setup.component';
+import { MedicationLibraryComponent } from '../rx/medication-library.component';
+import { AllergyLibraryComponent } from '../rx/allergy-library.component';
 import { ThemeService } from '../../core/theme.service';
 import { LANGS, Lang } from '../../core/i18n/i18n.service';
 import { APPOINTMENT_TYPES, ClinicLocation, Message, PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
@@ -38,7 +40,9 @@ const SECTIONS = [
   { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule', need: 'settings.view' },
   { id: 'services', icon: 'fa-file-invoice', key: 'set.services', need: 'settings.view' },
   { id: 'documents', icon: 'fa-file-lines', key: 'set.documents', need: 'settings.view' },
-  { id: 'prescribing', icon: 'fa-file-prescription', key: 'set.prescribing', need: 'settings.view' },
+  { id: 'medications', icon: 'fa-pills', key: 'set.medications', need: 'clinical.view' },
+  { id: 'allergies', icon: 'fa-triangle-exclamation', key: 'set.allergies', need: 'clinical.view' },
+  { id: 'prescribing', icon: 'fa-file-prescription', key: 'set.prescribing', need: 'clinical.view' },
   { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging', need: 'settings.view' },
   { id: 'integrations', icon: 'fa-plug', key: 'set.integrations', need: 'settings.view' },
   { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace', need: 'settings.view' },
@@ -50,7 +54,7 @@ type SectionId = (typeof SECTIONS)[number]['id'];
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
-  imports: [RouterLink, ClinicProfileComponent, TeamComponent, DocDesignerComponent, RxSetupComponent],
+  imports: [RouterLink, ClinicProfileComponent, TeamComponent, DocDesignerComponent, RxSetupComponent, MedicationLibraryComponent, AllergyLibraryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })

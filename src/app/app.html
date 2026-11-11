@@ -35,7 +35,7 @@
       <span>{{ t('nav.reports') }}</span>
     </a>
     }
-    @if (auth.canAny('settings.view', 'profile.view', 'team.view')) {
+    @if (auth.canAny('settings.view', 'profile.view', 'team.view', 'clinical.view')) {
     <a class="item" routerLink="/setup" routerLinkActive="active" ariaCurrentWhenActive="page">
       <i class="fa-solid fa-gear" aria-hidden="true"></i>
       <span>{{ t('nav.setup') }}</span>

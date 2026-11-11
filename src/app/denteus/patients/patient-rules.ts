@@ -82,8 +82,8 @@ export function initials(fullName: string): string {
 export const CONDITIONS = ['diabetes', 'hypertension', 'heart', 'bloodThinners', 'asthma', 'pregnancy', 'epilepsy', 'kidney', 'liver', 'smoker'] as const;
 
 /** True when the patient has anything the clinic should be warned about. */
-export const hasAlert = (p: { alert?: string; medical?: { conditions?: string[]; allergies?: string; medications?: string } }): boolean =>
-  !!(p.alert || p.medical?.conditions?.length || p.medical?.allergies || p.medical?.medications);
+export const hasAlert = (p: { alert?: string; medical?: { conditions?: string[]; allergies?: string; medications?: string }; patientAllergies?: { active: boolean; removedAt?: string }[]; patientMedications?: { active: boolean; removedAt?: string }[] }): boolean =>
+  !!(p.alert || p.medical?.conditions?.length || p.medical?.allergies || p.medical?.medications || p.patientAllergies?.some((a) => a.active && !a.removedAt) || p.patientMedications?.some((m) => m.active && !m.removedAt));
 
 /** The next version number for a quote, and the list with the unanswered older quote marked as replaced. */
 export function addProposal<T extends { version: number; status: string }>(list: T[], make: (version: number) => T): T[] {

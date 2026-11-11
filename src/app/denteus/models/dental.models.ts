@@ -97,6 +97,9 @@ export interface Patient {
   letters?: Letter[];
   /** Prescriptions (drafts, issued, voided, superseded), oldest first. Issued ones are never edited. */
   prescriptions?: Prescription[];
+  /** Structured medical records that point into the clinic's libraries. The free-text `medical.allergies` / `medical.medications` are kept untouched beside them. */
+  patientAllergies?: PatientAllergy[];
+  patientMedications?: PatientMedication[];
   /** Whether the patient agreed to WhatsApp messages from the clinic. Unset means not asked yet; `declined` blocks every message. */
   whatsappConsent?: 'granted' | 'declined';
   /** ISO timestamp the consent answer was recorded. */
@@ -116,6 +119,8 @@ export interface MedicalHistory {
   conditions?: string[];
   allergies?: string;
   medications?: string;
+  /** Pieces of the free text a dentist has already turned into a structured record (lower-cased, trimmed). The original text is never edited. */
+  legacyMatched?: string[];
 }
 
 /** One quote given to the patient. A newer quote supersedes an unanswered older one; nothing is deleted. */
@@ -441,23 +446,78 @@ export interface PatientDocument {
 
 /* ------------------------------ prescriptions ------------------------------ */
 
-/** One entry of the clinic's own medication list. Nothing is built in: the dentist adds what they prescribe. */
-export interface Medication {
+/**
+ * One entry of the clinic's medication master list (Open Dental style). A generic stands alone and carries the notes; a brand always
+ * points at a generic and shows its name through that link. Nothing is built in: the dentist adds what the practice uses.
+ */
+export interface LibMedication {
+  id: string;
+  kind: 'generic' | 'brand';
+  name: string;
+  /** Brands only: the generic this brand belongs to. */
+  genericId?: string;
+  /** Generics only: practice-written notes (therapeutic category, precautions), shared by every brand. */
+  notes?: string;
+  /** Medical-condition codes to flag when this drug is added to a prescription (kept from the earlier medication list). */
+  reviewConditions?: string[];
+  /** Hidden from pickers but kept, for records that still point at it. */
+  hidden?: boolean;
+  /** Free field for a future interoperability code. Never required, never interpreted. */
+  externalId?: string;
+}
+
+/** The clinic's allergy master list. An allergy may point at a medication; it never needs a code. */
+export interface AllergyDef {
   id: string;
   name: string;
-  brand?: string;
-  /** Active ingredient. */
-  generic?: string;
-  strength?: string;
-  form?: string;
-  route?: string;
-  /** Default patient instructions, copied to a prescription line and editable there. */
-  instructions?: string;
-  /** Other names or the drug family (for example "penicillin") an allergy note might use. Matched against the patient's allergies. */
-  aliases?: string;
-  /** Medical-condition codes (the patient file's own list) the dentist wants flagged for review when this drug is prescribed. */
-  reviewConditions?: string[];
-  archivedAt?: string;
+  medicationId?: string;
+  externalId?: string;
+  hidden?: boolean;
+}
+
+export interface AuditEntry { at: string; what: string; note?: string }
+
+/** A patient's allergy: a reference to the allergy list plus what happened to this patient. `label` keeps the name as it was recorded. */
+export interface PatientAllergy {
+  id: string;
+  allergyId: string;
+  label: string;
+  reaction?: string;
+  reactionDate?: string;
+  active: boolean;
+  createdAt: string;
+  removedAt?: string;
+  /** The piece of free text this record was confirmed from, when it came from the old notes. */
+  legacyText?: string;
+  history: AuditEntry[];
+}
+
+export interface PatientMedication {
+  id: string;
+  medicationId: string;
+  label: string;
+  /** Patient-specific notes. The generic's own notes stay on the library entry. */
+  notes?: string;
+  start?: string;
+  stop?: string;
+  active: boolean;
+  source?: 'manual' | 'prescribed' | 'reported';
+  prescriptionId?: string;
+  createdAt: string;
+  removedAt?: string;
+  legacyText?: string;
+  history: AuditEntry[];
+}
+
+/** An alert a prescription line raises when the patient has the allergy, medication or condition it names. Set by the dentist, never inferred. */
+export interface RxAlert {
+  id: string;
+  type: 'allergy' | 'medication' | 'problem';
+  /** Allergy id, medication id, or a condition code. */
+  refId: string;
+  label: string;
+  message?: string;
+  severity: 'critical' | 'warning';
 }
 
 /** A medication line on a prescription. Copies the medication's text so later edits to the list never change it. */
@@ -477,8 +537,13 @@ export interface RxItem {
   refills?: string;
   instructions?: string;
   /** Copied from the medication record when the line was added; used only for the safety notes. */
+  /** Old free-text family names from before the structured libraries. Kept on old records, no longer used to match anything. */
   aliases?: string;
   reviewConditions?: string[];
+  /** Raised when the patient has the allergy, medication or condition named; see `RxAlert`. */
+  alerts?: RxAlert[];
+  /** For the practice only: never printed. */
+  internalNotes?: string;
 }
 
 export interface RxTemplate {

@@ -6,6 +6,7 @@ import { Patient, Prescription, RxItem, RxSnapshot, RxTemplate } from '../models
 import { DentalStore } from '../services/dental-store.service';
 import { RxItemsComponent } from './rx-items.component';
 import { RxLibrary } from './rx-library.service';
+import { activeAllergies, activeMedications, audit } from './med-library';
 import { rxHtml, RxDocLabels } from './rx-html';
 import { IssueProblem, applyIssue, issueProblem, itemTitle, itemsFromTemplate, nextRxNumber, rxWarnings, startCorrection, tidyItem, voidPrescription } from './rx-rules';
 
@@ -43,9 +44,12 @@ import { IssueProblem, applyIssue, issueProblem, itemTitle, itemsFromTemplate, n
               @if (w.level === 'critical') { <label class="check"><input type="checkbox" [checked]="(d.acknowledged ?? []).includes(w.id)" (change)="ack(w.id)" />{{ t('rx.ack') }}</label> }
             </div>
           }
-          <p class="hint">{{ t('rx.w.limit') }}</p>
+          <p class="hint">{{ t('rx.w.limit2') }}</p>
         </section>
 
+        @if (canRecord()) {
+          <label class="check"><input type="checkbox" [checked]="record()" (change)="record.set($any($event.target).checked)" />{{ t('rx.recordMeds') }}</label>
+        }
         @if (problem() && tried()) { <p class="error" role="alert">{{ t(problemKey[problem()!]) }}</p> }
         <div class="actions">
           <button type="button" class="btn btn--primary" (click)="issue()"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>{{ t('rx.issue') }}</button>
@@ -153,11 +157,14 @@ export class RxPageComponent {
   protected readonly tried = signal(false);
   protected readonly act = signal<{ id: string; kind: 'correct' | 'void' } | null>(null);
   protected readonly reason = signal('');
+  /** Unticked by default: a prescription does not prove the patient is taking the drug. */
+  protected readonly record = signal(false);
+  protected readonly canRecord = computed(() => !!this.draft()?.items.some((i) => i.medicationId) && this.store.patients().length > 0);
 
   protected readonly all = computed(() => this.patient().prescriptions ?? []);
   protected readonly rows = computed(() => [...this.all()].sort((a, b) => (b.issuedAt ?? b.createdAt).localeCompare(a.issuedAt ?? a.createdAt)));
   protected readonly visits = computed(() => this.store.appointments().filter((a) => a.patientId === this.patient().id).sort((a, b) => b.start.getTime() - a.start.getTime()).slice(0, 20));
-  protected readonly warnings = computed(() => { const p = this.patient(); return rxWarnings(p.medical, p.alert, this.draft()?.items ?? [], (c) => this.t(`med.${c}` as Key)); });
+  protected readonly warnings = computed(() => { const p = this.patient(); return rxWarnings({ medical: p.medical, alert: p.alert, allergies: activeAllergies(p), medications: activeMedications(p), allergyDefs: this.lib.allergies(), meds: this.lib.medications() }, this.draft()?.items ?? [], (c) => this.t(`med.${c}` as Key)); });
   protected readonly problem = computed((): IssueProblem | 'dentist' | null => {
     const d = this.draft();
     if (!d) return null;
@@ -211,7 +218,22 @@ export class RxPageComponent {
     const number = nextRxNumber(this.store.patients().flatMap((p) => p.prescriptions ?? []), new Date().getFullYear());
     const snap = this.snapshot(d);
     this.store.changePrescriptions(this.patient().id, (l) => applyIssue(this.upsert(l, d), d.id, number, snap, d.acknowledged ?? [], now));
+    if (this.record()) this.recordMedications(d, number, now);
+    this.record.set(false);
     this.draft.set(null);
+  }
+
+  /** Adds the issued drugs as current medications, skipping any the patient already has active. */
+  private recordMedications(d: Prescription, number: string, now: string): void {
+    const meds = this.lib.medications();
+    this.store.changeMedical(this.patient().id, (r) => {
+      const have = new Set(r.medications.filter((m) => m.active && !m.removedAt).map((m) => m.medicationId));
+      const add = d.items.filter((i) => i.medicationId && !have.has(i.medicationId)).map((i) => ({
+        id: crypto.randomUUID(), medicationId: i.medicationId!, label: meds.find((m) => m.id === i.medicationId)?.name ?? i.name,
+        start: now.slice(0, 10), active: true, source: 'prescribed' as const, prescriptionId: d.id, createdAt: now, history: [audit('prescribed', now, number)],
+      }));
+      return { ...r, medications: [...r.medications, ...add] };
+    });
   }
 
   protected confirmAct(r: Prescription): void {

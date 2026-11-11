@@ -12,6 +12,10 @@ import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { RxPageComponent } from '../rx/rx-page.component';
+import { MedicalPageComponent } from '../rx/medical-page.component';
+import { activeAllergies, activeMedications } from '../rx/med-library';
+import { RxLibrary } from '../rx/rx-library.service';
+import { unmatchedPieces } from '../rx/rx-rules';
 import { LettersComponent } from './letters.component';
 import { VisitNotesComponent } from './visit-notes.component';
 import { TreatmentPlanComponent } from './treatment-plan.component';
@@ -22,7 +26,7 @@ type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, QuoteVersionsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent, RxPageComponent],
+  imports: [RouterLink, QuoteVersionsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent, RxPageComponent, MedicalPageComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +44,11 @@ export class PatientProfileComponent {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly hasAlert = hasAlert;
+  protected readonly activeAllergies = activeAllergies;
+  protected readonly activeMedications = activeMedications;
+  protected readonly allergyName = (a: { allergyId: string; label: string }) => this.lib.allergies().find((d) => d.id === a.allergyId)?.name ?? a.label;
+  protected readonly unconfirmed = (text: string | undefined, p: { medical?: { legacyMatched?: string[] } }) => unmatchedPieces(text, p.medical?.legacyMatched);
+  private readonly lib = inject(RxLibrary);
   protected readonly STATUS_KEY = STATUS_KEY;
   protected readonly STATUS_TONE = STATUS_TONE;
   protected readonly typeKey = typeKey;

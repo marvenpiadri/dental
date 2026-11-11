@@ -26,6 +26,8 @@ import {
   Invoice,
   Letter,
   Prescription,
+  PatientAllergy,
+  PatientMedication,
   Message,
   Payment,
   VisitNote,
@@ -69,6 +71,9 @@ const fail = (code: 'conflict' | 'invalid' | 'forbidden' | 'not-found', message:
   message,
   details,
 });
+
+/** A patient's structured allergy and medication records, plus which pieces of the old free text have been confirmed as records. */
+export interface MedicalRecords { allergies: PatientAllergy[]; medications: PatientMedication[]; legacyMatched?: string[] }
 
 /**
  * Holds the clinic's data and applies every change to it.
@@ -244,7 +249,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
   }
@@ -282,6 +287,17 @@ export class DentalStore {
   changeLetters(patientId: string, change: (letters: Letter[]) => Letter[]): void {
     if (!this.auth.can('clinical.edit')) return; // the buttons are hidden too; this keeps every caller honest
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, letters: change(p.letters ?? []) } : p)));
+  }
+
+  /** The patient's structured allergies and medications. `change` receives both lists and returns the new ones. */
+  changeMedical(patientId: string, change: (r: MedicalRecords) => MedicalRecords): void {
+    if (!this.auth.can('clinical.edit')) return;
+    this.patients.update((list) => list.map((p) => {
+      if (p.id !== patientId) return p;
+      const r = change({ allergies: p.patientAllergies ?? [], medications: p.patientMedications ?? [], legacyMatched: p.medical?.legacyMatched ?? [] });
+      const matched = r.legacyMatched ?? [];
+      return { ...p, patientAllergies: r.allergies, patientMedications: r.medications, ...(matched.length ? { medical: { ...p.medical, legacyMatched: matched } } : {}) };
+    }));
   }
 
   /** Same shape as `changeLetters`, for the patient's prescriptions. Issued ones are changed only by the rules in rx-rules.ts. */
