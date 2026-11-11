@@ -43,3 +43,24 @@ Prioritise work that requires running the application locally:
 6. Report exactly what passed, what failed, and what remains. Do not claim full release acceptance if any required browser flow was not run.
 
 Do not start country-configuration runtime code or backend migrations yet. The country-configuration document is a product/architecture decision record, not authorisation to begin Phase 3.
+
+## 11 November 2026 — CNSS/CNOPS removal is final
+
+The product owner has removed CNSS, CNOPS and all insurer-reimbursement functionality from Dontalist. Do not recreate it in V1, a Morocco country configuration, a future country pack or Phase 3 unless the product owner explicitly reverses this decision.
+
+Changes already committed on this branch:
+- Removed insurer and member-number fields from the patient model, patient form and patient profile.
+- Removed the printable care statement intended for patients to submit to insurers, including its UI action, renderer, document kind and translation label.
+- Kept ordinary invoices, credit notes, receipts, prescriptions, clinical reports, chart exports and general PDF printing intact.
+- Increased the local IndexedDB schema to v4 and added an in-place migration that removes the two retired patient fields without clearing other patient data.
+- Older JSON backups are cleaned on import: retired patient fields and the retired document-default key are dropped while the remaining clinic data is preserved.
+- Updated product direction, audit, domain model, database handoff and this Claude handoff to keep the scope consistent.
+
+**Local verification is still required; ChatGPT could not run the Angular project or browser in this session.** Run these focused checks, then the normal project build/test commands:
+1. Create and edit a patient; confirm no insurer/member-number fields appear.
+2. Open a pre-existing v3 IndexedDB clinic; confirm patient records and clinical/billing data remain, while the two retired fields are removed.
+3. Import an older JSON backup containing those fields and a `docDefaults.statement`; confirm the patient, clinical records, invoices, payments, appointments, documents and other settings still restore.
+4. Confirm invoice, credit-note, receipt, quote, prescription, clinical-report and chart printing still work; there must be no insurer care-statement option.
+5. Search active source for `CNSS`, `CNOPS`, `insurer`, `insuranceNumber` and the retired document kind. The intentional migration and compatibility tests are expected to mention the old keys; active patient/billing UI must not.
+
+Do not turn this verification into a broad product audit or add new modules. Backend work remains deferred until the frontend is accepted.
