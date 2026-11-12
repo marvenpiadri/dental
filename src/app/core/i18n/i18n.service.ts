@@ -1,3 +1,4 @@
+import { formatMoney } from '../../denteus/regional/regional-rules';
 import { DOCUMENT } from '@angular/common';
 import { Injectable, REQUEST, effect, inject, signal } from '@angular/core';
 import { readCookie } from '../cookie';
@@ -78,9 +79,12 @@ export class I18n {
   }
 
   /** 24-hour clock, the same in every language a clinic here would use. */
-  /** shortcut: the clinic's currency is fixed to MAD, move it to clinic setup for clinics elsewhere. */
-  money(amount: number): string {
-    return new Intl.NumberFormat(this.lang(), { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(amount);
+  /** The clinic's currency (ISO 4217), set from the clinic's location settings. Dirhams until a clinic chooses one. */
+  readonly currency = signal('MAD');
+
+  /** An amount in the clinic's currency, or in the given one for a record that was made in another currency. */
+  money(amount: number, currency?: string): string {
+    return formatMoney(amount, currency ?? this.currency(), this.lang());
   }
 
   time(value: Date): string {

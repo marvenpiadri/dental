@@ -1,7 +1,7 @@
 import type { Patient } from '../models/dental.models';
 import { paymentsCsv } from './payments-csv';
 
-const head = { date: 'Date', receipt: 'Receipt', patient: 'Patient', method: 'Method', amount: 'Amount' };
+const head = { date: 'Date', receipt: 'Receipt', patient: 'Patient', method: 'Method', amount: 'Amount', currency: 'Currency' };
 const pay = (id: string, at: string, amount: number) => ({ id, at, amount, method: 'cash' as const });
 const people = [
   { id: 'a', fullName: '=HYPERLINK("x")', payments: [pay('abcdef123', '2026-10-05T10:00:00.000Z', 300)] },
@@ -17,6 +17,10 @@ describe('paymentsCsv', () => {
     expect(lines[1]).toContain('2026-10-02');
     expect(lines[2]).toContain('2026-10-05');
     expect(csv).not.toContain('old00000'.toUpperCase());
+  });
+  it('writes each payment with its own currency, dirhams when it has none', () => {
+    expect(lines[0].endsWith('Currency')).toBe(true);
+    expect(lines[1].endsWith(';MAD')).toBe(true);
   });
   it('quotes separators and neutralises formulas', () => {
     expect(lines[1]).toContain('"Sara; ""Ben"""');

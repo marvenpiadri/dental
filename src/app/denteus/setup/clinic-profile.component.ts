@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PlacePickerComponent } from '../regional/place-picker.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { ClinicLocation, ClinicProfile, PublishState } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { MapsService, Suggestion } from '../services/maps.service';
 import { changeSlug, clinicPath, displayName, freeSlug, publishProblems, slugProblem, slugify } from '../rules/clinic-profile-rules';
-import { countryCodeFor, fromPlace, mapsLink } from '../rules/places-rules';
+import { fromPlace, mapsLink } from '../rules/places-rules';
 import { publicRecord } from '../rules/public-record';
 
 interface Field { k: string; label: Key; root?: boolean; type?: string; max?: number }
@@ -23,10 +24,7 @@ const CONTACT: Field[] = [
   { k: 'facebook', label: 'prof.facebook', type: 'url', max: 200 },
 ];
 const PLACE: Field[] = [
-  { k: 'country', label: 'prof.country', max: 60 },
-  { k: 'countryCode', label: 'prof.countryCode', max: 2 },
   { k: 'region', label: 'prof.region', max: 80 },
-  { k: 'city', label: 'prof.city', max: 80 },
 ];
 const LISTS = ['languages', 'specialties', 'services'] as const;
 
@@ -46,7 +44,7 @@ const resize = (file: File, max: number): Promise<string> => new Promise((done, 
   selector: 'den-clinic-profile',
   templateUrl: './clinic-profile.component.html',
   styleUrl: './clinic-profile.component.css',
-  imports: [RouterLink],
+  imports: [RouterLink, PlacePickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClinicProfileComponent {
@@ -85,11 +83,18 @@ export class ClinicProfileComponent {
     if (patch.name !== undefined && !patch.name.trim()) { this.status.set('needName'); return; }
     await this.commit({ ...this.clinic(), ...patch });
   }
+  /** Country and city live once, on the clinic (Location settings); the public profile mirrors them. */
+  protected setPlace(patch: { countryCode?: string; city?: string }): Promise<void> { return this.store.patchClinic(patch); }
+  private async commitWithPlace(next: ClinicLocation): Promise<void> {
+    const { country: _c, countryCode, city, ...rest } = next.profile ?? {};
+    await this.commit({ ...next, profile: { ...this.p(), ...rest } });
+    const central = { ...(countryCode ? { countryCode: countryCode.toUpperCase() } : {}), ...(city ? { city } : {}) };
+    if (Object.keys(central).length) await this.store.patchClinic(central);
+  }
   protected async setProfile(patch: Partial<ClinicProfile>): Promise<void> { await this.commit({ ...this.clinic(), profile: { ...this.p(), ...patch } }); }
   protected edit(f: Field, raw: string): Promise<void> {
     const v = raw.trim();
-    if (f.k === 'country') return this.setProfile({ country: v || undefined, ...(v && !this.p().countryCode ? { countryCode: countryCodeFor(v) } : {}) });
-    return f.root ? this.setRoot({ [f.k]: v }) : this.setProfile({ [f.k]: f.k === 'countryCode' ? v.toUpperCase() : v || undefined });
+    return f.root ? this.setRoot({ [f.k]: v }) : this.setProfile({ [f.k]: v || undefined });
   }
   protected editList(k: (typeof LISTS)[number], raw: string): Promise<void> {
     return this.setProfile({ [k]: raw.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 20) });
@@ -109,7 +114,7 @@ export class ClinicProfileComponent {
     const { lat, lng, placeId, name } = found.link;
     const profile: Partial<ClinicProfile> = { ...fill.profile, ...(lat !== undefined && lng !== undefined ? { lat, lng } : {}), ...(placeId ? { placeId } : {}) };
     const have = this.clinic();
-    await this.commit({ ...have, name: have.name || name || have.name, address: have.address || fill.address, profile: { ...this.p(), ...profile, displayName: this.p().displayName || (have.name ? undefined : name) } });
+    await this.commitWithPlace({ ...have, name: have.name || name || have.name, address: have.address || fill.address, profile: { ...this.p(), ...profile, displayName: this.p().displayName || (have.name ? undefined : name) } });
     this.linkState.set('ok');
   }
 
@@ -121,7 +126,7 @@ export class ClinicProfileComponent {
     try {
       const fill = fromPlace(await this.maps.details(s.placeId));
       this.suggestions.set([]);
-      await this.commit({ ...this.clinic(), address: fill.address ?? this.clinic().address, profile: { ...this.p(), ...fill.profile } });
+      await this.commitWithPlace({ ...this.clinic(), address: fill.address ?? this.clinic().address, profile: { ...this.p(), ...fill.profile } });
     } catch { this.status.set('failed'); }
   }
 

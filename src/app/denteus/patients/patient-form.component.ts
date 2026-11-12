@@ -3,17 +3,18 @@ import { Router, RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PatientInput } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
+import { PlacePickerComponent } from '../regional/place-picker.component';
 import { CONDITIONS, PatientProblem, validatePatient } from './patient-rules';
 
-type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'city' | 'alert' | 'notes', string>;
+type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'country' | 'city' | 'alert' | 'notes', string>;
 type Field = keyof Values;
 
-const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', city: '', alert: '', notes: '' };
+const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', country: '', city: '', alert: '', notes: '' };
 
 /** Creates a patient, or edits one when the route carries an `id` (bound from the URL). */
 @Component({
   selector: 'den-patient-form',
-  imports: [RouterLink],
+  imports: [RouterLink, PlacePickerComponent],
   templateUrl: './patient-form.component.html',
   styleUrl: './patient-form.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +52,12 @@ export class PatientFormComponent {
   protected readonly hasProblems = computed(() => Object.keys(this.problems()).length > 0);
 
   constructor() {
+    // A new patient starts from the clinic's country and city (still editable); an existing record is never touched.
+    effect(() => {
+      const clinic = this.store.locations()[0];
+      if (this.editing() || !this.store.loaded() || !clinic) return;
+      untracked(() => this.values.update((v) => (v.country || v.city ? v : { ...v, country: clinic.countryCode ?? '', city: clinic.city ?? '' })));
+    });
     // Fill the form once the record has loaded; never again, so the user's typing isn't overwritten.
     effect(() => {
       const patient = this.existing();
@@ -63,6 +70,7 @@ export class PatientFormComponent {
           email: patient.email ?? '',
           birthDate: patient.birthDate ?? '',
           sex: patient.sex ?? '',
+          country: patient.country ?? '',
           city: patient.city ?? '',
           alert: patient.alert ?? '',
           notes: patient.notes ?? '',
@@ -119,6 +127,7 @@ export class PatientFormComponent {
       email: v.email,
       birthDate: v.birthDate,
       sex: v.sex === 'female' || v.sex === 'male' ? v.sex : undefined,
+      country: v.country,
       city: v.city,
       alert: v.alert,
       notes: v.notes,

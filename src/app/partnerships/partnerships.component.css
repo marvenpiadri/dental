@@ -67,5 +67,4 @@ details { border-bottom: 1px solid var(--app-line); padding: 14px 0; } summary {
 .review { max-width: 700px; padding: clamp(16px, 3vw, 32px); border: 1px solid var(--app-text); border-radius: 8px; } .review p { color: var(--app-muted); }
 .legal { width: var(--wrap); margin: 0 auto; padding: 24px 0 8px; font-size: 13px; color: var(--app-muted); border-top: 1px solid var(--app-line); max-width: 900px; }
 .foot { padding: 16px clamp(16px, 4vw, 48px) 40px; color: var(--app-muted); font-size: 14px; } .foot a { color: inherit; }
-@media (max-width: 700px) { .links { display: none; } }
 @media (prefers-reduced-motion: no-preference) { :host { scroll-behavior: smooth; } }

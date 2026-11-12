@@ -7,6 +7,10 @@
   </div>
 </dl>
 
+@if (otherCurrency().length) {
+  <p class="empty-note" role="status"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ t('bill.otherCurrency', { codes: otherCurrency().join(', '), current: cur() }) }}</p>
+}
+
 <form class="add" novalidate (submit)="$event.preventDefault(); add()">
   <label class="field price">
     <span class="label">{{ t('bill.amount') }}</span>
@@ -19,6 +23,14 @@
       @for (m of methods(); track m) { <option [value]="m" [selected]="chosen() === m">{{ t(methodKey[m]) }}</option> }
     </select>
   </label>
+  @if (payerOptions().length > 1) {
+    <label class="field">
+      <span class="label">{{ t('payer.from') }}</span>
+      <select class="input" (change)="payer.set($any($event.target).value)">
+        @for (o of payerOptions(); track o.value) { <option [value]="o.value" [selected]="payer() === o.value">{{ t(typeKey[o.type]) }}@if ($any(o).name) { · {{ $any(o).name }} }</option> }
+      </select>
+    </label>
+  }
   <label class="field">
     <span class="label">{{ t('bill.reference') }}</span>
     <input class="input" [value]="reference()" (input)="reference.set($any($event.target).value)" maxlength="60" />
@@ -45,7 +57,7 @@
       <li [class.gone]="r.state === 'cancelled'">
         <span class="when"><b>{{ r.inv.number }}</b> · {{ when(r.inv.issuedAt) }}@if (r.inv.cancelReason) { <small> · {{ r.inv.cancelReason }}</small> }</span>
         @if (r.inv.kind === 'invoice') { <span class="chip" [attr.data-tone]="r.state === 'paid' ? 'ok' : r.state === 'cancelled' ? 'neutral' : 'warn'">{{ t(stateKey[r.state]) }}</span> } @else { <span class="chip" data-tone="neutral">{{ t('inv.creditNote') }}</span> }
-        <span class="amount">{{ i18n.money(r.inv.total) }}@if (r.inv.kind === 'invoice' && (r.state === 'unpaid' || r.state === 'partial')) { <small> · {{ t('inv.left', { amount: i18n.money(r.remaining) }) }}</small> }</span>
+        <span class="amount">{{ money(r.inv.total, r.inv.currency) }}@if (r.inv.kind === 'invoice' && (r.state === 'unpaid' || r.state === 'partial')) { <small> · {{ t('inv.left', { amount: money(r.remaining, r.inv.currency) }) }}</small> }</span>
         <button type="button" class="btn btn--icon" [attr.aria-label]="t('inv.print')" (click)="printInvoice(r.inv)"><i class="fa-solid fa-print" aria-hidden="true"></i></button>
         @if (canVoid() && r.inv.kind === 'invoice' && !r.inv.cancelledAt) { <button type="button" class="btn btn--icon" [attr.aria-label]="t('inv.cancel')" (click)="ask('invoice', r.inv.id)"><i class="fa-solid fa-ban" aria-hidden="true"></i></button> }
       </li>
@@ -67,7 +79,8 @@
       <li [class.gone]="p.voidedAt">
         <span class="when">{{ when(p.at) }}@if (p.reference) { <small> · {{ p.reference }}</small> }@if (p.voidedAt) { <small> · {{ t('bill.voided', { reason: p.voidReason ?? '' }) }}</small> }</span>
         <span class="chip" data-tone="neutral">{{ t(methodKey[p.method]) }}</span>
-        <span class="amount">{{ i18n.money(p.amount) }}</span>
+        @if (payerLabel(p)) { <span class="chip" data-tone="info">{{ payerLabel(p) }}</span> }
+        <span class="amount">{{ money(p.amount, p.currency) }}</span>
         <button type="button" class="btn btn--icon" [attr.aria-label]="t('receipt.print')" (click)="print(p)"><i class="fa-solid fa-print" aria-hidden="true"></i></button>
         @if (canVoid() && !p.voidedAt) { <button type="button" class="btn btn--icon" [attr.aria-label]="t('bill.void')" (click)="ask('payment', p.id)"><i class="fa-solid fa-ban" aria-hidden="true"></i></button> }
       </li>

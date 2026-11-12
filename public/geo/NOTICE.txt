@@ -1,0 +1,2 @@
+City names: GeoNames (https://www.geonames.org), CC BY 4.0, via the all-the-cities package (places with 1000+ inhabitants).
+Country index: world-countries (https://github.com/mledoze/countries), ODbL 1.0.

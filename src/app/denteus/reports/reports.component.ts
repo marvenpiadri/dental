@@ -36,7 +36,7 @@ export class ReportsComponent {
   protected readonly report = computed(() => {
     const now = this.now();
     if (!now || !this.store.loaded()) return null;
-    return buildReport({ patients: this.store.patients(), appointments: this.store.appointments(), dentists: this.store.dentists() }, this.period(), now);
+    return buildReport({ patients: this.store.patients(), appointments: this.store.appointments(), dentists: this.store.dentists() }, this.period(), now, this.store.currency());
   });
 
   protected readonly peak = computed(() => Math.max(1, ...(this.report()?.series.map((b) => b.amount) ?? [])));
@@ -51,7 +51,7 @@ export class ReportsComponent {
     if (!now) return;
     const t = this.t;
     const text = paymentsCsv(this.store.patients(), this.period(), now,
-      { date: t('reports.csv.date'), receipt: t('reports.csv.receipt'), patient: t('reports.csv.patient'), method: t('reports.csv.method'), amount: t('reports.csv.amount') },
+      { date: t('reports.csv.date'), receipt: t('reports.csv.receipt'), patient: t('reports.csv.patient'), method: t('reports.csv.method'), amount: t('reports.csv.amount'), currency: t('reports.csv.currency') },
       (m) => t(this.methodKey[m as PaymentMethod]));
     const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');

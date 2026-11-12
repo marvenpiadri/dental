@@ -1,3 +1,4 @@
+import { inCurrency } from '../regional/regional-rules';
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
@@ -44,7 +45,7 @@ export class TreatmentPlanComponent {
   protected readonly draftPrice = signal('');
   protected readonly priceInvalid = signal(false);
 
-  private readonly alloc = computed(() => allocate(this.plan(), this.payments()));
+  private readonly alloc = computed(() => allocate(this.plan(), inCurrency(this.payments(), this.store.currency())));
   protected paid(i: TreatmentItem) { return this.alloc().get(i.id) ?? { received: 0, remaining: i.price }; }
   protected dayOf(i: TreatmentItem): string {
     const d = i.date ?? i.doneAt?.slice(0, 10);

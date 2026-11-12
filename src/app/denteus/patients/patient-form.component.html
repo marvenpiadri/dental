@@ -73,10 +73,8 @@
               [attr.aria-invalid]="errorKey('email') ? 'true' : null" [attr.aria-describedby]="errorKey('email') ? 'err-email' : null" />
             @if (errorKey('email'); as key) { <p class="error-text" id="err-email">{{ t(key) }}</p> }
           </label>
-          <label class="field wide">
-            <span class="label">{{ t('form.city') }}</span>
-            <input class="input" name="city" autocomplete="address-level2" [value]="values().city" (input)="set('city', $any($event.target).value)" />
-          </label>
+          <den-place-picker kind="country" [label]="t('form.country')" [value]="values().country" (changed)="set('country', $event)" />
+          <den-place-picker kind="city" [label]="t('form.city')" [country]="values().country" [value]="values().city" (changed)="set('city', $event)" />
         </div>
       </section>
 

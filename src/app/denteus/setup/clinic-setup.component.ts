@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ClinicProfileComponent } from './clinic-profile.component';
+import { LocationSettingsComponent } from './location-settings.component';
+import { PayerSettingsComponent } from './financial-settings.component';
+import { IntegrationsSettingsComponent } from './integrations-settings.component';
 import { TeamComponent } from './team.component';
 import { RxSetupComponent } from '../rx/rx-setup.component';
 import { MedicationLibraryComponent } from '../rx/medication-library.component';
@@ -36,34 +39,54 @@ const PALETTE = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4
 
 const SECTIONS = [
   { id: 'clinic', icon: 'fa-hospital', key: 'set.clinicProfile', need: 'profile.view' },
+  { id: 'location', icon: 'fa-location-dot', key: 'set.location', need: 'settings.view' },
+  { id: 'services', icon: 'fa-file-invoice', key: 'set.services', need: 'settings.view' },
+  { id: 'payers', icon: 'fa-hand-holding-dollar', key: 'set.payers', need: 'settings.view' },
+  { id: 'integrations', icon: 'fa-plug', key: 'set.integrations', need: 'settings.view' },
   { id: 'team', icon: 'fa-user-doctor', key: 'set.team', need: 'team.view' },
   { id: 'schedule', icon: 'fa-calendar-days', key: 'set.schedule', need: 'settings.view' },
-  { id: 'services', icon: 'fa-file-invoice', key: 'set.services', need: 'settings.view' },
-  { id: 'documents', icon: 'fa-file-lines', key: 'set.documents', need: 'settings.view' },
   { id: 'medications', icon: 'fa-pills', key: 'set.medications', need: 'clinical.view' },
   { id: 'allergies', icon: 'fa-triangle-exclamation', key: 'set.allergies', need: 'clinical.view' },
   { id: 'prescribing', icon: 'fa-file-prescription', key: 'set.prescribing', need: 'clinical.view' },
+  { id: 'documents', icon: 'fa-file-lines', key: 'set.documents', need: 'settings.view' },
   { id: 'messaging', icon: 'fa-brands fa-whatsapp', key: 'set.messaging', need: 'settings.view' },
-  { id: 'integrations', icon: 'fa-plug', key: 'set.integrations', need: 'settings.view' },
   { id: 'workspace', icon: 'fa-sliders', key: 'set.workspace', need: 'settings.view' },
+  { id: 'backup', icon: 'fa-database', key: 'setup.backup', need: 'settings.view' },
 ] as const satisfies readonly { id: string; icon: string; key: Key; need: Permission }[];
 type SectionId = (typeof SECTIONS)[number]['id'];
+
+/** The Settings index: each category groups the screens below it; opening one lands on its first screen the role may use. */
+const CATEGORIES = [
+  { id: 'clinic', icon: 'fa-hospital', subs: ['clinic'] },
+  { id: 'regional', icon: 'fa-earth-africa', subs: ['location'] },
+  { id: 'financial', icon: 'fa-coins', subs: ['services', 'payers'] },
+  { id: 'integrations', icon: 'fa-plug', subs: ['integrations'] },
+  { id: 'team', icon: 'fa-users', subs: ['team'] },
+  { id: 'operations', icon: 'fa-calendar-days', subs: ['schedule'] },
+  { id: 'clinical', icon: 'fa-pills', subs: ['medications', 'allergies', 'prescribing', 'documents'] },
+  { id: 'notifications', icon: 'fa-bell', subs: ['messaging'] },
+  { id: 'appearance', icon: 'fa-sliders', subs: ['workspace'] },
+  { id: 'data', icon: 'fa-database', subs: ['backup'] },
+] as const satisfies readonly { id: string; icon: string; subs: readonly SectionId[] }[];
 
 /** Who treats and where: the dentists and chairs the calendar books against. Every change saves at once. */
 @Component({
   selector: 'den-clinic-setup',
   templateUrl: './clinic-setup.component.html',
   styleUrl: './clinic-setup.component.css',
-  imports: [RouterLink, ClinicProfileComponent, TeamComponent, DocDesignerComponent, RxSetupComponent, MedicationLibraryComponent, AllergyLibraryComponent],
+  imports: [RouterLink, LocationSettingsComponent, PayerSettingsComponent, IntegrationsSettingsComponent, ClinicProfileComponent, TeamComponent, DocDesignerComponent, RxSetupComponent, MedicationLibraryComponent, AllergyLibraryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'ds-page' },
 })
 export class ClinicSetupComponent {
   readonly section = input<string>();
-  protected readonly sections = SECTIONS;
-  /** Sections the signed-in role may open; a direct link to another one lands on the first allowed. */
+  /** Screens the signed-in role may open. */
   protected readonly visible = computed(() => SECTIONS.filter((x) => this.auth.can(x.need)));
-  protected readonly current = computed<SectionId>(() => (this.visible().find((x) => x.id === this.section()) ?? this.visible()[0] ?? SECTIONS[0]).id);
+  /** Categories with at least one allowed screen, each with those screens. */
+  protected readonly categories = computed(() => CATEGORIES.map((c) => ({ ...c, items: this.visible().filter((x) => (c.subs as readonly string[]).includes(x.id)) })).filter((c) => c.items.length));
+  /** The open screen; undefined shows the index, and a link to a screen the role can't use does too. */
+  protected readonly current = computed<SectionId | undefined>(() => this.visible().find((x) => x.id === this.section())?.id);
+  protected readonly category = computed(() => this.categories().find((c) => c.items.some((x) => x.id === this.current())));
   protected readonly clinic = computed<ClinicLocation | undefined>(() => this.store.locations()[0]);
   protected readonly theme = inject(ThemeService);
   protected readonly langs = LANGS;

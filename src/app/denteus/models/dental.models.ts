@@ -3,7 +3,10 @@ import type { Examination } from '../odontogram/engine/exam';
 import type { IconName } from '../../calendar/components/cal-icon/cal-icon.component';
 import type { EventTone } from '../../calendar/models/calendar.models';
 
+import type { Payer, PayerType } from '../regional/payers';
+
 /** A physical clinic site. Operational records reference this ID instead of assuming one global practice. */
+
 export interface ClinicLocation {
   id: string;
   name: string;
@@ -15,6 +18,18 @@ export interface ClinicLocation {
   hours?: OpeningHours;
   phone?: string;
   email?: string;
+  /** Where the clinic is. One source for the whole app: currency, patient defaults and the regional options follow it. ISO 3166-1 alpha-2. */
+  countryCode?: string;
+  /** The city as the clinic writes it; free text is always allowed. */
+  city?: string;
+  postalCode?: string;
+  website?: string;
+  /** ISO 4217. Unset means dirhams, which every clinic used before this was configurable. Changing it never converts old records. */
+  currency?: string;
+  /** Payer types the clinic uses; the patient is always one. Unset means the suggestion for its country. */
+  payerTypes?: PayerType[];
+  /** Named insurers, mutuals and employers the clinic deals with. */
+  payers?: Payer[];
   /** Printed on invoices: the registered business name, tax number (ICE in Morocco), bank details and a footer note. */
   legalName?: string;
   taxId?: string;
@@ -70,6 +85,8 @@ export interface Patient {
   /** ISO date, `YYYY-MM-DD`. Stored as a string so there is no time zone to get wrong. */
   birthDate?: string;
   sex?: 'female' | 'male';
+  /** ISO 3166-1 alpha-2. Filled from the clinic for new patients; never rewritten when the clinic setting changes. */
+  country?: string;
   city?: string;
   /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
   alert?: string;
@@ -210,6 +227,12 @@ export interface Payment {
   note?: string;
   /** The invoice this money settles; absent means an advance or a payment on account. */
   invoiceId?: string;
+  /** Who provided the money. Absent means the patient. This is money received by the clinic, not a reimbursement paid to the patient. */
+  payerType?: PayerType;
+  /** The named payer from the clinic directory, when there is one. */
+  payerId?: string;
+  /** ISO 4217 at the time of payment. Absent on older records, which count as dirhams. */
+  currency?: string;
   /** A voided payment is never deleted: it stays in the history, out of every total. */
   voidedAt?: string;
   voidReason?: string;
@@ -238,6 +261,8 @@ export interface Invoice {
   issuedAt: string;
   lines: InvoiceLine[];
   total: number;
+  /** ISO 4217 at the time of issue. Absent on older records, which count as dirhams. */
+  currency?: string;
   /** A credit note points at the invoice it cancels. */
   cancelsId?: string;
   cancelledAt?: string;

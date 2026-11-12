@@ -35,7 +35,7 @@ export function cancelInvoice(invoice: Invoice, reason: string, all: readonly In
   const marked = { ...invoice, cancelledAt: now.toISOString(), cancelReason: why };
   const creditNote: Invoice = {
     id: crypto.randomUUID(), number: nextNumber('credit-note', now.getFullYear(), all), kind: 'credit-note', issuedAt: now.toISOString(),
-    lines: invoice.lines.map((l) => ({ ...l, price: -l.price })), total: -invoice.total, cancelsId: invoice.id,
+    lines: invoice.lines.map((l) => ({ ...l, price: -l.price })), total: -invoice.total, cancelsId: invoice.id, ...(invoice.currency && { currency: invoice.currency }),
   };
   return { marked, creditNote };
 }

@@ -1,15 +1,37 @@
 <header class="ds-head">
-  <div class="ds-head-main"><h1 class="ds-title">{{ t('nav.setup') }}</h1></div>
+  <div class="ds-head-main">
+    @if (category(); as c) {
+      <a class="btn btn--icon" routerLink="/setup" [attr.aria-label]="t('set.back')"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></a>
+      <div><h1 class="ds-title">{{ t($any('set.cat.' + c.id)) }}</h1><p class="head-sub">{{ t($any('set.cat.' + c.id + '.text')) }}</p></div>
+    } @else {
+      <div><h1 class="ds-title">{{ t('nav.setup') }}</h1><p class="head-sub">{{ t('set.index.text') }}</p></div>
+    }
+  </div>
 </header>
 
-<nav class="pages" [attr.aria-label]="t('set.sections')">
-  @for (x of visible(); track x.id) {
-    <a class="page-link" [routerLink]="['/setup', x.id]" [class.on]="current() === x.id" [attr.aria-current]="current() === x.id ? 'page' : null">
-      <i [class]="x.icon.includes(' ') ? x.icon : 'fa-solid ' + x.icon" aria-hidden="true"></i><span>{{ t(x.key) }}</span>
-    </a>
+@if (category(); as c) {
+  @if (c.items.length > 1) {
+    <nav class="pages" [attr.aria-label]="t('set.sections')">
+      @for (x of c.items; track x.id) {
+        <a class="page-link" [routerLink]="['/setup', x.id]" [class.on]="current() === x.id" [attr.aria-current]="current() === x.id ? 'page' : null">
+          <i [class]="x.icon.includes(' ') ? x.icon : 'fa-solid ' + x.icon" aria-hidden="true"></i><span>{{ t(x.key) }}</span>
+        </a>
+      }
+    </nav>
   }
-</nav>
+} @else {
+  <nav class="index" [attr.aria-label]="t('set.sections')">
+    @for (c of categories(); track c.id) {
+      <a class="index-row" [routerLink]="['/setup', c.items[0].id]">
+        <i [class]="'fa-solid ' + c.icon" aria-hidden="true"></i>
+        <span class="index-text"><strong>{{ t($any('set.cat.' + c.id)) }}</strong><span>{{ t($any('set.cat.' + c.id + '.text')) }}</span></span>
+        <i class="fa-solid fa-chevron-right go" aria-hidden="true"></i>
+      </a>
+    }
+  </nav>
+}
 
+@if (current()) {
 <div class="ds-body canvas">
   <div class="grid-wide">
     @if (failed()) {
@@ -63,15 +85,9 @@
           }
         </section>
       }
-      @if (current() === 'integrations') {
-        @for (i of [{ id: 'g', icon: 'fa-brands fa-google', title: 'set.int.google', text: 'set.int.google.text' }, { id: 'w', icon: 'fa-brands fa-whatsapp', title: 'set.int.wa', text: 'set.int.wa.text' }]; track i.id) {
-          <section class="card" [attr.aria-labelledby]="'int-' + i.id">
-            <header class="card-head"><h2 class="card-title" [id]="'int-' + i.id"><i [class]="i.icon" aria-hidden="true"></i>{{ t($any(i.title)) }}</h2><span class="chip" data-tone="neutral">{{ t('set.int.notconnected') }}</span></header>
-            <p class="intro hint">{{ t($any(i.text)) }}</p>
-            <div class="row"><button type="button" class="btn" disabled>{{ t('set.int.needs') }}</button></div>
-          </section>
-        }
-      }
+      @if (current() === 'integrations') { <den-integrations-settings /> }
+      @if (current() === 'location') { <den-location-settings /> }
+      @if (current() === 'payers') { <den-payer-settings /> }
       @if (current() === 'workspace') {
         <section class="card" aria-labelledby="look-title">
           <header class="card-head"><h2 class="card-title" id="look-title"><i class="fa-solid fa-palette" aria-hidden="true"></i>{{ t('set.appearance') }}</h2></header>
@@ -225,7 +241,7 @@
 }
 
 
-      @if (current() === 'workspace') {
+      @if (current() === 'backup') {
 <section class="card" aria-labelledby="backup-title">
         <header class="card-head"><h2 class="card-title" id="backup-title"><i class="fa-solid fa-database" aria-hidden="true"></i>{{ t('setup.backup') }}</h2></header>
         <div class="card-body backup">
@@ -254,3 +270,4 @@
     }
   </div>
 </div>
+}

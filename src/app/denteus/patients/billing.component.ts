@@ -9,8 +9,11 @@ import { balance, parsePrice, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
 import { InvoiceState, cancelInvoice, invoiceState, issueInvoice, uninvoiced, voidPayment } from './invoice-rules';
 import { invoiceHtml } from './invoice-html';
+import { LEGACY_CURRENCY, inCurrency } from '../regional/regional-rules';
+import { PAYER_TYPES, PayerType, enabledTypes } from '../regional/payers';
 
 const STATE_KEY: Record<InvoiceState, Key> = { unpaid: 'inv.state.unpaid', partial: 'inv.state.partial', paid: 'inv.state.paid', cancelled: 'inv.state.cancelled' };
+const TYPE_KEY: Record<PayerType, Key> = { patient: 'payer.type.patient', public: 'payer.type.public', private: 'payer.type.private', mutual: 'payer.type.mutual', employer: 'payer.type.employer', other: 'payer.type.other' };
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' };
 
 /** What the patient owes (done work) against what they have paid. Payments are recorded here; nothing is sent anywhere. */
@@ -48,12 +51,31 @@ export class BillingComponent {
   /** The payment or invoice waiting for a reason before it is voided or cancelled. */
   protected readonly asking = signal<{ kind: 'payment' | 'invoice'; id: string } | null>(null);
   protected readonly reason = signal('');
+  /** Who provided the money: the patient, or an insurer, mutual, employer or other third party. One select; the value is `type` or `type|payerId`. */
+  protected readonly payer = signal('patient');
+  protected readonly typeKey = TYPE_KEY;
+  protected readonly payerOptions = computed(() => {
+    const loc = this.store.locations()[0];
+    const types = enabledTypes(loc?.payerTypes, loc?.countryCode);
+    const named = (loc?.payers ?? []).filter((p) => !p.hidden);
+    return types.flatMap((type) => [{ value: type as string, type }, ...(type === 'patient' ? [] : named.filter((p) => p.type === type).map((p) => ({ value: `${type}|${p.id}`, type, name: p.name })))]);
+  });
+  protected payerLabel(p: { payerType?: PayerType; payerId?: string }): string {
+    if (!p.payerType || p.payerType === 'patient') return '';
+    const name = this.store.locations()[0]?.payers?.find((x) => x.id === p.payerId)?.name;
+    return name ? `${this.t(TYPE_KEY[p.payerType])} · ${name}` : this.t(TYPE_KEY[p.payerType]);
+  }
+  /** Payments and invoices made in another currency than the clinic's now: kept as they are, left out of totals. */
+  protected readonly cur = computed(() => this.store.currency());
+  protected readonly current = computed(() => inCurrency(this.payments(), this.cur()));
+  protected readonly otherCurrency = computed(() => [...new Set([...this.payments(), ...this.invoices()].map((r) => r.currency ?? LEGACY_CURRENCY).filter((c) => c !== this.cur()))]);
+  protected money(amount: number, currency?: string): string { return this.i18n.money(amount, currency ?? this.cur()); }
   protected readonly toBill = computed(() => uninvoiced(this.plan(), this.invoices()));
   protected readonly toBillTotal = computed(() => this.toBill().reduce((n, i) => n + i.price, 0));
-  protected readonly rows = computed(() => [...this.invoices()].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt)).map((inv) => ({ inv, ...invoiceState(inv, this.payments()) })));
-  protected readonly open = computed(() => this.rows().filter((r) => r.state === 'unpaid' || r.state === 'partial'));
+  protected readonly rows = computed(() => [...this.invoices()].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt)).map((inv) => ({ inv, ...invoiceState(inv, inCurrency(this.payments(), inv.currency ?? this.cur())) })));
+  protected readonly open = computed(() => this.rows().filter((r) => (r.state === 'unpaid' || r.state === 'partial') && (r.inv.currency ?? this.cur()) === this.cur()));
 
-  protected readonly sums = computed(() => balance(this.plan(), this.payments()));
+  protected readonly sums = computed(() => balance(this.plan(), this.current()));
   protected readonly recent = computed(() => [...this.payments()].sort((a, b) => b.at.localeCompare(a.at)));
 
   /** One click for the common case at the desk: the patient pays what is left. */
@@ -65,13 +87,16 @@ export class BillingComponent {
   protected add(): void {
     const value = parsePrice(this.amount());
     if (!value) { this.invalid.set(true); return; } // zero is not a payment
-    const payment: Payment = { id: crypto.randomUUID(), amount: value, method: this.chosen(), at: new Date().toISOString() };
+    const payment: Payment = { id: crypto.randomUUID(), amount: value, method: this.chosen(), at: new Date().toISOString(), currency: this.cur() };
+    const [type, id] = this.payer().split('|');
+    if (type !== 'patient' && PAYER_TYPES.includes(type as PayerType)) { payment.payerType = type as PayerType; if (id) payment.payerId = id; }
     if (this.reference().trim()) payment.reference = this.reference().trim();
     if (this.forInvoice()) payment.invoiceId = this.forInvoice();
     this.edit.emit((list) => [...list, payment]);
     this.amount.set('');
     this.reference.set('');
     this.forInvoice.set('');
+    this.payer.set('patient');
     this.invalid.set(false);
   }
 
@@ -105,7 +130,7 @@ export class BillingComponent {
     const t = this.t;
     const all = this.store.patients().flatMap((p) => p.invoices ?? []);
     const inv = issueInvoice(this.toBill(), (i) => ({ itemId: i.id, label: procedureName(t, i.procedure, i.name), where: i.tooth ?? (i.scope ? scopeText(i, t) : ''), price: i.price }), all, new Date());
-    if (inv) this.editInvoices.emit((list) => [...list, inv]);
+    if (inv) this.editInvoices.emit((list) => [...list, { ...inv, currency: this.cur() }]);
   }
 
   private legal(): string[] {
@@ -115,15 +140,15 @@ export class BillingComponent {
 
   protected printInvoice(inv: Invoice): void {
     const t = this.t;
-    const st = invoiceState(inv, this.payments());
+    const st = invoiceState(inv, inCurrency(this.payments(), inv.currency ?? this.cur()));
     const orig = inv.cancelsId ? this.invoices().find((i) => i.id === inv.cancelsId) : undefined;
     const tpl = this.docs.templateFor('invoice');
     const html = invoiceHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
       cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
       date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
-      lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.i18n.money(l.price) })),
-      total: this.i18n.money(inv.total), paid: this.i18n.money(st.paid), remaining: this.i18n.money(st.remaining),
+      lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.money(l.price, inv.currency) })),
+      total: this.money(inv.total, inv.currency), paid: this.money(st.paid, inv.currency), remaining: this.money(st.remaining, inv.currency),
       legal: this.legal(),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), where: t('plan.tooth'), act: t('plan.procedure'), price: t('plan.price'), total: t('inv.total'), paid: t('bill.paid'), remaining: t('bill.due') },
     }, tpl);
@@ -142,7 +167,7 @@ export class BillingComponent {
       reference: payment.reference,
       date: this.when(payment.at),
       method: t(METHOD_KEY[payment.method]),
-      amount: this.i18n.money(payment.amount),
+      amount: this.money(payment.amount, payment.currency),
       charged: this.i18n.money(sums.charged),
       paid: this.i18n.money(sums.paid),
       due: this.i18n.money(Math.max(0, sums.due)),

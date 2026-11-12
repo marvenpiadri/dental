@@ -1,3 +1,4 @@
+import { LEGACY_CURRENCY, inCurrency } from '../regional/regional-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
 export type Period = 'month' | '30d' | 'year';
@@ -27,7 +28,8 @@ export interface Report {
 
 const within = (value: Date, range: { from: Date; to: Date }) => value >= range.from && value < range.to;
 
-export function buildReport(data: { patients: Patient[]; appointments: Appointment[]; dentists: Dentist[] }, period: Period, now: Date): Report {
+/** Money counts only in `currency` (the clinic's current one): payments made in another currency stay on file but are never added in. */
+export function buildReport(data: { patients: Patient[]; appointments: Appointment[]; dentists: Dentist[] }, period: Period, now: Date, currency = LEGACY_CURRENCY): Report {
   const range = periodRange(period, now);
   const perMonth = period === 'year';
 
@@ -41,7 +43,7 @@ export function buildReport(data: { patients: Patient[]; appointments: Appointme
   let charged = 0;
   const byMethod: Record<PaymentMethod, number> = { cash: 0, card: 0, transfer: 0, cheque: 0, other: 0 };
   for (const patient of data.patients) {
-    for (const payment of patient.payments ?? []) {
+    for (const payment of inCurrency(patient.payments ?? [], currency)) {
       if (payment.voidedAt) continue;
       const at = new Date(payment.at);
       if (!within(at, range)) continue;

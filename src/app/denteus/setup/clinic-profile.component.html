@@ -78,6 +78,8 @@
       <label class="field">{{ t('set.address') }}<input class="input" [value]="c.address ?? ''" maxlength="160" (change)="setRoot({ address: $any($event.target).value.trim() })" /></label>
     </div>
     <div class="grid">
+      <den-place-picker kind="country" [label]="t('prof.country')" [value]="c.countryCode" [disabled]="!editable()" (changed)="setPlace({ countryCode: $event || undefined })" />
+      <den-place-picker kind="city" [label]="t('prof.city')" [country]="c.countryCode" [value]="c.city" [disabled]="!editable()" (changed)="setPlace({ city: $event || undefined })" />
       @for (f of place; track f.k) {
         <label class="field">{{ t(f.label) }}<input class="input" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
       }

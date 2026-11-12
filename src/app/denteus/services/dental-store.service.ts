@@ -1,3 +1,4 @@
+import { LEGACY_CURRENCY, countryName } from '../regional/regional-rules';
 import { CONDITIONS } from '../patients/patient-rules';
 import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
 import { isPlatformBrowser } from '@angular/common';
@@ -53,7 +54,7 @@ export interface RescheduleChange {
 /** Trims every text field and drops the empty optional ones, so "" never gets stored as a value. */
 function tidy(input: PatientInput): PatientInput {
   const out: PatientInput = { fullName: input.fullName.trim(), phone: input.phone.trim() };
-  for (const key of ['email', 'birthDate', 'sex', 'city', 'alert', 'notes'] as const) {
+  for (const key of ['email', 'birthDate', 'sex', 'country', 'city', 'alert', 'notes'] as const) {
     const value = input[key]?.trim();
     if (value) (out as unknown as Record<string, string>)[key] = value;
   }
@@ -118,11 +119,16 @@ export class DentalStore {
   private persistQueue: Promise<void> = Promise.resolve();
   private readonly database = inject(ClinicDatabase);
   private readonly auth = inject(AuthService);
-  private readonly t = inject(I18n).t;
+  private readonly i18n = inject(I18n);
+  private readonly t = this.i18n.t;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly persistenceError = signal<string | null>(null);
 
+  /** The clinic's current currency; dirhams for a clinic that never chose one. */
+  readonly currency = computed(() => this.locations()[0]?.currency ?? LEGACY_CURRENCY);
+
   constructor() {
+    effect(() => this.i18n.currency.set(this.currency()));
     effect(() => {
       const patients = this.patients();
       const appointments = this.appointments();
@@ -250,8 +256,46 @@ export class DentalStore {
     const current = this.patientMap().get(id);
     if (!current) return null;
     const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
+    if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
     return patient;
+  }
+
+  /** Saves clinic fields on the first site (creating it when there is none). Country and city also update the public profile, so the two never disagree. */
+  async patchClinic(patch: Partial<ClinicLocation>): Promise<void> {
+    const base: ClinicLocation = this.locations()[0] ?? { id: crypto.randomUUID(), name: 'Dontalist', code: 'MAIN', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, active: true };
+    const next: ClinicLocation = { ...base, ...patch };
+    if (('countryCode' in patch || 'city' in patch) && next.profile) {
+      const code = next.countryCode;
+      next.profile = { ...next.profile, countryCode: code, country: code ? countryName(code, 'en') : undefined, city: next.city || undefined };
+    }
+    await this.saveLocations([next, ...this.locations().slice(1)]);
+  }
+
+  /** True once the clinic has any payment, invoice or finished work: then a currency change needs explicit confirmation. */
+  hasFinancialRecords(): boolean {
+    return this.patients().some((p) => p.payments?.length || p.invoices?.length || p.plan?.some((i) => i.status === 'done'));
+  }
+
+  /** How many payments and invoices carry no currency yet, and would be stamped with the old one on a currency change. */
+  unstampedFinancialRecords(): number {
+    return this.patients().reduce((n, p) => n + (p.payments ?? []).filter((x) => !x.currency).length + (p.invoices ?? []).filter((x) => !x.currency).length, 0);
+  }
+
+  /**
+   * Changes the clinic's currency without touching any old amount: every payment and invoice that has no currency
+   * is first stamped with the currency it was made in, so it keeps meaning what it meant. Nothing is converted.
+   */
+  async changeCurrency(next: string): Promise<void> {
+    const old = this.currency();
+    if (next === old) return;
+    this.patients.update((list) => list.map((p) => ({
+      ...p,
+      ...(p.payments?.length && { payments: p.payments.map((x) => (x.currency ? x : { ...x, currency: old })) }),
+      ...(p.invoices?.length && { invoices: p.invoices.map((x) => (x.currency ? x : { ...x, currency: old })) }),
+    })));
+    await this.patchClinic({ currency: next });
   }
 
   /** Records (or clears, with `null`) one tooth's condition on the patient's chart. */
