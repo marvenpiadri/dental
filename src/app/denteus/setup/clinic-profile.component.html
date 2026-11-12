@@ -1,5 +1,4 @@
 <fieldset class="fs" [disabled]="!editable()">
-@let c = clinic();
 @let pr = p();
 <section class="card" aria-labelledby="pub-title">
   <header class="card-head">
@@ -71,23 +70,7 @@
       }
     </div>
   }
-  @if (needsPlace()) { <p class="row banner" role="status">{{ t('prof.needPlace') }}</p> }
-  <details class="more" [open]="needsPlace()">
-    <summary>{{ t('prof.details') }}</summary>
-    <div class="grid one">
-      <label class="field">{{ t('set.address') }}<input class="input" [value]="c.address ?? ''" maxlength="160" (change)="setRoot({ address: $any($event.target).value.trim() })" /></label>
-    </div>
-    <div class="grid">
-      <den-place-picker kind="country" [label]="t('prof.country')" [value]="c.countryCode" [disabled]="!editable()" (changed)="setPlace({ countryCode: $event || undefined })" />
-      <den-place-picker kind="city" [label]="t('prof.city')" [country]="c.countryCode" [value]="c.city" [disabled]="!editable()" (changed)="setPlace({ city: $event || undefined })" />
-      @for (f of place; track f.k) {
-        <label class="field">{{ t(f.label) }}<input class="input" [value]="value(f)" [attr.maxlength]="f.max" (change)="edit(f, $any($event.target).value)" /></label>
-      }
-      <label class="field">{{ t('prof.lat') }}<input class="input" inputmode="decimal" [value]="pr.lat ?? ''" (change)="editCoord('lat', $any($event.target).value)" /></label>
-      <label class="field">{{ t('prof.lng') }}<input class="input" inputmode="decimal" [value]="pr.lng ?? ''" (change)="editCoord('lng', $any($event.target).value)" /></label>
-    </div>
-    @if (pr.placeId) { <p class="row hint">{{ t('prof.placeId') }}: <code>{{ pr.placeId }}</code></p> }
-  </details>
+  @if (needsPlace()) { <p class="row banner" role="status">{{ t('prof.needPlace') }} <a routerLink="/setup/location">{{ t('prof.needPlace.link') }}</a></p> }
   @if (mapUrl(); as u) { <p class="row hint"><a [href]="u" target="_blank" rel="noopener">{{ t('prof.checkMap') }}</a></p> }
 </section>
 

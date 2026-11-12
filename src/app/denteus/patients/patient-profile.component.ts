@@ -13,6 +13,7 @@ import { DentalChartComponent } from '../odontogram/dental-chart.component';
 import { BillingComponent } from './billing.component';
 import { DocumentsComponent } from './documents.component';
 import { RxPageComponent } from '../rx/rx-page.component';
+import { PatientInsuranceComponent } from './patient-insurance.component';
 import { MedicalPageComponent } from '../rx/medical-page.component';
 import { activeAllergies, activeMedications } from '../rx/med-library';
 import { RxLibrary } from '../rx/rx-library.service';
@@ -27,7 +28,7 @@ type Tab = 'upcoming' | 'history';
 
 @Component({
   selector: 'den-patient-profile',
-  imports: [RouterLink, QuoteVersionsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent, RxPageComponent, MedicalPageComponent],
+  imports: [RouterLink, QuoteVersionsComponent, DentalChartComponent, TreatmentPlanComponent, BillingComponent, VisitNotesComponent, LettersComponent, DocumentsComponent, RxPageComponent, MedicalPageComponent, PatientInsuranceComponent],
   templateUrl: './patient-profile.component.html',
   styleUrl: './patient-profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

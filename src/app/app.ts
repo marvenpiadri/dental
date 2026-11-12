@@ -11,7 +11,6 @@ import { DentalStore } from './denteus/services/dental-store.service';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, SignInComponent],
-  providers: [DentalStore],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

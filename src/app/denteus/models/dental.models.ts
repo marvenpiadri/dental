@@ -4,6 +4,7 @@ import type { IconName } from '../../calendar/components/cal-icon/cal-icon.compo
 import type { EventTone } from '../../calendar/models/calendar.models';
 
 import type { Payer, PayerType } from '../regional/payers';
+import type { PatientInsurance } from '../regional/insurance';
 
 /** A physical clinic site. Operational records reference this ID instead of assuming one global practice. */
 
@@ -113,6 +114,8 @@ export interface Patient {
   prescriptions?: Prescription[];
   /** Structured medical records that point into the clinic's libraries. The free-text `medical.allergies` / `medical.medications` are kept untouched beside them. */
   patientAllergies?: PatientAllergy[];
+  /** Who covers the patient (separate from payments and from any claim). */
+  insurances?: PatientInsurance[];
   patientMedications?: PatientMedication[];
   /** Whether the patient agreed to WhatsApp messages from the clinic. Unset means not asked yet; `declined` blocks every message. */
   whatsappConsent?: 'granted' | 'declined';
@@ -304,7 +307,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances'>;
 
 export interface Dentist {
   id: string;

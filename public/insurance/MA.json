@@ -1,0 +1,182 @@
+{
+ "country": "MA",
+ "version": 1,
+ "entries": [
+  {
+   "id": "ma-cnss",
+   "name": "Caisse Nationale de Sécurité Sociale",
+   "short": "CNSS",
+   "kind": "public",
+   "aliases": [
+    "AMO",
+    "AMO Salariés"
+   ]
+  },
+  {
+   "id": "ma-cnops",
+   "name": "Caisse Nationale des Organismes de Prévoyance Sociale",
+   "short": "CNOPS",
+   "kind": "public",
+   "aliases": [
+    "AMO secteur public"
+   ]
+  },
+  {
+   "id": "ma-amo-tadamon",
+   "name": "AMO Tadamon (ex-RAMED)",
+   "short": "AMO Tadamon",
+   "kind": "public",
+   "aliases": [
+    "RAMED",
+    "Tadamon"
+   ]
+  },
+  {
+   "id": "ma-far",
+   "name": "Forces Armées Royales — couverture santé militaire",
+   "short": "FAR",
+   "kind": "military",
+   "aliases": [
+    "FAR",
+    "Militaire",
+    "Armée"
+   ]
+  },
+  {
+   "id": "ma-mgpap",
+   "name": "Mutuelle Générale du Personnel des Administrations Publiques",
+   "short": "MGPAP",
+   "kind": "mutual",
+   "aliases": [
+    "MGPAPM"
+   ]
+  },
+  {
+   "id": "ma-omfam",
+   "name": "Œuvres de Mutualité des Fonctionnaires et Agents assimilés du Maroc",
+   "short": "OMFAM",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-mgen",
+   "name": "Mutuelle Générale de l’Éducation Nationale",
+   "short": "MGEN",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-mgptt",
+   "name": "Mutuelle des Postes et Télécommunications",
+   "short": "MGPTT",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-mfa",
+   "name": "Mutuelle des Forces Auxiliaires",
+   "short": "MFA",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-modep",
+   "name": "Mutuelle du Personnel de l’Office d’Exploitation des Ports",
+   "short": "MODEP",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-mutuelle-police",
+   "name": "Mutuelle de Police",
+   "kind": "mutual",
+   "aliases": [
+    "Police"
+   ]
+  },
+  {
+   "id": "ma-mutuelle-douanes",
+   "name": "Mutuelle des Douanes et Impôts Indirects",
+   "kind": "mutual",
+   "aliases": [
+    "Douanes"
+   ]
+  },
+  {
+   "id": "ma-mpsc",
+   "name": "Mutuelle de la Prévoyance Sociale des Cheminots",
+   "kind": "mutual",
+   "aliases": [
+    "Cheminots",
+    "ONCF"
+   ]
+  },
+  {
+   "id": "ma-mcap",
+   "name": "MCAP",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-mucap",
+   "name": "MUCAP",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-cmim",
+   "name": "Caisse Mutualiste Interprofessionnelle Marocaine",
+   "short": "CMIM",
+   "kind": "mutual"
+  },
+  {
+   "id": "ma-wafa",
+   "name": "Wafa Assurance",
+   "kind": "private"
+  },
+  {
+   "id": "ma-axa",
+   "name": "AXA Assurance Maroc",
+   "short": "AXA",
+   "kind": "private"
+  },
+  {
+   "id": "ma-rma",
+   "name": "Royale Marocaine d’Assurance",
+   "short": "RMA",
+   "kind": "private",
+   "aliases": [
+    "RMA Watanya"
+   ]
+  },
+  {
+   "id": "ma-sanlam",
+   "name": "Sanlam Maroc",
+   "short": "Sanlam",
+   "kind": "private",
+   "aliases": [
+    "Saham Assurance",
+    "Saham"
+   ]
+  },
+  {
+   "id": "ma-allianz",
+   "name": "Allianz Maroc",
+   "short": "Allianz",
+   "kind": "private"
+  },
+  {
+   "id": "ma-atlantasanad",
+   "name": "AtlantaSanad Assurance",
+   "short": "AtlantaSanad",
+   "kind": "private",
+   "aliases": [
+    "Atlanta",
+    "Sanad"
+   ]
+  },
+  {
+   "id": "ma-mamda-mcma",
+   "name": "MAMDA-MCMA",
+   "short": "MAMDA",
+   "kind": "private",
+   "aliases": [
+    "MCMA",
+    "Mutuelle Agricole Marocaine d’Assurances"
+   ]
+  }
+ ]
+}

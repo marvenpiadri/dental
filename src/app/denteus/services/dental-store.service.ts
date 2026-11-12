@@ -34,6 +34,7 @@ import {
   VisitNote,
   TreatmentItem,
 } from '../models/dental.models';
+import type { PatientInsurance } from '../regional/insurance';
 import {
   Candidate,
   canTransition,
@@ -84,7 +85,7 @@ export interface MedicalRecords { allergies: PatientAllergy[]; medications: Pati
  * applies (conflicts, status transitions, history) must live on the server, which also has to
  * protect against two people booking the same slot at once. The current local-first adapter persists in IndexedDB.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DentalStore {
   readonly locations = signal<ClinicLocation[]>([]);
   readonly hours = computed(() => parseHours(this.locations()[0]?.hours));
@@ -255,7 +256,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
     if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
@@ -342,6 +343,12 @@ export class DentalStore {
       const matched = r.legacyMatched ?? [];
       return { ...p, patientAllergies: r.allergies, patientMedications: r.medications, ...(matched.length ? { medical: { ...p.medical, legacyMatched: matched } } : {}) };
     }));
+  }
+
+  /** Replaces a patient's insurance records. Only people who may edit patients can. */
+  changeInsurance(patientId: string, change: (list: PatientInsurance[]) => PatientInsurance[]): void {
+    if (!this.auth.can('patients.edit')) return;
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, insurances: change(p.insurances ?? []) } : p)));
   }
 
   /** Same shape as `changeLetters`, for the patient's prescriptions. Issued ones are changed only by the rules in rx-rules.ts. */

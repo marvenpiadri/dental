@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PlacePickerComponent } from '../regional/place-picker.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { ClinicLocation, ClinicProfile, PublishState } from '../models/dental.models';
@@ -23,9 +22,6 @@ const CONTACT: Field[] = [
   { k: 'instagram', label: 'prof.instagram', type: 'url', max: 200 },
   { k: 'facebook', label: 'prof.facebook', type: 'url', max: 200 },
 ];
-const PLACE: Field[] = [
-  { k: 'region', label: 'prof.region', max: 80 },
-];
 const LISTS = ['languages', 'specialties', 'services'] as const;
 
 const resize = (file: File, max: number): Promise<string> => new Promise((done, fail) => {
@@ -44,7 +40,7 @@ const resize = (file: File, max: number): Promise<string> => new Promise((done, 
   selector: 'den-clinic-profile',
   templateUrl: './clinic-profile.component.html',
   styleUrl: './clinic-profile.component.css',
-  imports: [RouterLink, PlacePickerComponent],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClinicProfileComponent {
@@ -55,7 +51,7 @@ export class ClinicProfileComponent {
   protected readonly editable = computed(() => this.auth.can('profile.edit'));
   protected readonly t = inject(I18n).t;
   private readonly i18n = inject(I18n);
-  protected readonly identity = IDENTITY; protected readonly contact = CONTACT; protected readonly place = PLACE; protected readonly lists = LISTS;
+  protected readonly identity = IDENTITY; protected readonly contact = CONTACT; protected readonly lists = LISTS;
   protected readonly clinic = computed<ClinicLocation>(() => this.store.locations()[0] ?? { id: 'new', name: '', code: 'MAIN', timezone: 'UTC', active: true });
   protected readonly p = computed<ClinicProfile>(() => this.clinic().profile ?? { state: 'draft' });
   protected readonly problems = computed(() => publishProblems(this.clinic().name, this.p()));
@@ -83,8 +79,6 @@ export class ClinicProfileComponent {
     if (patch.name !== undefined && !patch.name.trim()) { this.status.set('needName'); return; }
     await this.commit({ ...this.clinic(), ...patch });
   }
-  /** Country and city live once, on the clinic (Location settings); the public profile mirrors them. */
-  protected setPlace(patch: { countryCode?: string; city?: string }): Promise<void> { return this.store.patchClinic(patch); }
   private async commitWithPlace(next: ClinicLocation): Promise<void> {
     const { country: _c, countryCode, city, ...rest } = next.profile ?? {};
     await this.commit({ ...next, profile: { ...this.p(), ...rest } });
@@ -98,10 +92,6 @@ export class ClinicProfileComponent {
   }
   protected editList(k: (typeof LISTS)[number], raw: string): Promise<void> {
     return this.setProfile({ [k]: raw.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 20) });
-  }
-  protected editCoord(k: 'lat' | 'lng', raw: string): Promise<void> {
-    const n = Number(raw);
-    return this.setProfile({ [k]: raw.trim() !== '' && Number.isFinite(n) && Math.abs(n) <= (k === 'lat' ? 90 : 180) ? n : undefined });
   }
 
   /** Paste a Google Maps link: coordinates, place id and (when the server can look it up) the address are filled in; the clinic only adds what's missing. */

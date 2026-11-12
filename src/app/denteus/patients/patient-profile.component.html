@@ -169,6 +169,8 @@
             @if (p.createdAt) { <p class="since muted">{{ t('profile.since', { date: since() }) }}</p> }
           </section>
 
+          <den-patient-insurance [patient]="p" />
+
           <section class="card" aria-labelledby="notes-title">
             <header class="card-head"><h2 class="card-title" id="notes-title"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i>{{ t('profile.notes') }}</h2></header>
             <div class="card-body">
