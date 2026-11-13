@@ -1,6 +1,6 @@
-# PostgreSQL readiness (design only, nothing built)
+# PostgreSQL readiness
 
-Status: a plan. No provider chosen, no backend, no auth change. The app still stores everything in IndexedDB.
+Status: the schema and a backup importer now exist in `db/` (see `db/README.md`) and are verified against a real PostgreSQL engine. Still no provider chosen, no backend, no auth change: the app stores everything in IndexedDB. Steps 3 and 4 below are done; the `clinic_id` and `version` columns exist in SQL but not yet in the browser models.
 
 ## Where the app stands
 - Every record has a UUID, so ids map to primary keys.
@@ -74,7 +74,7 @@ create table prescription (          -- issued rows are never updated except by 
   number text unique, status text not null, snapshot jsonb, issued_at timestamptz
 );
 ```
-Foreign keys without cascade give the same delete protection the browser rules provide. Remaining tables (patient, appointment, plan, payments, documents) follow the same pattern and still need designing.
+Foreign keys without cascade give the same delete protection the browser rules provide. The sketch above is the library part only; the complete schema is `db/migrations/0001_init.sql`.
 
 ## Suggested order
 1. Extract `Repo` interfaces; IndexedDB implementation unchanged.

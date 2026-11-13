@@ -1,0 +1,413 @@
+{
+ "app": "dontalist",
+ "version": 1,
+ "exportedAt": "2026-11-05T09:00:00.000Z",
+ "locations": [
+  {
+   "id": "loc-1",
+   "name": "Cabinet Dr Test",
+   "code": "MAIN",
+   "timezone": "Africa/Casablanca",
+   "active": true,
+   "hours": {
+    "open": "09:00",
+    "close": "18:00",
+    "days": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   "countryCode": "MA",
+   "city": "Salé",
+   "currency": "MAD",
+   "payerTypes": [
+    "patient",
+    "public",
+    "mutual"
+   ],
+   "payers": [
+    {
+     "id": "py-1",
+     "type": "public",
+     "name": "CNSS"
+    },
+    {
+     "id": "py-2",
+     "type": "mutual",
+     "name": "MGEN"
+    }
+   ],
+   "profile": {
+    "state": "published",
+    "slug": "cabinet-dr-test",
+    "city": "Salé",
+    "gallery": []
+   }
+  }
+ ],
+ "dentists": [
+  {
+   "id": "d1",
+   "name": "Dr Test",
+   "specialty": "General",
+   "color": "#336699",
+   "hours": {
+    "open": "09:00",
+    "close": "17:00"
+   }
+  }
+ ],
+ "chairs": [
+  {
+   "id": "c1",
+   "name": "Chair 1"
+  }
+ ],
+ "catalog": [
+  {
+   "id": "filling",
+   "price": 300
+  },
+  {
+   "id": "crown",
+   "name": "Couronne d'or",
+   "price": 2500
+  }
+ ],
+ "patients": [
+  {
+   "id": "p-1",
+   "fullName": "Amina O'Brien",
+   "phone": "0600000001",
+   "birthDate": "1990-04-02",
+   "sex": "female",
+   "country": "MA",
+   "city": "Salé",
+   "createdAt": "2026-11-05T09:00:00.000Z",
+   "medical": {
+    "conditions": [
+     "diabetes"
+    ]
+   },
+   "plan": [
+    {
+     "id": "i-1",
+     "tooth": "16",
+     "procedure": "filling",
+     "price": 300,
+     "status": "done",
+     "doneAt": "2026-11-05T09:00:00.000Z",
+     "date": "2026-11-05",
+     "appointmentId": "a-1"
+    },
+    {
+     "id": "i-2",
+     "procedure": "crown",
+     "price": 2500,
+     "status": "planned",
+     "currency": "EUR"
+    }
+   ],
+   "invoices": [
+    {
+     "id": "inv-1",
+     "number": "2026-0001",
+     "kind": "invoice",
+     "issuedAt": "2026-11-05T09:00:00.000Z",
+     "total": 300,
+     "currency": "MAD",
+     "lines": [
+      {
+       "itemId": "i-1",
+       "label": "Filling",
+       "where": "16",
+       "price": 300
+      }
+     ]
+    },
+    {
+     "id": "inv-2",
+     "number": "2026-0002",
+     "kind": "credit-note",
+     "issuedAt": "2026-11-05T09:00:00.000Z",
+     "total": -300,
+     "currency": "MAD",
+     "cancelsId": "inv-1",
+     "lines": []
+    }
+   ],
+   "payments": [
+    {
+     "id": "pay-1",
+     "amount": 200,
+     "method": "cash",
+     "at": "2026-11-05T09:00:00.000Z",
+     "invoiceId": "inv-1",
+     "payerType": "patient",
+     "currency": "MAD"
+    },
+    {
+     "id": "pay-2",
+     "amount": 100,
+     "method": "transfer",
+     "at": "2026-11-05T09:00:00.000Z",
+     "payerType": "public",
+     "payerId": "py-1",
+     "currency": "MAD",
+     "reference": "CNSS-7"
+    },
+    {
+     "id": "pay-3",
+     "amount": 50,
+     "method": "cash",
+     "at": "2026-11-05T09:00:00.000Z",
+     "payerId": "gone"
+    }
+   ],
+   "visits": [
+    {
+     "id": "v-1",
+     "at": "2026-11-05T09:00:00.000Z",
+     "appointmentId": "a-1",
+     "dentistId": "d1",
+     "complaint": "Pain",
+     "revisions": []
+    }
+   ],
+   "messages": [
+    {
+     "id": "m-1",
+     "at": "2026-11-05T09:00:00.000Z",
+     "kind": "recall",
+     "text": "Hello",
+     "status": "prepared"
+    }
+   ],
+   "letters": [
+    {
+     "id": "l-1",
+     "at": "2026-11-05T09:00:00.000Z",
+     "kind": "certificate",
+     "dentistId": "d1",
+     "restDays": 2,
+     "text": "Rest"
+    }
+   ],
+   "prescriptions": [
+    {
+     "id": "rx-1",
+     "number": "RX-1",
+     "status": "issued",
+     "createdAt": "2026-11-05T09:00:00.000Z",
+     "updatedAt": "2026-11-05T09:00:00.000Z",
+     "issuedAt": "2026-11-05T09:00:00.000Z",
+     "dentistId": "d1",
+     "items": [
+      {
+       "id": "it",
+       "name": "Amoxicillin",
+       "medicationId": "g-1"
+      }
+     ],
+     "acknowledged": [
+      "x"
+     ]
+    }
+   ],
+   "patientAllergies": [
+    {
+     "id": "pa-1",
+     "allergyId": "al-1",
+     "label": "Penicillin",
+     "active": true,
+     "createdAt": "2026-11-05T09:00:00.000Z",
+     "history": [
+      {
+       "at": "2026-11-05T09:00:00.000Z",
+       "what": "added"
+      }
+     ]
+    }
+   ],
+   "patientMedications": [
+    {
+     "id": "pm-1",
+     "medicationId": "g-1",
+     "label": "Amoxicillin",
+     "active": true,
+     "source": "prescribed",
+     "prescriptionId": "rx-1",
+     "createdAt": "2026-11-05T09:00:00.000Z",
+     "history": []
+    }
+   ],
+   "insurances": [
+    {
+     "id": "ins-1",
+     "providerId": "ma-cnss",
+     "providerName": "Caisse Nationale de Sécurité Sociale",
+     "number": "123456",
+     "addedAt": "2026-11-05T09:00:00.000Z"
+    }
+   ],
+   "proposals": [
+    {
+     "id": "pr-1",
+     "version": 1,
+     "at": "2026-11-05T09:00:00.000Z",
+     "lines": [
+      {
+       "name": "Crown",
+       "price": 2500
+      }
+     ],
+     "total": 2500,
+     "status": "proposed"
+    }
+   ]
+  }
+ ],
+ "appointments": [
+  {
+   "id": "a-1",
+   "patientId": "p-1",
+   "dentistId": "d1",
+   "chairId": "c1",
+   "type": "filling",
+   "status": "completed",
+   "start": "2026-11-05T09:00:00.000Z",
+   "end": "2026-11-05T10:00:00.000Z",
+   "createdAt": "2026-11-05T09:00:00.000Z",
+   "createdBy": "staff",
+   "history": [
+    {
+     "from": null,
+     "to": "scheduled",
+     "at": "2026-11-05T09:00:00.000Z",
+     "by": "staff"
+    }
+   ],
+   "scheduleHistory": []
+  },
+  {
+   "id": "a-orphan",
+   "patientId": "nobody",
+   "dentistId": "d1",
+   "chairId": "c1",
+   "type": "checkup",
+   "status": "scheduled",
+   "start": "2026-11-06T09:00:00.000Z",
+   "end": "2026-11-06T09:30:00.000Z",
+   "createdAt": "2026-11-05T09:00:00.000Z",
+   "createdBy": "staff",
+   "history": [],
+   "scheduleHistory": []
+  }
+ ],
+ "practice": {
+  "expenses": [
+   {
+    "id": "e1",
+    "day": "2026-11-01",
+    "label": "Gloves",
+    "amount": 120
+   }
+  ],
+  "stock": [
+   {
+    "id": "s1",
+    "name": "Gloves",
+    "qty": 3,
+    "min": 5
+   }
+  ],
+  "tasks": [
+   {
+    "id": "t1",
+    "text": "Order",
+    "done": false
+   }
+  ],
+  "implants": [],
+  "steril": [
+   {
+    "id": "st1",
+    "day": "2026-11-02",
+    "device": "A1",
+    "lot": "L1",
+    "operator": "Sara"
+   }
+  ],
+  "lab": [
+   {
+    "id": "lb1",
+    "patientId": "p-1",
+    "work": "Crown",
+    "lab": "LabX",
+    "due": "2026-11-20",
+    "status": "sent",
+    "tooth": "16"
+   }
+  ]
+ },
+ "documents": [
+  {
+   "id": "doc-1",
+   "patientId": "p-1",
+   "name": "xray.png",
+   "type": "image/png",
+   "size": 4,
+   "addedAt": "2026-11-05T09:00:00.000Z",
+   "data": "data:image/png;base64,iVBORw=="
+  }
+ ],
+ "settings": {
+  "prefs": {
+   "payMethods": [
+    "cash",
+    "card"
+   ]
+  },
+  "medications": [
+   {
+    "id": "b-1",
+    "kind": "brand",
+    "name": "Clamoxyl",
+    "genericId": "g-1"
+   },
+   {
+    "id": "g-1",
+    "kind": "generic",
+    "name": "Amoxicillin",
+    "reviewConditions": [
+     "pregnancy"
+    ]
+   }
+  ],
+  "allergyDefs": [
+   {
+    "id": "al-1",
+    "name": "Penicillin",
+    "medicationId": "g-1"
+   }
+  ],
+  "rxTemplates": [],
+  "insuranceProviders": [
+   {
+    "id": "cu-1",
+    "name": "Mutuelle Cabinet X",
+    "kind": "other"
+   }
+  ],
+  "staff": [
+   {
+    "id": "u1",
+    "pin": "1234"
+   }
+  ]
+ }
+}
