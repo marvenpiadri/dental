@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { I18n, type Key } from '../../core/i18n/i18n.service';
 import { Documents } from '../documents/documents.service';
-import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, newChart, readChart, writeChart, type Chart, type ChartPayload, type ToothRecord } from './engine/chart';
+import { ALL_TEETH, WISDOM_TEETH, isBlankTooth, needsReview, newChart, readChart, writeChart, type Chart, type ChartPayload, type ImportIssue, type ToothRecord } from './engine/chart';
 import type { ToothEdit } from './engine/edits';
 import { chartPageHtml } from '../documents/chart-export';
 import { exportFhir, exportJson, importFhir, importJson } from './engine/io';
@@ -33,7 +33,7 @@ function storedNumbering(): NumberingSystem {
 }
 
 type Tab = 'perio' | 'findings' | 'history';
-interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: number[] }
+interface Pending { edit: ToothEdit | 'edentulous'; teeth: number[]; diverging: number[]; erases: { tooth: number; fields: string[] }[] }
 
 /**
  * The patient's dental chart. Holds this patient's chart and nothing global: a new patient means a new
@@ -66,10 +66,15 @@ export class DentalChartComponent {
   readonly selection = output<readonly number[]>();
   readonly save = output<ChartPayload>();
   readonly examSave = output<Examination>();
+  /** Emitted when someone chooses to continue with the repaired copy of a chart that could not be read cleanly. */
+  readonly recover = output<{ chart: ChartPayload; issues: ImportIssue[] }>();
 
   protected readonly source = computed(() => (this.raw() == null ? { chart: newChart(), issues: [] } : readChart(this.raw())));
   /** An unreadable stored chart is never overwritten: the chart stays locked until someone looks at it. */
-  protected readonly locked = computed(() => this.source().chart === null);
+  protected readonly locked = computed(() => this.source().chart === null || needsReview(this.source().issues));
+  /** Readable but changed on load: editing stays off until someone chooses to keep a copy of the original and continue. */
+  protected readonly reviewable = computed(() => this.source().chart !== null && needsReview(this.source().issues));
+  protected keepAndContinue(): void { const s = this.source(); if (s.chart) this.recover.emit({ chart: writeChart(s.chart), issues: s.issues }); }
   protected readonly chart = linkedSignal<Chart>(() => this.source().chart ?? newChart());
   protected readonly mode = signal<ChartMode>('status');
   protected readonly numberings = NUMBERING_SYSTEMS;
@@ -295,8 +300,8 @@ export class DentalChartComponent {
   protected apply(edit: ToothEdit, confirmed = false, teeth: readonly number[] = this.selected()): void {
     if (this.readOnly() || !teeth.length) return;
     this.notice.set('');
-    const out = editChart(this.chart(), this.mode(), teeth, edit, { confirmed });
-    if (out.kind === 'confirm') { this.pending.set({ edit, teeth: [...teeth], diverging: out.teeth }); return; }
+    const out = editChart(this.chart(), this.mode(), teeth, edit, { confirmed, erasureConfirmed: confirmed });
+    if (out.kind === 'confirm') { this.pending.set({ edit, teeth: [...teeth], diverging: out.teeth, erases: out.erases ?? [] }); return; }
     this.pending.set(null);
     if (out.rejected.length) this.notice.set(out.rejected.map((r) => `${r.tooth}: ${r.reason}`).join(' · '));
     if (out.changed.length) this.commit(out.chart);
@@ -308,8 +313,8 @@ export class DentalChartComponent {
   }
   protected edentulous(confirmed = false): void {
     if (this.readOnly()) return;
-    const out = setEdentulous(this.chart(), this.mode(), { confirmed });
-    if (out.kind === 'confirm') { this.pending.set({ edit: 'edentulous', teeth: [...ALL_TEETH], diverging: out.teeth }); return; }
+    const out = setEdentulous(this.chart(), this.mode(), { confirmed, erasureConfirmed: confirmed });
+    if (out.kind === 'confirm') { this.pending.set({ edit: 'edentulous', teeth: [...ALL_TEETH], diverging: out.teeth, erases: out.erases ?? [] }); return; }
     this.pending.set(null);
     if (out.changed.length) this.commit(out.chart);
   }

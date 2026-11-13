@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// One-off import: turns a Dontalist backup file (Settings > Data and backup) into SQL for the schema in db/migrations.
-//   node tools/backup-to-sql.mjs backup.json [clinic-id] > import.sql      then:  psql -f import.sql
+// One-off import: turns a Dontalist backup file (Settings > Data and backup) into SQL for the schema in db/postgres-superseded/migrations.
+//   node db/postgres-superseded/tools/backup-to-sql.mjs backup.json [clinic-id] > import.sql      then:  psql -f import.sql
 // Counts and warnings go to stderr. References to rows that are not in the backup are nulled (optional ones) or the row is skipped (required ones), never invented.
 import { readFileSync } from 'node:fs';
 

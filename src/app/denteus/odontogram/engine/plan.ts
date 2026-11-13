@@ -1,7 +1,7 @@
 // Status vs plan. Status = findings; plan = proposed treatment. They are separate teeth maps and never mix:
 // a planned restoration is never read from the status chart. Rules from odontogram.ts (ds1 gate).
 import { ALL_TEETH, cloneChart, cloneTeeth, type Chart, type TeethMap } from './chart';
-import { applyEdit, type ToothEdit } from './edits';
+import { applyEdit, erasedBySelection, type ToothEdit } from './edits';
 import { defaultState, serializeState } from './vendor/state/payload';
 
 export type ChartMode = 'status' | 'plan';
@@ -9,7 +9,7 @@ export interface Rejection { tooth: number; reason: string }
 export type EditOutcome =
   | { kind: 'applied'; chart: Chart; changed: number[]; rejected: Rejection[] }
   /** A status edit would make the status diverge from a tooth the clinician deliberately planned. Ask, then retry with `confirmed`. */
-  | { kind: 'confirm'; teeth: number[] };
+  | { kind: 'confirm'; teeth: number[]; /** Recorded findings a tooth-type change would erase. Never applied without `erasureConfirmed`. */ erases?: { tooth: number; fields: string[] }[] };
 
 const ser = (m: TeethMap, n: number): string => JSON.stringify(serializeState(m.get(n) ?? defaultState()));
 /** Source keeps a runtime-only "plan-edited" set that is lost on reload (and a status edit would then overwrite the
@@ -21,7 +21,7 @@ export function plannedTeeth(c: Chart): number[] {
 
 const CLEARS_EDENTULOUS = new Set(['selection', 'substrate', 'restoration']);
 
-export function editChart(chart: Chart, mode: ChartMode, teeth: readonly number[], edit: ToothEdit, opts: { confirmed?: boolean } = {}): EditOutcome {
+export function editChart(chart: Chart, mode: ChartMode, teeth: readonly number[], edit: ToothEdit, opts: { confirmed?: boolean; erasureConfirmed?: boolean } = {}): EditOutcome {
   const targets = [...new Set(teeth)].filter((n) => ALL_TEETH.includes(n));
   const next = cloneChart(chart);
   const rejected: Rejection[] = [];
@@ -44,7 +44,8 @@ export function editChart(chart: Chart, mode: ChartMode, teeth: readonly number[
       if (r.ok && r.changed && planned.has(n)) diverging.push(n);
       return { n, t, r };
     });
-    if (diverging.length && !opts.confirmed) return { kind: 'confirm', teeth: diverging };
+    const erases = opts.erasureConfirmed ? [] : targets.map((n) => ({ tooth: n, fields: erasedBySelection(chart.status.get(n) ?? defaultState(), n, edit) })).filter((x) => x.fields.length);
+    if ((diverging.length && !opts.confirmed) || erases.length) return { kind: 'confirm', teeth: diverging, ...(erases.length ? { erases } : {}) };
     for (const { n, t, r } of results) {
       if (!r.ok) { rejected.push({ tooth: n, reason: r.reason }); continue; }
       next.status.set(n, t);
@@ -58,7 +59,7 @@ export function editChart(chart: Chart, mode: ChartMode, teeth: readonly number[
 }
 
 /** Whole-mouth edentulous: every tooth to "none" in the active chart, flag set only when something applied. */
-export function setEdentulous(chart: Chart, mode: ChartMode, opts: { confirmed?: boolean } = {}): EditOutcome {
+export function setEdentulous(chart: Chart, mode: ChartMode, opts: { confirmed?: boolean; erasureConfirmed?: boolean } = {}): EditOutcome {
   const out = editChart(chart, mode, ALL_TEETH, { kind: 'selection', value: 'none' }, opts);
   if (out.kind === 'applied' && out.changed.length) out.chart.globals.edentulous = true;
   return out;

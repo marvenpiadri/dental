@@ -36,7 +36,10 @@ export interface ChartPayload {
   case?: unknown;
 }
 
-export interface ImportIssue { path: string; message: string }
+/** `lossy` = a stored value could not be kept as it was (it was replaced, ignored or dropped). Any lossy issue means the chart needs review. */
+export interface ImportIssue { path: string; message: string; lossy?: boolean }
+/** True when loading changed or dropped recorded information. Such a chart must not be edited or saved until someone reviews it. */
+export const needsReview = (issues: readonly ImportIssue[]): boolean => issues.some((i) => i.lossy);
 export interface ReadResult { chart: Chart | null; issues: ImportIssue[] }
 
 const DEFAULT_GLOBALS: ChartGlobals = {
@@ -74,13 +77,13 @@ function readTeeth(raw: unknown, path: string, legacy: boolean, issues: ImportIs
   const teeth = isRecord(raw) ? raw : {};
   if (raw !== undefined && !isRecord(raw)) issues.push({ path, message: 'expected an object keyed by FDI tooth number' });
   for (const key of Object.keys(teeth)) {
-    if (!ALL_TEETH.includes(Number(key))) issues.push({ path: `${path}.${key}`, message: 'unknown tooth number, ignored' });
+    if (!ALL_TEETH.includes(Number(key))) issues.push({ path: `${path}.${key}`, message: 'unknown tooth number, ignored', lossy: true });
   }
   for (const n of ALL_TEETH) {
     const rawTooth = teeth[String(n)];
-    if (rawTooth === undefined) { out.set(n, defaultState()); continue; }
+    if (rawTooth === undefined) { out.set(n, defaultState()); continue; } // not recorded: shown as an empty tooth, never reported as a finding
     if (!isRecord(rawTooth)) {
-      issues.push({ path: `${path}.${n}`, message: 'tooth record is not an object, reset to healthy' });
+      issues.push({ path: `${path}.${n}`, message: 'tooth record is not an object, reset to healthy', lossy: true });
       out.set(n, defaultState());
       continue;
     }
@@ -91,7 +94,7 @@ function readTeeth(raw: unknown, path: string, legacy: boolean, issues: ImportIs
       for (const k of Object.keys(back)) {
         const before = rawTooth[k];
         if (MIGRATED.has(k) || typeof before !== 'string' || before === back[k]) continue;
-        issues.push({ path: `${path}.${n}.${k}`, message: `unrecognised value "${before}", reset to "${String(back[k])}"` });
+        issues.push({ path: `${path}.${n}.${k}`, message: `unrecognised value "${before}", reset to "${String(back[k])}"`, lossy: true });
       }
     }
     out.set(n, hydrated);

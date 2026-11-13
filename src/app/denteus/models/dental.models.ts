@@ -100,6 +100,8 @@ export interface Patient {
   odontogram?: unknown;
   /** Dated, frozen snapshots of the chart, one per examination. */
   examinations?: Examination[];
+  /** Originals of charts that could not be read cleanly, kept untouched when someone chose to continue with the repaired copy. */
+  chartRecoveries?: { at: string; raw: unknown; issues: { path: string; message: string }[] }[];
   /** Treatment plan: what was proposed and what has been done, with prices. */
   plan?: TreatmentItem[];
   /** Money received from the patient. What they owe is the done work in `plan` minus these. */
@@ -309,7 +311,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances'>;
+export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances' | 'chartRecoveries'>;
 
 export interface Dentist {
   id: string;

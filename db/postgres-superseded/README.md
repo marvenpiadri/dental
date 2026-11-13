@@ -1,3 +1,6 @@
+# Superseded: PostgreSQL work
+
+Replaced by the Cloudflare D1 direction in `docs/architecture-proposal-d1.md`. Kept for reference only; Neon is no longer used. Paths inside the tools were rewritten for this folder and the tools were not re-run after the move.
 # Database (PostgreSQL)
 
 SQL for moving a clinic from the browser's IndexedDB to PostgreSQL. **Nothing in the app uses it yet**: there is no server, no provider and no sign-in. The app still stores everything locally.
@@ -7,20 +10,20 @@ SQL for moving a clinic from the browser's IndexedDB to PostgreSQL. **Nothing in
 - `migrations/0003_staff.sql`: staff and the staff change log (no PIN hashes).
 - `migrations/0002_tenant_isolation.sql`: row-level security. The server runs `select set_config('app.clinic_id', '<id>', true)` per transaction; without it no rows are visible.
 - `fixtures/sample-backup.json`: a small backup that exercises every table, including bad references.
-- `../tools/backup-to-sql.mjs`: converts a backup file (Settings, Data and backup) into one SQL transaction.
-- `../tools/check-migration.mjs`: applies the migrations to an in-memory PostgreSQL, imports the fixture, and checks the rules below.
+- `../db/postgres-superseded/tools/backup-to-sql.mjs`: converts a backup file (Settings, Data and backup) into one SQL transaction.
+- `../db/postgres-superseded/tools/check-migration.mjs`: applies the migrations to an in-memory PostgreSQL, imports the fixture, and checks the rules below.
 
 ## Run it on Neon
 Put the connection string in `.env.local` as `DATABASE_URL=...` (git-ignored), then:
 ```
-node tools/db-apply.mjs        # applies migrations not yet recorded, in order
-node tools/db-check.mjs        # 39 tables, migrations recorded, RLS forced, a rolled-back write
-node tools/backup-to-sql.mjs my-backup.json > import.sql && psql "$DATABASE_URL" -f import.sql
+node db/postgres-superseded/tools/db-apply.mjs        # applies migrations not yet recorded, in order
+node db/postgres-superseded/tools/db-check.mjs        # 39 tables, migrations recorded, RLS forced, a rolled-back write
+node db/postgres-superseded/tools/backup-to-sql.mjs my-backup.json > import.sql && psql "$DATABASE_URL" -f import.sql
 ```
 ## Check the SQL without a server
 ```
 npm i --no-save @electric-sql/pglite
-node tools/check-migration.mjs                       # 23 checks on an in-memory PostgreSQL
+node db/postgres-superseded/tools/check-migration.mjs                       # 23 checks on an in-memory PostgreSQL
 ```
 Apply migrations as an owner role; run the application as a different role so row-level security applies.
 

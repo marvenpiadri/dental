@@ -338,8 +338,8 @@ I would do the **engine-side safety fixes (11.2 items 1–3, 11.3) first, even b
 | D4 | Plan state (`chart.plan`) not migrated as findings | yes; clinician confirms |
 | D5 | Raw payloads in R2 (recommended) or a TEXT quarantine blob in D1 | R2 |
 | D6 | Verify Open Dental names against a dictionary or a real database | please attach the dictionary or confirm version |
-| D7 | Keep or retire the PostgreSQL work | keep under `db/postgres-superseded/` |
-| D8 | Engine safety fixes now (before Phase 2)? | yes |
+| D7 | Keep or retire the PostgreSQL work | **Decided 2026-11-13: forget Neon.** Work moved to `db/postgres-superseded/`, `neon.ts` and `@neon/*` removed |
+| D8 | Engine safety fixes now (before Phase 2)? | **Done 2026-11-13** ("continue the work"): damaged-chart lock with recovery, tooth-type change confirmation, tests in `engine/integrity.spec.ts` |
 | D9 | Whether `exam_tooth` should keep ~10 typed columns or be fully surface/condition rows | typed core + rows for the repeating parts (this document) |
 | D10 | Moroccan insurer list confirmation (MCAP, MUCAP, FAR) | you review |
 

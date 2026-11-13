@@ -256,7 +256,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
     if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));
@@ -304,6 +304,11 @@ export class DentalStore {
   /** Saves the working chart's payload on the patient. */
   setOdontogram(patientId: string, odontogram: unknown): void {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, odontogram } : p)));
+  }
+
+  /** Keeps the damaged original untouched in `chartRecoveries`, then saves the repaired chart as the working one. */
+  recoverChart(patientId: string, repaired: unknown, issues: { path: string; message: string }[]): void {
+    this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, chartRecoveries: [...(p.chartRecoveries ?? []), { at: new Date().toISOString(), raw: p.odontogram, issues }], odontogram: repaired } : p)));
   }
 
   /** Sets (or clears, with `undefined`) the patient's photo, a small JPEG data URL kept locally with the record. */

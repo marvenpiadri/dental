@@ -1,7 +1,7 @@
 // Tooth edits as data. Each edit is validated against the source's VALID_* sets and the invariants read from
 // odontogram.ts (setToothSelectionForSelection, applyRestorationSelection, setSubstrateForSelection, …).
 // A rejected edit changes nothing and says why — invalid input never becomes a finding.
-import { defaultState, serializeState, clampPerio, furcationEntrances, PERIO_SITES, VALID_PLAQUE_SURFACE, VALID_FURCATION_GRADE,
+import { defaultState, hydrateState, serializeState, clampPerio, furcationEntrances, PERIO_SITES, VALID_PLAQUE_SURFACE, VALID_FURCATION_GRADE,
   VALID_TOOTH_SELECTION, VALID_TOOTH_SUBSTRATE, VALID_ENDO, VALID_PULP_DX, VALID_APICAL_DX, VALID_PERIAPICAL_TYPE, VALID_MOBILITY,
   VALID_RESORPTION_TYPE, VALID_WEAR_EDGE, VALID_WEAR_CERVICAL, VALID_DISCOLORATION, VALID_ORTHO_APPLIANCE, VALID_ORTHO_DRIFT,
   VALID_ORTHO_VERTICAL, VALID_ROOT_CARIES, VALID_PERI_IMPLANT, VALID_MODS, VALID_FILLING_MATERIAL, VALID_CARIES_SEVERITY,
@@ -52,6 +52,28 @@ export type ToothEdit =
   | { kind: 'note'; value: string }
   | { kind: 'reset' };
 
+
+const NOTES = ['note', 'customStates', 'dxOverrides'];
+const NATURAL = new Set(['tooth-base', 'milktooth']);
+/** Fields that stay when a tooth changes type; the rest is reset and must be confirmed first. */
+function selectionKeeps(from: string, to: string): string[] {
+  if (NATURAL.has(from) && NATURAL.has(to)) return Object.keys(defaultState()).filter((k) => k !== 'toothSelection'); // natural ↔ deciduous: nothing is incompatible
+  if (to === 'implant') return [...NOTES, 'mobility', 'perio', 'plaque', 'pi', 'gi', 'kg'];
+  return NOTES;
+}
+
+/** What a type change would erase on this tooth: recorded fields that differ afterwards. Empty = nothing is lost. */
+export function erasedBySelection(t: ToothRecord, toothNo: number, e: ToothEdit): string[] {
+  if (e.kind !== 'selection') return [];
+  const probe = hydrateState(serializeState(t), false) as ToothRecord;
+  const before = serializeState(t) as Record<string, unknown>;
+  const blank = serializeState(defaultState()) as Record<string, unknown>;
+  if (!run(probe, toothNo, e).ok) return [];
+  const after = serializeState(probe) as Record<string, unknown>;
+  const j = JSON.stringify;
+  return Object.keys(before).filter((k) => k !== 'toothSelection' && j(before[k]) !== j(blank[k]) && j(before[k]) !== j(after[k]));
+}
+
 export type EditResult = { ok: true; changed: boolean } | { ok: false; reason: string };
 const rejected = (reason: string): EditResult => ({ ok: false, reason });
 const key = (t: ToothRecord): string => JSON.stringify(serializeState(t));
@@ -71,6 +93,8 @@ function run(t: ToothRecord, toothNo: number, e: ToothEdit): EditResult {
       if (e.value === 'milktooth' && MILKTOOTH_BLOCKED.has(toothNo)) return rejected(`tooth ${toothNo} has no deciduous predecessor`);
       const next = defaultState();
       next.toothSelection = e.value;
+      // Compatible findings survive the change (see selectionKeeps); the rest is reported by erasedBySelection and needs confirmation first.
+      for (const f of selectionKeeps(String(t.toothSelection), e.value)) (next as Record<string, unknown>)[f] = (t as Record<string, unknown>)[f];
       if (!['tooth-base', 'milktooth', 'implant', 'tooth-under-gum'].includes(e.value)) next.extractionPlan = false;
       if (e.value !== 'none') next.extractionWound = false;
       if (e.value === 'implant' || e.value === 'none') {

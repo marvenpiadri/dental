@@ -1,8 +1,8 @@
 <div class="chart-root" (document:keydown)="onKey($event)">
   @if (locked()) {
-    <p class="banner danger" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ t('dc.locked') }}</p>
+    <p class="banner danger" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span>{{ reviewable() ? t('dc.review') : t('dc.locked') }}</span>@if (reviewable()) { <button type="button" class="btn" (click)="issuesOpen.set(true)">{{ t('dc.show') }}</button> <button type="button" class="btn btn--primary" (click)="keepAndContinue()">{{ t('dc.review.keep') }}</button> }</p>
   }
-  @if (issues().length) {
+  @if (issues().length && (!locked() || issuesOpen())) {
     <div class="banner warn" role="status">
       <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
       <span>{{ t('dc.issues', { n: issues().length }) }}</span>
@@ -64,7 +64,7 @@
   @if (pending(); as p) {
     <div class="banner warn" role="alertdialog" aria-live="assertive">
       <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
-      <span>{{ t('dc.confirm', { teeth: p.diverging.join(', ') }) }}</span>
+      <span>@if (p.diverging.length) { {{ t('dc.confirm', { teeth: p.diverging.join(', ') }) }} } @for (x of p.erases; track x.tooth) { <br />{{ t('dc.erases', { tooth: num(x.tooth), fields: x.fields.join(', ') }) }} }</span>
       <button type="button" class="btn btn--primary" (click)="confirmPending()">{{ t('dc.confirm.apply') }}</button>
       <button type="button" class="btn" (click)="pending.set(null)">{{ t('dc.cancel') }}</button>
     </div>

@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-// Applies db/migrations to an in-memory PostgreSQL (PGlite), imports a backup, and checks the rules the schema is meant to enforce.
-//   npm i --no-save @electric-sql/pglite && node tools/check-migration.mjs [backup.json]
+// Applies db/postgres-superseded/migrations to an in-memory PostgreSQL (PGlite), imports a backup, and checks the rules the schema is meant to enforce.
+//   npm i --no-save @electric-sql/pglite && node db/postgres-superseded/tools/check-migration.mjs [backup.json]
 import { PGlite } from '@electric-sql/pglite';
 import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 
-const backup = process.argv[2] ?? 'db/fixtures/sample-backup.json';
+const backup = process.argv[2] ?? 'db/postgres-superseded/fixtures/sample-backup.json';
 const db = new PGlite({ extensions: { btree_gist } });
 let failed = 0;
 const check = (name, ok, extra = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' ' + extra}`); if (!ok) failed++; };
 const refuses = async (sql, params) => { try { await db.query(sql, params); return false; } catch { return true; } };
 const one = async (sql) => (await db.query(sql)).rows[0];
 
-for (const f of readdirSync('db/migrations').sort()) await db.exec(readFileSync(`db/migrations/${f}`, 'utf8'));
+for (const f of readdirSync('db/postgres-superseded/migrations').sort()) await db.exec(readFileSync(`db/postgres-superseded/migrations/${f}`, 'utf8'));
 check('migrations applied', (await one('select count(*)::int n from schema_migration')).n === 3);
 
-const sql = execFileSync('node', ['tools/backup-to-sql.mjs', backup, 'clinic-1'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+const sql = execFileSync('node', ['db/postgres-superseded/tools/backup-to-sql.mjs', backup, 'clinic-1'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
 await db.exec(sql);
 const n = async (t) => (await one(`select count(*)::int n from ${t}`)).n;
 await db.exec("select set_config('app.clinic_id', 'clinic-1', false)");

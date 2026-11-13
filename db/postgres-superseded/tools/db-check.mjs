@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Checks a live PostgreSQL (Neon) against db/migrations. Reads DATABASE_URL from the environment or .env.local; changes nothing (the round trip is rolled back).
-//   node tools/db-check.mjs
+// Checks a live PostgreSQL (Neon) against db/postgres-superseded/migrations. Reads DATABASE_URL from the environment or .env.local; changes nothing (the round trip is rolled back).
+//   node db/postgres-superseded/tools/db-check.mjs
 import pg from 'pg';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 
@@ -8,8 +8,8 @@ let url = process.env.DATABASE_URL;
 if (!url && existsSync('.env.local')) url = /^DATABASE_URL=["']?([^"'\n]+)/m.exec(readFileSync('.env.local', 'utf8'))?.[1];
 if (!url) { console.error('DATABASE_URL not set (environment or .env.local)'); process.exit(2); }
 
-const files = readdirSync('db/migrations').filter((f) => f.endsWith('.sql')).sort();
-const expected = files.flatMap((f) => [...readFileSync(`db/migrations/${f}`, 'utf8').matchAll(/create table (\w+)/g)].map((m) => m[1]));
+const files = readdirSync('db/postgres-superseded/migrations').filter((f) => f.endsWith('.sql')).sort();
+const expected = files.flatMap((f) => [...readFileSync(`db/postgres-superseded/migrations/${f}`, 'utf8').matchAll(/create table (\w+)/g)].map((m) => m[1]));
 const versions = files.map((f) => f.replace('.sql', ''));
 const client = new pg.Client({ connectionString: url });
 let failed = 0;

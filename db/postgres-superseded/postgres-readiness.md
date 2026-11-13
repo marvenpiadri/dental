@@ -74,7 +74,7 @@ create table prescription (          -- issued rows are never updated except by 
   number text unique, status text not null, snapshot jsonb, issued_at timestamptz
 );
 ```
-Foreign keys without cascade give the same delete protection the browser rules provide. The sketch above is the library part only; the complete schema is `db/migrations/0001_init.sql`.
+Foreign keys without cascade give the same delete protection the browser rules provide. The sketch above is the library part only; the complete schema is `db/postgres-superseded/migrations/0001_init.sql`.
 
 ## Suggested order
 1. Extract `Repo` interfaces; IndexedDB implementation unchanged.
