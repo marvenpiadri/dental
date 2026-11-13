@@ -1,4 +1,4 @@
-import { inCurrency } from '../regional/regional-rules';
+import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -111,11 +111,11 @@ export class PatientProfileComponent {
     for (const a of this.appointments()) out.push({ key: 'c' + a.id, at: a.start, icon: 'fa-calendar-check', tone: 'neutral', title: t(typeKey(a.type)), sub: t(STATUS_KEY[a.status]) });
     return out.sort((x, y) => y.at.getTime() - x.at.getTime()).slice(0, 40);
   });
-  protected readonly money = computed(() => { const p = this.patient(); return balance(p?.plan ?? [], inCurrency(p?.payments ?? [], this.store.currency())); });
+  protected readonly money = computed(() => { const p = this.patient(); return balance(planInCurrency(p?.plan ?? [], this.store.currency()), inCurrency(p?.payments ?? [], this.store.currency())); });
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
     const p = this.patient();
-    return p ? balance(p.plan ?? [], inCurrency(p.payments ?? [], this.store.currency())).due : 0;
+    return p ? balance(planInCurrency(p.plan ?? [], this.store.currency()), inCurrency(p.payments ?? [], this.store.currency())).due : 0;
   });
   /** Tooth chosen in the chart for the next plan item. */
   // Only read once the store has loaded, which only happens in the browser.

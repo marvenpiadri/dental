@@ -31,3 +31,11 @@ describe('insurance reference data', () => {
     expect(tidyInsurance({ id: '1', providerId: 'x', providerName: ' CNSS ', number: ' 123 ', policy: ' ', addedAt: 't' })).toEqual({ id: '1', providerId: 'x', providerName: 'CNSS', number: '123', addedAt: 't' });
   });
 });
+
+import { planInCurrency } from './regional-rules';
+describe('planInCurrency', () => {
+  it('counts unstamped items in the current currency and leaves stamped old ones out', () => {
+    const items = [{ id: 'a' }, { id: 'b', currency: 'MAD' }, { id: 'c', currency: 'EUR' }];
+    expect(planInCurrency(items, 'EUR').map((i) => i.id)).toEqual(['a', 'c']);
+  });
+});

@@ -1,4 +1,4 @@
-import { LEGACY_CURRENCY, inCurrency } from '../regional/regional-rules';
+import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
 export type Period = 'month' | '30d' | 'year';
@@ -52,7 +52,7 @@ export function buildReport(data: { patients: Patient[]; appointments: Appointme
       const key = bucketStart(at).getTime();
       buckets.set(key, (buckets.get(key) ?? 0) + payment.amount);
     }
-    for (const item of patient.plan ?? []) {
+    for (const item of planInCurrency(patient.plan ?? [], currency)) {
       if (item.status === 'done' && item.doneAt && within(new Date(item.doneAt), range)) charged += item.price;
     }
   }

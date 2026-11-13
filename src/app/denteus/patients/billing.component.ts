@@ -9,7 +9,7 @@ import { balance, parsePrice, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
 import { InvoiceState, cancelInvoice, invoiceState, issueInvoice, uninvoiced, voidPayment } from './invoice-rules';
 import { invoiceHtml } from './invoice-html';
-import { LEGACY_CURRENCY, inCurrency } from '../regional/regional-rules';
+import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
 import { PAYER_TYPES, PayerType, enabledTypes } from '../regional/payers';
 
 const STATE_KEY: Record<InvoiceState, Key> = { unpaid: 'inv.state.unpaid', partial: 'inv.state.partial', paid: 'inv.state.paid', cancelled: 'inv.state.cancelled' };
@@ -70,12 +70,12 @@ export class BillingComponent {
   protected readonly current = computed(() => inCurrency(this.payments(), this.cur()));
   protected readonly otherCurrency = computed(() => [...new Set([...this.payments(), ...this.invoices()].map((r) => r.currency ?? LEGACY_CURRENCY).filter((c) => c !== this.cur()))]);
   protected money(amount: number, currency?: string): string { return this.i18n.money(amount, currency ?? this.cur()); }
-  protected readonly toBill = computed(() => uninvoiced(this.plan(), this.invoices()));
+  protected readonly toBill = computed(() => uninvoiced(planInCurrency(this.plan(), this.store.currency()), this.invoices()));
   protected readonly toBillTotal = computed(() => this.toBill().reduce((n, i) => n + i.price, 0));
   protected readonly rows = computed(() => [...this.invoices()].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt)).map((inv) => ({ inv, ...invoiceState(inv, inCurrency(this.payments(), inv.currency ?? this.cur())) })));
   protected readonly open = computed(() => this.rows().filter((r) => (r.state === 'unpaid' || r.state === 'partial') && (r.inv.currency ?? this.cur()) === this.cur()));
 
-  protected readonly sums = computed(() => balance(this.plan(), this.current()));
+  protected readonly sums = computed(() => balance(planInCurrency(this.plan(), this.store.currency()), this.current()));
   protected readonly recent = computed(() => [...this.payments()].sort((a, b) => b.at.localeCompare(a.at)));
 
   /** One click for the common case at the desk: the patient pays what is left. */

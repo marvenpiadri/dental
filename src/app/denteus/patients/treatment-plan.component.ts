@@ -1,4 +1,4 @@
-import { inCurrency } from '../regional/regional-rules';
+import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
@@ -45,13 +45,13 @@ export class TreatmentPlanComponent {
   protected readonly draftPrice = signal('');
   protected readonly priceInvalid = signal(false);
 
-  private readonly alloc = computed(() => allocate(this.plan(), inCurrency(this.payments(), this.store.currency())));
+  private readonly alloc = computed(() => allocate(planInCurrency(this.plan(), this.store.currency()), inCurrency(this.payments(), this.store.currency())));
   protected paid(i: TreatmentItem) { return this.alloc().get(i.id) ?? { received: 0, remaining: i.price }; }
   protected dayOf(i: TreatmentItem): string {
     const d = i.date ?? i.doneAt?.slice(0, 10);
     return d ? this.i18n.date(new Date(`${d}T12:00:00`), { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   }
-  protected readonly totals = computed(() => planTotals(this.plan()));
+  protected readonly totals = computed(() => planTotals(planInCurrency(this.plan(), this.store.currency())));
   protected readonly sorted = computed(() =>
     this.plan().filter((i) => !this.only() || i.status === this.only()).sort((a, b) => (a.status === b.status ? +(a.tooth ?? 99) - +(b.tooth ?? 99) : a.status === 'planned' ? -1 : 1)));
 
@@ -91,7 +91,7 @@ export class TreatmentPlanComponent {
 
   /** Opens the quote for the planned work in a new window and prints it. A blocked pop-up simply does nothing. */
   protected printQuote(): void {
-    const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? (i.scope ? scopeText(i, this.t) : ''), name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price) }));
+    const lines = this.sorted().filter((i) => i.status === 'planned').map((i) => ({ tooth: i.tooth ?? (i.scope ? scopeText(i, this.t) : ''), name: this.nameOf(i.procedure, i.name), price: this.i18n.money(i.price, i.currency) }));
     if (!lines.length) return;
     const t = this.t;
     const tpl = this.docs.templateFor('quote');

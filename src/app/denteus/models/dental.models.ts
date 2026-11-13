@@ -296,6 +296,8 @@ export interface TreatmentItem {
   name?: string;
   /** In the clinic's currency, whole units. */
   price: number;
+  /** Set only when the clinic's currency changed later: the currency this price was in. Absent means the current one. */
+  currency?: string;
   status: 'planned' | 'done';
   /** Day (`YYYY-MM-DD`) the procedure was recorded, set by the procedure panel. */
   date?: string;

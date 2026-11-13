@@ -84,5 +84,8 @@ export function formatMoney(amount: number, currency: string, locale: string): s
 /** The currency the clinic used before it chose one: every existing clinic was set to dirhams. */
 export const LEGACY_CURRENCY = 'MAD';
 
+/** Treatment items count in the current currency unless a past currency change stamped them with another: unstamped ones were made in the current one. */
+export const planInCurrency = <T extends { currency?: string }>(items: readonly T[], current: string): T[] => items.filter((r) => (r.currency ?? current) === current);
+
 /** Records in another currency than the clinic's current one are kept as they are and left out of totals. */
 export const inCurrency = <T extends { currency?: string }>(records: readonly T[], current: string): T[] => records.filter((r) => (r.currency ?? LEGACY_CURRENCY) === current);

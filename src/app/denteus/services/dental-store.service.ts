@@ -293,6 +293,7 @@ export class DentalStore {
     if (next === old) return;
     this.patients.update((list) => list.map((p) => ({
       ...p,
+      ...(p.plan?.length && { plan: p.plan.map((x) => (x.currency ? x : { ...x, currency: old })) }),
       ...(p.payments?.length && { payments: p.payments.map((x) => (x.currency ? x : { ...x, currency: old })) }),
       ...(p.invoices?.length && { invoices: p.invoices.map((x) => (x.currency ? x : { ...x, currency: old })) }),
     })));
