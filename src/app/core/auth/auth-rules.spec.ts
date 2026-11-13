@@ -82,3 +82,23 @@ describe('pins', () => {
     expect(await checkPin({ ...s, suspendedAt: 'now' }, '4321')).toBe(false);
   });
 });
+
+describe('daily operations by role', () => {
+  const day: [string, Permission][] = [
+    ['register a patient', 'patients.create'], ['book an appointment', 'appointments.create'], ['record an insurance number or edit a patient', 'patients.edit'],
+    ['record a payment', 'billing.create'], ['void a payment', 'billing.void'], ['write a prescription', 'clinical.create'], ['change settings', 'settings.edit'],
+  ];
+  const expected: Record<string, string[]> = {
+    owner: day.map(([n]) => n),
+    admin: ['register a patient', 'book an appointment', 'record an insurance number or edit a patient', 'record a payment', 'change settings'],
+    dentist: ['register a patient', 'book an appointment', 'record an insurance number or edit a patient', 'write a prescription'],
+    assistant: ['write a prescription'],
+    reception: ['register a patient', 'book an appointment', 'record an insurance number or edit a patient', 'record a payment'],
+    accountant: ['record a payment', 'void a payment'],
+  };
+  for (const role of ROLES) {
+    it(`${role} can do exactly what the front-desk day needs`, () => {
+      expect(day.filter(([, p]) => can(who(role), p)).map(([n]) => n)).toEqual(expected[role]);
+    });
+  }
+});
