@@ -51,7 +51,11 @@ const templates = list(s.rxTemplates); const templateIds = ids(templates);
 insert('rx_template', ['id', 'clinic_id', 'name', 'description', 'items', 'updated_at'], templates.map((t) => [q(t.id), C, q(t.name), q(t.description), j(t.items ?? []), ts(t.updatedAt) === 'null' ? 'now()' : ts(t.updatedAt)]));
 insert('insurance_provider', ['id', 'clinic_id', 'name', 'short', 'kind'], list(s.insuranceProviders).map((p) => [q(p.id), C, q(p.name), q(p.short), q(p.kind ?? 'other')]));
 insert('clinic_setting', ['clinic_id', 'key', 'value'], ['prefs', 'waTemplates', 'hiddenPages', 'view3d', 'docTemplates', 'docDefaults'].filter((k) => s[k] !== undefined).map((k) => [C, q(k), j(s[k])]));
-if (s.staff !== undefined) warn.push('staff list (roles, PIN) not migrated: server-side sign-in must be designed first');
+const ROLES = ['owner', 'admin', 'dentist', 'assistant', 'reception', 'accountant'];
+insert('staff', ['id', 'clinic_id', 'name', 'role', 'job_title', 'extra_permissions', 'removed_permissions', 'suspended_at', 'suspended_reason'],
+  list(s.staff).filter((m) => ROLES.includes(m.role) || (warn.push(`staff ${m.id} skipped: unknown role`), false)).map((m) => [q(m.id), C, q(m.name), q(m.role), q(m.jobTitle), arr(m.extra), arr(m.removed), ts(m.suspendedAt), q(m.suspendedReason)]));
+insert('staff_event', ['clinic_id', 'at', 'by_staff', 'action', 'target', 'detail'], list(s.staffLog).map((e) => [C, ts(e.at), q(e.by ?? 'import'), q(e.action), q(e.target ?? ''), q(e.detail)]));
+if (list(s.staff).length) warn.push('staff PIN hashes not migrated: credentials come with the server sign-in design');
 
 insert('patient', ['id', 'clinic_id', 'full_name', 'phone', 'email', 'birth_date', 'sex', 'country_code', 'city', 'alert', 'notes', 'photo', 'medical', 'odontogram', 'whatsapp_consent', 'whatsapp_consent_at', 'created_at', 'archived_at'],
   patients.map((p) => [q(p.id), C, q(p.fullName), q(p.phone ?? ''), q(p.email), day(p.birthDate), q(p.sex), cc(p.country), q(p.city), q(p.alert), q(p.notes), q(p.photo), j(p.medical), j(p.odontogram), q(p.whatsappConsent), ts(p.whatsappConsentAt), ts(p.createdAt) === 'null' ? 'now()' : ts(p.createdAt), ts(p.archivedAt)]));

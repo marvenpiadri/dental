@@ -1,6 +1,6 @@
 # PostgreSQL readiness
 
-Status: the schema and a backup importer now exist in `db/` (see `db/README.md`) and are verified against a real PostgreSQL engine. Still no provider chosen, no backend, no auth change: the app stores everything in IndexedDB. Steps 3 and 4 below are done; the `clinic_id` and `version` columns exist in SQL but not yet in the browser models.
+Status: the schema and a backup importer now exist in `db/` (see `db/README.md`) and are verified against a real PostgreSQL engine. Still no provider chosen, no backend, no auth change: the app stores everything in IndexedDB. Steps 3 and 4 below are done (every table the app stores now has a schema, including staff); the `clinic_id` and `version` columns exist in SQL but not yet in the browser models.
 
 ## Where the app stands
 - Every record has a UUID, so ids map to primary keys.
