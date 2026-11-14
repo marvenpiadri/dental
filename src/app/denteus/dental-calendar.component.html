@@ -25,6 +25,7 @@
     <cal-toolbar
       [searchPlaceholder]="t('dcal.search')"
       [newLabel]="t('dcal.new')"
+      [canCreate]="auth.can('appointments.create')"
       (newEvent)="openCreate()"
       (toggleSidebar)="sidebarOpen.set(!sidebarOpen())"
     >

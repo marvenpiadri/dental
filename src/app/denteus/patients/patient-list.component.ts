@@ -1,3 +1,4 @@
+import { AuthService } from '../../core/auth/auth.service';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { isSameDay } from '../../calendar/utils/date.utils';
@@ -29,6 +30,7 @@ const PAGE = 50;
 })
 export class PatientListComponent {
   protected readonly store = inject(DentalStore);
+  protected readonly auth = inject(AuthService);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly initials = initials;

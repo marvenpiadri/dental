@@ -1,3 +1,4 @@
+import { AuthService } from '../../../core/auth/auth.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { VisitActsComponent } from './visit-acts.component';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
@@ -40,6 +41,7 @@ export class AppointmentPanelComponent {
   readonly openFile = output<{ patientId: string; page: string }>();
 
   protected readonly store = inject(DentalStore);
+  protected readonly auth = inject(AuthService);
   private readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly meta = STATUS_META;

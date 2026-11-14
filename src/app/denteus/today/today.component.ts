@@ -1,3 +1,4 @@
+import { AuthService } from '../../core/auth/auth.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { ChangeDetectionStrategy, Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -22,6 +23,7 @@ import { balance } from '../patients/treatment-rules';
 })
 export class TodayComponent {
   protected readonly store = inject(DentalStore);
+  protected readonly auth = inject(AuthService);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly STATUS_KEY = STATUS_KEY;

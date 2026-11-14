@@ -410,6 +410,7 @@ export class DentalStore {
   /* ----------------------------- appointments ----------------------------- */
 
   async createAppointment(draft: AppointmentDraft): Promise<ApiResult<Appointment>> {
+    if (!this.auth.can('appointments.create')) return fail('forbidden', this.t('er.denied'));
     if (!draft.patientId) return fail('invalid', this.t('er.select'));
     const candidate = this.candidateOf(draft);
     const problem = this.check(candidate);
@@ -439,6 +440,7 @@ export class DentalStore {
 
   /** Full edit from the booking form. Keeps the same appointment (identity and history). */
   async updateAppointment(id: string, draft: AppointmentDraft): Promise<ApiResult<Appointment>> {
+    if (!this.auth.can('appointments.edit')) return fail('forbidden', this.t('er.denied'));
     const current = this.find(id);
     if (!current) return fail('not-found', this.t('er.gone'));
 

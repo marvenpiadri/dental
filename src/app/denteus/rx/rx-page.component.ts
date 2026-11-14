@@ -1,3 +1,4 @@
+import { AuthService } from '../../core/auth/auth.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { I18n, Key } from '../../core/i18n/i18n.service';
@@ -52,7 +53,7 @@ import { IssueProblem, applyIssue, issueProblem, itemTitle, itemsFromTemplate, n
         }
         @if (problem() && tried()) { <p class="error" role="alert">{{ t(problemKey[problem()!]) }}</p> }
         <div class="actions">
-          <button type="button" class="btn btn--primary" (click)="issue()"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>{{ t('rx.issue') }}</button>
+          @if (canIssue()) { <button type="button" class="btn btn--primary" (click)="issue()"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>{{ t('rx.issue') }}</button> }
           <button type="button" class="btn" (click)="saveDraft()">{{ t('rx.saveDraft') }}</button>
           <button type="button" class="btn" (click)="showPreview.set(!showPreview())"><i class="fa-regular fa-eye" aria-hidden="true"></i>{{ t('rx.preview') }}</button>
           <button type="button" class="btn" (click)="askTemplate.set(!askTemplate())">{{ t('rx.saveTemplate') }}</button>
@@ -104,8 +105,8 @@ import { IssueProblem, applyIssue, issueProblem, itemTitle, itemsFromTemplate, n
             @if (r.status === 'draft') { <button type="button" class="btn" (click)="draft.set(r)">{{ t('rx.edit') }}</button> }
             @else { <button type="button" class="btn" (click)="viewing.set(r)">{{ t('rx.open') }}</button> }
             @if (r.status === 'issued') {
-              <button type="button" class="btn" (click)="act.set({ id: r.id, kind: 'correct' }); reason.set('')">{{ t('rx.correct') }}</button>
-              <button type="button" class="btn" (click)="act.set({ id: r.id, kind: 'void' }); reason.set('')">{{ t('rx.void') }}</button>
+              @if (canIssue()) { <button type="button" class="btn" (click)="act.set({ id: r.id, kind: 'correct' }); reason.set('')">{{ t('rx.correct') }}</button> }
+              @if (auth.can('clinical.void')) { <button type="button" class="btn" (click)="act.set({ id: r.id, kind: 'void' }); reason.set('')">{{ t('rx.void') }}</button> }
             }
           </li>
           @if (act(); as a) {
@@ -137,6 +138,9 @@ import { IssueProblem, applyIssue, issueProblem, itemTitle, itemsFromTemplate, n
 export class RxPageComponent {
   readonly patient = input.required<Patient>();
   protected readonly store = inject(DentalStore);
+  protected readonly auth = inject(AuthService);
+  /** Only prescribers (the clinical “approve” right) issue or correct prescriptions; others may prepare drafts. */
+  protected readonly canIssue = computed(() => this.auth.can('clinical.approve'));
   protected readonly lib = inject(RxLibrary);
   private readonly docs = inject(Documents);
   private readonly i18n = inject(I18n);
@@ -211,6 +215,7 @@ export class RxPageComponent {
   }
 
   protected issue(): void {
+    if (!this.canIssue()) return;
     const d = this.draft();
     this.tried.set(true);
     if (!d || this.problem()) return;

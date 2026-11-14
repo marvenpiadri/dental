@@ -67,8 +67,8 @@ import { actsOfVisit, completePlanned, plannedActs, recordVisitAct } from './vis
     }
     <p class="live" role="status">{{ message() }}</p>
     <div class="row">
-      <button type="button" (click)="openFile.emit({ patientId: appointment().patientId, page: 'acts' })">{{ t('va.chart') }}</button>
-      @if (done().length) {
+      @if (auth.can('clinical.view')) { <button type="button" (click)="openFile.emit({ patientId: appointment().patientId, page: 'acts' })">{{ t('va.chart') }}</button> }
+      @if (done().length && auth.can('billing.view')) {
         <button type="button" (click)="openFile.emit({ patientId: appointment().patientId, page: 'billing' })">{{ t('va.bill') }}</button>
       }
     </div>
@@ -80,7 +80,7 @@ export class VisitActsComponent {
 
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   protected readonly t = this.i18n.t;
   protected readonly nameOf = (id: string, name?: string) => procedureName(this.t, id, name);
 

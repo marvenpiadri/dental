@@ -134,3 +134,8 @@ describe('lines', () => {
     expect(tidyItem({ id: 'a', name: ' X ', strength: ' ', route: 'oral' })).toMatchObject({ name: 'X', strength: undefined, route: 'oral' });
   });
 });
+
+describe('itemTitle without repeats', () => {
+  it('joins name, strength and form', () => expect(itemTitle({ name: 'Amoxicillin', strength: '500 mg', form: 'capsule' })).toBe('Amoxicillin 500 mg capsule'));
+  it('does not repeat what the name already says', () => expect(itemTitle({ name: 'Amoxicillin 500 mg capsule', strength: '500 mg', form: 'Capsule' })).toBe('Amoxicillin 500 mg capsule'));
+});

@@ -3,10 +3,12 @@
     <button type="button" class="icon-btn menu" [attr.aria-label]="t('cal.sidebar')" (click)="toggleSidebar.emit()">
       <cal-icon name="menu" [size]="18" />
     </button>
-    <button type="button" class="new-btn" [title]="newLabel() + ' (N)'" (click)="newEvent.emit()">
-      <cal-icon name="plus" [size]="16" [stroke]="2.4" />
-      <span class="new-label">{{ newLabel() }}</span>
-    </button>
+    @if (canCreate()) {
+      <button type="button" class="new-btn" [title]="newLabel() + ' (N)'" (click)="newEvent.emit()">
+        <cal-icon name="plus" [size]="16" [stroke]="2.4" />
+        <span class="new-label">{{ newLabel() }}</span>
+      </button>
+    }
   </div>
 
   <div class="segmented" role="tablist" [attr.aria-label]="t('cal.view')">

@@ -342,6 +342,7 @@ I would do the **engine-side safety fixes (11.2 items 1–3, 11.3) first, even b
 | D8 | Engine safety fixes now (before Phase 2)? | **Done 2026-11-13** ("continue the work"): damaged-chart lock with recovery, tooth-type change confirmation, tests in `engine/integrity.spec.ts` |
 | D9 | Whether `exam_tooth` should keep ~10 typed columns or be fully surface/condition rows | typed core + rows for the repeating parts (this document) |
 | D10 | Moroccan insurer list confirmation (MCAP, MUCAP, FAR) | you review |
+| D11 | Is offline use a requirement? (clinics working through an internet outage) | decide before Phase 2; it changes the whole sync design |
 
 ## 18. Risk assessment
 

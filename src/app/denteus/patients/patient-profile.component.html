@@ -5,9 +5,9 @@
   </div>
   @if (patient(); as p) {
     <div class="ds-actions">
-      <button type="button" class="btn" (click)="askArchive.set(true)"><i class="fa-solid" [class.fa-box-archive]="!p.archivedAt" [class.fa-box-open]="p.archivedAt" aria-hidden="true"></i><span class="hide-sm">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</span></button>
-      <a class="btn" [routerLink]="['/patients', p.id, 'edit']"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></a>
-      <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a>
+      @if (auth.can('patients.manage')) { <button type="button" class="btn" (click)="askArchive.set(true)"><i class="fa-solid" [class.fa-box-archive]="!p.archivedAt" [class.fa-box-open]="p.archivedAt" aria-hidden="true"></i><span class="hide-sm">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</span></button> }
+      @if (auth.can('patients.edit')) { <a class="btn" [routerLink]="['/patients', p.id, 'edit']"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></a> }
+      @if (auth.can('appointments.create')) { <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a> }
     </div>
   }
 </header>
@@ -154,7 +154,7 @@
           <header class="card-head"><h2 class="card-title" id="next-title"><i class="fa-regular fa-calendar" aria-hidden="true"></i>{{ t('profile.next') }}</h2><a class="btn" [routerLink]="['/patients', p.id, 'appointments']">{{ t('profile.all') }}</a></header>
           <div class="card-body">
             @if (upcoming()[0]; as a) { <p class="big">{{ day(a) }} · {{ i18n.time(a.start) }}</p><p class="muted">{{ t(typeKey(a.type)) }}@if (dentist(a); as d) { · {{ d.name }} }</p> }
-            @else { <p class="muted">{{ t('profile.upcoming.empty.title') }}</p><a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }">{{ t('profile.book') }}</a> }
+            @else { <p class="muted">{{ t('profile.upcoming.empty.title') }}</p>@if (auth.can('appointments.create')) { <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }">{{ t('profile.book') }}</a> } }
           </div>
         </section>
         <div class="side">
@@ -236,7 +236,7 @@
               @if (tab() === 'upcoming') {
                 <h2>{{ t('profile.upcoming.empty.title') }}</h2>
                 <p>{{ t('profile.upcoming.empty.body') }}</p>
-                <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>{{ t('profile.book') }}</a>
+                @if (auth.can('appointments.create')) { <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>{{ t('profile.book') }}</a> }
               } @else {
                 <h2>{{ t('profile.history.empty.title') }}</h2>
                 <p>{{ t('profile.history.empty.body') }}</p>

@@ -17,6 +17,7 @@ export class CalendarToolbarComponent {
 
   readonly searchPlaceholder = input('Search');
   readonly newLabel = input('New event');
+  readonly canCreate = input(true);
   readonly newEvent = output<void>();
   readonly toggleSidebar = output<void>();
 

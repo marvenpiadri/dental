@@ -102,3 +102,10 @@ describe('daily operations by role', () => {
     });
   }
 });
+
+describe('prescribing right', () => {
+  it('only owner and dentist hold clinical.approve, so only they issue or correct prescriptions', () => {
+    const holders = ROLES.filter((r) => can({ role: r }, 'clinical.approve'));
+    expect(holders.sort()).toEqual(['dentist', 'owner']);
+  });
+});

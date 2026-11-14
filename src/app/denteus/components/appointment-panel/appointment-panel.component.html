@@ -68,15 +68,15 @@
   }
 
   <div class="links">
-    <button type="button" class="link-btn" (click)="edit.emit()">
+    @if (auth.can('appointments.edit')) {<button type="button" class="link-btn" (click)="edit.emit()">
       <cal-icon name="calendar" [size]="15" />
       {{ movable() ? t('pn.editMove') : t('pn.editNotes') }}
-    </button>
+    </button>}
     <button type="button" class="link-btn" (click)="openPatient.emit(appointment().patientId)">
       <cal-icon name="user" [size]="15" />
       {{ t('pn.openPatient') }}
     </button>
-    @if (encounterAvailable()) {
+    @if (encounterAvailable() && auth.can('clinical.create')) {
       <button type="button" class="link-btn" (click)="openEncounter.emit(appointment().id)">
         <cal-icon name="file-text" [size]="15" />
         {{ t('pn.visitNote') }}

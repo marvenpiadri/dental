@@ -1,3 +1,4 @@
+import { AuthService } from '../core/auth/auth.service';
 import { RouterLink } from '@angular/router';
 import {
   ChangeDetectionStrategy,
@@ -69,6 +70,7 @@ interface EditorState {
 export class DentalCalendarComponent implements OnInit {
   protected readonly cal = inject(CalendarStore);
   protected readonly dental = inject(DentalStore);
+  protected readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
@@ -193,6 +195,7 @@ export class DentalCalendarComponent implements OnInit {
   }
 
   protected openCreate(draft?: EventDraft): void {
+    if (!this.auth.can('appointments.create')) return;
     const store = this.dental;
     const visible = this.cal.categories().filter((c) => c.visible).map((c) => c.id);
     const start = draft?.start ?? this.defaultStart();

@@ -4,8 +4,8 @@
     <p class="ds-sub">{{ dateLabel() }}</p>
   </div>
   <div class="ds-actions">
-    <a class="btn" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newPatient') }}</span></a>
-    <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ book: 1 }"><i class="fa-solid fa-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newAppointment') }}</span></a>
+    @if (auth.can('patients.create')) { <a class="btn" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newPatient') }}</span></a> }
+    @if (auth.can('appointments.create')) { <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ book: 1 }"><i class="fa-solid fa-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('today.newAppointment') }}</span></a> }
   </div>
 </header>
 

@@ -664,6 +664,7 @@ const D = {
   'ap.needSetup': ['Add at least one dentist and one chair before booking.', 'Ajoutez au moins un dentiste et un fauteuil avant de réserver.'],
   'ap.needSetup.link': ['Open settings', 'Ouvrir les paramètres'],
   'ap.outsideHours': ['This is outside the dentist’s working hours ({h}). You can still book it.', 'Ce créneau est en dehors des horaires du dentiste ({h}). Vous pouvez quand même le réserver.'],
+  'er.denied': ['You don’t have permission to do this.', 'Vous n’avez pas l’autorisation de faire cela.'],
   'ap.find': ['Find a free slot', 'Trouver un créneau libre'],
   'ap.findNone': ['No free slot in the next two weeks for this dentist.', 'Aucun créneau libre dans les deux prochaines semaines pour ce dentiste.'],
   'ap.findList': ['Free slots', 'Créneaux libres'],

@@ -26,7 +26,8 @@ export function move<T>(list: readonly T[], from: number, to: number): T[] {
 }
 
 /** One readable line per medication, for lists and history: "Amoxicillin 500 mg capsule". */
-export const itemTitle = (i: Pick<RxItem, 'name' | 'strength' | 'form'>): string => [i.name, i.strength, i.form].filter(blank).join(' ');
+/** Name, strength and form, without repeating what the name already says ("Amoxicillin 500 mg" + "500 mg" stays "Amoxicillin 500 mg"). */
+export const itemTitle = (i: Pick<RxItem, 'name' | 'strength' | 'form'>): string => [i.name, ...[i.strength, i.form].filter((x) => blank(x) && !i.name.toLowerCase().includes(x!.trim().toLowerCase()))].filter(blank).join(' ');
 
 /* -------------------------------- safety notes -------------------------------- */
 

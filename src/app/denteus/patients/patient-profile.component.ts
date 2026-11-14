@@ -57,7 +57,7 @@ export class PatientProfileComponent {
   protected readonly initials = initials;
 
   protected readonly tab = signal<Tab>('upcoming');
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   /** Dentists don't see billing, reception doesn't see clinical records, and the clinic can hide pages in Setup. */
   protected readonly sections = computed(() => PROFILE_PAGES.filter((x) => x.id === 'overview' || (!this.store.hiddenPages().includes(x.id) && (x.id === 'appointments' ? this.auth.can('appointments.view') : this.auth.can(x.clinical ? 'clinical.view' : 'billing.view')))).map((x) => x.id as Section));
   protected readonly sectionKey = Object.fromEntries(PROFILE_PAGES.map((x) => [x.id, x.key])) as Record<Section, Key>;
@@ -70,7 +70,7 @@ export class PatientProfileComponent {
   private readonly keepTabVisible = effect(() => {
     this.section();
     if (typeof document === 'undefined') return;
-    setTimeout(() => document.querySelector('.page-link.on')?.scrollIntoView({ inline: 'nearest', block: 'nearest' }));
+    setTimeout(() => document.querySelector('.page-link.on')?.scrollIntoView({ inline: 'nearest', block: 'nearest' }), 150);
   });
   /** WhatsApp messages ready to send (the clinic presses send): next visit, balance due, check-up invitation. */
   protected readonly reminders = computed(() => {
