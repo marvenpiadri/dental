@@ -45,8 +45,9 @@ Thumbs.db
 __pycache__/
 __pycache__/
 
-# local secrets (Neon connection strings)
+# local secrets
 .env
 .env.local
 .env.*.local
-.neon
+.dev.vars
+.wrangler/

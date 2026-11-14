@@ -1,0 +1,30 @@
+// Dontalist on Cloudflare: one Worker serves Angular SSR, /api/v1/* and the static assets.
+// Secrets are NOT in this file. Set them with `wrangler secret put` (production) or .dev.vars (local, git-ignored):
+//   TIDB_DATABASE_URL   mysql://<user>:<password>@<host>/<db>  (TiDB Cloud Starter/Essential connection string; the serverless driver talks HTTPS, not TCP)
+//   PASSWORD_PEPPER     long random string; server-side secret mixed into password hashes
+//   GOOGLE_MAPS_SERVER_KEY  optional; address lookup for pasted Maps links
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dontalist",
+  "main": "dist/calendar-app/server/server.mjs",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "dist/calendar-app/browser",
+    "binding": "ASSETS"
+  },
+  "r2_buckets": [
+    { "binding": "FILES", "bucket_name": "dontalist-files", "preview_bucket_name": "dontalist-files-dev" }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_ORIGIN": "https://dontalist.com"
+  },
+  "observability": { "enabled": true },
+  "env": {
+    "dev": {
+      "vars": { "ENVIRONMENT": "development", "APP_ORIGIN": "http://localhost:8787" },
+      "r2_buckets": [{ "binding": "FILES", "bucket_name": "dontalist-files-dev" }]
+    }
+  }
+}

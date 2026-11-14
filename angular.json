@@ -57,11 +57,14 @@
             "security": {
               "allowedHosts": [
                 "dontalist.com",
-                "www.dontalist.com"
+                "www.dontalist.com",
+                "localhost",
+                "*.workers.dev"
               ]
             },
             "ssr": {
-              "entry": "src/server.ts"
+              "entry": "src/server.ts",
+              "platform": "neutral"
             }
           },
           "configurations": {

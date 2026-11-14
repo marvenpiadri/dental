@@ -19,9 +19,8 @@ export async function followLink(raw: string): Promise<URL | null> {
   return null;
 }
 
-/** Address for a point. Needs a server-side Geocoding key in GOOGLE_MAPS_SERVER_KEY; without one the clinic types its city and country. */
-export async function reverseGeocode(lat: number, lng: number, lang: string): Promise<PlaceResult | null> {
-  const key = process.env['GOOGLE_MAPS_SERVER_KEY'];
+/** Address for a point. Needs the server-side Geocoding key (Worker secret GOOGLE_MAPS_SERVER_KEY); without one the clinic types its city and country. */
+export async function reverseGeocode(key: string | undefined, lat: number, lng: number, lang: string): Promise<PlaceResult | null> {
   if (!key) return null;
   const u = new URL('https://maps.googleapis.com/maps/api/geocode/json');
   u.search = new URLSearchParams({ latlng: `${lat},${lng}`, language: lang, key }).toString();
@@ -31,17 +30,17 @@ export async function reverseGeocode(lat: number, lng: number, lang: string): Pr
 }
 
 const hits = new Map<string, number[]>();
-/** 20 imports a minute per address is plenty for one clinic and keeps the geocoding bill bounded. */
+/** 20 imports a minute per address per Worker instance. Per-isolate memory only: a soft limit, not a guarantee across instances (see docs/architecture-tidb.md). */
 export const rateLimited = (ip: string, now = Date.now()): boolean => {
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < 60_000);
   recent.push(now); hits.set(ip, recent);
   return recent.length > 20;
 };
 
-export async function importLink(raw: string, lang: string): Promise<LinkResult | null> {
+export async function importLink(raw: string, lang: string, key?: string): Promise<LinkResult | null> {
   const final = await followLink(raw);
   const parsed = final && parseMapsLink(final.href);
   if (!parsed) return null;
-  const geo = parsed.lat !== undefined && parsed.lng !== undefined ? await reverseGeocode(parsed.lat, parsed.lng, lang).catch(() => null) : null;
+  const geo = parsed.lat !== undefined && parsed.lng !== undefined ? await reverseGeocode(key, parsed.lat, parsed.lng, lang).catch(() => null) : null;
   return { ...parsed, ...(geo ? { geo, address: geo.formattedAddress } : {}) };
 }

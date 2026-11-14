@@ -7,7 +7,7 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/worker/harness.ts"],
   "angularCompilerOptions": {
     "extendedDiagnostics": {
       "checks": {
