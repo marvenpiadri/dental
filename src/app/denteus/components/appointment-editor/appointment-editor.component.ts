@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { typeMinutes } from '../../setup/prefs-rules';
 import {
   ChangeDetectionStrategy,
@@ -11,7 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
-import { dentistHours } from '../../rules/opening-hours';
+import { dentistHours, fromMin, outsideHours } from '../../rules/opening-hours';
 import { findFreeSlots, type Slot } from '../../rules/slot-finder';
 import { I18n, Key } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
@@ -41,7 +42,7 @@ const DURATIONS = Array.from({ length: 12 }, (_, i) => (i + 1) * 15); // 15 min 
  */
 @Component({
   selector: 'den-appointment-editor',
-  imports: [CalIconComponent, DateTimeFieldComponent, PatientPickerComponent],
+  imports: [CalIconComponent, DateTimeFieldComponent, PatientPickerComponent, RouterLink],
   templateUrl: './appointment-editor.component.html',
   styleUrl: './appointment-editor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -95,14 +96,17 @@ export class AppointmentEditorComponent implements OnInit {
   /** Instant feedback only; the server decides when saving. */
   protected readonly warnings = computed(() => {
     if (this.scheduleLocked() || !this.patientId()) return [] as string[];
-    return this.store.previewConflicts({
+    const end = addMinutes(this.start(), this.duration());
+    const hours = dentistHours(this.store.hours(), this.store.dentistMap().get(this.dentistId())?.hours);
+    const out = this.dentistId() && outsideHours(this.start(), end, hours) ? [this.t('ap.outsideHours', { h: `${fromMin(hours.startMin)}–${fromMin(hours.endMin)}` })] : [];
+    return [...out, ...this.store.previewConflicts({
       id: this.draft().id,
       patientId: this.patientId() ?? '',
       dentistId: this.dentistId(),
       chairId: this.chairId(),
       start: this.start(),
-      end: addMinutes(this.start(), this.duration()),
-    });
+      end,
+    })];
   });
 
   protected readonly slots = signal<Slot[] | null>(null);

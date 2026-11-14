@@ -132,6 +132,13 @@
     (input)="note.set($any($event.target).value)"
   ></textarea>
 
+  @if (!store.dentists().length || !store.chairs().length) {
+    <div class="warn" role="status">
+      <cal-icon name="alert" [size]="16" [stroke]="2.2" />
+      <span>{{ t('ap.needSetup') }} <a routerLink="/setup/schedule">{{ t('ap.needSetup.link') }}</a></span>
+    </div>
+  }
+
   @if (warnings().length && !problem()) {
     <div class="warn" role="status">
       <cal-icon name="alert" [size]="16" [stroke]="2.2" />

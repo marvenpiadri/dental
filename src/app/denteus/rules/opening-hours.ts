@@ -23,3 +23,11 @@ export function dentistHours(clinic: Hours, own: { open?: string; close?: string
   const start = toMin(own?.open), end = toMin(own?.close);
   return start === null || end === null || end <= start ? clinic : { ...clinic, startMin: start, endMin: end };
 }
+
+/** True when any part of start–end falls on a closed day or outside the open hours (end at closing time is fine). */
+export function outsideHours(start: Date, end: Date, h: Hours): boolean {
+  if (!h.days.includes(start.getDay())) return true;
+  const s = start.getHours() * 60 + start.getMinutes();
+  const e = (end.getTime() - start.getTime()) / 60_000 + s;
+  return s < h.startMin || e > h.endMin;
+}
