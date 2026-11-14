@@ -275,7 +275,7 @@
 .owed { color: var(--app-danger); font-weight: 700; }
 .file { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .pages { position: relative; display: flex; overflow-x: auto; background: var(--app-panel); border-bottom: 1px solid var(--app-line); }
-.page-link { display: flex; align-items: center; gap: 8px; padding: 14px 20px; color: var(--app-muted); font-weight: 600; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.page-link { display: flex; align-items: center; gap: 8px; padding: 14px 14px; color: var(--app-muted); font-weight: 600; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; margin-bottom: -1px; }
 .page-link:hover { background: var(--app-hover); color: var(--app-text); }
 .page-link.on { color: var(--app-text); border-bottom-color: var(--app-text); }
 .page-link:focus-visible { outline: 2px solid var(--app-text); outline-offset: -2px; }

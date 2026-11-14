@@ -66,6 +66,12 @@ export class PatientProfileComponent {
     const want = (this.page() ?? (this.note() ? 'visits' : 'overview')) as Section; // a link from the calendar lands on the notes
     return this.sections().includes(want) ? want : 'overview';
   });
+  /** The tab bar scrolls sideways on narrower screens: keep the open tab visible. */
+  private readonly keepTabVisible = effect(() => {
+    this.section();
+    if (typeof document === 'undefined') return;
+    setTimeout(() => document.querySelector('.page-link.on')?.scrollIntoView({ inline: 'nearest', block: 'nearest' }));
+  });
   /** WhatsApp messages ready to send (the clinic presses send): next visit, balance due, check-up invitation. */
   protected readonly reminders = computed(() => {
     const p = this.patient();
