@@ -55,7 +55,7 @@ Order follows dependencies. Items marked done were verified (see audit/README.md
 1. **Verify before building**: run Scenarios A (visit) and B (estimate, invoice, partial payments, receipt) in the browser with synthetic data and capture populated screenshots. Fix what breaks. *Open.*
 2. **Patient file**: identity fields and file number *done 16 Nov*; patient merge, wider duplicate hints (same phone, same email), patient timeline. *Open.*
 3. **Billing**: refunds, cash closing, expense categories report, overdue invoices view. *Open.*
-4. **Calendar**: waiting list, free-slot search, working hours and holidays check. *Open.*
+4. **Calendar**: waiting list; check the default booking time against working hours (booking dialog opened at 05:30 while the grid starts at 07:00); working hours and holidays check. A free-slot search already exists in the booking dialog. *Open.*
 5. **Practice**: stock movements (entry, consumption, adjustment, waste) with reasons; suppliers and purchase orders; equipment register and maintenance; lab case status history, remake, cancel reason, cost, attachments. *Open.* Keep it clinic-sized, not an ERP.
 6. **Documents**: periodontal report print; check every printed document at A4 in EN and FR. *Open.*
 7. **Permissions**: test each of the six roles against every route and action. *Open.*

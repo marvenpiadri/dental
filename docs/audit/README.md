@@ -20,8 +20,9 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 | F4 | Lab orders have 3 statuses (sent, ready, fitted); no event history, remake, cancel reason, attachments, cost | `LAB_STATUSES` | Open |
 | F5 | No refunds, no cash closing, no expense categories report | grep: no refund code | Open |
 | F6 | No audit trail of who changed what | grep: none | Open (needs backend identity) |
-| F7 | No periodontal report print; no waiting list; no recurring appointments check | grep: none | Open |
+| F7 | No periodontal report print; no waiting list (a free-slot search does exist in the booking dialog) | grep, booking screenshot | Open |
 | F8 | Tab strip on the patient profile is clipped at 1440 px ("Imaging & fi...") | `patients/profile-after-identity-fields` screenshot | Open |
+| F10 | Booking dialog defaulted to 05:30 (sandbox clock ~04:30) while the calendar grid starts at 07:00; **not yet confirmed** whether this is a real defect or only the clock | `calendar/booking-dialog` screenshot | To verify |
 | F9 | File number was only visible in the Details card, below the fold | same screenshot | **Fixed** |
 
 ## Fixed in this pass
