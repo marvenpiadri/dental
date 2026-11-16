@@ -52,15 +52,15 @@ These are gaps or validation candidates, not automatic instructions to expand sc
 
 Order follows dependencies. Items marked done were verified (see audit/README.md); the rest are open.
 
-1. **Verify before building**: run Scenarios A (visit) and B (estimate, invoice, partial payments, receipt) in the browser with synthetic data and capture populated screenshots. Fix what breaks. *Open.*
+1. **Verify before building**: Scenarios A (visit) and B (invoice, partial payments, receipt) were run in the browser on 16 Nov and the defects found were fixed (see audit/README.md, F10-F14). Still to run: A's exam/note/complete steps, B's quote path and reports, C to G. *In progress.*
 2. **Patient file**: identity fields and file number *done 16 Nov*; patient merge, wider duplicate hints (same phone, same email), patient timeline. *Open.*
-3. **Billing**: refunds, cash closing, expense categories report, overdue invoices view. *Open.*
+3. **Billing**: payment-to-invoice default and overpayment guard *done 16 Nov*; receipt legal block and invoice due date (F13); refunds, cash closing, expense categories report, overdue invoices view. *Open.*
 4. **Calendar**: waiting list; check the default booking time against working hours (booking dialog opened at 05:30 while the grid starts at 07:00); working hours and holidays check. A free-slot search already exists in the booking dialog. *Open.*
 5. **Practice**: stock movements (entry, consumption, adjustment, waste) with reasons; suppliers and purchase orders; equipment register and maintenance; lab case status history, remake, cancel reason, cost, attachments. *Open.* Keep it clinic-sized, not an ERP.
 6. **Documents**: periodontal report print; check every printed document at A4 in EN and FR. *Open.*
 7. **Permissions**: test each of the six roles against every route and action. *Open.*
 8. **Backups**: create, validate, restore preview, restore into a clean profile. *Open.*
-9. **Accessibility and layout**: clipped patient tab strip, keyboard and focus review. *Open.*
+9. **Accessibility and layout**: patient tab strip fixed *16 Nov*; keyboard and focus review. *Open.*
 10. **Backend contracts** (separate repo `dental-api`): auth/session, tenant isolation, appointments, patients, billing, clinical, documents and prescriptions exist there and are tested only against a SQLite stand-in. The frontend still persists to IndexedDB; the repository layer that swaps it is not built. Real-TiDB verification is blocked from the sandbox.
 
 ## 4. Product boundaries

@@ -38,13 +38,14 @@
   <label class="field">
     <span class="label">{{ t('bill.forInvoice') }}</span>
     <select class="input" (change)="pickInvoice($any($event.target).value)">
-      <option value="" [selected]="!forInvoice()">{{ t('bill.advance') }}</option>
-      @for (r of open(); track r.inv.id) { <option [value]="r.inv.id" [selected]="forInvoice() === r.inv.id">{{ r.inv.number }} · {{ t('inv.left', { amount: i18n.money(r.remaining) }) }}</option> }
+      <option value="" [selected]="!target()">{{ t('bill.advance') }}</option>
+      @for (r of open(); track r.inv.id) { <option [value]="r.inv.id" [selected]="target() === r.inv.id">{{ r.inv.number }} · {{ t('inv.left', { amount: i18n.money(r.remaining) }) }}</option> }
     </select>
   </label>
   @if (sums().due > 0) { <button class="btn" type="button" (click)="fillDue()">{{ t('bill.fillDue', { amount: i18n.money(sums().due) }) }}</button> }
   <button class="btn btn--primary" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('bill.record') }}</button>
 </form>
+@if (over(); as msg) { <p class="error-text" role="alert">{{ msg }}</p> }
 @if (invalid()) { <p class="error-text" id="pay-error" role="alert">{{ t('bill.amount.error') }}</p> }
 
 <h3 class="sub">{{ t('inv.title') }}</h3>

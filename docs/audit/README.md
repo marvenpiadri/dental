@@ -21,8 +21,12 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 | F5 | No refunds, no cash closing, no expense categories report | grep: no refund code | Open |
 | F6 | No audit trail of who changed what | grep: none | Open (needs backend identity) |
 | F7 | No periodontal report print; no waiting list (a free-slot search does exist in the booking dialog) | grep, booking screenshot | Open |
-| F8 | Tab strip on the patient profile is clipped at 1440 px ("Imaging & fi...") | `patients/profile-after-identity-fields` screenshot | Open |
-| F10 | Booking dialog defaulted to 05:30 (sandbox clock ~04:30) while the calendar grid starts at 07:00; **not yet confirmed** whether this is a real defect or only the clock | `calendar/booking-dialog` screenshot | To verify |
+| F8 | Tab strip on the patient profile was clipped at 1440 px ("Imaging & fi...") | before: `patients/profile-after-identity-fields…`; after: `clinical/chart-empty…` | **Fixed**: all 9 tabs fit at 1440 (EN, FR) and 1280 (EN) |
+| F10 | Booking dialog proposed 05:30 (before opening); the booked appointment sat above the visible grid | `calendar/booking-dialog`, `calendar/day-with-appointment` | **Fixed**: default start is never before opening or past the last slot (`defaultStartMin`, 4 tests) |
+| F14 | Today's waiting room had no action: staff had to open the calendar to start treatment | `dashboard/today-with-waiting-patient` | **Fixed**: "Start treatment" button (needs `appointments.edit`), same store transition as the calendar |
+| F11 | Payments defaulted to "Advance / on account" even with an open invoice, so the patient balance reached MAD 0 while the invoice still read "Unpaid · MAD 400 left" | Browser run: 2 payments, invoice stayed Unpaid | **Fixed**: default is now the oldest open invoice (Advance stays selectable) |
+| F12 | A payment larger than the invoice's remaining amount was accepted and the excess disappeared into "Paid" | Code: `billing.component.ts add()` had no check | **Fixed**: blocked with a message offering an advance |
+| F13 | Receipt print has no clinic legal/address block (invoice has one); invoice has no due date | `receipt-html.ts`, `invoice-html.ts`, model | Open |
 | F9 | File number was only visible in the Details card, below the fold | same screenshot | **Fixed** |
 
 ## Fixed in this pass
@@ -31,5 +35,10 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 - Tests: `patient-rules.spec.ts` (+2: numbering, emergency-phone validation).
 - Older patients have no file number (no back-fill). Not decided: whether to assign one lazily on first open.
 
+## Workflows run in the browser (synthetic data)
+- **Scenario A, partly**: register patient -> add dentist and chair -> book (default time in hours) -> arrived -> waiting room on Today -> start treatment from Today -> calendar panel offers Complete visit and Write visit note. Not run: exam, odontogram edits beyond one procedure, visit note, completing the visit, patient history review.
+- **Scenario B, mostly**: open the chart, select tooth 16, add a Filling at MAD 400 marked Done -> billing shows it charged -> issue invoice FA-2026-0001 -> pay 150 (invoice Partly paid, MAD 250 left) -> try 300 (blocked) -> pay 250 (invoice Paid, balance 0) -> invoice and receipt print. PDFs and screenshots: `docs/audit/prints/`. Not run: quote -> acceptance -> invoice, reports reflecting the payments, voiding a payment, credit note.
+- Print checks were done with an unconfigured clinic, so the clinic name shows the fallback "Dontalist"; branding with a configured clinic is **not verified**.
+
 ## Not checked in this pass
-Populated screens, dialogs, calendar interactions, odontogram and periodontogram behaviour, invoice/payment workflow end to end (Scenarios A-G), real print/PDF output, role-by-role permission tests, backup then restore, accessibility audit, FR text review of every screen. The earlier docs claim several of these were verified on 10 November; this pass did not re-verify them.
+Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-role permission tests, backup then restore, accessibility audit, FR text review of every screen. The earlier docs claim several of these were verified on 10 November; this pass did not re-verify them.

@@ -290,6 +290,7 @@ export const en = {
   'bill.reference': 'Reference (slip, transfer or cheque no.)',
   'bill.forInvoice': 'Applies to',
   'bill.advance': 'Advance / on account',
+  'bill.over': 'That is more than the {amount} left on this invoice. Record the rest as an advance.',
   'bill.void': 'Void payment',
   'bill.voided': 'Voided: {reason}',
   'wa.consent': 'WhatsApp consent',

@@ -288,6 +288,7 @@ export const fr: Record<keyof typeof en, string> = {
   'bill.reference': 'Référence (n° de reçu, virement ou chèque)',
   'bill.forInvoice': 'S’applique à',
   'bill.advance': 'Avance / acompte',
+  'bill.over': 'C’est plus que les {amount} restant sur cette facture. Enregistrez le reste comme avance.',
   'bill.void': 'Annuler le paiement',
   'bill.voided': 'Annulé : {reason}',
   'wa.consent': 'Consentement WhatsApp',

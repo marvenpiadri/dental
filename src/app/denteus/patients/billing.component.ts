@@ -47,7 +47,10 @@ export class BillingComponent {
   protected readonly chosen = computed(() => (this.methods().includes(this.method()) ? this.method() : this.methods()[0]));
   protected readonly invalid = signal(false);
   protected readonly reference = signal('');
-  protected readonly forInvoice = signal('');
+  /** `null` = untouched: the payment goes to the oldest open invoice. `''` = the user chose "Advance / on account". */
+  protected readonly forInvoice = signal<string | null>(null);
+  protected readonly target = computed(() => this.forInvoice() ?? this.open().at(-1)?.inv.id ?? '');
+  protected readonly over = signal<string | null>(null);
   /** The payment or invoice waiting for a reason before it is voided or cancelled. */
   protected readonly asking = signal<{ kind: 'payment' | 'invoice'; id: string } | null>(null);
   protected readonly reason = signal('');
@@ -91,11 +94,14 @@ export class BillingComponent {
     const [type, id] = this.payer().split('|');
     if (type !== 'patient' && PAYER_TYPES.includes(type as PayerType)) { payment.payerType = type as PayerType; if (id) payment.payerId = id; }
     if (this.reference().trim()) payment.reference = this.reference().trim();
-    if (this.forInvoice()) payment.invoiceId = this.forInvoice();
+    const left = this.open().find((r) => r.inv.id === this.target())?.remaining;
+    if (left !== undefined && value > left) { this.over.set(this.t('bill.over', { amount: this.i18n.money(left) })); return; } // the rest would vanish into "paid"; ask for an advance instead
+    this.over.set(null);
+    if (this.target()) payment.invoiceId = this.target();
     this.edit.emit((list) => [...list, payment]);
     this.amount.set('');
     this.reference.set('');
-    this.forInvoice.set('');
+    this.forInvoice.set(null);
     this.payer.set('patient');
     this.invalid.set(false);
   }
