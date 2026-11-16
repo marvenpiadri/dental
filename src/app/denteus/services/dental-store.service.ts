@@ -1,5 +1,5 @@
 import { LEGACY_CURRENCY, countryName } from '../regional/regional-rules';
-import { CONDITIONS } from '../patients/patient-rules';
+import { CONDITIONS, nextPatientNumber } from '../patients/patient-rules';
 import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
@@ -55,10 +55,11 @@ export interface RescheduleChange {
 /** Trims every text field and drops the empty optional ones, so "" never gets stored as a value. */
 function tidy(input: PatientInput): PatientInput {
   const out: PatientInput = { fullName: input.fullName.trim(), phone: input.phone.trim() };
-  for (const key of ['email', 'birthDate', 'sex', 'country', 'city', 'alert', 'notes'] as const) {
+  for (const key of ['email', 'birthDate', 'sex', 'country', 'city', 'address', 'emergencyName', 'emergencyPhone', 'referral', 'alert', 'notes'] as const) {
     const value = input[key]?.trim();
     if (value) (out as unknown as Record<string, string>)[key] = value;
   }
+  if (input.language === 'en' || input.language === 'fr') out.language = input.language;
   const m = input.medical;
   const conditions = (m?.conditions ?? []).filter((c) => CONDITIONS.includes(c as never));
   const allergies = m?.allergies?.trim();
@@ -248,7 +249,7 @@ export class DentalStore {
 
   /** Callers validate first (patient-rules.ts); this only tidies the text and stamps the record. */
   addPatient(input: PatientInput): Patient {
-    const patient: Patient = { ...tidy(input), id: newId(), createdAt: new Date().toISOString() };
+    const patient: Patient = { ...tidy(input), id: newId(), number: nextPatientNumber(this.patients()), createdAt: new Date().toISOString() };
     this.patients.update((list) => [...list, patient]);
     return patient;
   }
@@ -256,7 +257,7 @@ export class DentalStore {
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, number: current.number, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
     const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
     if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));

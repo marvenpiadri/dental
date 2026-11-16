@@ -1,5 +1,5 @@
 import { Patient } from '../models/dental.models';
-import { addProposal, hasAlert, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient } from './patient-rules';
+import { addProposal, hasAlert, nextPatientNumber, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient } from './patient-rules';
 
 const TODAY = new Date(2026, 9, 22); // 22 Oct 2026
 const patient = (over: Partial<Patient> = {}): Patient => ({ id: 'p1', fullName: 'Hélène Benali', phone: '+212 600-000-001', ...over });
@@ -83,5 +83,18 @@ describe('medical history and quote versions', () => {
     expect(v1).toEqual([{ version: 1, status: 'proposed' }]);
     expect(list.map((x) => x.status)).toEqual(['accepted', 'superseded', 'proposed']);
     expect(list[2].version).toBe(3);
+  });
+});
+
+describe('patient identity fields', () => {
+  it('numbers files P-0001, one above the highest in use, never reusing a number', () => {
+    expect(nextPatientNumber([])).toBe('P-0001');
+    expect(nextPatientNumber([{ number: 'P-0001' }, { number: 'P-0007' }, {}])).toBe('P-0008');
+    expect(nextPatientNumber([{ number: 'junk' }])).toBe('P-0001');
+  });
+  it('validates the emergency phone like the main phone, and allows it empty', () => {
+    expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '' }, [], TODAY)).toEqual({});
+    expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '123' }, [], TODAY)).toEqual({ emergencyPhone: 'phone-invalid' });
+    expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '+212 600 000 002' }, [], TODAY)).toEqual({});
   });
 });

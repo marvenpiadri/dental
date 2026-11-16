@@ -6,10 +6,10 @@ import { DentalStore } from '../services/dental-store.service';
 import { PlacePickerComponent } from '../regional/place-picker.component';
 import { CONDITIONS, PatientProblem, validatePatient } from './patient-rules';
 
-type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'country' | 'city' | 'alert' | 'notes', string>;
+type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'country' | 'city' | 'address' | 'emergencyName' | 'emergencyPhone' | 'language' | 'referral' | 'alert' | 'notes', string>;
 type Field = keyof Values;
 
-const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', country: '', city: '', alert: '', notes: '' };
+const EMPTY: Values = { fullName: '', phone: '', email: '', birthDate: '', sex: '', country: '', city: '', address: '', emergencyName: '', emergencyPhone: '', language: '', referral: '', alert: '', notes: '' };
 
 /** Creates a patient, or edits one when the route carries an `id` (bound from the URL). */
 @Component({
@@ -72,6 +72,11 @@ export class PatientFormComponent {
           sex: patient.sex ?? '',
           country: patient.country ?? '',
           city: patient.city ?? '',
+          address: patient.address ?? '',
+          emergencyName: patient.emergencyName ?? '',
+          emergencyPhone: patient.emergencyPhone ?? '',
+          language: patient.language ?? '',
+          referral: patient.referral ?? '',
           alert: patient.alert ?? '',
           notes: patient.notes ?? '',
         });
@@ -129,6 +134,11 @@ export class PatientFormComponent {
       sex: v.sex === 'female' || v.sex === 'male' ? v.sex : undefined,
       country: v.country,
       city: v.city,
+      address: v.address,
+      emergencyName: v.emergencyName,
+      emergencyPhone: v.emergencyPhone,
+      language: v.language === 'en' || v.language === 'fr' ? v.language : undefined,
+      referral: v.referral,
       alert: v.alert,
       notes: v.notes,
       medical: { conditions: this.conditions(), allergies: this.allergies(), medications: this.medications() },

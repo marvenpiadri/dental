@@ -89,6 +89,16 @@ export interface Patient {
   /** ISO 3166-1 alpha-2. Filled from the clinic for new patients; never rewritten when the clinic setting changes. */
   country?: string;
   city?: string;
+  /** Clinic-assigned file number (`P-0001`), set once when the patient is created and never reused. Older records may not have one. */
+  number?: string;
+  /** Free-text postal address. */
+  address?: string;
+  emergencyName?: string;
+  emergencyPhone?: string;
+  /** Language to write to the patient in (messages, printed documents the clinic hands over). */
+  language?: 'en' | 'fr';
+  /** How the patient heard about the clinic (free text: "Dr. Tazi", "Instagram", "a friend"). */
+  referral?: string;
   /** Medical alert shown prominently on the profile and the booking form (allergies, conditions, anticoagulants...). */
   alert?: string;
   /** Structured medical history; `alert` stays the free-text note beside it. */
@@ -311,7 +321,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances' | 'chartRecoveries'>;
+export type PatientInput = Omit<Patient, 'id' | 'number' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances' | 'chartRecoveries'>;
 
 export interface Dentist {
   id: string;

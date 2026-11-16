@@ -53,6 +53,18 @@
               <option value="male">{{ t('form.sex.male') }}</option>
             </select>
           </label>
+          <label class="field">
+            <span class="label">{{ t('form.language') }}</span>
+            <select class="input" name="language" [value]="values().language" (change)="set('language', $any($event.target).value)">
+              <option value="">{{ t('form.sex.unspecified') }}</option>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.referral') }}</span>
+            <input class="input" name="referral" maxlength="120" [placeholder]="t('form.referral.placeholder')" [value]="values().referral" (input)="set('referral', $any($event.target).value)" />
+          </label>
         </div>
       </section>
 
@@ -75,6 +87,21 @@
           </label>
           <den-place-picker kind="country" [label]="t('form.country')" [value]="values().country" (changed)="set('country', $event)" />
           <den-place-picker kind="city" [label]="t('form.city')" [country]="values().country" [value]="values().city" (changed)="set('city', $event)" />
+          <label class="field wide">
+            <span class="label">{{ t('form.address') }}</span>
+            <input class="input" name="address" autocomplete="street-address" maxlength="200" [value]="values().address" (input)="set('address', $any($event.target).value)" />
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.emergencyName') }}</span>
+            <input class="input" name="emergencyName" maxlength="120" [value]="values().emergencyName" (input)="set('emergencyName', $any($event.target).value)" />
+          </label>
+          <label class="field">
+            <span class="label">{{ t('form.emergencyPhone') }}</span>
+            <input class="input" type="tel" name="emergencyPhone" inputmode="tel" [placeholder]="t('form.phone.placeholder')"
+              [value]="values().emergencyPhone" (input)="set('emergencyPhone', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('emergencyPhone') ? 'true' : null" [attr.aria-describedby]="errorKey('emergencyPhone') ? 'err-emergencyPhone' : null" />
+            @if (errorKey('emergencyPhone'); as key) { <p class="error-text" id="err-emergencyPhone">{{ t(key) }}</p> }
+          </label>
         </div>
       </section>
 

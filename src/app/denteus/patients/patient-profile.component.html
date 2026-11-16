@@ -57,6 +57,7 @@
               @if (p.city) { <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ p.city }}</li> }
             </ul>
             <div class="tags">
+              @if (p.number) { <span class="chip" data-tone="neutral">{{ p.number }}</span> }
               @if (p.createdAt) { <span class="chip" data-tone="neutral">{{ t('profile.since', { date: since() }) }}</span> }
             </div>
           </div>
@@ -161,10 +162,15 @@
           <section class="card" aria-labelledby="details-title">
             <header class="card-head"><h2 class="card-title" id="details-title"><i class="fa-regular fa-id-card" aria-hidden="true"></i>{{ t('profile.details') }}</h2></header>
             <dl class="details">
+              @if (p.number) { <div><dt>{{ t('profile.number') }}</dt><dd>{{ p.number }}</dd></div> }
               <div><dt>{{ t('profile.birthDate') }}</dt><dd>{{ dateOnly(p.birthDate) || t('common.notProvided') }}</dd></div>
               <div><dt>{{ t('form.phone') }}</dt><dd>{{ p.phone || t('common.notProvided') }}</dd></div>
               <div><dt>{{ t('form.email') }}</dt><dd>{{ p.email || t('common.notProvided') }}</dd></div>
               <div><dt>{{ t('form.city') }}</dt><dd>{{ p.city || t('common.notProvided') }}</dd></div>
+              @if (p.address) { <div><dt>{{ t('form.address') }}</dt><dd>{{ p.address }}</dd></div> }
+              @if (p.emergencyName || p.emergencyPhone) { <div><dt>{{ t('form.emergency') }}</dt><dd>{{ p.emergencyName }}@if (p.emergencyName && p.emergencyPhone) { · }{{ p.emergencyPhone }}</dd></div> }
+              @if (p.language) { <div><dt>{{ t('form.language') }}</dt><dd>{{ p.language === 'fr' ? 'Français' : 'English' }}</dd></div> }
+              @if (p.referral) { <div><dt>{{ t('form.referral') }}</dt><dd>{{ p.referral }}</dd></div> }
             </dl>
             @if (p.createdAt) { <p class="since muted">{{ t('profile.since', { date: since() }) }}</p> }
           </section>

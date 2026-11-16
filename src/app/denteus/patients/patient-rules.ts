@@ -15,6 +15,15 @@ export function matchesQuery(patient: Pick<Patient, 'fullName' | 'phone'>, query
   return digits.length >= 3 && digitsOf(patient.phone).includes(digits);
 }
 
+/** Empty is fine. Otherwise 8 to 15 digits (E.164 maximum), with only the usual separators around them. */
+export const phoneOk = (phone: string): boolean => !phone || (/^[+\d\s().-]+$/.test(phone) && digitsOf(phone).length >= 8 && digitsOf(phone).length <= 15);
+
+/** The next file number: `P-0001`, one above the highest number in use, so a deleted or archived record's number is never reused. */
+export function nextPatientNumber(existing: readonly Pick<Patient, 'number'>[]): string {
+  const top = Math.max(0, ...existing.map((p) => Number(/^P-(\d+)$/.exec(p.number ?? '')?.[1] ?? 0)));
+  return `P-${String(top + 1).padStart(4, '0')}`;
+}
+
 export type PatientProblem = 'name-required' | 'phone-invalid' | 'email-invalid' | 'birth-invalid' | 'duplicate';
 
 /** Returns the problems by field. An empty object means the input can be saved. */
@@ -23,17 +32,15 @@ export function validatePatient(
   existing: readonly Patient[],
   today: Date,
   selfId?: string,
-): Partial<Record<'fullName' | 'phone' | 'email' | 'birthDate', PatientProblem>> {
-  const problems: Partial<Record<'fullName' | 'phone' | 'email' | 'birthDate', PatientProblem>> = {};
+): Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate', PatientProblem>> {
+  const problems: Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate', PatientProblem>> = {};
   const name = input.fullName.trim();
   const phone = input.phone.trim();
 
   if (name.length < 2) problems.fullName = 'name-required';
 
-  // 8 to 15 digits (E.164 maximum), with only the usual separators around them.
-  if (phone && (!/^[+\d\s().-]+$/.test(phone) || digitsOf(phone).length < 8 || digitsOf(phone).length > 15)) {
-    problems.phone = 'phone-invalid';
-  }
+  if (!phoneOk(phone)) problems.phone = 'phone-invalid';
+  if (!phoneOk(input.emergencyPhone?.trim() ?? '')) problems.emergencyPhone = 'phone-invalid';
 
   if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.email.trim())) problems.email = 'email-invalid';
 
