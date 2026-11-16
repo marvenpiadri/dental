@@ -23,6 +23,7 @@ import { isSameDay } from '../calendar/utils/date.utils';
 import { I18n } from '../core/i18n/i18n.service';
 import { ThemeService } from '../core/theme.service';
 import { parseIsoDate } from './patients/patient-rules';
+import { defaultStartMin } from './rules/opening-hours';
 import { chairTint } from './utils/chair-tint';
 import { AppointmentEditorComponent, EditorProblem } from './components/appointment-editor/appointment-editor.component';
 import { AppointmentPanelComponent } from './components/appointment-panel/appointment-panel.component';
@@ -221,9 +222,9 @@ export class DentalCalendarComponent implements OnInit {
   private defaultStart(): Date {
     const focus = this.cal.focusDate();
     const now = this.cal.now();
-    const slot = isSameDay(focus, now) ? (Math.floor((now.getHours() * 60 + now.getMinutes()) / 15) + 1) * 15 : 9 * 60;
+    const slot = defaultStartMin(isSameDay(focus, now) ? now.getHours() * 60 + now.getMinutes() : null, this.dental.hours());
     const d = new Date(focus);
-    d.setHours(0, Math.min(slot, 23 * 60), 0, 0);
+    d.setHours(0, slot, 0, 0);
     return d;
   }
 

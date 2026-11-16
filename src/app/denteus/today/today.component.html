@@ -48,10 +48,11 @@
             <h2 class="card-title" id="waiting-title"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>{{ t('today.waiting.title') }}</h2>
             <span class="chip" data-tone="warn">{{ waiting().length }}</span>
           </header>
+          @if (problem(); as msg) { <p class="error-text" role="alert" style="margin: 8px 12px">{{ msg }}</p> }
           @if (waiting().length) {
             <ul class="list">
               @for (a of waiting(); track a.id) {
-                <li>
+                <li class="with-action">
                   <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a.start), appointment: a.id }">
                     <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(patientName(a)) }}</span>
                     <span class="who">
@@ -63,6 +64,9 @@
                       @if (wait(a) !== null) { <span class="sub warn-text">{{ t('today.waiting.since', { n: wait(a)! }) }}</span> }
                     </span>
                   </a>
+                  @if (auth.can('appointments.edit')) {
+                    <button type="button" class="btn btn--primary" (click)="start(a)"><i class="fa-solid fa-play" aria-hidden="true"></i><span class="hide-sm">{{ t('act.in-progress') }}</span></button>
+                  }
                 </li>
               }
             </ul>

@@ -90,3 +90,6 @@ a.row:hover {
 }
 
 .more { margin: 0; padding: 0 16px 14px; }
+
+li.with-action { display: flex; align-items: center; gap: 8px; padding-right: 8px; }
+li.with-action > a.row { flex: 1; min-width: 0; }

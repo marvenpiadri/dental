@@ -31,3 +31,13 @@ export function outsideHours(start: Date, end: Date, h: Hours): boolean {
   const e = (end.getTime() - start.getTime()) / 60_000 + s;
   return s < h.startMin || e > h.endMin;
 }
+
+/**
+ * Minute of the day a new booking starts at. Today it is the next quarter hour, but never before opening or after the last slot that still fits
+ * before closing (then the clinic's opening time, so the dialog never proposes a time the calendar cannot show). Another day starts at opening.
+ */
+export function defaultStartMin(nowMin: number | null, h: Hours, durationMin = 30): number {
+  if (nowMin === null) return h.startMin;
+  const next = (Math.floor(nowMin / 15) + 1) * 15;
+  return next < h.startMin || next + durationMin > h.endMin ? h.startMin : next;
+}

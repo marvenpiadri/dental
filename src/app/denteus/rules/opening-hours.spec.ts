@@ -1,4 +1,4 @@
-import { DEFAULT_HOURS, outsideHours, parseHours } from './opening-hours';
+import { DEFAULT_HOURS, defaultStartMin, outsideHours, parseHours } from './opening-hours';
 
 describe('parseHours', () => {
   it('reads valid hours', () => expect(parseHours({ open: '08:30', close: '17:00', days: [3, 1, 1] })).toEqual({ startMin: 510, endMin: 1020, days: [1, 3] }));
@@ -29,4 +29,12 @@ describe('outsideHours', () => {
     expect(outsideHours(...at('2026-11-12T17:45:00', 30), DEFAULT_HOURS)).toBe(true);
     expect(outsideHours(...at('2026-11-15T10:00:00', 30), DEFAULT_HOURS)).toBe(true); // Sunday
   });
+});
+
+describe('defaultStartMin', () => {
+  const h = { startMin: 9 * 60, endMin: 18 * 60, days: [1, 2, 3, 4, 5, 6] };
+  it('starts at opening on another day', () => expect(defaultStartMin(null, h)).toBe(540));
+  it('rounds up to the next quarter hour during the day', () => expect(defaultStartMin(10 * 60 + 1, h)).toBe(615));
+  it('never proposes a time before opening', () => expect(defaultStartMin(4 * 60 + 40, h)).toBe(540));
+  it('falls back to opening when the slot would run past closing', () => { expect(defaultStartMin(17 * 60 + 40, h)).toBe(540); expect(defaultStartMin(17 * 60 + 20, h)).toBe(17 * 60 + 30); });
 });

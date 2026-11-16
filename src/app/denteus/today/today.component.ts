@@ -61,6 +61,14 @@ export class TodayComponent {
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   });
 
+  protected readonly problem = signal<string | null>(null);
+
+  /** Waiting room to chair in one click; the store applies the same transition rules as the calendar panel. */
+  protected async start(a: Appointment): Promise<void> {
+    const result = await this.store.transition(a.id, 'in-progress');
+    this.problem.set(result.ok ? null : result.message);
+  }
+
   protected readonly waiting = computed(() => this.todays().filter((a) => a.status === 'arrived'));
   protected readonly upcoming = computed(() => this.todays().filter((a) => a.status === 'scheduled' || a.status === 'confirmed'));
 
