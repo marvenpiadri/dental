@@ -109,3 +109,15 @@ describe('prescribing right', () => {
     expect(holders.sort()).toEqual(['dentist', 'owner']);
   });
 });
+
+describe('what the Practice screen relies on', () => {
+  const grid = (role: (typeof ROLES)[number]) => (['practice.view', 'practice.create', 'practice.edit', 'billing.create', 'billing.edit', 'tasks.create', 'tasks.edit'] as const).map((p) => (can({ role, extra: [], removed: [] }, p) ? 1 : 0)).join('');
+  it('gives each role exactly these: view, add, change, expense, expense change, task, task change', () => {
+    expect(grid('owner')).toBe('1111111');
+    expect(grid('admin')).toBe('1111111');
+    expect(grid('dentist')).toBe('1100011'); // adds and records, cannot delete or touch money
+    expect(grid('assistant')).toBe('1110011');
+    expect(grid('accountant')).toBe('1001100'); // records expenses, cannot touch clinical stock
+    expect(grid('reception')).toBe('0001011'); // no Practice screen at all (no practice.view)
+  });
+});

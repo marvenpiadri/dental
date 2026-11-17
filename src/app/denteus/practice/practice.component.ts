@@ -53,6 +53,8 @@ export class PracticeComponent {
   }
 
   protected isLow = isLow;
+  /** What this person may do here; the server must enforce the same (see docs/audit/README.md, F15). */
+  protected readonly may = computed(() => ({ add: this.auth.can('practice.create'), edit: this.auth.can('practice.edit'), pay: this.auth.can('billing.create'), payEdit: this.auth.can('billing.edit'), task: this.auth.can('tasks.create'), taskEdit: this.auth.can('tasks.edit') }));
   protected readonly equipmentList = computed(() => [...this.practice.equipment()].sort((a, b) => a.name.localeCompare(b.name)));
   protected readonly serviceLate = computed(() => this.today() ? this.practice.equipment().filter((e) => serviceState(e, this.today()) === 'overdue').length : 0);
   protected state = (e: Equipment) => serviceState(e, this.today());

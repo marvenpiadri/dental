@@ -46,3 +46,9 @@ Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-r
 **Lab work (F-lab):** orders now carry a cost and an append-only status history (day, who, reason). 'Remake at the lab' and 'Cancelled' need a reason; fitted and cancelled orders are closed. Checked in browser (remake without reason refused, then logged). Not done: attachments, lab directory, cost in reports.
 
 **Equipment register:** Practice → Equipment lists devices with serial, place, service interval and last service; next-due date is computed (month-end safe), chips show soon/overdue, a dot flags the tab, 'Serviced today' resets it. Included in backups. Checked in browser. Not done: per-service log with technician/cost, reminders.
+
+**Scenario F, roles (run in browser, 5 synthetic staff + owner):**
+- Routes: reports and setup redirect roles without access; the patient file hides tabs by permission and a typed clinical or payments URL falls back to Overview (checked for admin, dentist, assistant, reception, accountant).
+- **F15 (fixed):** the Practice screen did not check permissions, so a view-only accountant could add or delete stock, lab orders, equipment and tasks. Forms, status changes, movements and delete buttons are now gated (add = `practice.create`, delete = `practice.edit`, expenses = `billing.create`/`billing.edit`, tasks = `tasks.*`). Counted per role in the browser; role grid locked in `auth-rules.spec.ts`.
+- Not enforced by anything but the browser: all of this is UI-side. The server must repeat every check (backend contract in `docs/architecture.md`); anyone with the browser database can bypass it today.
+- Not checked: French, keyboard-only sign-in, PIN lockout.
