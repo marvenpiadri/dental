@@ -26,7 +26,7 @@ This document is a source-level product inventory, not a release certification. 
 - Calendar event movement uses Angular CDK; custom pointer handling remains for resize, drag-to-create and all-day movement.
 - Visit-note corrections preserve prior content in revisions; notes can be voided with a reason.
 - Prescription lines support free-text medication entry, basic suggestions, dosage/duration fields and printing. The current static suggestions are not a maintained national medication catalogue.
-- Basic stock quantity/minimum-threshold tracking and low-stock alerts exist.
+- Stock has a movement ledger (received, used, wasted, count) with expiry dates and low-stock alerts; no suppliers or purchase orders yet.
 - The Practice task list is a simple checklist.
 - The clinic store uses IndexedDB. The Angular service worker caches the production app shell/assets.
 - Patient file sections include overview, acts/chart, appointments, billing, quotes, visits and documents.
@@ -56,7 +56,7 @@ Order follows dependencies. Items marked done were verified (see audit/README.md
 2. **Patient file**: identity fields and file number *done 16 Nov*; patient merge, wider duplicate hints (same phone, same email), patient timeline. *Open.*
 3. **Billing**: payment-to-invoice default and overpayment guard *done 16 Nov*; receipt legal block and invoice due date (F13); refunds, cash closing, expense categories report, overdue invoices view. *Open.*
 4. **Calendar**: waiting list; check the default booking time against working hours (booking dialog opened at 05:30 while the grid starts at 07:00); working hours and holidays check. A free-slot search already exists in the booking dialog. *Open.*
-5. **Practice**: stock movements (entry, consumption, adjustment, waste) with reasons; suppliers and purchase orders; equipment register and maintenance; lab case status history, remake, cancel reason, cost, attachments. *Open.* Keep it clinic-sized, not an ERP.
+5. **Practice**: ~~stock movements~~ (done: ledger, reasons, expiry, history); suppliers and purchase orders; equipment register and maintenance; lab case status history, remake, cancel reason, cost, attachments. *Open.* Keep it clinic-sized, not an ERP.
 6. **Documents**: periodontal report print; check every printed document at A4 in EN and FR. *Open.*
 7. **Permissions**: test each of the six roles against every route and action. *Open.*
 8. **Backups**: create, validate, restore preview, restore into a clean profile. *Open.*

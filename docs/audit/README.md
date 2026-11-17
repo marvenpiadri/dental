@@ -16,7 +16,7 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 |---|---|---|---|
 | F1 | Patient file had no address, emergency contact, preferred language, referral source or file number | `patients/patient-form` screenshot before; model had only name/phone/email/birth/sex/country/city | **Fixed** (below) |
 | F2 | Duplicate detection only matches same name AND same phone; no merge | `patient-rules.ts` `validatePatient`; no merge code | Open |
-| F3 | Stock is quantity + minimum only: no movements, reasons, purchase orders, expiry, batch, supplier records | `practice/practice-rules.ts` (`isLow` only) | Open |
+| F3 | Stock was quantity + minimum only | `practice/practice-rules.ts` (`recordMovement`) | Partly fixed: movement ledger (received/used/wasted/count, reason on counts, no overdraw), expiry chips, unit, history, in backups. Checked in browser (10→9→7, overdraw refused). Still open: suppliers, purchase orders, batch numbers |
 | F4 | Lab orders have 3 statuses (sent, ready, fitted); no event history, remake, cancel reason, attachments, cost | `LAB_STATUSES` | Open |
 | F5 | No refunds, no cash closing, no expense categories report | grep: no refund code | Open |
 | F6 | No audit trail of who changed what | grep: none | Open (needs backend identity) |
