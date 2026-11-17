@@ -1,5 +1,10 @@
 export interface Expense { id: string; day: string; label: string; amount: number }
-export interface StockItem { id: string; name: string; qty: number; min: number }
+/** `expires` is the earliest expiry date of what is on the shelf ("YYYY-MM-DD"). */
+export interface StockItem { id: string; name: string; qty: number; min: number; unit?: string; expires?: string }
+export const MOVE_KINDS = ['in', 'out', 'waste', 'adjust'] as const;
+export type MoveKind = (typeof MOVE_KINDS)[number];
+/** One line of the stock ledger. `change` is signed; `after` is the balance once it was applied. `opening` records stock that existed before the ledger did. */
+export interface StockMovement { id: string; itemId: string; day: string; kind: MoveKind | 'opening'; change: number; after: number; reason?: string; by: string }
 export interface Task { id: string; text: string; done: boolean }
 /** Which implant (brand and lot) went into which patient's tooth: needed if a lot is ever recalled. */
 export interface ImplantRecord { id: string; patientId: string; tooth: string; brand: string; lot: string; day: string }
@@ -30,3 +35,39 @@ export const sortTasks = (tasks: Task[]): Task[] => [...tasks].sort((a, b) => Nu
 /** Implants that came from one lot, for a recall notice. */
 export const implantsInLot = (records: ImplantRecord[], lot: string): ImplantRecord[] =>
   lot.trim() ? records.filter((r) => r.lot.trim().toLowerCase() === lot.trim().toLowerCase()) : [];
+
+export type MoveError = 'amount' | 'insufficient' | 'reason';
+export type MoveResult = { ok: true; item: StockItem; moves: StockMovement[] } | { ok: false; error: MoveError };
+
+/**
+ * Applies one stock movement. The balance only ever changes through here, so it always equals the sum of the item's movements.
+ * `in` receives, `out` uses, `waste` discards (both cannot take more than is in stock), `adjust` sets the counted quantity and needs a reason.
+ * Stock that has no history yet (older records) first gets an `opening` line, so the ledger adds up.
+ */
+export function recordMovement(
+  item: StockItem, history: readonly StockMovement[],
+  input: { kind: MoveKind; amount: number; reason?: string; day: string; by: string; newId: () => string },
+): MoveResult {
+  const { kind, amount } = input, reason = input.reason?.trim() || undefined;
+  if (!Number.isInteger(amount) || amount < 0 || (kind !== 'adjust' && amount < 1)) return { ok: false, error: 'amount' };
+  if ((kind === 'out' || kind === 'waste') && amount > item.qty) return { ok: false, error: 'insufficient' };
+  if (kind === 'adjust' && !reason) return { ok: false, error: 'reason' };
+  const change = kind === 'in' ? amount : kind === 'adjust' ? amount - item.qty : -amount;
+  if (change === 0) return { ok: false, error: 'amount' };
+  const moves: StockMovement[] = [];
+  const known = history.filter((m) => m.itemId === item.id).reduce((n, m) => n + m.change, 0);
+  if (known !== item.qty) moves.push({ id: input.newId(), itemId: item.id, day: input.day, kind: 'opening', change: item.qty - known, after: item.qty, by: input.by });
+  const after = item.qty + change;
+  moves.push({ id: input.newId(), itemId: item.id, day: input.day, kind, change, after, ...(reason ? { reason } : {}), by: input.by });
+  return { ok: true, item: { ...item, qty: after }, moves };
+}
+
+/** Newest first, bounded: the history panel never renders an item's whole life. */
+export const movementsFor = (moves: readonly StockMovement[], itemId: string, limit = 20): StockMovement[] =>
+  moves.filter((m) => m.itemId === itemId).reverse().slice(0, limit);
+
+const dayNumber = (iso: string): number => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86_400_000 : NaN; };
+export const isExpired = (item: StockItem, today: string): boolean => !!item.expires && dayNumber(item.expires) < dayNumber(today);
+/** Not expired yet, but within `days`. */
+export const expiresSoon = (item: StockItem, today: string, days = 60): boolean =>
+  !!item.expires && !isExpired(item, today) && dayNumber(item.expires) - dayNumber(today) <= days;

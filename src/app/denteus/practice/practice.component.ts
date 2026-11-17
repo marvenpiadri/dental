@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
-import { LAB_STATUSES, LabOrder, LabStatus, implantsInLot, isLate, isLow, monthTotal, sortTasks, wholeNumber } from './practice-rules';
+import { AuthService } from '../../core/auth/auth.service';
+import { LAB_STATUSES, LabOrder, LabStatus, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
 type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
@@ -20,6 +21,7 @@ type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
 export class PracticeComponent {
   protected readonly practice = inject(PracticeStore);
   protected readonly store = inject(DentalStore);
+  private readonly auth = inject(AuthService);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
 
@@ -35,7 +37,7 @@ export class PracticeComponent {
 
   protected readonly monthSpent = computed(() => this.today() ? monthTotal(this.practice.expenses(), this.today().slice(0, 7)) : 0);
   protected readonly newestFirst = computed(() => [...this.practice.expenses()].sort((a, b) => b.day.localeCompare(a.day)));
-  protected readonly lowCount = computed(() => this.practice.stock().filter(isLow).length);
+  protected readonly lowCount = computed(() => this.attention());
   protected readonly taskList = computed(() => sortTasks(this.practice.tasks()));
   protected readonly openTasks = computed(() => this.practice.tasks().filter((x) => !x.done).length);
   protected readonly lotMatches = computed(() => implantsInLot(this.practice.implants(), this.lot()));
@@ -61,14 +63,38 @@ export class PracticeComponent {
     this.practice.changeExpenses((list) => [...list, { id: crypto.randomUUID(), day: this.today(), label: label.trim(), amount: value }]);
   }
 
-  protected addStock(name: string, qty: string, min: string): void {
+  protected addStock(name: string, qty: string, min: string, unit = '', expires = ''): void {
     if (!name.trim()) { this.invalid.set(true); return; }
     this.invalid.set(false);
-    this.practice.changeStock((list) => [...list, { id: crypto.randomUUID(), name: name.trim(), qty: wholeNumber(qty), min: wholeNumber(min) }]);
+    this.practice.addStockItem({ id: crypto.randomUUID(), name: name.trim(), qty: wholeNumber(qty), min: wholeNumber(min), unit: unit.trim() || undefined, expires: expires || undefined }, this.today(), this.who());
   }
 
-  protected nudge(id: string, by: number): void {
-    this.practice.changeStock((list) => list.map((s) => (s.id === id ? { ...s, qty: Math.max(0, s.qty + by) } : s)));
+  private who = (): string => this.auth.user()?.name ?? this.t('practice.stock.frontDesk');
+  protected readonly moveKinds = MOVE_KINDS;
+  protected readonly moveKey: Record<MoveKind, Key> = { in: 'practice.stock.kind.in', out: 'practice.stock.kind.out', waste: 'practice.stock.kind.waste', adjust: 'practice.stock.kind.adjust' };
+  /** The item whose movement form or history is open (one at a time keeps the list short). */
+  protected readonly moving = signal<string | null>(null);
+  protected readonly history = signal<string | null>(null);
+  protected readonly moveError = signal<string | null>(null);
+  protected readonly lastMoves = computed(() => { const id = this.history(); return id ? movementsFor(this.practice.stockMoves(), id) : []; });
+  protected expired = (s: StockItem): boolean => isExpired(s, this.today());
+  protected soon = (s: StockItem): boolean => expiresSoon(s, this.today());
+  protected readonly attention = computed(() => this.practice.stock().filter((s) => isLow(s) || isExpired(s, this.today()) || expiresSoon(s, this.today())).length);
+
+  /** One use at the chair: a single click records "used 1". */
+  protected useOne(s: StockItem): void { void this.record(s.id, 'out', '1', ''); }
+
+  protected clear(...fields: HTMLInputElement[]): boolean { for (const f of fields) f.value = ''; return true; }
+
+  /** True when the movement was recorded. */
+  protected record(id: string, kind: string, amount: string, reason: string): boolean {
+    const trimmed = amount.trim();
+    const n = /^\d+$/.test(trimmed) ? Number(trimmed) : NaN;
+    const r = this.practice.moveStock(id, { kind: kind as MoveKind, amount: n, reason, day: this.today(), by: this.who() });
+    if (!r) return false;
+    this.moveError.set(r.ok ? null : this.t(`practice.stock.err.${r.error}` as Key));
+    if (r.ok) this.moving.set(null);
+    return r.ok;
   }
 
   protected addOrder(patientId: string, work: string, lab: string, due: string, tooth = '', shade = ''): void {

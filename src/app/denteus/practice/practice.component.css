@@ -17,3 +17,5 @@
 .check input { width: 18px; height: 18px; accent-color: var(--app-text); }
 .done { text-decoration: line-through; color: var(--app-muted); }
 .chip.count::before { display: none; }
+
+.moves { list-style: none; margin: 0; padding: 8px 16px 12px; display: grid; gap: 4px; font-size: 13px; border-bottom: 1px solid var(--border, #ddd); }

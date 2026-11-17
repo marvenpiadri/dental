@@ -97,21 +97,43 @@
         @case ('stock') {
           <section class="card">
             <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>{{ t('practice.tab.stock') }}</h2></header>
-            <form class="row" (submit)="$event.preventDefault(); addStock(name.value, qty.value, min.value); name.value = ''; qty.value = ''; min.value = ''">
+            <form class="row" (submit)="$event.preventDefault(); addStock(name.value, qty.value, min.value, unit.value, exp.value); name.value = ''; qty.value = ''; min.value = ''; unit.value = ''; exp.value = ''">
               <input class="input" #name [attr.aria-label]="t('practice.stock.name')" [placeholder]="t('practice.stock.name')" />
               <input class="input num" #qty inputmode="numeric" [attr.aria-label]="t('practice.stock.qty')" [placeholder]="t('practice.stock.qty')" />
               <input class="input num" #min inputmode="numeric" [attr.aria-label]="t('practice.stock.min')" [placeholder]="t('practice.stock.min')" />
+              <input class="input num" #unit maxlength="20" [attr.aria-label]="t('practice.stock.unit')" [placeholder]="t('practice.stock.unit')" />
+              <input class="input" #exp type="date" [attr.aria-label]="t('practice.stock.expires')" [title]="t('practice.stock.expires')" />
               <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
             </form>
             @for (s of practice.stock(); track s.id) {
               <div class="row">
-                <span class="grow"><strong>{{ s.name }}</strong> <span class="muted">· {{ t('practice.stock.min') }} {{ s.min }}</span></span>
+                <span class="grow"><strong>{{ s.name }}</strong> <span class="muted">· {{ t('practice.stock.min') }} {{ s.min }}@if (s.expires) { · {{ t('practice.stock.expires') }} {{ s.expires }} }</span></span>
                 @if (isLow(s)) { <span class="chip" data-tone="danger">{{ t('practice.stock.low') }}</span> }
-                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.less')" (click)="nudge(s.id, -1)"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
-                <strong class="qty">{{ s.qty }}</strong>
-                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.more')" (click)="nudge(s.id, 1)"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                @if (expired(s)) { <span class="chip" data-tone="danger">{{ t('practice.stock.expired') }}</span> } @else if (soon(s)) { <span class="chip" data-tone="warn">{{ t('practice.stock.soon') }}</span> }
+                <strong class="qty">{{ s.qty }}@if (s.unit) { <span class="muted"> {{ s.unit }}</span> }</strong>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.useOne')" [title]="t('practice.stock.useOne')" [disabled]="s.qty < 1" (click)="useOne(s)"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+                <button type="button" class="btn" [attr.aria-expanded]="moving() === s.id" (click)="moveError.set(null); moving.set(moving() === s.id ? null : s.id)"><i class="fa-solid fa-right-left" aria-hidden="true"></i>{{ t('practice.stock.move') }}</button>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.history')" [title]="t('practice.stock.history')" [attr.aria-expanded]="history() === s.id" (click)="history.set(history() === s.id ? null : s.id)"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></button>
                 <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeStock(l => l.filter(x => x.id !== s.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
               </div>
+              @if (moving() === s.id) {
+                <form class="row" (submit)="$event.preventDefault(); record(s.id, kind.value, amt.value, why.value) && clear(amt, why)">
+                  <select class="input" #kind [attr.aria-label]="t('practice.stock.move')">
+                    @for (k of moveKinds; track k) { <option [value]="k">{{ t(moveKey[k]) }}</option> }
+                  </select>
+                  <input class="input num" #amt inputmode="numeric" [attr.aria-label]="t('practice.stock.amount')" [placeholder]="t('practice.stock.amount')" [attr.aria-describedby]="moveError() ? 'move-error' : null" />
+                  <input class="input grow" #why maxlength="200" [attr.aria-label]="t('practice.stock.reason')" [placeholder]="t('practice.stock.reason')" />
+                  <button type="submit" class="btn btn--primary">{{ t('common.save') }}</button>
+                </form>
+                @if (moveError(); as msg) { <p class="error-text" id="move-error" role="alert">{{ msg }}</p> }
+              }
+              @if (history() === s.id) {
+                <ul class="moves">
+                  @for (m of lastMoves(); track m.id) {
+                    <li><span class="muted">{{ m.day }}</span> · {{ m.kind === 'opening' ? t('practice.stock.kind.opening') : t(moveKey[m.kind]) }} <strong>{{ m.change > 0 ? '+' : '' }}{{ m.change }}</strong> → {{ m.after }}@if (m.reason) { <span class="muted"> · {{ m.reason }}</span> } <span class="muted"> · {{ m.by }}</span></li>
+                  } @empty { <li class="muted">{{ t('practice.stock.noMoves') }}</li> }
+                </ul>
+              }
             } @empty { <p class="empty-note">{{ t('practice.stock.empty') }}</p> }
           </section>
         }

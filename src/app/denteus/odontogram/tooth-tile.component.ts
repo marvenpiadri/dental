@@ -94,27 +94,32 @@ export class ToothTileComponent {
       if (!this.browser) return;
       if (this.store.view3d()) {
         const mk = this.marked(), no = this.no(), st = this.state(), pulp = this.showHealthyPulp() && !this.compact();
-        void this.snap.snap(no, st, pulp, this.compact(), mk).then((u) => { if (no === this.no()) this.real.set(u); });
+        // No WebGL or no meshes: draw the flat anatomy instead of leaving the tile blank.
+        void this.snap.snap(no, st, pulp, this.compact(), mk).then((u) => { if (no !== this.no()) return; this.real.set(u); if (!u) this.paint(); });
         return;
       }
       this.real.set(null);
-      const key = artKey(this.meta().tpl as Template, this.occlusal());
-      const text = this.art.texts()[key];
-      const state = this.state(), findings = this.findings();
-      const opts = { showBase: this.showBase(), showHealthyPulp: this.showHealthyPulp() };
-      if (!text) return;
-      const host = this.host().nativeElement;
-      if (!this.svg || this.keyOfSvg !== key) {
-        this.svg = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement as unknown as SVGElement;
-        prepareArt(this.svg);
-        this.keyOfSvg = key;
-        host.replaceChildren(this.svg);
-      }
-      const ids = paintTooth(this.svg, this.no(), state, opts);
-      if (findings) {
-        const clone = this.svg.cloneNode(true) as SVGElement;
-        markProposed(this.svg, ids, paintTooth(clone, this.no(), findings, opts));
-      }
+      this.paint();
     });
+  }
+
+  private paint(): void {
+    const key = artKey(this.meta().tpl as Template, this.occlusal());
+    const text = this.art.texts()[key];
+    const state = this.state(), findings = this.findings();
+    const opts = { showBase: this.showBase(), showHealthyPulp: this.showHealthyPulp() };
+    if (!text) return;
+    const host = this.host().nativeElement;
+    if (!this.svg || this.keyOfSvg !== key) {
+      this.svg = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement as unknown as SVGElement;
+      prepareArt(this.svg);
+      this.keyOfSvg = key;
+      host.replaceChildren(this.svg);
+    }
+    const ids = paintTooth(this.svg, this.no(), state, opts);
+    if (findings) {
+      const clone = this.svg.cloneNode(true) as SVGElement;
+      markProposed(this.svg, ids, paintTooth(clone, this.no(), findings, opts));
+    }
   }
 }
