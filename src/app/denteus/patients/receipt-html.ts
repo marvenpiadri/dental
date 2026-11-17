@@ -8,6 +8,8 @@ export interface ReceiptData {
   date: string;
   method: string;
   reference?: string;
+  /** Legal name, tax number, bank, address and phone from Settings, as on the invoice; empty lines are skipped. */
+  legal?: string[];
   amount: string;
   charged: string;
   paid: string;
@@ -23,7 +25,7 @@ export function receiptDoc(r: ReceiptData): DocContent {
     kind: 'receipt', lang: r.lang, dir: r.dir, clinic: r.clinic, sender: [], title: r.labels.title, number: r.number, subtitle: [],
     facts: [{ label: r.labels.patient, value: r.patient }, { label: r.labels.date, value: r.date }, { label: r.labels.method, value: r.method }, { label: r.labels.reference ?? '', value: r.reference ?? '' }],
     blocks: [{ type: 'rows', rows: [{ label: r.labels.amount, value: r.amount, strong: true }, { label: r.labels.charged, value: r.charged }, { label: r.labels.paid, value: r.paid }, { label: r.labels.due, value: r.due }] }],
-    notes: [r.labels.thanks],
+    notes: [r.labels.thanks, ...(r.legal ?? [])],
   };
 }
 export const receiptHtml = (r: ReceiptData, tpl: DocTemplate = DEFAULT_TEMPLATE, chart?: string): string => renderDocument(receiptDoc(r), tpl, { chart });

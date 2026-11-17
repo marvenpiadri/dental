@@ -167,6 +167,7 @@ export class BillingComponent {
     const sums = this.sums();
     const tpl = this.docs.templateFor('receipt');
     const html = receiptHtml({
+      legal: this.legal(),
       clinic: this.store.locations()[0]?.name ?? 'Dontalist',
       patient: this.patientName(),
       number: payment.id.slice(0, 8).toUpperCase(),

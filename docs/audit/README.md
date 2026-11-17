@@ -26,7 +26,7 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 | F14 | Today's waiting room had no action: staff had to open the calendar to start treatment | `dashboard/today-with-waiting-patient` | **Fixed**: "Start treatment" button (needs `appointments.edit`), same store transition as the calendar |
 | F11 | Payments defaulted to "Advance / on account" even with an open invoice, so the patient balance reached MAD 0 while the invoice still read "Unpaid · MAD 400 left" | Browser run: 2 payments, invoice stayed Unpaid | **Fixed**: default is now the oldest open invoice (Advance stays selectable) |
 | F12 | A payment larger than the invoice's remaining amount was accepted and the excess disappeared into "Paid" | Code: `billing.component.ts add()` had no check | **Fixed**: blocked with a message offering an advance |
-| F13 | Receipt print has no clinic legal/address block (invoice has one); invoice has no due date | `receipt-html.ts`, `invoice-html.ts`, model | Open |
+| F13 | Receipt print has no clinic legal/address block (invoice has one); invoice has no due date | `receipt-html.ts`, `invoice-html.ts`, model | Receipt **fixed** (legal block from Settings, unit-tested, escaped; not re-printed to PDF this round). Invoice due date still open (needs a payment-terms field) |
 | F9 | File number was only visible in the Details card, below the fold | same screenshot | **Fixed** |
 
 ## Fixed in this pass

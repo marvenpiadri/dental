@@ -17,3 +17,11 @@ describe('receiptHtml', () => {
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt; &amp; &quot;co&quot;');
   });
 });
+
+describe('receipt legal block', () => {
+  it('prints the clinic details under the thank-you line, escaped', () => {
+    const html = receiptHtml({ ...base, legal: ['Cabinet <b>Atlas</b> SARL', 'ICE: 001'] });
+    expect(html).toContain('Cabinet &lt;b&gt;Atlas&lt;/b&gt; SARL');
+    expect(html).toContain('ICE: 001');
+  });
+});
