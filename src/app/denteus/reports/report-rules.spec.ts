@@ -1,5 +1,5 @@
 import { Appointment, Dentist, Patient } from '../models/dental.models';
-import { buildReport, expensesIn, periodRange } from './report-rules';
+import { buildReport, expensesIn, periodRange, receivables } from './report-rules';
 
 const now = new Date(2026, 9, 24, 12, 0); // Sat 24 Oct 2026, local
 const dentist: Dentist = { id: 'd1', name: 'Dr. A', specialty: '', color: '#000' };
@@ -79,4 +79,22 @@ describe('expensesIn', () => {
   const list = [{ day: '2026-11-01', amount: 100 }, { day: '2026-11-30', amount: 50 }, { day: '2026-10-31', amount: 999 }, { day: '2026-12-01', amount: 999 }];
   it('counts the first and last day of the month and nothing outside', () => { expect(expensesIn(list, 'month', now)).toBe(150); });
   it('a year covers the whole calendar year', () => { expect(expensesIn(list, 'year', now)).toBe(100 + 50 + 999 + 999); });
+});
+
+describe('receivables', () => {
+  const act = (price: number) => ({ id: crypto.randomUUID(), status: 'done', price, procedure: 'x', name: 'x', scope: 'teeth', teeth: [], date: '2026-10-01' }) as never;
+  const pay = (amount: number) => ({ id: crypto.randomUUID(), amount, method: 'cash', at: '2026-10-02T10:00:00Z' }) as never;
+  const person = (fullName: string, plan: unknown[], payments: unknown[], extra = {}) => ({ id: fullName, fullName, plan, payments, ...extra }) as never;
+  it('adds up what is owed, biggest first, and skips paid, prepaid and archived patients', () => {
+    const r = receivables([
+      person('B', [act(300)], [pay(100)]),
+      person('A', [act(500)], []),
+      person('Paid', [act(100)], [pay(100)]),
+      person('Ahead', [act(100)], [pay(400)]),
+      person('Gone', [act(900)], [], { archivedAt: '2026-01-01' }),
+    ]);
+    expect(r.total).toBe(700);
+    expect(r.owing).toBe(2);
+    expect(r.top.map((x) => x.patient.fullName)).toEqual(['A', 'B']);
+  });
 });

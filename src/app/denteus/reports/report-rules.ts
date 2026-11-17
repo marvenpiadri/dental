@@ -1,4 +1,5 @@
 import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
+import { balance } from '../patients/treatment-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
 export type Period = 'month' | '30d' | 'year';
@@ -82,4 +83,14 @@ export function buildReport(data: { patients: Patient[]; appointments: Appointme
 export function expensesIn(expenses: readonly { day: string; amount: number }[], period: Period, now: Date): number {
   const { from, to } = periodRange(period, now);
   return expenses.reduce((sum, e) => { const [y, m, d] = e.day.split('-').map(Number); return within(new Date(y, m - 1, d), { from, to }) ? sum + e.amount : sum; }, 0);
+}
+
+/** What patients owe right now (a snapshot, not tied to the period): total and the biggest balances first. Prepaid patients owe nothing. */
+export function receivables(patients: readonly Patient[], currency = LEGACY_CURRENCY, top = 5): { total: number; owing: number; top: { patient: Patient; due: number }[] } {
+  const rows = patients
+    .filter((p) => !p.archivedAt)
+    .map((patient) => ({ patient, due: balance(planInCurrency(patient.plan ?? [], currency), inCurrency(patient.payments ?? [], currency)).due }))
+    .filter((r) => r.due > 0)
+    .sort((a, b) => b.due - a.due || a.patient.fullName.localeCompare(b.patient.fullName));
+  return { total: rows.reduce((n, r) => n + r.due, 0), owing: rows.length, top: rows.slice(0, top) };
 }

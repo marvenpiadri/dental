@@ -18,6 +18,8 @@ export const fr: Record<keyof typeof en, string> = {
   'reports.charged': 'Soins réalisés (facturés)',
   'reports.spent': 'Dépenses',
   'reports.net': 'Encaissé moins dépenses',
+  'reports.owed': "Soldes impayés aujourd’hui",
+  'reports.owed.none': "Aucun solde dû pour le moment.",
   'reports.visits': 'Visites réalisées',
   'reports.noShowRate': 'Taux d’absence',
   'reports.newPatients': 'Nouveaux patients',

@@ -80,6 +80,22 @@
           <p class="note muted">{{ i18n.tn('reports.missed', r.noShows + r.cancelled) }}</p>
         </section>
       </div>
+
+      @if (owed(); as o) {
+        <section class="card" aria-labelledby="owed-title">
+          <header class="card-head">
+            <h2 class="card-title" id="owed-title"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>{{ t('reports.owed') }}</h2>
+            <span class="chip" data-tone="neutral">{{ i18n.money(o.total) }} · {{ o.owing }}</span>
+          </header>
+          @if (o.top.length) {
+            <ul class="meter-list">
+              @for (r of o.top; track r.patient.id) {
+                <li><a class="meter-label" [routerLink]="['/patients', r.patient.id, 'billing']">{{ r.patient.fullName }}</a><span></span><span class="meter-value">{{ i18n.money(r.due) }}</span></li>
+              }
+            </ul>
+          } @else { <p class="note muted">{{ t('reports.owed.none') }}</p> }
+        </section>
+      }
     </div>
   } @else {
     <div class="stack" aria-busy="true" [attr.aria-label]="t('common.loading')">

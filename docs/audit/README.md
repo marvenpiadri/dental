@@ -49,7 +49,7 @@ Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-r
 
 **Scenario F, roles (run in browser, 5 synthetic staff + owner):**
 - Routes: reports and setup redirect roles without access; the patient file hides tabs by permission and a typed clinical or payments URL falls back to Overview (checked for admin, dentist, assistant, reception, accountant).
-- **F15 (fixed):** the Practice screen did not check permissions, so a view-only accountant could add or delete stock, lab orders, equipment and tasks. Forms, status changes, movements and delete buttons are now gated (add = `practice.create`, delete = `practice.edit`, expenses = `billing.create`/`billing.edit`, tasks = `tasks.*`). Counted per role in the browser; role grid locked in `auth-rules.spec.ts`.
+- **F15 (fixed):** the Practice screen did not check permissions, so a view-only accountant could add or delete stock, lab orders, equipment and tasks. Forms, status changes, movements and delete buttons are now gated (add = `practice.create`, delete = `practice.edit`, expenses = `billing.create`/`billing.edit`, tasks = `tasks.*`). Counted per role in the browser; correction: the billing page's URL id is `billing` (my first probe used a non-existent `payments`, so I re-ran with the real ids `acts`, `billing`, `rx`, `visits`: clinical pages fall back to Activity for admin, reception and accountant, billing falls back for dentist and assistant); role grid locked in `auth-rules.spec.ts`.
 - Not enforced by anything but the browser: all of this is UI-side. The server must repeat every check (backend contract in `docs/architecture.md`); anyone with the browser database can bypass it today.
 - Not checked: French, keyboard-only sign-in, PIN lockout.
 
@@ -58,3 +58,5 @@ Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-r
 **Backup reminder:** Today shows a notice (owner/admin, i.e. `settings.view`) when the clinic has patients and no backup was downloaded in the last 7 days; the Settings export records the day. Checked in browser (hidden on an empty clinic, shown with a patient, hidden after a download). It proves a file was created, not that it was kept safe.
 
 **Reports:** added Expenses and Received-minus-expenses tiles (period expenses from Practice → Expenses; boundary days unit-tested). Checked in browser. Still missing: receivables (unpaid balances), per-act revenue, lab cost, CSV of expenses, comparison with the previous period.
+
+**Reports, receivables:** a card lists the biggest unpaid balances (links to the patient's Billing) with the clinic-wide total; archived and prepaid patients excluded; unit-tested. Not screenshot-checked.

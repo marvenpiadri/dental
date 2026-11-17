@@ -20,6 +20,8 @@ export const en = {
   'reports.charged': 'Work done (charged)',
   'reports.spent': 'Expenses',
   'reports.net': 'Received minus expenses',
+  'reports.owed': "Unpaid balances today",
+  'reports.owed.none': "Nobody owes anything right now.",
   'reports.visits': 'Visits completed',
   'reports.noShowRate': 'No-show rate',
   'reports.newPatients': 'New patients',
