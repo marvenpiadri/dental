@@ -84,3 +84,26 @@ export const isExpired = (item: StockItem, today: string): boolean => !!item.exp
 /** Not expired yet, but within `days`. */
 export const expiresSoon = (item: StockItem, today: string, days = 60): boolean =>
   !!item.expires && !isExpired(item, today) && dayNumber(item.expires) - dayNumber(today) <= days;
+
+/** A device that needs regular servicing (autoclave, compressor, X-ray unit). */
+export interface Equipment { id: string; name: string; serial?: string; location?: string; everyMonths?: number; lastService?: string }
+export type ServiceState = 'none' | 'ok' | 'soon' | 'overdue';
+
+/** The day service is next due ("YYYY-MM-DD"), or null when no interval or no first service is set. */
+export function nextService(eq: Equipment): string | null {
+  if (!eq.everyMonths || !eq.lastService) return null;
+  const d = new Date(`${eq.lastService}T00:00:00Z`);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + eq.everyMonths);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, last)); // 31 Jan + 1 month is 28/29 Feb, not March
+  return d.toISOString().slice(0, 10);
+}
+
+export function serviceState(eq: Equipment, today: string, soonDays = 30): ServiceState {
+  const due = nextService(eq);
+  if (!due) return 'none';
+  const left = dayNumber(due) - dayNumber(today);
+  return left < 0 ? 'overdue' : left <= soonDays ? 'soon' : 'ok';
+}

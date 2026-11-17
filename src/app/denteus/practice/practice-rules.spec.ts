@@ -1,4 +1,4 @@
-import { changeLabStatus, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
+import { nextService, serviceState, changeLabStatus, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
 
 describe('practice rules', () => {
   it('totals one month of expenses', () => {
@@ -100,4 +100,15 @@ describe('lab status', () => {
     expect(changeLabStatus(o, 'sent', by)).toEqual({ ok: false, error: 'same' });
   });
   it('a remade order is late again after its due day', () => { expect(isLate({ ...o, status: 'remake' }, '2026-10-21')).toBe(true); });
+});
+
+describe('equipment service', () => {
+  const eq = { id: 'e', name: 'Autoclave', everyMonths: 6, lastService: '2026-01-31' };
+  it('adds months without spilling into the next month', () => { expect(nextService({ ...eq, everyMonths: 1 })).toBe('2026-02-28'); expect(nextService(eq)).toBe('2026-07-31'); });
+  it('has no due day without an interval or a first service', () => { expect(nextService({ id: 'e', name: 'X' })).toBeNull(); expect(serviceState({ id: 'e', name: 'X' }, '2026-01-01')).toBe('none'); });
+  it('is ok, soon, then overdue', () => {
+    expect(serviceState(eq, '2026-05-01')).toBe('ok');
+    expect(serviceState(eq, '2026-07-10')).toBe('soon');
+    expect(serviceState(eq, '2026-08-01')).toBe('overdue');
+  });
 });

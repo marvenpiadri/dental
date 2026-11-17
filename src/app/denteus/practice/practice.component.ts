@@ -4,10 +4,10 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 import { AuthService } from '../../core/auth/auth.service';
-import { LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
+import { Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
-type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
+type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'equipment' | 'trace';
 
 /** The daily running of the clinic outside the chair: what was spent, what is running out, what is at the lab. */
 @Component({
@@ -25,8 +25,8 @@ export class PracticeComponent {
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
 
-  protected readonly tabs: Tab[] = ['tasks', 'expenses', 'stock', 'lab', 'trace'];
-  protected readonly tabKey: Record<Tab, Key> = { tasks: 'practice.tab.tasks', trace: 'practice.tab.trace', expenses: 'practice.tab.expenses', stock: 'practice.tab.stock', lab: 'practice.tab.lab' };
+  protected readonly tabs: Tab[] = ['tasks', 'expenses', 'stock', 'lab', 'equipment', 'trace'];
+  protected readonly tabKey: Record<Tab, Key> = { tasks: 'practice.tab.tasks', trace: 'practice.tab.trace', expenses: 'practice.tab.expenses', stock: 'practice.tab.stock', lab: 'practice.tab.lab', equipment: 'practice.tab.equipment' };
   protected readonly statuses = LAB_STATUSES;
   protected readonly statusKey: Record<LabStatus, Key> = { sent: 'practice.lab.status.sent', ready: 'practice.lab.status.ready', fitted: 'practice.lab.status.fitted', remake: 'practice.lab.status.remake', cancelled: 'practice.lab.status.cancelled' };
   protected readonly tab = signal<Tab>('tasks');
@@ -53,6 +53,17 @@ export class PracticeComponent {
   }
 
   protected isLow = isLow;
+  protected readonly equipmentList = computed(() => [...this.practice.equipment()].sort((a, b) => a.name.localeCompare(b.name)));
+  protected readonly serviceLate = computed(() => this.today() ? this.practice.equipment().filter((e) => serviceState(e, this.today()) === 'overdue').length : 0);
+  protected state = (e: Equipment) => serviceState(e, this.today());
+  protected nextDue = nextService;
+  protected addEquipment(name: string, serial: string, where: string, every: string, last: string): void {
+    const months = wholeNumber(every, 0);
+    if (!name.trim() || (months > 0 && !last)) { this.invalid.set(true); return; }
+    this.invalid.set(false);
+    this.practice.changeEquipment((list) => [...list, { id: crypto.randomUUID(), name: name.trim(), serial: serial.trim() || undefined, location: where.trim() || undefined, everyMonths: months || undefined, lastService: last || undefined }]);
+  }
+  protected serviced(id: string): void { this.practice.changeEquipment((list) => list.map((e) => (e.id === id ? { ...e, lastService: this.today() } : e))); }
   protected late = (o: LabOrder): boolean => isLate(o, this.today());
   protected patientName = (id: string): string => this.store.patientMap().get(id)?.fullName ?? '—';
 

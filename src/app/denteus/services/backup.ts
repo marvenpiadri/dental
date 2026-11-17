@@ -1,7 +1,7 @@
 import { defaultCatalog } from '../patients/treatment-rules';
 import { Appointment, CatalogEntry, Chair, ClinicLocation, Dentist, Patient } from '../models/dental.models';
 
-export const PRACTICE_KEYS = ['expenses', 'stock', 'stockMoves', 'lab', 'tasks', 'implants', 'steril'] as const;
+export const PRACTICE_KEYS = ['expenses', 'stock', 'stockMoves', 'lab', 'tasks', 'implants', 'steril', 'equipment'] as const;
 export type PracticeData = Record<(typeof PRACTICE_KEYS)[number], unknown[]>;
 
 /** Settings rows kept next to the records: preferences, message templates, document templates, staff and the staff log. */

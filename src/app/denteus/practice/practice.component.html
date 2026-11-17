@@ -9,7 +9,7 @@
     <div class="tabs" role="group" [attr.aria-label]="t('practice.title')">
       @for (item of tabs; track item) {
         <button type="button" class="pill" [class.on]="tab() === item" [attr.aria-pressed]="tab() === item" (click)="tab.set(item); invalid.set(false)">
-          {{ t(tabKey[item]) }}@if (item === 'tasks' && openTasks() > 0) { <span class="chip count">{{ openTasks() }}</span> }@if (item === 'stock' && lowCount() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ lowCount() }})</span> }
+          {{ t(tabKey[item]) }}@if (item === 'tasks' && openTasks() > 0) { <span class="chip count">{{ openTasks() }}</span> }@if (item === 'stock' && lowCount() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ lowCount() }})</span> }@if (item === 'equipment' && serviceLate() > 0) { <span class="due-dot" aria-hidden="true"></span><span class="sr-only"> ({{ serviceLate() }})</span> }
         </button>
       }
     </div>
@@ -135,6 +135,27 @@
                 </ul>
               }
             } @empty { <p class="empty-note">{{ t('practice.stock.empty') }}</p> }
+          </section>
+        }
+        @case ('equipment') {
+          <section class="card">
+            <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>{{ t('practice.tab.equipment') }}</h2></header>
+            <form class="row" (submit)="$event.preventDefault(); addEquipment(ename.value, eserial.value, ewhere.value, eevery.value, elast.value); ename.value = ''; eserial.value = ''; ewhere.value = ''; eevery.value = ''; elast.value = ''">
+              <input class="input" #ename [attr.aria-label]="t('practice.eq.name')" [placeholder]="t('practice.eq.name')" />
+              <input class="input" #eserial [attr.aria-label]="t('practice.eq.serial')" [placeholder]="t('practice.eq.serial')" />
+              <input class="input" #ewhere [attr.aria-label]="t('practice.eq.where')" [placeholder]="t('practice.eq.where')" />
+              <input class="input num" #eevery inputmode="numeric" [attr.aria-label]="t('practice.eq.every')" [placeholder]="t('practice.eq.every')" />
+              <input class="input date" #elast type="date" [attr.aria-label]="t('practice.eq.last')" [title]="t('practice.eq.last')" />
+              <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
+            </form>
+            @for (e of equipmentList(); track e.id) {
+              <div class="row">
+                <span class="grow"><strong>{{ e.name }}</strong> <span class="muted">@if (e.serial) { · {{ e.serial }} }@if (e.location) { · {{ e.location }} }@if (nextDue(e); as due) { · {{ t('practice.eq.next') }} {{ due }} }</span></span>
+                @if (state(e) === 'overdue') { <span class="chip" data-tone="danger">{{ t('practice.eq.overdue') }}</span> } @else if (state(e) === 'soon') { <span class="chip" data-tone="warn">{{ t('practice.eq.soon') }}</span> }
+                <button type="button" class="btn" (click)="serviced(e.id)"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('practice.eq.done') }}</button>
+                <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeEquipment(l => l.filter(x => x.id !== e.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+              </div>
+            } @empty { <p class="empty-note">{{ t('practice.eq.empty') }}</p> }
           </section>
         }
         @case ('lab') {

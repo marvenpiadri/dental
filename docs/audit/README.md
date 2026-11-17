@@ -44,3 +44,5 @@ Screenshots are in `docs/audit/screenshots/<module>/<route>__<theme>-<lang>-<wid
 Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-role permission tests, backup then restore, accessibility audit, FR text review of every screen. The earlier docs claim several of these were verified on 10 November; this pass did not re-verify them.
 
 **Lab work (F-lab):** orders now carry a cost and an append-only status history (day, who, reason). 'Remake at the lab' and 'Cancelled' need a reason; fitted and cancelled orders are closed. Checked in browser (remake without reason refused, then logged). Not done: attachments, lab directory, cost in reports.
+
+**Equipment register:** Practice → Equipment lists devices with serial, place, service interval and last service; next-due date is computed (month-end safe), chips show soon/overdue, a dot flags the tab, 'Serviced today' resets it. Included in backups. Checked in browser. Not done: per-service log with technician/cost, reminders.

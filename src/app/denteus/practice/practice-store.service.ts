@@ -1,7 +1,7 @@
 import { Injectable, WritableSignal, inject, signal } from '@angular/core';
 import { ClinicDatabase } from '../services/clinic-database.service';
 import { PRACTICE_KEYS, PracticeData } from '../services/backup';
-import { Expense, ImplantRecord, LabOrder, MoveKind, SterilizationCycle, StockItem, StockMovement, Task, recordMovement } from './practice-rules';
+import { Equipment, Expense, ImplantRecord, LabOrder, MoveKind, SterilizationCycle, StockItem, StockMovement, Task, recordMovement } from './practice-rules';
 
 /**
  * Expenses, stock and lab orders: small lists kept in the browser database next to the clinic's settings.
@@ -18,6 +18,7 @@ export class PracticeStore {
   readonly tasks = signal<Task[]>([]);
   readonly implants = signal<ImplantRecord[]>([]);
   readonly cycles = signal<SterilizationCycle[]>([]);
+  readonly equipment = signal<Equipment[]>([]);
   private loading?: Promise<void>;
 
   init(): Promise<void> {
@@ -30,12 +31,13 @@ export class PracticeStore {
       this.tasks.set(await read<Task>('tasks'));
       this.implants.set(await read<ImplantRecord>('implants'));
       this.cycles.set(await read<SterilizationCycle>('steril'));
+      this.equipment.set(await read<Equipment>('equipment'));
       this.loaded.set(true);
     })();
     return this.loading;
   }
 
-  private readonly lists = { expenses: this.expenses, stock: this.stock, stockMoves: this.stockMoves, lab: this.lab, tasks: this.tasks, implants: this.implants, steril: this.cycles } as unknown as Record<(typeof PRACTICE_KEYS)[number], WritableSignal<unknown[]>>;
+  private readonly lists = { expenses: this.expenses, stock: this.stock, stockMoves: this.stockMoves, lab: this.lab, tasks: this.tasks, implants: this.implants, steril: this.cycles, equipment: this.equipment } as unknown as Record<(typeof PRACTICE_KEYS)[number], WritableSignal<unknown[]>>;
 
   /** For backups: what is in the lists now (loads them first, so an early export isn't empty). */
   async snapshot(): Promise<PracticeData> {
@@ -75,6 +77,7 @@ export class PracticeStore {
 
   changeTasks(change: (list: Task[]) => Task[]): void { this.apply(this.tasks, 'tasks', change); }
   changeImplants(change: (list: ImplantRecord[]) => ImplantRecord[]): void { this.apply(this.implants, 'implants', change); }
+  changeEquipment(change: (list: Equipment[]) => Equipment[]): void { this.apply(this.equipment, 'equipment', change); }
   changeCycles(change: (list: SterilizationCycle[]) => SterilizationCycle[]): void { this.apply(this.cycles, 'steril', change); }
 
   private apply<T>(list: WritableSignal<T[]>, key: string, change: (v: T[]) => T[]): void {
