@@ -16,6 +16,8 @@ export const fr: Record<keyof typeof en, string> = {
   'reports.year': 'Cette année',
   'reports.revenue': 'Encaissé',
   'reports.charged': 'Soins réalisés (facturés)',
+  'reports.spent': 'Dépenses',
+  'reports.net': 'Encaissé moins dépenses',
   'reports.visits': 'Visites réalisées',
   'reports.noShowRate': 'Taux d’absence',
   'reports.newPatients': 'Nouveaux patients',

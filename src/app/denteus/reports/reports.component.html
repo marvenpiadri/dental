@@ -20,6 +20,11 @@
       <section class="grid-kpi">
         <article class="card kpi"><span class="icon-tile ok"><i class="fa-solid fa-coins" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.revenue') }}</p><strong class="value">{{ i18n.money(r.revenue) }}</strong></div></article>
         <article class="card kpi"><span class="icon-tile"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.charged') }}</p><strong class="value">{{ i18n.money(r.charged) }}</strong></div></article>
+        @let out = spent();
+        @if (out !== null) {
+          <article class="card kpi"><span class="icon-tile warn"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.spent') }}</p><strong class="value">{{ i18n.money(out) }}</strong></div></article>
+          <article class="card kpi"><span class="icon-tile" [class.ok]="r.revenue >= out"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.net') }}</p><strong class="value">{{ i18n.money(r.revenue - out) }}</strong></div></article>
+        }
         <article class="card kpi"><span class="icon-tile"><i class="fa-regular fa-circle-check" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.visits') }}</p><strong class="value">{{ r.completed }}</strong></div></article>
         <article class="card kpi"><span class="icon-tile warn"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.noShowRate') }}</p><strong class="value">{{ percent(r.noShowRate) }}</strong></div></article>
         <article class="card kpi"><span class="icon-tile"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span><div><p class="eyebrow">{{ t('reports.newPatients') }}</p><strong class="value">{{ r.newPatients }}</strong></div></article>

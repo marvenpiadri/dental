@@ -77,3 +77,9 @@ export function buildReport(data: { patients: Patient[]; appointments: Appointme
     series: [...buckets].map(([time, amount]) => ({ at: new Date(time), amount })),
   };
 }
+
+/** Expenses whose day falls in the period. `day` is "YYYY-MM-DD" in local time, so it is compared as a local date, not parsed as UTC. */
+export function expensesIn(expenses: readonly { day: string; amount: number }[], period: Period, now: Date): number {
+  const { from, to } = periodRange(period, now);
+  return expenses.reduce((sum, e) => { const [y, m, d] = e.day.split('-').map(Number); return within(new Date(y, m - 1, d), { from, to }) ? sum + e.amount : sum; }, 0);
+}

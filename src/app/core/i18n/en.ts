@@ -18,6 +18,8 @@ export const en = {
   'reports.year': 'This year',
   'reports.revenue': 'Money received',
   'reports.charged': 'Work done (charged)',
+  'reports.spent': 'Expenses',
+  'reports.net': 'Received minus expenses',
   'reports.visits': 'Visits completed',
   'reports.noShowRate': 'No-show rate',
   'reports.newPatients': 'New patients',

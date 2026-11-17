@@ -3,7 +3,8 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { paymentsCsv } from './payments-csv';
-import { Period, buildReport } from './report-rules';
+import { PracticeStore } from '../practice/practice-store.service';
+import { Period, buildReport, expensesIn } from './report-rules';
 
 const PERIOD_KEY: Record<Period, Key> = { month: 'reports.month', '30d': 'reports.30d', year: 'reports.year' };
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' };
@@ -19,6 +20,9 @@ const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.ca
 export class ReportsComponent {
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
+  private readonly practice = inject(PracticeStore);
+  /** Money spent in the period (Practice → Expenses); null until the practice data has loaded. */
+  protected readonly spent = computed(() => { const now = this.now(); return now && this.practice.loaded() ? expensesIn(this.practice.expenses(), this.period(), now) : null; });
   protected readonly t = this.i18n.t;
   protected readonly periods = Object.keys(PERIOD_KEY) as Period[];
   protected readonly periodKey = PERIOD_KEY;
@@ -30,7 +34,7 @@ export class ReportsComponent {
   private readonly now = signal<Date | null>(null);
 
   constructor() {
-    afterNextRender(() => this.now.set(new Date()));
+    afterNextRender(() => { this.now.set(new Date()); void this.practice.init(); });
   }
 
   protected readonly report = computed(() => {

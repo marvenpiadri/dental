@@ -1,5 +1,5 @@
 import { Appointment, Dentist, Patient } from '../models/dental.models';
-import { buildReport, periodRange } from './report-rules';
+import { buildReport, expensesIn, periodRange } from './report-rules';
 
 const now = new Date(2026, 9, 24, 12, 0); // Sat 24 Oct 2026, local
 const dentist: Dentist = { id: 'd1', name: 'Dr. A', specialty: '', color: '#000' };
@@ -72,4 +72,11 @@ describe('reports and voided payments', () => {
     expect(r.revenue).toBe(0);
     expect(r.byMethod.card).toBe(0);
   });
+});
+
+describe('expensesIn', () => {
+  const now = new Date(2026, 10, 17);
+  const list = [{ day: '2026-11-01', amount: 100 }, { day: '2026-11-30', amount: 50 }, { day: '2026-10-31', amount: 999 }, { day: '2026-12-01', amount: 999 }];
+  it('counts the first and last day of the month and nothing outside', () => { expect(expensesIn(list, 'month', now)).toBe(150); });
+  it('a year covers the whole calendar year', () => { expect(expensesIn(list, 'year', now)).toBe(100 + 50 + 999 + 999); });
 });
