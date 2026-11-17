@@ -60,3 +60,5 @@ Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-r
 **Reports:** added Expenses and Received-minus-expenses tiles (period expenses from Practice → Expenses; boundary days unit-tested). Checked in browser. Still missing: receivables (unpaid balances), per-act revenue, lab cost, CSV of expenses, comparison with the previous period.
 
 **Reports, receivables:** a card lists the biggest unpaid balances (links to the patient's Billing) with the clinic-wide total; archived and prepaid patients excluded; unit-tested. Not screenshot-checked.
+
+**Keyboard and focus (Part 17), automated pass:** tabbing through Today, Calendar, Patients, patient overview, chart, billing, Practice, Reports and Settings: every stop has an accessible name and a visible focus ring (no problems found, at most 60 stops per page); Escape closes the tooth editor and returns focus to the tooth. Not covered: screen-reader output, the calendar grid by keyboard alone, 200% zoom, colour contrast measurement, other dialogs.
