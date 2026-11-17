@@ -1,4 +1,4 @@
-import { expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
+import { changeLabStatus, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
 
 describe('practice rules', () => {
   it('totals one month of expenses', () => {
@@ -81,4 +81,23 @@ describe('stock ledger', () => {
     expect(expiresSoon(item('2026-11-01'), '2026-11-16')).toBe(false); // already expired, not "soon"
     expect(isExpired(item(undefined), '2026-11-16') || expiresSoon(item('garbage'), '2026-11-16')).toBe(false);
   });
+});
+
+describe('lab status', () => {
+  const o = { id: 'l1', patientId: 'p', work: 'Crown', lab: 'X', due: '2026-10-20', status: 'sent' as const };
+  const by = { day: '2026-10-22', who: 'Dr A' };
+  it('logs each change and keeps the earlier ones', () => {
+    const r = changeLabStatus(o, 'ready', by);
+    expect(r.ok && r.order.history).toEqual([{ day: '2026-10-22', status: 'ready', by: 'Dr A' }]);
+  });
+  it('needs a reason to remake or cancel', () => {
+    expect(changeLabStatus(o, 'remake', by)).toEqual({ ok: false, error: 'note' });
+    const r = changeLabStatus(o, 'remake', { ...by, note: ' bad margin ' });
+    expect(r.ok && r.order.history?.[0].note).toBe('bad margin');
+  });
+  it('closed orders and no-op changes are refused', () => {
+    expect(changeLabStatus({ ...o, status: 'fitted' }, 'ready', by)).toEqual({ ok: false, error: 'closed' });
+    expect(changeLabStatus(o, 'sent', by)).toEqual({ ok: false, error: 'same' });
+  });
+  it('a remade order is late again after its due day', () => { expect(isLate({ ...o, status: 'remake' }, '2026-10-21')).toBe(true); });
 });

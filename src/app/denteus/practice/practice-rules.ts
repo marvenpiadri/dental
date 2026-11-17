@@ -10,9 +10,22 @@ export interface Task { id: string; text: string; done: boolean }
 export interface ImplantRecord { id: string; patientId: string; tooth: string; brand: string; lot: string; day: string }
 /** One run of the autoclave. */
 export interface SterilizationCycle { id: string; day: string; device: string; lot: string; operator: string }
-export const LAB_STATUSES = ['sent', 'ready', 'fitted'] as const;
+export const LAB_STATUSES = ['sent', 'ready', 'fitted', 'remake', 'cancelled'] as const;
 export type LabStatus = (typeof LAB_STATUSES)[number];
-export interface LabOrder { id: string; patientId: string; work: string; lab: string; due: string; status: LabStatus; tooth?: string; shade?: string }
+/** One step in a lab order's life; the list is append-only. */
+export interface LabEvent { day: string; status: LabStatus; by: string; note?: string }
+export interface LabOrder { id: string; patientId: string; work: string; lab: string; due: string; status: LabStatus; tooth?: string; shade?: string; cost?: number; history?: LabEvent[] }
+/** Sending work back or dropping it must say why. */
+export const labNeedsNote = (status: LabStatus): boolean => status === 'remake' || status === 'cancelled';
+
+/** Move an order to a new status and log it. Fitted and cancelled orders are closed. */
+export function changeLabStatus(order: LabOrder, status: LabStatus, by: { day: string; who: string; note?: string }): { ok: true; order: LabOrder } | { ok: false; error: 'same' | 'closed' | 'note' } {
+  if (status === order.status) return { ok: false, error: 'same' };
+  if (order.status === 'fitted' || order.status === 'cancelled') return { ok: false, error: 'closed' };
+  const note = by.note?.trim() || undefined;
+  if (labNeedsNote(status) && !note) return { ok: false, error: 'note' };
+  return { ok: true, order: { ...order, status, history: [...(order.history ?? []), { day: by.day, status, by: by.who, ...(note ? { note } : {}) }] } };
+}
 
 /** Total spent in a month, `month` as "YYYY-MM". */
 export const monthTotal = (expenses: Expense[], month: string): number =>
@@ -21,7 +34,7 @@ export const monthTotal = (expenses: Expense[], month: string): number =>
 export const isLow = (item: StockItem): boolean => item.qty <= item.min;
 
 /** Still at the lab after its due day. `today` and `due` are "YYYY-MM-DD", which sort as text. */
-export const isLate = (order: LabOrder, today: string): boolean => order.status === 'sent' && order.due !== '' && order.due < today;
+export const isLate = (order: LabOrder, today: string): boolean => (order.status === 'sent' || order.status === 'remake') && order.due !== '' && order.due < today;
 
 /** Whole numbers only (items, dirhams): anything else becomes the fallback. */
 export const wholeNumber = (value: string, fallback = 0): number => {

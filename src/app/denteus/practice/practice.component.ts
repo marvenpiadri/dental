@@ -4,7 +4,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 import { AuthService } from '../../core/auth/auth.service';
-import { LAB_STATUSES, LabOrder, LabStatus, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
+import { LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
 type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'trace';
@@ -28,7 +28,7 @@ export class PracticeComponent {
   protected readonly tabs: Tab[] = ['tasks', 'expenses', 'stock', 'lab', 'trace'];
   protected readonly tabKey: Record<Tab, Key> = { tasks: 'practice.tab.tasks', trace: 'practice.tab.trace', expenses: 'practice.tab.expenses', stock: 'practice.tab.stock', lab: 'practice.tab.lab' };
   protected readonly statuses = LAB_STATUSES;
-  protected readonly statusKey: Record<LabStatus, Key> = { sent: 'practice.lab.status.sent', ready: 'practice.lab.status.ready', fitted: 'practice.lab.status.fitted' };
+  protected readonly statusKey: Record<LabStatus, Key> = { sent: 'practice.lab.status.sent', ready: 'practice.lab.status.ready', fitted: 'practice.lab.status.fitted', remake: 'practice.lab.status.remake', cancelled: 'practice.lab.status.cancelled' };
   protected readonly tab = signal<Tab>('tasks');
   protected readonly lot = signal('');
   protected readonly invalid = signal(false);
@@ -97,10 +97,10 @@ export class PracticeComponent {
     return r.ok;
   }
 
-  protected addOrder(patientId: string, work: string, lab: string, due: string, tooth = '', shade = ''): void {
+  protected addOrder(patientId: string, work: string, lab: string, due: string, tooth = '', shade = '', cost = ''): void {
     if (!patientId || !work.trim()) { this.invalid.set(true); return; }
     this.invalid.set(false);
-    this.practice.changeLab((list) => [...list, { id: crypto.randomUUID(), patientId, work: work.trim(), lab: lab.trim(), due, status: 'sent', tooth: tooth.trim() || undefined, shade: shade.trim() || undefined }]);
+    this.practice.changeLab((list) => [...list, { id: crypto.randomUUID(), patientId, work: work.trim(), lab: lab.trim(), due, status: 'sent', tooth: tooth.trim() || undefined, shade: shade.trim() || undefined, cost: wholeNumber(cost, 0) || undefined, history: [{ day: this.today(), status: 'sent', by: this.who() }] }]);
   }
 
   protected addTask(text: string): void {
@@ -125,7 +125,19 @@ export class PracticeComponent {
     this.practice.changeCycles((list) => [...list, { id: crypto.randomUUID(), day: this.today(), device: device.trim(), lot: lot.trim(), operator: operator.trim() }]);
   }
 
-  protected setStatus(id: string, status: string): void {
-    this.practice.changeLab((list) => list.map((o) => (o.id === id ? { ...o, status: status as LabStatus } : o)));
+  protected readonly labPending = signal<{ id: string; status: LabStatus } | null>(null);
+  protected readonly labHistory = signal<string | null>(null);
+  protected readonly labError = signal<string | null>(null);
+  protected readonly needsNote = labNeedsNote;
+
+  /** A status that needs a reason waits for it; the others apply at once. */
+  protected setStatus(id: string, status: string, note = ''): boolean {
+    const st = status as LabStatus, order = this.practice.lab().find((o) => o.id === id);
+    if (!order || st === order.status) return false;
+    if (labNeedsNote(st) && !note.trim()) { this.labError.set(this.labPending() ? this.t('practice.lab.err.note') : null); this.labPending.set({ id, status: st }); return false; }
+    const r = changeLabStatus(order, st, { day: this.today(), who: this.who(), note });
+    this.labError.set(r.ok ? null : this.t(`practice.lab.err.${r.error}` as Key));
+    if (r.ok) { this.practice.changeLab((list) => list.map((o) => (o.id === id ? r.order : o))); this.labPending.set(null); }
+    return r.ok;
   }
 }
