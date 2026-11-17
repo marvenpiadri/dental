@@ -54,3 +54,5 @@ Periodontogram behaviour, reports, Scenarios C-G, French print output, role-by-r
 - Not checked: French, keyboard-only sign-in, PIN lockout.
 
 **Scenario G, backup and restore (browser, synthetic data):** exported a clinic with a patient, a stock item with two movements and a device; opened a fresh browser profile (empty database), restored the file; the patient, the stock history (+50, −1 → 49) and the device came back. No page errors. Gaps: the confirm dialog counts only patients and appointments, though stock, lab and equipment are replaced too; no test of a damaged or newer file in the browser (covered by `backup.spec.ts`); backups are only as good as the person remembering to download them (no reminder, no scheduled copy). Documents (files) were not part of this run.
+
+**Backup reminder:** Today shows a notice (owner/admin, i.e. `settings.view`) when the clinic has patients and no backup was downloaded in the last 7 days; the Settings export records the day. Checked in browser (hidden on an empty clinic, shown with a patient, hidden after a download). It proves a file was created, not that it was kept safe.

@@ -93,3 +93,6 @@ a.row:hover {
 
 li.with-action { display: flex; align-items: center; gap: 8px; padding-right: 8px; }
 li.with-action > a.row { flex: 1; min-width: 0; }
+
+.banner { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--app-border); border-radius: var(--radius-control); background: var(--app-panel); color: var(--app-text); font-size: 13px; }
+.banner a { color: var(--app-text); font-weight: 600; text-decoration: underline; margin-inline-start: 6px; }

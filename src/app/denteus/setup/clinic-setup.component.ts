@@ -221,6 +221,7 @@ export class ClinicSetupComponent {
     link.download = `dontalist-backup-${localIsoDay(now)}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    await this.database.saveSetting('lastBackup', localIsoDay(now)); // only says a file was made; the person must keep it
   }
 
   protected async chooseBackup(input: HTMLInputElement): Promise<void> {

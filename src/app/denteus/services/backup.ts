@@ -127,3 +127,9 @@ export function parseBackup(source: string): BackupResult {
     },
   };
 }
+
+/** True when there is data worth protecting and no backup in the last `days` days. `last` and `today` are "YYYY-MM-DD"; an empty `last` means never. */
+export function backupStale(last: string | null | undefined, today: string, days = 7): boolean {
+  if (!last) return true;
+  return (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${last}T00:00:00Z`)) / 86_400_000 >= days;
+}

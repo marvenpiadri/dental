@@ -99,6 +99,8 @@ export const en = {
   'type.emergency': 'Emergency',
 
   'today.newAppointment': 'New appointment',
+  'today.backup': "Your data is stored in this browser only and has not been backed up this week.",
+  'today.backup.go': "Download a backup",
   'today.newPatient': 'New patient',
   'today.kpi.booked': 'Booked today',
   'today.kpi.waiting': 'In waiting room',

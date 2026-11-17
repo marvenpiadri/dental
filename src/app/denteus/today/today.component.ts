@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { isSameDay } from '../../calendar/utils/date.utils';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Appointment } from '../models/dental.models';
+import { ClinicDatabase } from '../services/clinic-database.service';
+import { backupStale } from '../services/backup';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, typeKey, waitingMinutes } from '../utils/appointment-labels';
 import { initials } from '../patients/patient-rules';
@@ -31,6 +33,10 @@ export class TodayComponent {
   protected readonly typeKey = typeKey;
   protected readonly initials = initials;
   protected readonly isoDay = localIsoDay;
+  private readonly database = inject(ClinicDatabase);
+  private readonly lastBackup = signal<string | null | undefined>(undefined); // undefined: not read yet
+  /** Everything lives in this browser, so say so once a week passes without a downloaded copy. */
+  protected readonly needsBackup = computed(() => { const n = this.now(), last = this.lastBackup(); return !!n && last !== undefined && this.auth.can('settings.view') && this.store.patients().length > 0 && backupStale(last, localIsoDay(n)); });
 
   /**
    * The clock starts empty on the server and is set in the browser: the server's "now" is not the
@@ -42,6 +48,7 @@ export class TodayComponent {
     const destroyRef = inject(DestroyRef); // must be taken here: inject() doesn't work inside the callback below
     afterNextRender(() => {
       this.now.set(new Date());
+      void this.database.loadSetting<string>('lastBackup').then((v) => this.lastBackup.set(v ?? null));
       const timer = setInterval(() => this.now.set(new Date()), 30_000);
       destroyRef.onDestroy(() => clearInterval(timer));
     });

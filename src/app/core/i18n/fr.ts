@@ -97,6 +97,8 @@ export const fr: Record<keyof typeof en, string> = {
   'type.emergency': 'Urgence',
 
   'today.newAppointment': 'Nouveau rendez-vous',
+  'today.backup': "Vos données sont stockées uniquement dans ce navigateur et n’ont pas été sauvegardées cette semaine.",
+  'today.backup.go': "Télécharger une sauvegarde",
   'today.newPatient': 'Nouveau patient',
   'today.kpi.booked': 'Rendez-vous du jour',
   'today.kpi.waiting': 'En salle d’attente',

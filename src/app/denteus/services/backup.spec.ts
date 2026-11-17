@@ -1,6 +1,6 @@
 import { Appointment, Patient } from '../models/dental.models';
 import { readMedications } from '../rx/med-library';
-import { makeBackup, parseBackup } from './backup';
+import { backupStale, makeBackup, parseBackup } from './backup';
 
 const when = new Date('2026-10-23T09:00:00.000Z');
 const patient: Patient = { id: 'p1', fullName: 'Sara Benali', phone: '0612345678', odontogram: { version: '2.22', teeth: {} }, plan: [{ id: 'i1', procedure: 'crown', price: 2500, status: 'done' }], payments: [{ id: 'y1', amount: 500, method: 'cash', at: when.toISOString() }] };
@@ -102,5 +102,13 @@ describe('backup settings', () => {
     expect(parseBackup(makeBackup({ ...data, settings: { staff: [{ ...owner, role: 'dentist' }] } }, when))).toEqual({ ok: false, reason: 'damaged' });
     const broken = JSON.parse(makeBackup(data, when)); broken.settings = 'x';
     expect(parseBackup(JSON.stringify(broken))).toEqual({ ok: false, reason: 'damaged' });
+  });
+});
+
+describe('backupStale', () => {
+  it('is stale when never backed up or a week old', () => {
+    expect(backupStale(null, '2026-11-17')).toBe(true);
+    expect(backupStale('2026-11-10', '2026-11-17')).toBe(true);
+    expect(backupStale('2026-11-11', '2026-11-17')).toBe(false);
   });
 });
