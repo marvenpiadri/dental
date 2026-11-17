@@ -14,11 +14,14 @@ import { ToothSnap } from './tooth-snap.service';
       <img [src]="s" alt="" draggable="false" [class.ro]="readonly()" (click)="click($event)" />
     } @else if (!store.view3d()) {
       <den-surface-cube [no]="no()" [state]="state()" [readonly]="readonly()" [marked]="marked()" (pick)="pick.emit($event)" />
+    } @else {
+      <span class="skeleton wait" aria-hidden="true"></span>
     }
   `,
   styles: `
     :host { display: block; width: 100%; max-width: var(--crown-top, 52px); margin-inline: auto; aspect-ratio: 1; }
     img { width: 100%; height: 100%; display: block; cursor: pointer; object-fit: contain; }
+    .wait { min-height: 0; display: block; width: 78%; height: 78%; margin: 11% auto; border-radius: 10px; }
     img.ro { cursor: default; }
   `,
 })

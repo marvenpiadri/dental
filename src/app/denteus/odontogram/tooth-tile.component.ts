@@ -15,8 +15,8 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
   template: `
     <button type="button" class="tile" [class.compact]="compact()" [class.selected]="selected()" [class.planned]="planned()" [attr.aria-pressed]="selected()" [attr.aria-label]="label()" (click)="click($event)">
       @if (upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
-      <span class="art" #art [style.transform]="transform()" [hidden]="!!real()"></span>
-      @if (real(); as src) { <img class="real" [src]="src" alt="" draggable="false" /> }
+      <span class="art" #art [style.transform]="transform()" [hidden]="!!real() || loading()"></span>
+      @if (real(); as src) { <img class="real" [src]="src" alt="" draggable="false" /> } @else if (loading()) { <span class="skeleton wait" aria-hidden="true"></span> }
       @if (!upper() && !hideNumber()) { <span class="no">{{ shown() }}</span> }
     </button>
   `,
@@ -29,6 +29,8 @@ import { ToothArt, artKey, type Template } from './tooth-art.service';
     .tile:focus-visible { outline: 2px solid var(--app-text); outline-offset: 1px; }
     .art { display: block; width: 100%; max-width: 64px; aspect-ratio: 39 / 72; }
     .real { width: 100%; max-width: 64px; aspect-ratio: 180 / 330; object-fit: contain; display: block; }
+    .wait { min-height: 0; width: 100%; max-width: 64px; aspect-ratio: 180 / 330; display: block; border-radius: 12px; }
+    .tile.compact .wait { max-width: 34px; aspect-ratio: 1; }
     .art :is(svg) { width: 100%; height: 100%; display: block; }
     .tile.compact .art { max-width: 34px; aspect-ratio: 1; }
     .tile.compact .real { max-width: 34px; aspect-ratio: 1; }
@@ -74,6 +76,7 @@ export class ToothTileComponent {
   private readonly store = inject(DentalStore);
   /** The library tooth as a picture, when the 3D view setting is on (front-view tiles only; the top-view row keeps the drawing). */
   protected readonly real = signal<string | null>(null);
+  protected readonly loading = computed(() => this.browser && this.store.view3d());
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('art');
   private svg: SVGElement | null = null;
