@@ -4,7 +4,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { SurfaceCubeComponent, type CubeSurface } from './surface-cube.component';
 import { ToothSnap } from './tooth-snap.service';
 
-/** A tooth's crown from the biting side, as a 3D picture cut into its five surfaces with visible borders; a click names the surface. Falls back to the flat drawing without 3D. */
+/** A tooth's crown from the biting side, as a 3D picture cut into its five surfaces with visible borders; a click names the surface. The flat drawing only shows when the 3D setting is off; while a picture renders the cell stays empty. */
 @Component({
   selector: 'den-crown-top',
   imports: [SurfaceCubeComponent],
@@ -12,7 +12,7 @@ import { ToothSnap } from './tooth-snap.service';
   template: `
     @if (src(); as s) {
       <img [src]="s" alt="" draggable="false" [class.ro]="readonly()" (click)="click($event)" />
-    } @else {
+    } @else if (!store.view3d()) {
       <den-surface-cube [no]="no()" [state]="state()" [readonly]="readonly()" [marked]="marked()" (pick)="pick.emit($event)" />
     }
   `,
@@ -31,7 +31,7 @@ export class CrownTopComponent {
   readonly pick = output<CubeSurface>();
 
   private readonly snap = inject(ToothSnap);
-  private readonly store = inject(DentalStore);
+  protected readonly store = inject(DentalStore);
   private readonly url = signal<string | null>(null);
   protected readonly src = computed(() => (this.store.view3d() ? this.url() : null));
 

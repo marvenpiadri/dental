@@ -94,8 +94,8 @@ export class ToothTileComponent {
       if (!this.browser) return;
       if (this.store.view3d()) {
         const mk = this.marked(), no = this.no(), st = this.state(), pulp = this.showHealthyPulp() && !this.compact();
-        // No WebGL or no meshes: draw the flat anatomy instead of leaving the tile blank.
-        void this.snap.snap(no, st, pulp, this.compact(), mk).then((u) => { if (no !== this.no()) return; this.real.set(u); if (!u) this.paint(); });
+        // 3D mode never draws the flat cartoon: the last picture stays until the new render arrives.
+        void this.snap.snap(no, st, pulp, this.compact(), mk).then((u) => { if (no !== this.no()) return; if (u) this.real.set(u); });
         return;
       }
       this.real.set(null);
