@@ -14,9 +14,9 @@
   <div class="bar">
     @if (ro()) {
       <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
-        <button type="button" [disabled]="!examinations().length" [class.on]="viewing() !== null && viewing()?.id === examinations()[0]?.id" (click)="setView('initial')">{{ t('dc.mode.initial') }}</button>
-        <button type="button" [class.on]="viewing() === null && mode() === 'status'" (click)="setView('current')">{{ t('dc.mode.current') }}</button>
-        <button type="button" [class.on]="viewing() === null && mode() === 'plan'" (click)="setView('plan')">{{ t('dc.mode.plan') }}@if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
+        <button type="button" [disabled]="!examinations().length" [attr.title]="t(examinations().length ? 'dc.mode.initial.hint' : 'dc.mode.initial.none')" [class.on]="viewing() !== null && viewing()?.id === examinations()[0]?.id" (click)="setView('initial')">{{ t('dc.mode.initial') }}</button>
+        <button type="button" [attr.title]="t('dc.mode.current.hint')" [class.on]="viewing() === null && mode() === 'status'" (click)="setView('current')">{{ t('dc.mode.current') }}</button>
+        <button type="button" [attr.title]="t('dc.mode.plan.hint')" [class.on]="viewing() === null && mode() === 'plan'" (click)="setView('plan')">{{ t('dc.mode.plan') }}@if (planned().length) { <span class="count">{{ planned().length }}</span> }</button>
       </div>
     } @else {
     <div class="seg" role="group" [attr.aria-label]="t('dc.mode')">
