@@ -195,7 +195,7 @@ const tests = {
     await other.close();
   },
 
-  async 'chart: 32 teeth drawn, Escape closes the tooth editor and returns focus'(page) {
+  async 'chart: 32 teeth drawn, Escape closes the editor, Initial becomes available after the first procedure'(page) {
     await newPatient(page, 'Test Patient Six', '+212 600 000 206');
     await page.getByRole('link', { name: 'Procedures & chart' }).click();
     await page.waitForTimeout(1500);
@@ -208,6 +208,15 @@ const tests = {
     await page.waitForTimeout(400);
     assert.equal(await page.locator('[role=dialog]').count(), 0, 'editor closes');
     assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'BUTTON');
+    // Initial is a true baseline: unavailable before any work, available after the first procedure is recorded.
+    const initial = page.getByRole('button', { name: /^Initial/ });
+    assert.equal(await initial.isEnabled(), false, 'Initial disabled before any work');
+    await page.locator('den-tooth-tile button.tile').nth(5).click();
+    await page.waitForTimeout(600);
+    await page.locator('button').filter({ hasText: 'Add procedure' }).last().click();
+    await page.getByRole('button', { name: 'Save procedure' }).click();
+    await page.waitForTimeout(800);
+    assert.equal(await initial.isEnabled(), true, 'Initial enabled after the first procedure');
   },
 };
 
