@@ -669,7 +669,7 @@ export const en = {
   'visit.edit': 'Edit note',
   'nav.practice': 'Practice',
   'practice.title': 'Practice',
-  'practice.sub': 'Expenses, stock and lab work',
+  'practice.sub': 'Tasks, expenses, stock, lab work and equipment',
   'practice.tab.expenses': 'Expenses',
   'practice.tab.stock': 'Stock',
   'practice.tab.lab': 'Lab work',

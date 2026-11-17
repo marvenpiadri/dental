@@ -667,7 +667,7 @@ export const fr: Record<keyof typeof en, string> = {
   'visit.edit': 'Modifier la note',
   'nav.practice': 'Cabinet',
   'practice.title': 'Cabinet',
-  'practice.sub': 'Dépenses, stock et prothèses',
+  'practice.sub': 'Tâches, dépenses, stock, prothèses, équipements',
   'practice.tab.expenses': 'Dépenses',
   'practice.tab.stock': 'Stock',
   'practice.tab.lab': 'Prothèses',
