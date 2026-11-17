@@ -11,6 +11,7 @@ export const fr: Record<keyof typeof en, string> = {
   'nav.patients': 'Patients',
   'nav.reports': 'Rapports',
   'reports.period': 'Période',
+  'reports.today': "Aujourd’hui",
   'reports.month': 'Ce mois',
   'reports.30d': '30 derniers jours',
   'reports.year': 'Cette année',

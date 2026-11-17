@@ -98,3 +98,12 @@ describe('receivables', () => {
     expect(r.top.map((x) => x.patient.fullName)).toEqual(['A', 'B']);
   });
 });
+
+describe('today as a period', () => {
+  it('is the local day, from midnight to the next midnight', () => {
+    const { from, to } = periodRange('today', new Date(2026, 10, 17, 18, 30));
+    expect(from).toEqual(new Date(2026, 10, 17));
+    expect(to).toEqual(new Date(2026, 10, 18));
+  });
+  it('counts only that day\'s expenses', () => { expect(expensesIn([{ day: '2026-11-17', amount: 40 }, { day: '2026-11-16', amount: 9 }], 'today', new Date(2026, 10, 17, 23, 59))).toBe(40); });
+});

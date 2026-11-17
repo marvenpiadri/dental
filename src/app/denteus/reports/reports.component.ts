@@ -7,7 +7,7 @@ import { paymentsCsv } from './payments-csv';
 import { PracticeStore } from '../practice/practice-store.service';
 import { Period, buildReport, expensesIn, receivables } from './report-rules';
 
-const PERIOD_KEY: Record<Period, Key> = { month: 'reports.month', '30d': 'reports.30d', year: 'reports.year' };
+const PERIOD_KEY: Record<Period, Key> = { today: 'reports.today', month: 'reports.month', '30d': 'reports.30d', year: 'reports.year' };
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' };
 
 /** How the clinic is doing: money received, visits kept and missed, and who did the work. */

@@ -10,6 +10,7 @@
     "build:worker": "ng build",
     "dev:worker": "ng build --configuration development && wrangler dev",
     "deploy:check": "ng build && wrangler deploy --dry-run",
+    "e2e": "node e2e/smoke.mjs",
     "db:check": "node tools/db-migrate.mjs --check"
   },
   "private": true,

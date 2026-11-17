@@ -13,6 +13,7 @@ export const en = {
   'nav.patients': 'Patients',
   'nav.reports': 'Reports',
   'reports.period': 'Period',
+  'reports.today': "Today",
   'reports.month': 'This month',
   'reports.30d': 'Last 30 days',
   'reports.year': 'This year',

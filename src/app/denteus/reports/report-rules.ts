@@ -2,11 +2,12 @@ import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regiona
 import { balance } from '../patients/treatment-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
-export type Period = 'month' | '30d' | 'year';
+export type Period = 'today' | 'month' | '30d' | 'year';
 
 /** `[from, to)`: the start of the first day up to the start of the day after the last. */
 export function periodRange(period: Period, now: Date): { from: Date; to: Date } {
   const day = (offset: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+  if (period === 'today') return { from: day(0), to: day(1) };
   if (period === '30d') return { from: day(-29), to: day(1) };
   if (period === 'year') return { from: new Date(now.getFullYear(), 0, 1), to: new Date(now.getFullYear() + 1, 0, 1) };
   return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date(now.getFullYear(), now.getMonth() + 1, 1) };

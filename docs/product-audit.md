@@ -52,16 +52,16 @@ These are gaps or validation candidates, not automatic instructions to expand sc
 
 Order follows dependencies. Items marked done were verified (see audit/README.md); the rest are open.
 
-1. **Verify before building**: Scenarios A (visit) and B (invoice, partial payments, receipt) were run in the browser on 16 Nov and the defects found were fixed (see audit/README.md, F10-F14). Still to run: A's exam/note/complete steps, B's quote path and reports, C to G. *In progress.*
-2. **Patient file**: identity fields and file number *done 16 Nov*; patient merge, wider duplicate hints (same phone, same email), patient timeline. *Open.*
-3. **Billing**: payment-to-invoice default and overpayment guard *done 16 Nov*; receipt legal block and invoice due date (F13); refunds, cash closing, expense categories report, overdue invoices view. *Open.*
-4. **Calendar**: waiting list; check the default booking time against working hours (booking dialog opened at 05:30 while the grid starts at 07:00); working hours and holidays check. A free-slot search already exists in the booking dialog. *Open.*
-5. **Practice**: ~~stock movements~~ (done: ledger, reasons, expiry, history); suppliers and purchase orders; ~~equipment register~~ (done: service interval, next due, overdue chip; no service log yet); ~~lab status history, remake, cancel reason, cost~~ (done; attachments open). *Partly open.* Keep it clinic-sized, not an ERP.
-6. **Documents**: periodontal report print; check every printed document at A4 in EN and FR. *Open.*
-7. **Permissions**: test each of the six roles against every route and action. *Open.*
-8. **Backups**: create, validate, restore preview, restore into a clean profile. *Open.*
-9. **Accessibility and layout**: patient tab strip fixed *16 Nov*; keyboard and focus review. *Open.*
-10. **Backend contracts** (separate repo `dental-api`): auth/session, tenant isolation, appointments, patients, billing, clinical, documents and prescriptions exist there and are tested only against a SQLite stand-in. The frontend still persists to IndexedDB; the repository layer that swaps it is not built. Real-TiDB verification is blocked from the sandbox.
+1. **Verify before building**: Scenarios A (visit start), B (invoice, partial payments, receipt), E (stock, as ledger), D (lab, status history), F (roles, UI side) and G (backup/restore) were run in the browser; six of them are now repeatable in `e2e/smoke.mjs`. Still to run: A's exam/visit-note/complete steps, B's quote path, C (recall and calendar). *In progress.*
+2. **Patient file**: identity fields and file number *done*; patient merge, wider duplicate hints (same phone or email, non-blocking), patient timeline. *Open.*
+3. **Billing and reports**: payment-to-invoice default, overpayment guard, receipt legal block, Reports tiles for expenses/net and a *Today* period, unpaid-balances card *done*. ~~Cash closing~~ **superseded** by Reports → Today (cash/card/etc. by method, expenses, net); no signed closing record is kept. Still open: invoice due date and payment terms (F13), refunds, expense categories, overdue-invoices list. *Partly open.*
+4. **Calendar**: waiting list; working hours and holidays check. (Default booking time *done*.) *Open.*
+5. **Practice**: stock ledger, equipment register, lab history/cost/remake *done*. Open: suppliers and purchase orders, lab attachments, equipment service log. Keep it clinic-sized, not an ERP.
+6. **Documents**: periodontal table in the clinical report *done*; check every printed document at A4 in EN and FR (the new perio page was never rendered to PDF). *Open.*
+7. ~~Permissions test~~ **merged into 10**: the UI side is done for all six roles (Practice gating fixed, F15; route fallbacks checked; role grid unit-tested). What remains is server enforcement, which only the backend can provide.
+8. ~~Backups~~ **done**: export, validate, restore into a clean profile (browser test), weekly reminder. Remaining nit: the restore dialog counts only patients and appointments.
+9. **Accessibility and layout**: tab strip fixed; keyboard/focus pass (names, focus rings, Escape and focus return) *done*. Open: screen-reader pass, 200% zoom, contrast measurement. *Partly open.*
+10. **Backend contracts** (separate repo `dental-api`): auth/session, tenant isolation, appointments, patients, billing, clinical, documents and prescriptions exist there and are tested only against a SQLite stand-in; every permission check above must be repeated server-side. The frontend still persists to IndexedDB; the repository layer that swaps it is not built. Real-TiDB verification is blocked from the sandbox.
 
 ## 4. Product boundaries
 
