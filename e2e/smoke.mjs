@@ -136,6 +136,37 @@ const tests = {
     assert.equal(await dent.getByLabel('Amount (MAD)').count(), 0, 'dentist must not see the payment form');
   },
 
+  async 'visit: book, arrive, start, record an act, note, complete from Today; charge and visit count show on the file'(page) {
+    const id = await newPatient(page, 'Test Patient Seven', '+212 600 000 207');
+    await page.goto(`${BASE}/setup/schedule`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Add dentist' }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Add chair' }).click();
+    await page.waitForTimeout(300);
+    await page.goto(`${BASE}/calendar?patient=${id}&book=1`, { waitUntil: 'networkidle' });
+    await page.getByRole('dialog').getByRole('button', { name: 'Book appointment' }).click();
+    await page.waitForTimeout(600);
+    await page.goto(`${BASE}/today`, { waitUntil: 'networkidle' });
+    await page.getByText('Test Patient Seven').first().click(); // opens the visit panel in the calendar
+    await page.getByRole('button', { name: 'Patient has arrived' }).click();
+    await page.getByRole('button', { name: 'Start treatment' }).click();
+    await page.getByLabel('Procedure').selectOption({ label: 'Filling' });
+    await page.getByLabel('Price').fill('300');
+    await page.getByRole('button', { name: 'Record act' }).click();
+    await shows(page, /Filling[\s\S]*MAD\s*300/, 'act listed');
+    await page.getByRole('button', { name: /Write visit note/ }).click();
+    await page.getByLabel('Findings and diagnosis').fill('Test caries');
+    await page.getByRole('button', { name: /^Save/ }).first().click();
+    await shows(page, /Test caries/, 'note saved');
+    await page.goto(`${BASE}/today`, { waitUntil: 'networkidle' });
+    await shows(page, /In treatment[\s\S]*Test Patient Seven/, 'in-treatment list on Today');
+    await page.getByRole('button', { name: 'Complete visit' }).click();
+    await shows(page, /Completed\s*\|?\s*1|COMPLETED\s*1/, 'completed count');
+    await page.goto(`${BASE}/patients/${id}`, { waitUntil: 'networkidle' });
+    await shows(page, /Remaining\s*MAD\s*300/, 'charge on the file');
+    await shows(page, /Completed visits\s*1/, 'completed visits');
+  },
+
   async 'backup restores into a clean browser profile'(page) {
     await newPatient(page, 'Test Patient Five', '+212 600 000 205');
     await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle' });

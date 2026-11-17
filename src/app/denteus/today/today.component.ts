@@ -76,6 +76,13 @@ export class TodayComponent {
     this.problem.set(result.ok ? null : result.message);
   }
 
+  /** The chair to the finished visit in one click; completing keeps the same rules as the calendar panel. */
+  protected async finish(a: Appointment): Promise<void> {
+    const result = await this.store.transition(a.id, 'completed');
+    this.problem.set(result.ok ? null : result.message);
+  }
+
+  protected readonly inTreatment = computed(() => this.todays().filter((a) => a.status === 'in-progress'));
   protected readonly waiting = computed(() => this.todays().filter((a) => a.status === 'arrived'));
   protected readonly upcoming = computed(() => this.todays().filter((a) => a.status === 'scheduled' || a.status === 'confirmed'));
 

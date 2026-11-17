@@ -45,6 +45,32 @@
         </article>
       </section>
 
+      @if (inTreatment().length) {
+        <section class="card" aria-labelledby="chair-title">
+          <header class="card-head">
+            <h2 class="card-title" id="chair-title"><i class="fa-solid fa-tooth" aria-hidden="true"></i>{{ t('st.in-progress') }}</h2>
+            <span class="chip" data-tone="neutral">{{ inTreatment().length }}</span>
+          </header>
+          <ul class="list">
+            @for (a of inTreatment(); track a.id) {
+              <li class="with-action">
+                <a class="row" routerLink="/calendar" [queryParams]="{ date: isoDay(a.start), appointment: a.id }">
+                  <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(patientName(a)) }}</span>
+                  <span class="who">
+                    <span class="name">{{ patientName(a) }}</span>
+                    <span class="sub muted">{{ t(typeKey(a.type)) }} · {{ dentistOf(a)?.name }}</span>
+                  </span>
+                  <span class="meta"><span class="time">{{ i18n.time(a.start) }}</span></span>
+                </a>
+                @if (auth.can('appointments.edit')) {
+                  <button type="button" class="btn" (click)="finish(a)"><i class="fa-solid fa-check" aria-hidden="true"></i><span class="hide-sm">{{ t('act.completed') }}</span></button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       <div class="grid-2">
         <section class="card" aria-labelledby="waiting-title">
           <header class="card-head">
