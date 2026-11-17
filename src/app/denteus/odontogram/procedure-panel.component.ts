@@ -70,13 +70,16 @@ export class ProcedurePanelComponent {
     const items = buildProcedures({ procedure: entry.id, name, price, done: this.done(), date: this.date(), scope: this.scope(), quadrant: this.quadrant(), teeth }, () => crypto.randomUUID());
     const id = this.patientId();
     this.store.changePlan(id, (plan) => [...plan, ...items]);
-    let chart = this.chart();
+    const before = this.chart();
+    let chart = before;
     const edit = this.drawable();
     if (edit && this.draw() && teeth.length) { // done work shows as a finding on its teeth, planned work in the plan layer
       const out = editChart(chart, this.done() ? 'status' : 'plan', teeth, edit, { confirmed: true });
       if (out.kind !== 'confirm' && out.changed.length) chart = out.chart;
     }
     this.store.setOdontogram(id, writeChart(chart));
+    // The chart as it was before any recorded work is the baseline the Initial view shows; it can only be taken now.
+    if (!this.store.patients().find((p) => p.id === id)?.examinations?.length) this.store.addExamination(id, makeExamination(id, before, { id: crypto.randomUUID(), date: this.date(), note: this.t('dc.exam.baseline') }));
     this.store.addExamination(id, makeExamination(id, chart, { id: crypto.randomUUID(), date: this.date(), note: name }));
     this.closed.emit();
   }

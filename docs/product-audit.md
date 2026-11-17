@@ -52,7 +52,7 @@ These are gaps or validation candidates, not automatic instructions to expand sc
 
 Order follows dependencies. Items marked done were verified (see audit/README.md); the rest are open.
 
-1. **Verify before building**: Scenarios A (visit start), B (invoice, partial payments, receipt), E (stock, as ledger), D (lab, status history), F (roles, UI side) and G (backup/restore) were run in the browser; seven workflows are now repeatable in `e2e/smoke.mjs`. Scenario A is now complete through note and completion (F16 fixed). Still to run: the exam-saving step (see 2b), B's quote path, C (recall and calendar). *In progress.*
+1. **Verify before building**: Scenarios A (visit start), B (invoice, partial payments, receipt), E (stock, as ledger), D (lab, status history), F (roles, UI side) and G (backup/restore) were run in the browser; seven workflows are now repeatable in `e2e/smoke.mjs`. Scenario A is now complete through note and completion (F16 fixed). Chart *Initial* view fixed (F17). Still to run: B's quote path, C (recall and calendar). *In progress.*
 2. **Patient file**: identity fields and file number *done*; patient merge, wider duplicate hints (same phone or email, non-blocking), patient timeline. *Open.*
 3. **Billing and reports**: payment-to-invoice default, overpayment guard, receipt legal block, Reports tiles for expenses/net and a *Today* period, unpaid-balances card *done*. ~~Cash closing~~ **superseded** by Reports → Today (cash/card/etc. by method, expenses, net); no signed closing record is kept. Still open: invoice due date and payment terms (F13), refunds, expense categories, overdue-invoices list. *Partly open.*
 4. **Calendar**: waiting list; working hours and holidays check. (Default booking time *done*.) *Open.*

@@ -23,6 +23,7 @@ const D = {
   'dc.editing.many': ['Editing {n} teeth. The first tooth’s values are shown.', 'Modification de {n} dents. Les valeurs de la première sont affichées.'],
   'dc.editing.one': ['Editing tooth {n}', 'Modification de la dent {n}'],
   'dc.endo': ['Endodontic treatment', 'Traitement endodontique'],
+  'dc.exam.baseline': ['Initial state (before the first procedure)', 'État initial (avant la première procédure)'],
   'dc.exam.date': ['Examination date', 'Date de l’examen'],
   'dc.exam.examiner': ['Examiner', 'Examinateur'],
   'dc.exam.note': ['Note', 'Note'],
