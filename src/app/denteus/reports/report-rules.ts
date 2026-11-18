@@ -106,3 +106,14 @@ export function overdueInvoices(patients: readonly Patient[], now: Date, currenc
     .filter((r) => r.remaining > 0)).sort((a, b) => a.dueOn.localeCompare(b.dueOn) || a.number.localeCompare(b.number));
   return { count: rows.length, total: rows.reduce((n, r) => n + r.remaining, 0), top: rows.slice(0, top) };
 }
+
+/** Spending in the period per category, biggest first; expenses without a category count as `other`. */
+export function expensesByCategory(expenses: readonly { day: string; amount: number; category?: string }[], period: Period, now: Date): { category: string; total: number }[] {
+  const { from, to } = periodRange(period, now);
+  const sums = new Map<string, number>();
+  for (const e of expenses) {
+    const [y, m, d] = e.day.split('-').map(Number);
+    if (within(new Date(y, m - 1, d), { from, to })) sums.set(e.category ?? 'other', (sums.get(e.category ?? 'other') ?? 0) + e.amount);
+  }
+  return [...sums].map(([category, total]) => ({ category, total })).sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
+}

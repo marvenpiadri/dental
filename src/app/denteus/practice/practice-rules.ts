@@ -1,4 +1,7 @@
-export interface Expense { id: string; day: string; label: string; amount: number }
+export const EXPENSE_CATEGORIES = ['rent', 'salaries', 'supplies', 'lab', 'equipment', 'utilities', 'taxes', 'other'] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+/** `category` is absent on expenses recorded before categories existed; they count as `other`. */
+export interface Expense { id: string; day: string; label: string; amount: number; category?: ExpenseCategory }
 /** `expires` is the earliest expiry date of what is on the shelf ("YYYY-MM-DD"). */
 export interface StockItem { id: string; name: string; qty: number; min: number; unit?: string; expires?: string }
 export const MOVE_KINDS = ['in', 'out', 'waste', 'adjust'] as const;

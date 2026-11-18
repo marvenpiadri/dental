@@ -80,14 +80,15 @@
               <h2 class="card-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i>{{ t('practice.tab.expenses') }}</h2>
               <span class="chip" data-tone="neutral">{{ t('practice.expenses.month') }} · {{ i18n.money(monthSpent()) }}</span>
             </header>
-            @if (may().pay) { <form class="row" (submit)="$event.preventDefault(); addExpense(label.value, amount.value); label.value = ''; amount.value = ''">
+            @if (may().pay) { <form class="row" (submit)="$event.preventDefault(); addExpense(label.value, amount.value, cat.value); label.value = ''; amount.value = ''">
               <input class="input" #label [attr.aria-label]="t('practice.label')" [placeholder]="t('practice.label')" />
               <input class="input num" #amount inputmode="numeric" [attr.aria-label]="t('practice.amount')" [placeholder]="t('practice.amount')" />
+              <select class="input" #cat [attr.aria-label]="t('practice.category')">@for (c of categories; track c) { <option [value]="c" [selected]="c === 'other'">{{ t(expKey(c)) }}</option> }</select>
               <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
             </form> }
             @for (e of newestFirst(); track e.id) {
               <div class="row">
-                <span class="grow"><strong>{{ e.label }}</strong> <span class="muted">· {{ e.day }}</span></span>
+                <span class="grow"><strong>{{ e.label }}</strong> <span class="muted">· {{ t(expKey((e.category ?? 'other'))) }} · {{ e.day }}</span></span>
                 <strong>{{ i18n.money(e.amount) }}</strong>
                 @if (may().payEdit) { <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeExpenses(l => l.filter(x => x.id !== e.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button> }
               </div>

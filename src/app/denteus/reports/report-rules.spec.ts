@@ -1,5 +1,5 @@
 import { Appointment, Dentist, Patient } from '../models/dental.models';
-import { buildReport, expensesIn, overdueInvoices, periodRange, receivables } from './report-rules';
+import { buildReport, expensesIn, expensesByCategory, overdueInvoices, periodRange, receivables } from './report-rules';
 
 const now = new Date(2026, 9, 24, 12, 0); // Sat 24 Oct 2026, local
 const dentist: Dentist = { id: 'd1', name: 'Dr. A', specialty: '', color: '#000' };
@@ -115,5 +115,12 @@ describe('overdueInvoices', () => {
     const r = overdueInvoices([p([inv('1', '2026-10-10', 300), inv('2', '2026-10-24', 100), inv('3', undefined, 100), inv('4', '2026-10-01', 50, { cancelledAt: 'x' }), inv('5', '2026-10-05', 200)], [{ id: 'a', amount: 200, method: 'cash', at: '2026-10-06T10:00:00Z', invoiceId: '5' }])], now);
     expect(r.top.map((x) => x.number)).toEqual(['FA-1']);
     expect(r).toMatchObject({ count: 1, total: 300 });
+  });
+});
+
+describe('expensesByCategory', () => {
+  it('sums the period per category, uncategorised as other, biggest first', () => {
+    const list = [{ day: '2026-10-24', amount: 100, category: 'rent' }, { day: '2026-10-24', amount: 300 }, { day: '2026-10-24', amount: 50, category: 'other' }, { day: '2026-10-01', amount: 999, category: 'lab' }];
+    expect(expensesByCategory(list, 'today', now)).toEqual([{ category: 'other', total: 350 }, { category: 'rent', total: 100 }]);
   });
 });

@@ -81,6 +81,14 @@
         </section>
       </div>
 
+      @if (spentBy().length) {
+        <section class="card" aria-labelledby="spentby-title">
+          <header class="card-head"><h2 class="card-title" id="spentby-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i>{{ t('reports.spentBy') }}</h2></header>
+          <ul class="meter-list">
+            @for (r of spentBy(); track r.category) { <li><span class="meter-label">{{ t(expKey(r.category)) }}</span><span></span><span class="meter-value">{{ i18n.money(r.total) }}</span></li> }
+          </ul>
+        </section>
+      }
       @if (owed(); as o) {
         <section class="card" aria-labelledby="owed-title">
           <header class="card-head">

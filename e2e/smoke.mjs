@@ -66,11 +66,13 @@ const tests = {
     await tab(page, 'Expenses');
     await page.fill('input[aria-label="What for"]', 'Test Rent');
     await page.fill('input[aria-label^="Amount"]', '200');
+    await page.getByLabel('Category').selectOption('rent');
     await page.getByRole('button', { name: 'Add' }).click();
     await page.goto(`${BASE}/reports`, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Today' }).click();
     await shows(page, /Expenses[\s\S]*200/, 'expenses tile');
     await shows(page, /Received minus expenses[\s\S]*300/, 'net tile');
+    await shows(page, /Spending by category[\s\S]*Rent[\s\S]*200/, 'spending by category');
     await shows(page, /500/, 'money received');
   },
 

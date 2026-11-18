@@ -4,7 +4,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 import { AuthService } from '../../core/auth/auth.service';
-import { Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
+import { EXPENSE_CATEGORIES, ExpenseCategory, Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
 type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'equipment' | 'trace';
@@ -32,6 +32,8 @@ export class PracticeComponent {
   protected readonly tab = signal<Tab>('tasks');
   protected readonly lot = signal('');
   protected readonly invalid = signal(false);
+  protected readonly categories = EXPENSE_CATEGORIES;
+  protected expKey = (c: string): Key => `exp.${c}` as Key;
   /** Set in the browser only: the server doesn't know the visitor's day. */
   protected readonly today = signal('');
 
@@ -69,11 +71,11 @@ export class PracticeComponent {
   protected late = (o: LabOrder): boolean => isLate(o, this.today());
   protected patientName = (id: string): string => this.store.patientMap().get(id)?.fullName ?? '—';
 
-  protected addExpense(label: string, amount: string): void {
+  protected addExpense(label: string, amount: string, category = 'other'): void {
     const value = wholeNumber(amount);
     if (!label.trim() || value <= 0) { this.invalid.set(true); return; }
     this.invalid.set(false);
-    this.practice.changeExpenses((list) => [...list, { id: crypto.randomUUID(), day: this.today(), label: label.trim(), amount: value }]);
+    this.practice.changeExpenses((list) => [...list, { id: crypto.randomUUID(), day: this.today(), label: label.trim(), amount: value, category: (EXPENSE_CATEGORIES as readonly string[]).includes(category) ? (category as ExpenseCategory) : 'other' }]);
   }
 
   protected addStock(name: string, qty: string, min: string, unit = '', expires = ''): void {
