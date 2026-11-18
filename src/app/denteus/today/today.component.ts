@@ -1,3 +1,4 @@
+import { Documents } from '../documents/documents.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { ChangeDetectionStrategy, Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
@@ -24,6 +25,7 @@ import { balance } from '../patients/treatment-rules';
   host: { class: 'ds-page' },
 })
 export class TodayComponent {
+  protected readonly docs = inject(Documents);
   protected readonly store = inject(DentalStore);
   protected readonly auth = inject(AuthService);
   protected readonly i18n = inject(I18n);
@@ -122,7 +124,7 @@ export class TodayComponent {
         const patient = this.store.patientMap().get(a.patientId);
         const vars = {
           name: patient?.fullName ?? '',
-          clinic: this.store.locations()[0]?.name ?? 'Dontalist',
+          clinic: this.docs.clinicName(),
           day: this.i18n.date(a.start, { weekday: 'long', day: 'numeric', month: 'long' }),
           time: this.i18n.time(a.start),
         };
@@ -145,7 +147,7 @@ export class TodayComponent {
     const now = this.now();
     if (!now) return { rows: [], count: 0 };
     const all = recallDue(this.store.patients(), this.store.appointments(), now);
-    const clinic = this.store.locations()[0]?.name ?? 'Dontalist';
+    const clinic = this.docs.clinicName();
     const rows = all.slice(0, 5).map(({ patient, lastVisit }) => {
       const vars = { name: patient.fullName, clinic };
       const message = this.store.message('recall', this.t('recall.message', vars), vars);

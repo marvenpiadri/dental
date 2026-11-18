@@ -96,7 +96,7 @@ export class TreatmentPlanComponent {
     const t = this.t;
     const tpl = this.docs.templateFor('quote');
     const html = quoteHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
+      clinic: this.docs.clinicName(),
       patient: this.patientName(),
       date: this.i18n.date(new Date(), { day: 'numeric', month: 'long', year: 'numeric' }),
       lines,

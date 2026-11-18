@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { I18n, Key } from '../../core/i18n/i18n.service';
+import { DentalStore } from '../services/dental-store.service';
 import { ClinicDatabase } from '../services/clinic-database.service';
 import { WISDOM_TEETH, isBlankTooth, newChart, readChart } from '../odontogram/engine/chart';
 import { chartSvg } from './chart-svg';
@@ -12,6 +13,7 @@ type Mode = 'status' | 'plan';
 export class Documents {
   private readonly db = inject(ClinicDatabase);
   private readonly i18n = inject(I18n);
+  private readonly store = inject(DentalStore);
   readonly custom = signal<DocTemplate[]>([]);
   readonly defaults = signal<Partial<Record<DocKind, string>>>({});
   readonly all = computed(() => [...PRESETS, ...this.custom()]);
@@ -30,7 +32,21 @@ export class Documents {
 
   /** The template a document of this kind prints with; Minimal when none was chosen or the chosen one was deleted. */
   templateFor(kind: DocKind): DocTemplate {
-    return this.all().find((t) => t.id === this.defaults()[kind]) ?? DEFAULT_TEMPLATE;
+    const t = this.all().find((x) => x.id === this.defaults()[kind]) ?? DEFAULT_TEMPLATE;
+    const logo = this.clinicLogo();
+    // Every paper carries the clinic's own logo (uploaded in Prescription setup), whatever the template says.
+    return logo ? { ...t, logo, showLogo: true } : t;
+  }
+
+  clinicLogo(): string | undefined {
+    const logo = this.store.locations()[0]?.logo;
+    return logo?.startsWith('data:image/') ? logo : undefined;
+  }
+
+  /** The name printed on every paper. 'Dontalist' is only the placeholder of a clinic that has not named itself yet, so it is never printed. */
+  clinicName(): string {
+    const name = this.store.locations()[0]?.name?.trim() ?? '';
+    return name === 'Dontalist' ? '' : name;
   }
 
   async save(t: DocTemplate): Promise<void> {

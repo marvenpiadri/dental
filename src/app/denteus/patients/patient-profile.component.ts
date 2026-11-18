@@ -1,3 +1,4 @@
+import { Documents } from '../documents/documents.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -35,6 +36,7 @@ type Tab = 'upcoming' | 'history';
   host: { class: 'ds-page' },
 })
 export class PatientProfileComponent {
+  protected readonly docs = inject(Documents);
   /** Bound from the route (`/patients/:id`). */
   readonly id = input.required<string>();
   /** Appointment to write a visit note for (`/patients/:id?note=<appointment id>`, from the calendar). */
@@ -76,7 +78,7 @@ export class PatientProfileComponent {
   protected readonly reminders = computed(() => {
     const p = this.patient();
     if (!p) return null;
-    const clinic = this.store.locations()[0]?.name ?? 'Dontalist';
+    const clinic = this.docs.clinicName();
     const next = this.upcoming().find((a) => a.status === 'scheduled' || a.status === 'confirmed') ?? null;
     const due = this.money().due;
     const link = (m: string) => messageLink(p, m);

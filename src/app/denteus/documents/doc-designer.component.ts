@@ -42,7 +42,7 @@ export class DocDesignerComponent {
   /** The very HTML that prints, shown without opening the print dialog. */
   protected readonly preview = computed(() => {
     const k = this.kind(), tpl = this.draft();
-    const c = sampleDoc(k, this.t, this.store.locations()[0]?.name ?? this.t('doc.sample.clinic'), this.i18n.lang(), (n) => this.i18n.money(n));
+    const c = sampleDoc(k, this.t, this.docs.clinicName() || this.t('doc.sample.clinic'), this.i18n.lang(), (n) => this.i18n.money(n));
     c.chartTitle = undefined;
     return this.sanitizer.bypassSecurityTrustHtml(renderDocument(c, tpl, { chart: this.docs.chartFor(k, tpl, this.chartRaw), preview: true }));
   });
@@ -98,7 +98,7 @@ export class DocDesignerComponent {
   }
   protected printSample(): void {
     const k = this.kind(), tpl = this.draft();
-    const c = sampleDoc(k, this.t, this.store.locations()[0]?.name ?? this.t('doc.sample.clinic'), this.i18n.lang(), (n) => this.i18n.money(n));
+    const c = sampleDoc(k, this.t, this.docs.clinicName() || this.t('doc.sample.clinic'), this.i18n.lang(), (n) => this.i18n.money(n));
     this.docs.print(renderDocument(c, tpl, { chart: this.docs.chartFor(k, tpl, this.chartRaw) }));
   }
 }

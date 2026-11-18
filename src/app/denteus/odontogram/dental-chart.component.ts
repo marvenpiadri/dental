@@ -344,7 +344,7 @@ export class DentalChartComponent {
   }
   protected printChart(blank: boolean): void {
     this.docs.print(chartPageHtml(this.docs.standaloneChart(this.raw(), blank), {
-      title: this.t('dc.export.title'), patient: blank ? '' : this.patientName(), date: blank ? '' : (this.viewing()?.date ?? new Date().toISOString().slice(0, 10)), lang: this.i18n.lang(),
+      title: this.t('dc.export.title'), patient: blank ? '' : this.patientName(), date: blank ? '' : (this.viewing()?.date ?? new Date().toISOString().slice(0, 10)), lang: this.i18n.lang(), clinic: this.clinicName(), logo: this.docs.clinicLogo(),
     }));
   }
   /** "Periodontitis · Stage III · Grade B · Generalized", or '' when nothing is probed. */
@@ -362,7 +362,7 @@ export class DentalChartComponent {
     ].filter(Boolean);
     const tpl = this.docs.templateFor('report');
     const html = reportHtml({
-      clinic: this.clinicName() || 'Dontalist', patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
+      clinic: this.clinicName(), patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
       findings: findingRows(c, lang, undefined, (n) => this.num(n)), planned: this.viewing() ? [] : planRows(c, lang, (n) => this.num(n)),
       perio: perioRows(c, (n) => this.num(n)), classification: this.perioLine(c),
       suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`), summary,

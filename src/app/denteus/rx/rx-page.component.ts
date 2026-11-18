@@ -208,7 +208,7 @@ export class RxPageComponent {
     const loc = this.store.locations().find((l) => l.id === dentist.locationId) ?? this.store.locations()[0];
     const p = this.patient();
     return {
-      clinic: { name: loc?.legalName || loc?.name || 'Dontalist', address: loc?.address, phone: loc?.phone, email: loc?.email, logo: loc?.logo },
+      clinic: { name: loc?.legalName || this.docs.clinicName(), address: loc?.address, phone: loc?.phone, email: loc?.email, logo: loc?.logo },
       dentist: { name: dentist.name, specialty: dentist.specialty, registration: dentist.registration, phone: dentist.phone, email: dentist.email },
       patient: { name: p.fullName, birthDate: p.birthDate, sex: p.sex, phone: p.phone },
     };
@@ -266,7 +266,7 @@ export class RxPageComponent {
       corrects: '', reason: '' };
   }
   private docInput(r: Prescription, preview: boolean) {
-    const snapshot = r.snapshot ?? (r.dentistId ? this.snapshot(r) : { clinic: { name: this.store.locations()[0]?.name ?? 'Dontalist' }, dentist: { name: '' }, patient: { name: this.patient().fullName } });
+    const snapshot = r.snapshot ?? (r.dentistId ? this.snapshot(r) : { clinic: { name: this.docs.clinicName() }, dentist: { name: '' }, patient: { name: this.patient().fullName } });
     const corrects = r.correctsId ? this.t('rx.corrects', { n: this.numberOf(r.correctsId) }) : undefined;
     const birth = snapshot.patient.birthDate ? this.t('rx.doc.birth', { date: snapshot.patient.birthDate }) : undefined;
     return { rx: r, snapshot, date: this.day(r.issuedAt ?? r.createdAt), birth, corrects, labels: { ...this.labels(), corrects: corrects ?? '', reason: r.correctionReason ? this.t('rx.reason', { reason: r.correctionReason }) : '' }, lang: this.i18n.lang(), preview };

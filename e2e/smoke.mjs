@@ -264,6 +264,28 @@ const tests = {
     assert.equal(await page.getByLabel('Payment term (days)').inputValue(), '15');
   },
 
+  async 'every paper carries the clinic name and logo, never "Dontalist"'(page, ctx) {
+    await page.goto(`${BASE}/setup/clinic`, { waitUntil: 'networkidle' });
+    const name = page.getByLabel('Clinic name', { exact: true }).first();
+    await name.fill('Test Smile Clinic');
+    await name.blur();
+    await page.waitForTimeout(600);
+    await page.goto(`${BASE}/setup/prescribing`, { waitUntil: 'networkidle' });
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNQSFiAFTEMLQkAAmxIAbLcbYIAAAAASUVORK5CYII=', 'base64');
+    await page.locator('input[type=file]').first().setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
+    await page.waitForTimeout(800);
+    const id = await newPatient(page, 'Test Patient Twelve', '+212 600 000 212');
+    await page.goto(`${BASE}/patients/${id}/visits`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Save document' }).click();
+    const [pop] = await Promise.all([ctx.waitForEvent('page'), page.getByRole('button', { name: 'Print document' }).click()]);
+    await pop.waitForLoadState();
+    const html = await pop.content();
+    assert.match(html, /Test Smile Clinic/, 'clinic name printed');
+    assert.match(html, /<img src="data:image\/png/, 'clinic logo printed');
+    assert.doesNotMatch(html, /Dontalist/, 'no product name on the paper');
+    await pop.close();
+  },
+
 };
 
 const only = process.argv[2];

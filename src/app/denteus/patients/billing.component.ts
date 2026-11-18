@@ -150,7 +150,7 @@ export class BillingComponent {
     const orig = inv.cancelsId ? this.invoices().find((i) => i.id === inv.cancelsId) : undefined;
     const tpl = this.docs.templateFor('invoice');
     const html = invoiceHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
+      clinic: this.docs.clinicName(), patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
       due: inv.dueOn && inv.kind === 'invoice' ? t('inv.due', { date: this.i18n.date(new Date(`${inv.dueOn}T00:00:00`), { day: 'numeric', month: 'long', year: 'numeric' }) }) : undefined,
       cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
       date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
@@ -169,7 +169,7 @@ export class BillingComponent {
     const tpl = this.docs.templateFor('receipt');
     const html = receiptHtml({
       legal: this.legal(),
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
+      clinic: this.docs.clinicName(),
       patient: this.patientName(),
       number: payment.id.slice(0, 8).toUpperCase(),
       reference: payment.reference,

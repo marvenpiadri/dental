@@ -14,4 +14,11 @@ describe('chart export', () => {
   it('draws all 32 teeth when blank, with no findings marked', () => {
     expect(svg.match(/>(1[1-8]|2[1-8]|3[1-8]|4[1-8])<\/text>/g)?.length).toBe(32);
   });
+  it('carries the clinic name and logo when given, and nothing when not', () => {
+    const base = { title: 't', patient: '', date: '', lang: 'en' };
+    const html = chartPageHtml(svg, { ...base, clinic: 'Smile <Clinic>', logo: 'data:image/png;base64,AAAA' });
+    expect(html).toContain('Smile &lt;Clinic&gt;');
+    expect(html).toContain('<img src="data:image/png;base64,AAAA"');
+    expect(chartPageHtml(svg, base)).not.toContain('<header>');
+  });
 });

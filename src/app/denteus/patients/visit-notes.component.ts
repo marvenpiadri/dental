@@ -157,7 +157,7 @@ export class VisitNotesComponent {
     const t = this.t;
     const tpl = this.docs.templateFor('prescription');
     const html = prescriptionHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist',
+      clinic: this.docs.clinicName(),
       dentist: this.dentistName(note),
       patient: this.patientName(),
       date: this.day(note.at),

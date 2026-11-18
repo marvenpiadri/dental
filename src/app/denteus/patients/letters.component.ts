@@ -92,7 +92,7 @@ export class LettersComponent {
     const loc = this.store.locations()[0];
     const tpl = this.docs.templateFor('letter');
     const html = letterHtml({
-      clinic: this.store.locations()[0]?.name ?? 'Dontalist', dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
+      clinic: this.docs.clinicName(), dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
       contact: [loc?.address ?? '', loc?.phone ?? ''].filter(Boolean), note: t('letter.responsible'),
       date: this.day(l.at), lang: this.i18n.lang(), title: t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate'),
       details: [...(l.to ? [`${t('letter.to')}: ${l.to}`] : []), ...(l.restDays ? [t('letter.days', { n: l.restDays })] : [])], text: l.text,
