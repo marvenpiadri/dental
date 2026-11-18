@@ -54,6 +54,7 @@
             <label class="hours-field grow">{{ t('set.taxId') }}<input class="input" [value]="clinic()?.taxId ?? ''" maxlength="40" (change)="patchClinic({ taxId: $any($event.target).value })" /></label>
           </div>
           <div class="row"><label class="hours-field grow">{{ t('set.bank') }}<input class="input" [value]="clinic()?.bank ?? ''" maxlength="60" (change)="patchClinic({ bank: $any($event.target).value })" /></label></div>
+          <div class="row"><label class="hours-field">{{ t('set.paymentDays') }}<input class="input" type="number" min="0" max="365" step="1" [value]="clinic()?.paymentDays ?? ''" (change)="patchTerm($any($event.target).value)" /></label></div>
           <div class="row"><label class="hours-field grow">{{ t('set.invoiceNote') }}<textarea class="input" rows="2" maxlength="300" [value]="clinic()?.invoiceNote ?? ''" (change)="patchClinic({ invoiceNote: $any($event.target).value })"></textarea></label></div>
         </section>
       }

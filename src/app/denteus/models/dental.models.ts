@@ -36,6 +36,8 @@ export interface ClinicLocation {
   taxId?: string;
   bank?: string;
   invoiceNote?: string;
+  /** Days from issue to the due date printed on new invoices; absent or 0 prints none. */
+  paymentDays?: number;
   /** Public page content and location, all owned by the clinic. Absent until the owner fills it in. */
   profile?: ClinicProfile;
   /** Printed at the top of prescriptions. Resized in the browser and kept as a data URL. */
@@ -274,6 +276,8 @@ export interface Invoice {
   kind: 'invoice' | 'credit-note';
   /** ISO timestamp. */
   issuedAt: string;
+  /** ISO day (`YYYY-MM-DD`) payment is expected by; fixed at issue from the clinic's payment term. */
+  dueOn?: string;
   lines: InvoiceLine[];
   total: number;
   /** ISO 4217 at the time of issue. Absent on older records, which count as dirhams. */

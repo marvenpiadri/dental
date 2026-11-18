@@ -248,6 +248,16 @@ const tests = {
     await pop.close();
   },
 
+  async 'invoice payment term is saved in Settings and survives a reload'(page) {
+    await page.goto(`${BASE}/setup/services`, { waitUntil: 'networkidle' });
+    const term = page.getByLabel('Payment term (days)');
+    await term.fill('15');
+    await term.blur();
+    await page.waitForTimeout(500);
+    await page.reload({ waitUntil: 'networkidle' });
+    assert.equal(await page.getByLabel('Payment term (days)').inputValue(), '15');
+  },
+
 };
 
 const only = process.argv[2];

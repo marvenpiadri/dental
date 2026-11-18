@@ -324,6 +324,8 @@ export const en = {
   'letter.tpl.referral': 'Dear colleague, I am referring {patient} to you for evaluation and care. Relevant findings: ',
   'visit.emptyConfirm': "No act or note was recorded for this visit. Complete it anyway?",
   'form.similar': "Same phone or email as {name} {number}. Check this is not the same person.",
+  'set.paymentDays': 'Payment term (days)',
+  'inv.due': 'Due {date}',
   'letter.save': 'Save document',
   'letter.error': 'Write the text, name who it is sent to (referral) and give rest days as a whole number up to 365.',
   'letter.days': '{n} day(s) of rest',

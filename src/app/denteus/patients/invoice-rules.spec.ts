@@ -1,5 +1,5 @@
 import { Invoice, Payment, TreatmentItem } from '../models/dental.models';
-import { activePayments, cancelInvoice, invoiceState, issueInvoice, nextNumber, uninvoiced, voidPayment } from './invoice-rules';
+import { dueOn, activePayments, cancelInvoice, invoiceState, issueInvoice, nextNumber, uninvoiced, voidPayment } from './invoice-rules';
 import { balance } from './treatment-rules';
 
 const item = (id: string, price: number, status: TreatmentItem['status'] = 'done'): TreatmentItem => ({ id, procedure: 'filling', price, status });
@@ -93,5 +93,14 @@ describe('invoice rules: clinic-wide and edge cases', () => {
     expect(voidPayment(pay('p', 5), '   ', now)).toBeNull();
     const v = voidPayment(pay('p', 5), 'Typo', now)!;
     expect(voidPayment(v, 'Again', now)).toBeNull();
+  });
+});
+
+describe('payment term', () => {
+  it('computes the due day across month ends and leaves none without a term', () => {
+    expect(dueOn(new Date(2026, 0, 25, 23, 30), 10)).toBe('2026-02-04');
+    const plan = [item('1', 500)];
+    expect(issueInvoice(plan, label, [], new Date(2026, 0, 25), 30)!.dueOn).toBe('2026-02-24');
+    expect(issueInvoice(plan, label, [], new Date(2026, 0, 25))!.dueOn).toBeUndefined();
   });
 });

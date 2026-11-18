@@ -7,7 +7,7 @@ export interface InvoiceData {
   lines: { where: string; name: string; price: string }[];
   /** Business name, tax number, bank details and note set in Settings; empty lines are skipped. */
   legal: string[];
-  total: string; paid: string; remaining: string; lang: string;
+  due?: string; total: string; paid: string; remaining: string; lang: string;
   labels: { patient: string; date: string; where: string; act: string; price: string; total: string; paid: string; remaining: string };
 }
 
@@ -15,7 +15,7 @@ export interface InvoiceData {
 export function invoiceDoc(d: InvoiceData): DocContent {
   const l = d.labels;
   return {
-    kind: 'invoice', lang: d.lang, dir: 'ltr', clinic: d.clinic, sender: [], title: d.title, number: d.number, subtitle: d.cancels ? [d.cancels] : [],
+    kind: 'invoice', lang: d.lang, dir: 'ltr', clinic: d.clinic, sender: [], title: d.title, number: d.number, subtitle: [d.cancels, d.due].filter((x): x is string => !!x),
     facts: [{ label: l.patient, value: d.patient }, { label: l.date, value: d.date }],
     blocks: [
       { type: 'table', head: [l.where, l.act, l.price], rows: d.lines.map((x) => [x.where, x.name, x.price]), right: [2] },

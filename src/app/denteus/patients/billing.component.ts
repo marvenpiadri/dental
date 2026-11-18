@@ -135,7 +135,7 @@ export class BillingComponent {
   protected issue(): void {
     const t = this.t;
     const all = this.store.patients().flatMap((p) => p.invoices ?? []);
-    const inv = issueInvoice(this.toBill(), (i) => ({ itemId: i.id, label: procedureName(t, i.procedure, i.name), where: i.tooth ?? (i.scope ? scopeText(i, t) : ''), price: i.price }), all, new Date());
+    const inv = issueInvoice(this.toBill(), (i) => ({ itemId: i.id, label: procedureName(t, i.procedure, i.name), where: i.tooth ?? (i.scope ? scopeText(i, t) : ''), price: i.price }), all, new Date(), this.store.locations()[0]?.paymentDays);
     if (inv) this.editInvoices.emit((list) => [...list, { ...inv, currency: this.cur() }]);
   }
 
@@ -151,6 +151,7 @@ export class BillingComponent {
     const tpl = this.docs.templateFor('invoice');
     const html = invoiceHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', patient: this.patientName(), number: inv.number, title: t(inv.kind === 'invoice' ? 'inv.invoice' : 'inv.creditNote'),
+      due: inv.dueOn && inv.kind === 'invoice' ? t('inv.due', { date: this.i18n.date(new Date(`${inv.dueOn}T00:00:00`), { day: 'numeric', month: 'long', year: 'numeric' }) }) : undefined,
       cancels: orig ? t('inv.cancelsOf', { number: orig.number }) : undefined,
       date: this.i18n.date(new Date(inv.issuedAt), { day: 'numeric', month: 'long', year: 'numeric' }), lang: this.i18n.lang(),
       lines: inv.lines.map((l) => ({ where: l.where ?? '', name: l.label, price: this.money(l.price, inv.currency) })),

@@ -294,6 +294,8 @@ export class ClinicSetupComponent {
   protected setLang(code: string): void { this.i18n.setLang(code as Lang); }
 
   /** Saves one or more clinic fields on the first site, creating it if the clinic has none. An empty name is refused. */
+  protected patchTerm(raw: string): Promise<void> { return this.patchClinic({ paymentDays: Math.min(365, Math.max(0, Math.floor(Number(raw) || 0))) || undefined }); }
+
   protected async patchClinic(patch: Partial<ClinicLocation>): Promise<void> {
     if (patch.name !== undefined && !patch.name.trim()) { this.needName.set(true); return; }
     this.needName.set(false);

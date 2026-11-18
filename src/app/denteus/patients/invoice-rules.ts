@@ -22,10 +22,16 @@ export function uninvoiced(plan: readonly TreatmentItem[], invoices: readonly In
   return plan.filter((i) => i.status === 'done' && i.price > 0 && !covered.has(i.id));
 }
 
-export function issueInvoice(items: readonly TreatmentItem[], label: (i: TreatmentItem) => InvoiceLine, all: readonly Invoice[], now: Date): Invoice | null {
+/** The local day `days` after `from`, as `YYYY-MM-DD`. */
+export function dueOn(from: Date, days: number): string {
+  const d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function issueInvoice(items: readonly TreatmentItem[], label: (i: TreatmentItem) => InvoiceLine, all: readonly Invoice[], now: Date, dueDays = 0): Invoice | null {
   if (!items.length) return null;
   const lines = items.map(label);
-  return { id: crypto.randomUUID(), number: nextNumber('invoice', now.getFullYear(), all), kind: 'invoice', issuedAt: now.toISOString(), lines, total: money(lines.reduce((n, l) => n + l.price, 0)) };
+  return { id: crypto.randomUUID(), number: nextNumber('invoice', now.getFullYear(), all), kind: 'invoice', issuedAt: now.toISOString(), ...(dueDays > 0 ? { dueOn: dueOn(now, dueDays) } : {}), lines, total: money(lines.reduce((n, l) => n + l.price, 0)) };
 }
 
 /** Cancelling never edits the invoice's lines: it marks it and issues a credit note for the same amount. A reason is required. */
