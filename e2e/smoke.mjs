@@ -219,6 +219,28 @@ const tests = {
     await page.waitForTimeout(800);
     assert.equal(await initial.isEnabled(), true, 'Initial enabled after the first procedure');
   },
+  async 'letter: pre-filled template, edit after saving, prints with the responsibility line'(page, ctx) {
+    const id = await newPatient(page, 'Test Patient Eight', '+212 600 000 208');
+    await page.goto(`${BASE}/patients/${id}/visits`, { waitUntil: 'networkidle' });
+    const text = page.getByLabel('Text', { exact: true });
+    await text.waitFor();
+    assert.match(await text.inputValue(), /Test Patient Eight/, 'template names the patient');
+    await text.fill('Needs two days of rest. Test certificate.');
+    await page.getByLabel('Days of rest').fill('2');
+    await page.getByRole('button', { name: 'Save document' }).click();
+    await shows(page, /2 day\(s\) of rest/, 'letter listed');
+    await page.getByRole('button', { name: 'Edit', exact: true }).click({ timeout: 4000 });
+    await text.fill('Needs three days of rest. Edited.');
+    await page.getByRole('button', { name: 'Save document' }).click();
+    const [pop] = await Promise.all([ctx.waitForEvent('page'), page.getByRole('button', { name: 'Print document' }).click()]);
+    await pop.waitForLoadState();
+    const html = await pop.content();
+    assert.match(html, /Edited\./, 'edited text printed');
+    assert.doesNotMatch(html, /Test certificate/, 'old text gone');
+    assert.match(html, /dentist is responsible/i, 'responsibility line');
+    await pop.close();
+  },
+
 };
 
 const only = process.argv[2];
