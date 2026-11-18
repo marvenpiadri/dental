@@ -276,6 +276,7 @@ export class DentalCalendarComponent implements OnInit {
   }
 
   protected async onTransition(id: string, to: AppointmentStatus): Promise<void> {
+    if (to === 'completed' && !this.dental.confirmCompletion(id)) return;
     const result = await this.dental.transition(id, to);
     if (!result.ok) this.cal.notify(result.message);
   }

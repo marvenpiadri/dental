@@ -1,18 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Letter } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { Documents } from '../documents/documents.service';
 import { letterHtml } from './letter-html';
 
-/** Medical certificates and referral letters. Written once, printed as often as needed, never edited. */
+/** Medical certificates and referral letters. Pre-filled from a template, editable until printed, kept in the patient's file. */
 @Component({
   selector: 'den-letters',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="add" novalidate (submit)="$event.preventDefault(); save()">
       <label class="field"><span class="label">{{ t('letter.kind') }}</span>
-        <select class="input" (change)="setKind($any($event.target).value)">
+        <select class="input" (change)="setKind($any($event.target).value)" [disabled]="!!editing()">
           <option value="certificate" [selected]="kind() === 'certificate'">{{ t('letter.certificate') }}</option>
           <option value="referral" [selected]="kind() === 'referral'">{{ t('letter.referral') }}</option>
         </select></label>
@@ -22,14 +22,16 @@ import { letterHtml } from './letter-html';
         <label class="field narrow"><span class="label">{{ t('letter.rest') }}</span><input class="input" inputmode="numeric" [value]="rest()" (input)="rest.set($any($event.target).value)" /></label>
       }
       <label class="field wide"><span class="label">{{ t('letter.text') }}</span>
-        <textarea class="input" rows="4" maxlength="1500" [value]="text()" (input)="text.set($any($event.target).value)" [attr.aria-invalid]="invalid() ? 'true' : null"></textarea></label>
+        <textarea class="input" rows="4" maxlength="1500" [value]="text()" (input)="touched = true; text.set($any($event.target).value)" [attr.aria-invalid]="invalid() ? 'true' : null"></textarea></label>
       <button class="btn btn--primary" type="submit"><i class="fa-solid fa-file-signature" aria-hidden="true"></i>{{ t('letter.save') }}</button>
+      @if (editing()) { <button class="btn" type="button" (click)="cancel()">{{ t('letter.cancel') }}</button> }
     </form>
     @if (invalid()) { <p class="error" role="alert">{{ t('letter.error') }}</p> }
     @if (rows().length) {
       <ul class="items">
         @for (l of rows(); track l.id) {
           <li><span class="when">{{ day(l.at) }} · {{ t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate') }}@if (l.to) { → {{ l.to }} }@if (l.restDays) { · {{ t('letter.days', { n: l.restDays }) }} }</span>
+            <button type="button" class="btn btn--icon" [attr.aria-label]="t('letter.edit')" (click)="load(l)"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
             <button type="button" class="btn btn--icon" [attr.aria-label]="t('letter.print')" (click)="print(l)"><i class="fa-solid fa-print" aria-hidden="true"></i></button></li>
         }
       </ul>
@@ -62,24 +64,36 @@ export class LettersComponent {
   protected readonly invalid = signal(false);
   protected readonly rows = computed(() => [...this.letters()].sort((a, b) => b.at.localeCompare(a.at)));
 
-  protected setKind(k: string): void { this.kind.set(k as Letter['kind']); }
+  protected readonly editing = signal<string | null>(null);
+
+  constructor() { effect(() => { if (!this.editing() && !this.touched) this.text.set(this.template()); }); }
+  private touched = false;
+  private template(): string { return this.t(this.kind() === 'referral' ? 'letter.tpl.referral' : 'letter.tpl.certificate', { patient: this.patientName() }); }
+
+  protected setKind(k: string): void { this.kind.set(k as Letter['kind']); this.touched = false; }
+  protected load(l: Letter): void { this.editing.set(l.id); this.kind.set(l.kind); this.text.set(l.text); this.to.set(l.to ?? ''); this.rest.set(l.restDays ? String(l.restDays) : ''); this.invalid.set(false); }
+  protected cancel(): void { this.editing.set(null); this.touched = false; this.to.set(''); this.rest.set(''); this.invalid.set(false); }
   protected day(iso: string): string { return this.i18n.date(new Date(iso), { day: 'numeric', month: 'short', year: 'numeric' }); }
 
   protected save(): void {
     const text = this.text().trim();
     const days = this.rest().trim() === '' ? undefined : Number(this.rest());
     if (!text || (this.kind() === 'referral' && !this.to().trim()) || (days !== undefined && !(Number.isInteger(days) && days > 0 && days <= 365))) { this.invalid.set(true); return; }
-    const letter: Letter = { id: crypto.randomUUID(), at: new Date().toISOString(), kind: this.kind(), dentistId: this.store.dentists()[0]?.id, text,
+    const id = this.editing();
+    const old = id ? this.letters().find((x) => x.id === id) : undefined;
+    const letter: Letter = { id: old?.id ?? crypto.randomUUID(), at: old?.at ?? new Date().toISOString(), kind: this.kind(), dentistId: old?.dentistId ?? this.store.dentists()[0]?.id, text,
       ...(this.kind() === 'referral' ? { to: this.to().trim() } : days ? { restDays: days } : {}) };
-    this.edit.emit((list) => [...list, letter]);
-    this.text.set(''); this.to.set(''); this.rest.set(''); this.invalid.set(false);
+    this.edit.emit((list) => (old ? list.map((x) => (x.id === old.id ? letter : x)) : [...list, letter]));
+    this.editing.set(null); this.touched = false; this.to.set(''); this.rest.set(''); this.invalid.set(false);
   }
 
   protected print(l: Letter): void {
     const t = this.t;
+    const loc = this.store.locations()[0];
     const tpl = this.docs.templateFor('letter');
     const html = letterHtml({
       clinic: this.store.locations()[0]?.name ?? 'Dontalist', dentist: this.store.dentists().find((d) => d.id === l.dentistId)?.name ?? '', patient: this.patientName(),
+      contact: [loc?.address ?? '', loc?.phone ?? ''].filter(Boolean), note: t('letter.responsible'),
       date: this.day(l.at), lang: this.i18n.lang(), title: t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate'),
       details: [...(l.to ? [`${t('letter.to')}: ${l.to}`] : []), ...(l.restDays ? [t('letter.days', { n: l.restDays })] : [])], text: l.text,
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), signature: t('rx.signature') },

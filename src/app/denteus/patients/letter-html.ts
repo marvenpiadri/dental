@@ -5,15 +5,19 @@ export interface LetterData {
   /** Lines shown under the title: who the letter goes to, days of rest. */
   details: string[];
   text: string;
+  /** Clinic address and phone, shown under the dentist's name. */
+  contact?: string[];
+  /** Printed under the text: the dentist answers for the content. */
+  note?: string;
   labels: { patient: string; date: string; signature: string };
 }
 
 /** A certificate or referral letter the browser prints; line breaks are kept. */
 export function letterDoc(l: LetterData): DocContent {
   return {
-    kind: 'letter', lang: l.lang, dir: 'ltr', clinic: l.clinic, sender: [l.dentist], title: l.title, subtitle: l.details,
+    kind: 'letter', lang: l.lang, dir: 'ltr', clinic: l.clinic, sender: [l.dentist, ...(l.contact ?? [])], title: l.title, subtitle: l.details,
     facts: [{ label: l.labels.patient, value: l.patient }, { label: l.labels.date, value: l.date }],
-    blocks: [{ type: 'text', text: l.text }], notes: [], signature: l.labels.signature,
+    blocks: [{ type: 'text', text: l.text }], notes: l.note ? [l.note] : [], signature: l.labels.signature,
   };
 }
 export const letterHtml = (l: LetterData, tpl: DocTemplate = DEFAULT_TEMPLATE, chart?: string): string => renderDocument(letterDoc(l), tpl, { chart });

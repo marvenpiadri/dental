@@ -160,6 +160,7 @@ const tests = {
     await shows(page, /Test caries/, 'note saved');
     await page.goto(`${BASE}/today`, { waitUntil: 'networkidle' });
     await shows(page, /In treatment[\s\S]*Test Patient Seven/, 'in-treatment list on Today');
+    page.once('dialog', (d) => d.accept());
     await page.getByRole('button', { name: 'Complete visit' }).click();
     await shows(page, /Completed\s*\|?\s*1|COMPLETED\s*1/, 'completed count');
     await page.goto(`${BASE}/patients/${id}`, { waitUntil: 'networkidle' });

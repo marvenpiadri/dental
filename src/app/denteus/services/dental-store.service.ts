@@ -503,6 +503,14 @@ export class DentalStore {
     return { ok: true, value: next };
   }
 
+  /** Completing a visit with no recorded act and no note is allowed, but only after the user confirms it. */
+  confirmCompletion(id: string): boolean {
+    const a = this.find(id);
+    const p = a && this.patientMap().get(a.patientId);
+    if (!a || !p || (p.plan ?? []).some((i) => i.appointmentId === id) || (p.visits ?? []).some((v) => v.appointmentId === id)) return true;
+    return confirm(this.t('visit.emptyConfirm'));
+  }
+
   async transition(id: string, to: AppointmentStatus): Promise<ApiResult<Appointment>> {
     const current = this.find(id);
     if (!current) return fail('not-found', this.t('er.gone'));

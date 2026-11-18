@@ -78,6 +78,7 @@ export class TodayComponent {
 
   /** The chair to the finished visit in one click; completing keeps the same rules as the calendar panel. */
   protected async finish(a: Appointment): Promise<void> {
+    if (!this.store.confirmCompletion(a.id)) return;
     const result = await this.store.transition(a.id, 'completed');
     this.problem.set(result.ok ? null : result.message);
   }
