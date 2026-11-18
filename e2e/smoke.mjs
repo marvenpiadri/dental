@@ -47,6 +47,13 @@ const tests = {
     await addPatient(page, 'Test Patient One', '+212 600 000 201');
     await page.waitForTimeout(500);
     assert.doesNotMatch(page.url(), ID, 'duplicate must not be saved');
+    // Same phone, different name: only a hint, the record can still be saved.
+    await page.goto(`${BASE}/patients/new`, { waitUntil: 'networkidle' });
+    await page.fill('[name=fullName]', 'Test Relative One');
+    await page.fill('[name=phone]', '+212 600 000 201');
+    await shows(page, /Same phone or email as Test Patient One/, 'similar-patient hint');
+    await page.click('button[type=submit]');
+    await page.waitForFunction((re) => new RegExp(re).test(location.pathname), ID.source);
   },
 
   async 'a payment and an expense show up in Reports > Today (received, expenses, net)'(page) {

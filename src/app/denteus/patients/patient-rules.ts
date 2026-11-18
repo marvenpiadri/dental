@@ -60,6 +60,14 @@ export function validatePatient(
   return problems;
 }
 
+/** Other patients sharing this phone or email: a hint for the user, never a block (families share a phone). Max 3. */
+export function similarPatients(input: Pick<PatientInput, 'phone' | 'email'>, existing: readonly Patient[], selfId?: string): Patient[] {
+  const phone = digitsOf(input.phone.trim());
+  const email = input.email?.trim().toLowerCase();
+  if (phone.length < 6 && !email) return [];
+  return existing.filter((p) => p.id !== selfId && ((phone.length >= 6 && digitsOf(p.phone) === phone) || (!!email && p.email?.trim().toLowerCase() === email))).slice(0, 3);
+}
+
 /** `YYYY-MM-DD` to a local Date, or null when it isn't a real calendar day (e.g. 2026-02-31). */
 export function parseIsoDate(iso: string): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);

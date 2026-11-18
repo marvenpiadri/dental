@@ -321,6 +321,7 @@ export const fr: Record<keyof typeof en, string> = {
   'letter.tpl.certificate': 'Je certifie avoir examiné {patient} à la date ci-dessus et que son état nécessite des soins dentaires.',
   'letter.tpl.referral': 'Cher confrère, je vous adresse {patient} pour évaluation et prise en charge. Constatations utiles : ',
   'visit.emptyConfirm': "Aucun acte ni note n'a été enregistré pour cette visite. La terminer quand même ?",
+  'form.similar': "Même téléphone ou e-mail que {name} {number}. Vérifiez qu'il ne s'agit pas de la même personne.",
   'letter.save': 'Enregistrer le document',
   'letter.error': 'Rédigez le texte, indiquez le destinataire (orientation) et les jours de repos en nombre entier jusqu’à 365.',
   'letter.days': '{n} jour(s) de repos',

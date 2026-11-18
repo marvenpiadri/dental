@@ -1,5 +1,5 @@
 import { Patient } from '../models/dental.models';
-import { addProposal, hasAlert, nextPatientNumber, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient } from './patient-rules';
+import { addProposal, hasAlert, nextPatientNumber, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient, similarPatients } from './patient-rules';
 
 const TODAY = new Date(2026, 9, 22); // 22 Oct 2026
 const patient = (over: Partial<Patient> = {}): Patient => ({ id: 'p1', fullName: 'Hélène Benali', phone: '+212 600-000-001', ...over });
@@ -96,5 +96,17 @@ describe('patient identity fields', () => {
     expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '' }, [], TODAY)).toEqual({});
     expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '123' }, [], TODAY)).toEqual({ emergencyPhone: 'phone-invalid' });
     expect(validatePatient({ ...empty, fullName: 'Sara Benali', emergencyPhone: '+212 600 000 002' }, [], TODAY)).toEqual({});
+  });
+});
+
+describe('similarPatients', () => {
+  const others = [patient({ id: 'a', phone: '+212 600-000-001', email: 'Fam@x.ma' }), patient({ id: 'b', fullName: 'Other', phone: '+212 611 111 111' })];
+  it('hints at the same phone (formatting ignored) or email, never the record itself', () => {
+    expect(similarPatients({ phone: '212600000001' }, others).map((p) => p.id)).toEqual(['a']);
+    expect(similarPatients({ phone: '', email: 'fam@X.ma' }, others).map((p) => p.id)).toEqual(['a']);
+    expect(similarPatients({ phone: '212600000001' }, others, 'a')).toEqual([]);
+  });
+  it('says nothing for a short or empty phone', () => {
+    expect(similarPatients({ phone: '12' }, others)).toEqual([]);
   });
 });

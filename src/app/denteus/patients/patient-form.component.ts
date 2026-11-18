@@ -4,7 +4,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { PatientInput } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { PlacePickerComponent } from '../regional/place-picker.component';
-import { CONDITIONS, PatientProblem, validatePatient } from './patient-rules';
+import { CONDITIONS, PatientProblem, validatePatient, similarPatients } from './patient-rules';
 
 type Values = Record<'fullName' | 'phone' | 'email' | 'birthDate' | 'sex' | 'country' | 'city' | 'address' | 'emergencyName' | 'emergencyPhone' | 'language' | 'referral' | 'alert' | 'notes', string>;
 type Field = keyof Values;
@@ -49,6 +49,7 @@ export class PatientFormComponent {
     if (!this.submitted()) return {};
     return validatePatient(this.toInput(), this.store.patients(), new Date(), this.id());
   });
+  protected readonly similar = computed(() => similarPatients(this.toInput(), this.store.patients(), this.id()));
   protected readonly hasProblems = computed(() => Object.keys(this.problems()).length > 0);
 
   constructor() {
