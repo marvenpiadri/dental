@@ -108,6 +108,10 @@ const tests = {
     await page.locator('input[type=date]').fill('2025-01-10');
     await page.getByRole('button', { name: 'Add' }).click();
     await shows(page, /Service overdue/, 'overdue chip');
+    await page.getByLabel('Service note (optional)').fill('Replaced filter');
+    await page.getByRole('button', { name: /Serviced|Mark serviced|Done/i }).first().click();
+    await shows(page, /Last services:[\s\S]*Replaced filter/, 'service log');
+    assert.equal(await page.getByText('Service overdue').count(), 0, 'no longer overdue after service');
   },
 
   async 'roles: accountant records expenses but not stock; dentist cannot open billing'(page, ctx) {

@@ -67,7 +67,7 @@ export class PracticeComponent {
     this.invalid.set(false);
     this.practice.changeEquipment((list) => [...list, { id: crypto.randomUUID(), name: name.trim(), serial: serial.trim() || undefined, location: where.trim() || undefined, everyMonths: months || undefined, lastService: last || undefined }]);
   }
-  protected serviced(id: string): void { this.practice.changeEquipment((list) => list.map((e) => (e.id === id ? { ...e, lastService: this.today() } : e))); }
+  protected serviced(id: string, note = ''): void { this.practice.changeEquipment((list) => list.map((e) => (e.id === id ? { ...e, lastService: this.today(), log: [...(e.log ?? []), { day: this.today(), ...(note.trim() ? { note: note.trim().slice(0, 120) } : {}) }] } : e))); }
   protected late = (o: LabOrder): boolean => isLate(o, this.today());
   protected patientName = (id: string): string => this.store.patientMap().get(id)?.fullName ?? '—';
 

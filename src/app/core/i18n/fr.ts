@@ -335,6 +335,8 @@ export const fr: Record<keyof typeof en, string> = {
   'exp.taxes': "Impôts et taxes",
   'exp.other': "Autre",
   'reports.spentBy': "Dépenses par catégorie",
+  'practice.eq.note': "Note d'intervention (facultatif)",
+  'practice.eq.log': "Dernières interventions",
   'letter.save': 'Enregistrer le document',
   'letter.error': 'Rédigez le texte, indiquez le destinataire (orientation) et les jours de repos en nombre entier jusqu’à 365.',
   'letter.days': '{n} jour(s) de repos',

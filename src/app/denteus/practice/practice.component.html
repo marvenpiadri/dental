@@ -153,9 +153,10 @@
               <div class="row">
                 <span class="grow"><strong>{{ e.name }}</strong> <span class="muted">@if (e.serial) { · {{ e.serial }} }@if (e.location) { · {{ e.location }} }@if (nextDue(e); as due) { · {{ t('practice.eq.next') }} {{ due }} }</span></span>
                 @if (state(e) === 'overdue') { <span class="chip" data-tone="danger">{{ t('practice.eq.overdue') }}</span> } @else if (state(e) === 'soon') { <span class="chip" data-tone="warn">{{ t('practice.eq.soon') }}</span> }
-                @if (may().add) { <button type="button" class="btn" (click)="serviced(e.id)"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('practice.eq.done') }}</button> }
+                @if (may().add) { <input class="input" #svc maxlength="120" [attr.aria-label]="t('practice.eq.note')" [placeholder]="t('practice.eq.note')" /><button type="button" class="btn" (click)="serviced(e.id, svc.value); svc.value = ''"><i class="fa-solid fa-check" aria-hidden="true"></i>{{ t('practice.eq.done') }}</button> }
                 @if (may().edit) { <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeEquipment(l => l.filter(x => x.id !== e.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button> }
               </div>
+              @if (e.log?.length) { <p class="muted eq-log">{{ t('practice.eq.log') }}: @for (l of e.log!.slice(-3).reverse(); track $index) { {{ l.day }}@if (l.note) { ({{ l.note }}) }@if (!$last) { · } }</p> }
             } @empty { <p class="empty-note">{{ t('practice.eq.empty') }}</p> }
           </section>
         }

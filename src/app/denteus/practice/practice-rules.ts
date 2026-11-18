@@ -89,7 +89,7 @@ export const expiresSoon = (item: StockItem, today: string, days = 60): boolean 
   !!item.expires && !isExpired(item, today) && dayNumber(item.expires) - dayNumber(today) <= days;
 
 /** A device that needs regular servicing (autoclave, compressor, X-ray unit). */
-export interface Equipment { id: string; name: string; serial?: string; location?: string; everyMonths?: number; lastService?: string }
+export interface Equipment { id: string; name: string; serial?: string; location?: string; everyMonths?: number; lastService?: string; /** Services done in the app, oldest first; the day always matches `lastService` for the newest. */ log?: { day: string; note?: string }[] }
 export type ServiceState = 'none' | 'ok' | 'soon' | 'overdue';
 
 /** The day service is next due ("YYYY-MM-DD"), or null when no interval or no first service is set. */

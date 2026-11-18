@@ -337,6 +337,8 @@ export const en = {
   'exp.taxes': "Taxes and fees",
   'exp.other': "Other",
   'reports.spentBy': "Spending by category",
+  'practice.eq.note': "Service note (optional)",
+  'practice.eq.log': "Last services",
   'letter.save': 'Save document',
   'letter.error': 'Write the text, name who it is sent to (referral) and give rest days as a whole number up to 365.',
   'letter.days': '{n} day(s) of rest',
