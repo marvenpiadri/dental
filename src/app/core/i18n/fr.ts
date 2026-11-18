@@ -324,6 +324,7 @@ export const fr: Record<keyof typeof en, string> = {
   'form.similar': "Même téléphone ou e-mail que {name} {number}. Vérifiez qu'il ne s'agit pas de la même personne.",
   'set.paymentDays': 'Délai de paiement (jours)',
   'inv.due': 'Échéance {date}',
+  'reports.overdue': 'Factures en retard',
   'letter.save': 'Enregistrer le document',
   'letter.error': 'Rédigez le texte, indiquez le destinataire (orientation) et les jours de repos en nombre entier jusqu’à 365.',
   'letter.days': '{n} jour(s) de repos',

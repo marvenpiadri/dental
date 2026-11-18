@@ -1,5 +1,5 @@
 import { Appointment, Dentist, Patient } from '../models/dental.models';
-import { buildReport, expensesIn, periodRange, receivables } from './report-rules';
+import { buildReport, expensesIn, overdueInvoices, periodRange, receivables } from './report-rules';
 
 const now = new Date(2026, 9, 24, 12, 0); // Sat 24 Oct 2026, local
 const dentist: Dentist = { id: 'd1', name: 'Dr. A', specialty: '', color: '#000' };
@@ -106,4 +106,14 @@ describe('today as a period', () => {
     expect(to).toEqual(new Date(2026, 10, 18));
   });
   it('counts only that day\'s expenses', () => { expect(expensesIn([{ day: '2026-11-17', amount: 40 }, { day: '2026-11-16', amount: 9 }], 'today', new Date(2026, 10, 17, 23, 59))).toBe(40); });
+});
+
+describe('overdueInvoices', () => {
+  const inv = (id: string, dueOn: string | undefined, total: number, extra = {}) => ({ id, number: `FA-${id}`, kind: 'invoice' as const, issuedAt: '2026-09-01T10:00:00Z', dueOn, lines: [], total, ...extra });
+  const p = (invoices: ReturnType<typeof inv>[], payments: Patient['payments'] = []): Patient => ({ ...patient, invoices, payments });
+  it('lists unpaid invoices past their due day, oldest first, and skips paid, undated, future and cancelled ones', () => {
+    const r = overdueInvoices([p([inv('1', '2026-10-10', 300), inv('2', '2026-10-24', 100), inv('3', undefined, 100), inv('4', '2026-10-01', 50, { cancelledAt: 'x' }), inv('5', '2026-10-05', 200)], [{ id: 'a', amount: 200, method: 'cash', at: '2026-10-06T10:00:00Z', invoiceId: '5' }])], now);
+    expect(r.top.map((x) => x.number)).toEqual(['FA-1']);
+    expect(r).toMatchObject({ count: 1, total: 300 });
+  });
 });

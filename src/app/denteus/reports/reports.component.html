@@ -96,6 +96,21 @@
           } @else { <p class="note muted">{{ t('reports.owed.none') }}</p> }
         </section>
       }
+      @if (overdue(); as v) {
+        @if (v.count) {
+          <section class="card" aria-labelledby="overdue-title">
+            <header class="card-head">
+              <h2 class="card-title" id="overdue-title"><i class="fa-solid fa-clock" aria-hidden="true"></i>{{ t('reports.overdue') }}</h2>
+              <span class="chip" data-tone="danger">{{ i18n.money(v.total) }} · {{ v.count }}</span>
+            </header>
+            <ul class="meter-list">
+              @for (r of v.top; track r.number) {
+                <li><a class="meter-label" [routerLink]="['/patients', r.patient.id, 'billing']">{{ r.patient.fullName }} · {{ r.number }}</a><span class="muted">{{ r.dueOn }}</span><span class="meter-value">{{ i18n.money(r.remaining) }}</span></li>
+              }
+            </ul>
+          </section>
+        }
+      }
     </div>
   } @else {
     <div class="stack" aria-busy="true" [attr.aria-label]="t('common.loading')">

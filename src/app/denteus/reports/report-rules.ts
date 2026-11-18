@@ -1,4 +1,5 @@
 import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
+import { invoiceState } from '../patients/invoice-rules';
 import { balance } from '../patients/treatment-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
@@ -94,4 +95,14 @@ export function receivables(patients: readonly Patient[], currency = LEGACY_CURR
     .filter((r) => r.due > 0)
     .sort((a, b) => b.due - a.due || a.patient.fullName.localeCompare(b.patient.fullName));
   return { total: rows.reduce((n, r) => n + r.due, 0), owing: rows.length, top: rows.slice(0, top) };
+}
+
+/** Standing invoices past their due day with money still owed, oldest due first. Only invoices issued with a payment term have a due day. */
+export function overdueInvoices(patients: readonly Patient[], now: Date, currency = LEGACY_CURRENCY, top = 5): { count: number; total: number; top: { patient: Patient; number: string; dueOn: string; remaining: number }[] } {
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const rows = patients.filter((p) => !p.archivedAt).flatMap((patient) => (patient.invoices ?? [])
+    .filter((i) => i.kind === 'invoice' && i.dueOn && i.dueOn < today && (i.currency ?? LEGACY_CURRENCY) === currency)
+    .map((i) => ({ patient, number: i.number, dueOn: i.dueOn!, remaining: invoiceState(i, patient.payments ?? []).remaining }))
+    .filter((r) => r.remaining > 0)).sort((a, b) => a.dueOn.localeCompare(b.dueOn) || a.number.localeCompare(b.number));
+  return { count: rows.length, total: rows.reduce((n, r) => n + r.remaining, 0), top: rows.slice(0, top) };
 }

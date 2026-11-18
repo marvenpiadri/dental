@@ -5,7 +5,7 @@ import { PAYMENT_METHODS, PaymentMethod } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { paymentsCsv } from './payments-csv';
 import { PracticeStore } from '../practice/practice-store.service';
-import { Period, buildReport, expensesIn, receivables } from './report-rules';
+import { Period, buildReport, expensesIn, overdueInvoices, receivables } from './report-rules';
 
 const PERIOD_KEY: Record<Period, Key> = { today: 'reports.today', month: 'reports.month', '30d': 'reports.30d', year: 'reports.year' };
 const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.card', transfer: 'pay.transfer', cheque: 'pay.cheque', other: 'pay.other' };
@@ -22,6 +22,7 @@ const METHOD_KEY: Record<PaymentMethod, Key> = { cash: 'pay.cash', card: 'pay.ca
 export class ReportsComponent {
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
+  protected readonly overdue = computed(() => { const now = this.now(); return now ? overdueInvoices(this.store.patients(), now, this.store.currency()) : null; });
   protected readonly owed = computed(() => receivables(this.store.patients(), this.store.currency()));
   private readonly practice = inject(PracticeStore);
   /** Money spent in the period (Practice → Expenses); null until the practice data has loaded. */
