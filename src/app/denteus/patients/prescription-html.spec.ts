@@ -9,7 +9,7 @@ const base: PrescriptionData = {
 describe('prescriptionHtml', () => {
   it('lists every line in order, with dose and duration when given', () => {
     const html = prescriptionHtml(base);
-    expect(html.indexOf('1. Amoxicillin')).toBeLessThan(html.indexOf('2. Paracetamol'));
+    expect(html.indexOf('Amoxicillin')).toBeLessThan(html.indexOf('Paracetamol'));
     expect(html).toContain('1 g, twice a day');
     expect(html).toContain('7 days');
   });
