@@ -486,6 +486,8 @@ export interface PatientDocument {
   addedAt: string;
   /** FDI number of the tooth this image is about, when it is about one. */
   tooth?: string;
+  /** The lab order this file belongs to (a scan, a shade photo); it still shows in the patient's documents. */
+  labOrderId?: string;
   blob: Blob;
 }
 

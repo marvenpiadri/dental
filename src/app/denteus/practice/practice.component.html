@@ -192,8 +192,12 @@
                   @for (s of statuses; track s) { <option [value]="s" [selected]="o.status === s">{{ t(statusKey[s]) }}</option> }
                 </select>
                 <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.stock.history')" [title]="t('practice.stock.history')" [attr.aria-expanded]="labHistory() === o.id" (click)="labHistory.set(labHistory() === o.id ? null : o.id)"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></button>
+                @if (may().add && o.status !== 'fitted' && o.status !== 'cancelled') { <label class="btn btn--icon" [title]="t('practice.lab.attach')"><i class="fa-solid fa-paperclip" aria-hidden="true"></i><span class="sr-only">{{ t('practice.lab.attach') }}</span><input type="file" hidden [accept]="accept" [attr.aria-label]="t('practice.lab.attach')" (change)="attachToOrder(o, $any($event.target))" /></label> }
                 @if (may().edit) { <button type="button" class="btn btn--icon" [attr.aria-label]="t('practice.remove')" (click)="practice.changeLab(l => l.filter(x => x.id !== o.id))"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button> }
               </div>
+              @if (labFiles()[o.id]; as files) {
+                <div class="row"><span class="muted">{{ t('practice.lab.files') }}:</span> @for (f of files; track f.id) { <a class="link" [href]="f.url" target="_blank" rel="noopener">{{ f.name }}</a> }</div>
+              }
               @if (labPending(); as pend) { @if (pend.id === o.id) {
                 <form class="row" (submit)="$event.preventDefault(); setStatus(o.id, pend.status, why.value)">
                   <span class="muted">{{ t(statusKey[pend.status]) }}</span>

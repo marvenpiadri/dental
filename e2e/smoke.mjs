@@ -40,6 +40,7 @@ const shows = async (page, re, what) => {
 };
 const tab = (page, name) => page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
 
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNQSFiAFTEMLQkAAmxIAbLcbYIAAAAASUVORK5CYII=', 'base64');
 const tests = {
   async 'patient gets a file number and an exact duplicate is refused'(page) {
     await newPatient(page, 'Test Patient One', '+212 600 000 201');
@@ -98,6 +99,8 @@ const tests = {
     await page.locator('select[aria-label="Patient"]').selectOption({ label: 'Test Patient Three' });
     await page.fill('input[aria-label^="Work"]', 'Crown');
     await page.getByRole('button', { name: 'Add' }).click();
+    await page.locator('.row', { hasText: 'Crown' }).locator('input[type=file]').setInputFiles({ name: 'test-scan.png', mimeType: 'image/png', buffer: PNG });
+    await shows(page, /Files:\s*test-scan\.png/, 'lab file attached');
     await page.locator('select.status').first().selectOption({ label: 'Remake at the lab' });
     const reason = page.locator('input[aria-label="Reason (required)"]');
     await reason.locator('..').locator('button.btn--primary').click();
@@ -279,7 +282,7 @@ const tests = {
     await name.blur();
     await page.waitForTimeout(600);
     await page.goto(`${BASE}/setup/prescribing`, { waitUntil: 'networkidle' });
-    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNQSFiAFTEMLQkAAmxIAbLcbYIAAAAASUVORK5CYII=', 'base64');
+    const png = PNG;
     await page.locator('input[type=file]').first().setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
     await page.waitForTimeout(800);
     const id = await newPatient(page, 'Test Patient Twelve', '+212 600 000 212');

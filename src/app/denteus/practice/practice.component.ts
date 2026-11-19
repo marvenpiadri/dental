@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, afterNextRender, computed, inject, signal, effect } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 import { AuthService } from '../../core/auth/auth.service';
+import { ClinicDatabase } from '../services/clinic-database.service';
+import { fileProblem, ACCEPTED } from '../patients/document-rules';
 import { Documents } from '../documents/documents.service';
 import { ReorderGroup, orderText, reorderGroups, EXPENSE_CATEGORIES, ExpenseCategory, Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
@@ -35,6 +37,39 @@ export class PracticeComponent {
   protected readonly invalid = signal(false);
   protected readonly categories = EXPENSE_CATEGORIES;
   private readonly docs = inject(Documents);
+  private readonly db = inject(ClinicDatabase);
+  protected readonly accept = ACCEPTED;
+  /** Files attached to open lab orders, by order id. Loaded for the open orders only (at most 30), never all documents. */
+  protected readonly labFiles = signal<Record<string, { id: string; name: string; url: string }[]>>({});
+  protected readonly labFileProblem = signal(false);
+  private labFileUrls: string[] = [];
+  private readonly labFilesLoader = effect(() => { this.orders(); void this.loadLabFiles(); });
+
+  private async loadLabFiles(): Promise<void> {
+    const open = this.orders().filter((o) => o.status !== 'fitted' && o.status !== 'cancelled').slice(0, 30);
+    const out: Record<string, { id: string; name: string; url: string }[]> = {};
+    for (const u of this.labFileUrls) URL.revokeObjectURL(u);
+    this.labFileUrls = [];
+    for (const patientId of new Set(open.map((o) => o.patientId))) {
+      for (const d of await this.db.listDocuments(patientId)) {
+        if (!d.labOrderId || !open.some((o) => o.id === d.labOrderId)) continue;
+        const url = URL.createObjectURL(d.blob); this.labFileUrls.push(url);
+        (out[d.labOrderId] ??= []).push({ id: d.id, name: d.name, url });
+      }
+    }
+    this.labFiles.set(out);
+  }
+
+  protected async attachToOrder(o: LabOrder, input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    this.labFileProblem.set(false);
+    if (!file) return;
+    if (fileProblem(file)) { this.labFileProblem.set(true); return; }
+    try { await this.db.addDocument({ id: crypto.randomUUID(), patientId: o.patientId, name: file.name, type: file.type, size: file.size, addedAt: new Date().toISOString(), tooth: o.tooth, labOrderId: o.id, blob: file }); }
+    catch { this.labFileProblem.set(true); return; }
+    await this.loadLabFiles();
+  }
   protected expKey = (c: string): Key => `exp.${c}` as Key;
   /** Set in the browser only: the server doesn't know the visitor's day. */
   protected readonly today = signal('');

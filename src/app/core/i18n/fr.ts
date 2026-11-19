@@ -352,6 +352,8 @@ export const fr: Record<keyof typeof en, string> = {
   'practice.stock.reorder': "À recommander",
   'practice.stock.copy': "Copier la commande",
   'practice.stock.copied': "Copié",
+  'practice.lab.attach': "Joindre un scan ou une photo",
+  'practice.lab.files': "Fichiers",
   'letter.save': 'Enregistrer le document',
   'letter.error': 'Rédigez le texte, indiquez le destinataire (orientation) et les jours de repos en nombre entier jusqu’à 365.',
   'letter.days': '{n} jour(s) de repos',

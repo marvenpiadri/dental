@@ -354,6 +354,8 @@ export const en = {
   'practice.stock.reorder': "To reorder",
   'practice.stock.copy': "Copy order",
   'practice.stock.copied': "Copied",
+  'practice.lab.attach': "Attach a scan or photo",
+  'practice.lab.files': "Files",
   'letter.save': 'Save document',
   'letter.error': 'Write the text, name who it is sent to (referral) and give rest days as a whole number up to 365.',
   'letter.days': '{n} day(s) of rest',
