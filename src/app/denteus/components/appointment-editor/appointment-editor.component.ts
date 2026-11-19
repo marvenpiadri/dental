@@ -12,7 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { STATUS_LABEL, typeKey } from '../../utils/domain-keys';
-import { dentistHours, fromMin, outsideHours } from '../../rules/opening-hours';
+import { closureOn, dentistHours, fromMin, outsideHours } from '../../rules/opening-hours';
 import { findFreeSlots, type Slot } from '../../rules/slot-finder';
 import { I18n, Key } from '../../../core/i18n/i18n.service';
 import { CalIconComponent } from '../../../calendar/components/cal-icon/cal-icon.component';
@@ -99,6 +99,8 @@ export class AppointmentEditorComponent implements OnInit {
     const end = addMinutes(this.start(), this.duration());
     const hours = dentistHours(this.store.hours(), this.store.dentistMap().get(this.dentistId())?.hours);
     const out = this.dentistId() && outsideHours(this.start(), end, hours) ? [this.t('ap.outsideHours', { h: `${fromMin(hours.startMin)}–${fromMin(hours.endMin)}` })] : [];
+    const closure = closureOn(this.start(), this.store.locations()[0]?.profile?.closures);
+    if (closure) out.push(this.t('ap.closed', { why: closure.reason ? ` (${closure.reason})` : '' }));
     return [...out, ...this.store.previewConflicts({
       id: this.draft().id,
       patientId: this.patientId() ?? '',

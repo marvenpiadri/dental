@@ -32,6 +32,12 @@ export function outsideHours(start: Date, end: Date, h: Hours): boolean {
   return s < h.startMin || e > h.endMin;
 }
 
+/** The holiday or temporary closure covering this local day, if any (ISO `YYYY-MM-DD` bounds, inclusive). */
+export function closureOn(day: Date, closures: readonly { from: string; to: string; reason?: string }[] | undefined): { from: string; to: string; reason?: string } | undefined {
+  const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+  return closures?.find((c) => c.from <= iso && iso <= (c.to || c.from));
+}
+
 /**
  * Minute of the day a new booking starts at. Today it is the next quarter hour, but never before opening or after the last slot that still fits
  * before closing (then the clinic's opening time, so the dialog never proposes a time the calendar cannot show). Another day starts at opening.

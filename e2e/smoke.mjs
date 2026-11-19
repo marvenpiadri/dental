@@ -286,6 +286,24 @@ const tests = {
     await pop.close();
   },
 
+  async 'booking on a closure day warns that the clinic is closed'(page) {
+    const id = await newPatient(page, 'Test Patient Fourteen', '+212 600 000 214');
+    await page.goto(`${BASE}/setup/schedule`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Add dentist' }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole('button', { name: 'Add chair' }).click();
+    await page.waitForTimeout(300);
+    await page.goto(`${BASE}/setup/clinic`, { waitUntil: 'networkidle' });
+    const today = new Date().toISOString().slice(0, 10);
+    await page.getByLabel('Closed from').fill('2020-01-01');
+    await page.getByLabel('Until').fill('2099-12-31');
+    await page.getByLabel('Reason (optional)').fill('Test holiday');
+    await page.getByRole('button', { name: 'Add closure' }).click();
+    await page.waitForTimeout(500);
+    await page.goto(`${BASE}/calendar?patient=${id}&book=1`, { waitUntil: 'networkidle' });
+    await shows(page, /clinic is closed on this day \(Test holiday\)/, 'closure warning');
+  },
+
 };
 
 const only = process.argv[2];

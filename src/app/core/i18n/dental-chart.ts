@@ -665,6 +665,7 @@ const D = {
   'reports.csv.amount': ['Amount', 'Montant'],
   'ap.needSetup': ['Add at least one dentist and one chair before booking.', 'Ajoutez au moins un dentiste et un fauteuil avant de réserver.'],
   'ap.needSetup.link': ['Open settings', 'Ouvrir les paramètres'],
+  'ap.closed': ['The clinic is closed on this day{why}. You can still book it.', 'Le cabinet est fermé ce jour{why}. Vous pouvez quand même réserver.'],
   'ap.outsideHours': ['This is outside the dentist’s working hours ({h}). You can still book it.', 'Ce créneau est en dehors des horaires du dentiste ({h}). Vous pouvez quand même le réserver.'],
   'er.denied': ['You don’t have permission to do this.', 'Vous n’avez pas l’autorisation de faire cela.'],
   'ap.find': ['Find a free slot', 'Trouver un créneau libre'],

@@ -1,4 +1,4 @@
-import { DEFAULT_HOURS, defaultStartMin, outsideHours, parseHours } from './opening-hours';
+import { closureOn, DEFAULT_HOURS, defaultStartMin, outsideHours, parseHours } from './opening-hours';
 
 describe('parseHours', () => {
   it('reads valid hours', () => expect(parseHours({ open: '08:30', close: '17:00', days: [3, 1, 1] })).toEqual({ startMin: 510, endMin: 1020, days: [1, 3] }));
@@ -37,4 +37,14 @@ describe('defaultStartMin', () => {
   it('rounds up to the next quarter hour during the day', () => expect(defaultStartMin(10 * 60 + 1, h)).toBe(615));
   it('never proposes a time before opening', () => expect(defaultStartMin(4 * 60 + 40, h)).toBe(540));
   it('falls back to opening when the slot would run past closing', () => { expect(defaultStartMin(17 * 60 + 40, h)).toBe(540); expect(defaultStartMin(17 * 60 + 20, h)).toBe(17 * 60 + 30); });
+});
+
+describe('closureOn', () => {
+  const list = [{ from: '2026-12-24', to: '2026-12-26', reason: 'Holiday' }, { from: '2026-11-06', to: '' }];
+  it('finds a closure covering the day, bounds included, and none otherwise', () => {
+    expect(closureOn(new Date(2026, 11, 26, 9), list)?.reason).toBe('Holiday');
+    expect(closureOn(new Date(2026, 11, 27, 9), list)).toBeUndefined();
+    expect(closureOn(new Date(2026, 10, 6, 9), list)).toBeDefined();
+    expect(closureOn(new Date(2026, 10, 6, 9), undefined)).toBeUndefined();
+  });
 });
