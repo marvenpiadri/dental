@@ -98,17 +98,25 @@
         @case ('stock') {
           <section class="card">
             <header class="card-head"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>{{ t('practice.tab.stock') }}</h2></header>
-            @if (may().add) { <form class="row" (submit)="$event.preventDefault(); addStock(name.value, qty.value, min.value, unit.value, exp.value); name.value = ''; qty.value = ''; min.value = ''; unit.value = ''; exp.value = ''">
+            @if (may().add) { <form class="row" (submit)="$event.preventDefault(); addStock(name.value, qty.value, min.value, unit.value, exp.value, sup.value); name.value = ''; qty.value = ''; min.value = ''; unit.value = ''; exp.value = ''">
               <input class="input" #name [attr.aria-label]="t('practice.stock.name')" [placeholder]="t('practice.stock.name')" />
               <input class="input num" #qty inputmode="numeric" [attr.aria-label]="t('practice.stock.qty')" [placeholder]="t('practice.stock.qty')" />
               <input class="input num" #min inputmode="numeric" [attr.aria-label]="t('practice.stock.min')" [placeholder]="t('practice.stock.min')" />
               <input class="input num" #unit maxlength="20" [attr.aria-label]="t('practice.stock.unit')" [placeholder]="t('practice.stock.unit')" />
               <input class="input" #exp type="date" [attr.aria-label]="t('practice.stock.expires')" [title]="t('practice.stock.expires')" />
+              <input class="input" #sup list="suppliers" maxlength="60" [attr.aria-label]="t('practice.stock.supplier')" [placeholder]="t('practice.stock.supplier')" />
+              <datalist id="suppliers">@for (x of suppliers(); track x) { <option [value]="x"></option> }</datalist>
               <button type="submit" class="btn"><i class="fa-solid fa-plus" aria-hidden="true"></i>{{ t('practice.add') }}</button>
             </form> }
+            @for (g of reorder(); track g.supplier) {
+              <div class="row">
+                <span class="grow"><strong>{{ t('practice.stock.reorder') }}{{ g.supplier ? ' · ' + g.supplier : '' }}</strong> <span class="muted">· @for (l of g.lines; track l.name) { {{ l.name }} × {{ l.qty }}@if (!$last) { , } }</span></span>
+                <button type="button" class="btn" (click)="copyOrder(g)"><i class="fa-regular fa-copy" aria-hidden="true"></i>{{ t(copied() === g.supplier ? 'practice.stock.copied' : 'practice.stock.copy') }}</button>
+              </div>
+            }
             @for (s of practice.stock(); track s.id) {
               <div class="row">
-                <span class="grow"><strong>{{ s.name }}</strong> <span class="muted">· {{ t('practice.stock.min') }} {{ s.min }}@if (s.expires) { · {{ t('practice.stock.expires') }} {{ s.expires }} }</span></span>
+                <span class="grow"><strong>{{ s.name }}</strong> <span class="muted">· {{ t('practice.stock.min') }} {{ s.min }}@if (s.supplier) { · {{ s.supplier }} }@if (s.expires) { · {{ t('practice.stock.expires') }} {{ s.expires }} }</span></span>
                 @if (isLow(s)) { <span class="chip" data-tone="danger">{{ t('practice.stock.low') }}</span> }
                 @if (expired(s)) { <span class="chip" data-tone="danger">{{ t('practice.stock.expired') }}</span> } @else if (soon(s)) { <span class="chip" data-tone="warn">{{ t('practice.stock.soon') }}</span> }
                 <strong class="qty">{{ s.qty }}@if (s.unit) { <span class="muted"> {{ s.unit }}</span> }</strong>

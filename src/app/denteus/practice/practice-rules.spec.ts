@@ -1,4 +1,4 @@
-import { nextService, serviceState, changeLabStatus, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
+import { orderText, reorderGroups, nextService, serviceState, changeLabStatus, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, recordMovement, sortTasks, StockItem, StockMovement, wholeNumber } from './practice-rules';
 
 describe('practice rules', () => {
   it('totals one month of expenses', () => {
@@ -110,5 +110,15 @@ describe('equipment service', () => {
     expect(serviceState(eq, '2026-05-01')).toBe('ok');
     expect(serviceState(eq, '2026-07-10')).toBe('soon');
     expect(serviceState(eq, '2026-08-01')).toBe('overdue');
+  });
+});
+
+describe('reorderGroups', () => {
+  const it_ = (name: string, qty: number, min: number, supplier?: string, unit?: string) => ({ id: name, name, qty, min, supplier, unit });
+  it('groups low items by supplier, suggests back to twice the minimum, unnamed last, skips healthy stock', () => {
+    const g = reorderGroups([it_('Gloves', 2, 5, 'Medi', 'box'), it_('Floss', 10, 5, 'Medi'), it_('Cement', 0, 1), it_('Needles', 5, 5, 'Alpha')]);
+    expect(g.map((x) => x.supplier)).toEqual(['Alpha', 'Medi', '']);
+    expect(g[1].lines).toEqual([{ name: 'Gloves', qty: 8, unit: 'box' }]);
+    expect(orderText('Atlas', g[1])).toBe('Atlas → Medi\n- Gloves × 8 box');
   });
 });

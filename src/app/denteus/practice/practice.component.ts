@@ -4,7 +4,8 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { DentalStore } from '../services/dental-store.service';
 import { localIsoDay } from '../utils/appointment-labels';
 import { AuthService } from '../../core/auth/auth.service';
-import { EXPENSE_CATEGORIES, ExpenseCategory, Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
+import { Documents } from '../documents/documents.service';
+import { ReorderGroup, orderText, reorderGroups, EXPENSE_CATEGORIES, ExpenseCategory, Equipment, nextService, serviceState, LAB_STATUSES, LabOrder, LabStatus, changeLabStatus, labNeedsNote, MOVE_KINDS, MoveKind, StockItem, expiresSoon, implantsInLot, isExpired, isLate, isLow, monthTotal, movementsFor, sortTasks, wholeNumber } from './practice-rules';
 import { PracticeStore } from './practice-store.service';
 
 type Tab = 'tasks' | 'expenses' | 'stock' | 'lab' | 'equipment' | 'trace';
@@ -33,6 +34,7 @@ export class PracticeComponent {
   protected readonly lot = signal('');
   protected readonly invalid = signal(false);
   protected readonly categories = EXPENSE_CATEGORIES;
+  private readonly docs = inject(Documents);
   protected expKey = (c: string): Key => `exp.${c}` as Key;
   /** Set in the browser only: the server doesn't know the visitor's day. */
   protected readonly today = signal('');
@@ -78,14 +80,20 @@ export class PracticeComponent {
     this.practice.changeExpenses((list) => [...list, { id: crypto.randomUUID(), day: this.today(), label: label.trim(), amount: value, category: (EXPENSE_CATEGORIES as readonly string[]).includes(category) ? (category as ExpenseCategory) : 'other' }]);
   }
 
-  protected addStock(name: string, qty: string, min: string, unit = '', expires = ''): void {
+  protected addStock(name: string, qty: string, min: string, unit = '', expires = '', supplier = ''): void {
     if (!name.trim()) { this.invalid.set(true); return; }
     this.invalid.set(false);
-    this.practice.addStockItem({ id: crypto.randomUUID(), name: name.trim(), qty: wholeNumber(qty), min: wholeNumber(min), unit: unit.trim() || undefined, expires: expires || undefined }, this.today(), this.who());
+    this.practice.addStockItem({ id: crypto.randomUUID(), name: name.trim(), qty: wholeNumber(qty), min: wholeNumber(min), unit: unit.trim() || undefined, expires: expires || undefined, supplier: supplier.trim() || undefined }, this.today(), this.who());
   }
 
   private who = (): string => this.auth.user()?.name ?? this.t('practice.stock.frontDesk');
   protected readonly moveKinds = MOVE_KINDS;
+  protected readonly reorder = computed(() => reorderGroups(this.practice.stock()));
+  protected readonly suppliers = computed(() => [...new Set(this.practice.stock().map((s) => s.supplier).filter((x): x is string => !!x))].sort());
+  protected readonly copied = signal<string | null>(null);
+  protected async copyOrder(g: ReorderGroup): Promise<void> {
+    try { await navigator.clipboard.writeText(orderText(this.docs.clinicName(), g)); this.copied.set(g.supplier); } catch { this.copied.set(null); }
+  }
   protected readonly moveKey: Record<MoveKind, Key> = { in: 'practice.stock.kind.in', out: 'practice.stock.kind.out', waste: 'practice.stock.kind.waste', adjust: 'practice.stock.kind.adjust' };
   /** The item whose movement form or history is open (one at a time keeps the list short). */
   protected readonly moving = signal<string | null>(null);

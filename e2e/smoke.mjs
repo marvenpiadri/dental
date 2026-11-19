@@ -85,6 +85,12 @@ const tests = {
     await page.getByRole('button', { name: 'Used one' }).first().click();
     await page.waitForTimeout(300);
     assert.match(await page.locator('.row', { hasText: 'Test Gloves' }).first().innerText(), /\b9\b/);
+    await page.fill('input[aria-label="Item"]', 'Test Needles');
+    await page.fill('input[aria-label="In stock"]', '1');
+    await page.fill('input[aria-label="Alert at"]', '4');
+    await page.fill('input[aria-label="Supplier"]', 'Test Supplier');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await shows(page, /To reorder · Test Supplier[\s\S]*Test Needles × 7/, 'reorder suggestion by supplier');
 
     await newPatient(page, 'Test Patient Three', '+212 600 000 203');
     await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle' });

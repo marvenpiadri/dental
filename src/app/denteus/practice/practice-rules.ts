@@ -3,7 +3,7 @@ export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 /** `category` is absent on expenses recorded before categories existed; they count as `other`. */
 export interface Expense { id: string; day: string; label: string; amount: number; category?: ExpenseCategory }
 /** `expires` is the earliest expiry date of what is on the shelf ("YYYY-MM-DD"). */
-export interface StockItem { id: string; name: string; qty: number; min: number; unit?: string; expires?: string }
+export interface StockItem { id: string; name: string; qty: number; min: number; unit?: string; expires?: string; supplier?: string }
 export const MOVE_KINDS = ['in', 'out', 'waste', 'adjust'] as const;
 export type MoveKind = (typeof MOVE_KINDS)[number];
 /** One line of the stock ledger. `change` is signed; `after` is the balance once it was applied. `opening` records stock that existed before the ledger did. */
@@ -110,3 +110,18 @@ export function serviceState(eq: Equipment, today: string, soonDays = 30): Servi
   const left = dayNumber(due) - dayNumber(today);
   return left < 0 ? 'overdue' : left <= soonDays ? 'soon' : 'ok';
 }
+
+export interface ReorderGroup { supplier: string; lines: { name: string; qty: number; unit?: string }[] }
+/** Low-stock items grouped by supplier ('' = none named), each with enough to get back to twice the minimum (at least 1). */
+export function reorderGroups(items: readonly StockItem[]): ReorderGroup[] {
+  const groups = new Map<string, ReorderGroup>();
+  for (const i of items.filter(isLow)) {
+    const supplier = i.supplier?.trim() ?? '';
+    const g = groups.get(supplier) ?? { supplier, lines: [] };
+    g.lines.push({ name: i.name, qty: Math.max(1, i.min * 2 - i.qty), unit: i.unit });
+    groups.set(supplier, g);
+  }
+  return [...groups.values()].sort((a, b) => (a.supplier === '' ? 1 : b.supplier === '' ? -1 : a.supplier.localeCompare(b.supplier)));
+}
+/** Plain text of an order, ready to paste into a message to the supplier. Nothing is sent from the app. */
+export const orderText = (clinic: string, g: ReorderGroup): string => [clinic ? `${clinic}${g.supplier ? ` → ${g.supplier}` : ''}` : g.supplier, ...g.lines.map((l) => `- ${l.name} × ${l.qty}${l.unit ? ` ${l.unit}` : ''}`)].filter(Boolean).join('\n');
