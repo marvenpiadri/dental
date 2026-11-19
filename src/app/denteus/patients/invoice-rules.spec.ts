@@ -1,5 +1,5 @@
 import { Invoice, Payment, TreatmentItem } from '../models/dental.models';
-import { dueOn, activePayments, cancelInvoice, invoiceState, issueInvoice, nextNumber, uninvoiced, voidPayment } from './invoice-rules';
+import { dueOn, activePayments, cancelInvoice, invoiceState, issueInvoice, nextNumber, recordRefund, refundLeft, refundedTotal, uninvoiced, voidPayment } from './invoice-rules';
 import { balance } from './treatment-rules';
 
 const item = (id: string, price: number, status: TreatmentItem['status'] = 'done'): TreatmentItem => ({ id, procedure: 'filling', price, status });
@@ -102,5 +102,29 @@ describe('payment term', () => {
     const plan = [item('1', 500)];
     expect(issueInvoice(plan, label, [], new Date(2026, 0, 25), 30)!.dueOn).toBe('2026-02-24');
     expect(issueInvoice(plan, label, [], new Date(2026, 0, 25))!.dueOn).toBeUndefined();
+  });
+});
+
+describe('refunds on a credit note', () => {
+  const inv = issueInvoice([item('a', 300)], label, [], now)!;
+  const { creditNote } = cancelInvoice(inv, 'wrong patient', [inv], now)!;
+  const paid = [pay('p1', 200, { invoiceId: inv.id })];
+
+  it('can refund only what was paid on the cancelled invoice', () => {
+    expect(refundLeft(creditNote, paid)).toBe(200);
+    expect(refundLeft(creditNote, [])).toBe(0);
+    expect(refundLeft(inv, paid)).toBe(0);
+  });
+  it('records a refund on the note and refuses zero or too much', () => {
+    expect(recordRefund(creditNote, 0, 'cash', '', paid, now)).toBeNull();
+    expect(recordRefund(creditNote, 201, 'cash', '', paid, now)).toBeNull();
+    const done = recordRefund(creditNote, 150, 'transfer', ' T-9 ', paid, now)!;
+    expect(done.refunds?.[0]).toMatchObject({ amount: 150, method: 'transfer', reference: 'T-9' });
+    expect(refundLeft(done, paid)).toBe(50);
+    expect(recordRefund(done, 60, 'cash', '', paid, now)).toBeNull();
+  });
+  it('comes off what the patient counts as having paid', () => {
+    const done = recordRefund(creditNote, 150, 'cash', '', paid, now)!;
+    expect(balance([item('a', 300)], paid, refundedTotal([inv, done])).paid).toBe(50);
   });
 });

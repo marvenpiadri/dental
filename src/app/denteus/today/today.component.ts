@@ -1,6 +1,7 @@
 import { Documents } from '../documents/documents.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
+import { refundedTotal } from '../patients/invoice-rules';
 import { ChangeDetectionStrategy, Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { isSameDay } from '../../calendar/utils/date.utils';
@@ -145,7 +146,7 @@ export class TodayComponent {
   /** Patients who still owe money, biggest balance first. Only the top few are listed; the total covers everyone. */
   protected readonly owing = computed(() => {
     const rows = this.store.patients()
-      .map((patient) => ({ patient, due: balance(planInCurrency(patient.plan ?? [], this.store.currency()), inCurrency(patient.payments ?? [], this.store.currency())).due }))
+      .map((patient) => ({ patient, due: balance(planInCurrency(patient.plan ?? [], this.store.currency()), inCurrency(patient.payments ?? [], this.store.currency()), refundedTotal(inCurrency(patient.invoices ?? [], this.store.currency()))).due }))
       .filter((row) => row.due > 0)
       .sort((a, b) => b.due - a.due);
     return { rows: rows.slice(0, 5), count: rows.length, total: rows.reduce((n, row) => n + row.due, 0) };

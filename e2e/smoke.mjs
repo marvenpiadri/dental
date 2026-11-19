@@ -188,6 +188,21 @@ const tests = {
     await page.goto(`${BASE}/patients/${id}`, { waitUntil: 'networkidle' });
     await shows(page, /Remaining\s*MAD\s*300/, 'charge on the file');
     await shows(page, /Completed visits\s*1/, 'completed visits');
+    // Refund through a credit note: pay part of the invoice, cancel it, hand the money back.
+    await page.goto(`${BASE}/patients/${id}/billing`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: /Issue invoice/ }).click();
+    await page.getByLabel('Amount (MAD)').fill('200');
+    await page.getByRole('button', { name: 'Record payment' }).click();
+    await shows(page, /Paid\s*MAD\s*200/, 'payment recorded');
+    await page.getByRole('button', { name: 'Cancel invoice' }).click();
+    await page.getByLabel('Reason (kept in the record)').fill('Test mistake');
+    await page.getByRole('button', { name: 'Cancel and issue credit note' }).click();
+    await page.getByRole('button', { name: /Refund MAD\s*200/ }).click();
+    await page.getByRole('button', { name: 'Record refund' }).click();
+    await shows(page, /Refunded MAD\s*200/, 'refund on the credit note');
+    await shows(page, /Paid\s*MAD\s*0/, 'refund comes off paid');
+    await page.goto(`${BASE}/patients/${id}/billing`, { waitUntil: 'networkidle' });
+    await shows(page, /Refunded MAD\s*200/, 'refund survives reload');
   },
 
   async 'backup restores into a clean browser profile'(page) {

@@ -7,7 +7,7 @@ import { Documents } from '../documents/documents.service';
 import { receiptHtml } from './receipt-html';
 import { balance, parsePrice, procedureName } from './treatment-rules';
 import { scopeText } from './procedure-record';
-import { InvoiceState, cancelInvoice, invoiceState, issueInvoice, uninvoiced, voidPayment } from './invoice-rules';
+import { InvoiceState, cancelInvoice, invoiceState, issueInvoice, recordRefund, refundLeft, refundedTotal, uninvoiced, voidPayment } from './invoice-rules';
 import { invoiceHtml } from './invoice-html';
 import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
 import { PAYER_TYPES, PayerType, enabledTypes } from '../regional/payers';
@@ -78,7 +78,7 @@ export class BillingComponent {
   protected readonly rows = computed(() => [...this.invoices()].sort((a, b) => b.issuedAt.localeCompare(a.issuedAt)).map((inv) => ({ inv, ...invoiceState(inv, inCurrency(this.payments(), inv.currency ?? this.cur())) })));
   protected readonly open = computed(() => this.rows().filter((r) => (r.state === 'unpaid' || r.state === 'partial') && (r.inv.currency ?? this.cur()) === this.cur()));
 
-  protected readonly sums = computed(() => balance(planInCurrency(this.plan(), this.store.currency()), this.current()));
+  protected readonly sums = computed(() => balance(planInCurrency(this.plan(), this.store.currency()), this.current(), refundedTotal(inCurrency(this.invoices(), this.cur()))));
   protected readonly recent = computed(() => [...this.payments()].sort((a, b) => b.at.localeCompare(a.at)));
 
   /** One click for the common case at the desk: the patient pays what is left. */
@@ -111,6 +111,21 @@ export class BillingComponent {
     this.forInvoice.set(id);
     const left = this.open().find((r) => r.inv.id === id)?.remaining;
     if (left && !this.amount()) this.amount.set(String(left));
+  }
+
+  /** Refund form on one credit note: which note, and its amount and reference. */
+  protected readonly refunding = signal<string | null>(null);
+  protected readonly refundAmount = signal('');
+  protected readonly refundRef = signal('');
+  protected refundedOf(note: Invoice): number { return refundedTotal([note]); }
+  protected left(note: Invoice): number { return refundLeft(note, this.payments()); }
+  protected startRefund(note: Invoice): void { this.refundAmount.set(String(this.left(note))); this.refundRef.set(''); this.refunding.set(note.id); }
+  protected refund(): void {
+    const note = this.invoices().find((i) => i.id === this.refunding());
+    const done = note && recordRefund(note, Number(this.refundAmount()), this.chosen(), this.refundRef(), this.payments(), new Date());
+    if (!done) return;
+    this.editInvoices.emit((list) => list.map((i) => (i.id === done.id ? done : i)));
+    this.refunding.set(null);
   }
 
   protected readonly canVoid = computed(() => this.auth.can('billing.void'));

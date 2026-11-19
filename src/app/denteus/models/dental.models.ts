@@ -267,6 +267,17 @@ export interface InvoiceLine {
   price: number;
 }
 
+/** Money handed back to the patient against a credit note. Recorded once, never edited. */
+export interface Refund {
+  id: string;
+  /** Whole units, more than zero. */
+  amount: number;
+  method: PaymentMethod;
+  /** ISO timestamp. */
+  at: string;
+  reference?: string;
+}
+
 /**
  * An invoice, or the credit note that cancels one. Never edited and never deleted after issue:
  * a mistake is cancelled (which issues a credit note) and the work is invoiced again under a new number.
@@ -286,6 +297,8 @@ export interface Invoice {
   currency?: string;
   /** A credit note points at the invoice it cancels. */
   cancelsId?: string;
+  /** Only on a credit note: refunds paid out against it. */
+  refunds?: Refund[];
   cancelledAt?: string;
   cancelReason?: string;
 }

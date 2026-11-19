@@ -1,4 +1,4 @@
-import { Invoice, InvoiceLine, Payment, TreatmentItem } from '../models/dental.models';
+import { Invoice, InvoiceLine, Payment, PaymentMethod, Refund, TreatmentItem } from '../models/dental.models';
 
 /** Payments that count: a voided payment stays in the history but is in no total. */
 export const activePayments = (payments: readonly Payment[]): Payment[] => payments.filter((p) => !p.voidedAt);
@@ -61,3 +61,22 @@ export function voidPayment(payment: Payment, reason: string, now: Date): Paymen
   const why = reason.trim();
   return why && !payment.voidedAt ? { ...payment, voidedAt: now.toISOString(), voidReason: why } : null;
 }
+
+const refunded = (note: Invoice): number => money((note.refunds ?? []).reduce((n, r) => n + r.amount, 0));
+
+/** What can still be handed back on a credit note: what was paid on the cancelled invoice, minus refunds already made. */
+export function refundLeft(note: Invoice, payments: readonly Payment[]): number {
+  if (note.kind !== 'credit-note' || !note.cancelsId) return 0;
+  const paid = activePayments(payments).filter((p) => p.invoiceId === note.cancelsId).reduce((n, p) => n + p.amount, 0);
+  return Math.max(0, money(paid - refunded(note)));
+}
+
+/** Records a refund on a credit note. Null when the amount is not above zero or is more than is left to refund. */
+export function recordRefund(note: Invoice, amount: number, method: PaymentMethod, reference: string, payments: readonly Payment[], now: Date): Invoice | null {
+  if (!(amount > 0) || amount > refundLeft(note, payments)) return null;
+  const refund: Refund = { id: crypto.randomUUID(), amount: money(amount), method, at: now.toISOString(), ...(reference.trim() && { reference: reference.trim() }) };
+  return { ...note, refunds: [...(note.refunds ?? []), refund] };
+}
+
+/** Total refunded across credit notes: it comes off what the patient is counted as having paid. */
+export const refundedTotal = (invoices: readonly Invoice[]): number => money(invoices.reduce((n, i) => n + refunded(i), 0));

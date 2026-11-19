@@ -39,9 +39,9 @@ export function parsePrice(text: string): number | null {
 export interface Balance { charged: number; paid: number; due: number }
 
 /** Done work is what the patient is charged for; planned work is not billed yet. `due` is negative when they have paid ahead. */
-export function balance(plan: readonly TreatmentItem[], payments: readonly Payment[]): Balance {
+export function balance(plan: readonly TreatmentItem[], payments: readonly Payment[], refunded = 0): Balance {
   const charged = planTotals(plan).done;
-  const paid = payments.filter((p) => !p.voidedAt).reduce((n, p) => n + p.amount, 0);
+  const paid = payments.filter((p) => !p.voidedAt).reduce((n, p) => n + p.amount, 0) - refunded;
   return { charged, paid, due: charged - paid };
 }
 

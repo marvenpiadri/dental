@@ -1,5 +1,6 @@
 import { Documents } from '../documents/documents.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
+import { refundedTotal } from './invoice-rules';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -131,11 +132,11 @@ export class PatientProfileComponent {
   });
   protected readonly feedShown = signal(20);
   protected readonly feedPage = computed(() => this.feed().slice(0, this.feedShown()));
-  protected readonly money = computed(() => { const p = this.patient(); return balance(planInCurrency(p?.plan ?? [], this.store.currency()), inCurrency(p?.payments ?? [], this.store.currency())); });
+  protected readonly money = computed(() => { const p = this.patient(); return balance(planInCurrency(p?.plan ?? [], this.store.currency()), inCurrency(p?.payments ?? [], this.store.currency()), refundedTotal(inCurrency(p?.invoices ?? [], this.store.currency()))); });
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
     const p = this.patient();
-    return p ? balance(planInCurrency(p.plan ?? [], this.store.currency()), inCurrency(p.payments ?? [], this.store.currency())).due : 0;
+    return p ? balance(planInCurrency(p.plan ?? [], this.store.currency()), inCurrency(p.payments ?? [], this.store.currency()), refundedTotal(inCurrency(p.invoices ?? [], this.store.currency()))).due : 0;
   });
   /** Tooth chosen in the chart for the next plan item. */
   // Only read once the store has loaded, which only happens in the browser.

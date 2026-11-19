@@ -1,5 +1,5 @@
 import { LEGACY_CURRENCY, inCurrency, planInCurrency } from '../regional/regional-rules';
-import { invoiceState } from '../patients/invoice-rules';
+import { invoiceState, refundedTotal } from '../patients/invoice-rules';
 import { balance } from '../patients/treatment-rules';
 import { Appointment, Dentist, Patient, PaymentMethod } from '../models/dental.models';
 
@@ -91,7 +91,7 @@ export function expensesIn(expenses: readonly { day: string; amount: number }[],
 export function receivables(patients: readonly Patient[], currency = LEGACY_CURRENCY, top = 5): { total: number; owing: number; top: { patient: Patient; due: number }[] } {
   const rows = patients
     .filter((p) => !p.archivedAt)
-    .map((patient) => ({ patient, due: balance(planInCurrency(patient.plan ?? [], currency), inCurrency(patient.payments ?? [], currency)).due }))
+    .map((patient) => ({ patient, due: balance(planInCurrency(patient.plan ?? [], currency), inCurrency(patient.payments ?? [], currency), refundedTotal(inCurrency(patient.invoices ?? [], currency))).due }))
     .filter((r) => r.due > 0)
     .sort((a, b) => b.due - a.due || a.patient.fullName.localeCompare(b.patient.fullName));
   return { total: rows.reduce((n, r) => n + r.due, 0), owing: rows.length, top: rows.slice(0, top) };
