@@ -6,6 +6,7 @@
   @if (patient(); as p) {
     <div class="ds-actions">
       @if (auth.can('patients.manage')) { <button type="button" class="btn" (click)="askArchive.set(true)"><i class="fa-solid" [class.fa-box-archive]="!p.archivedAt" [class.fa-box-open]="p.archivedAt" aria-hidden="true"></i><span class="hide-sm">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</span></button> }
+      @if (auth.can('patients.manage')) { <button type="button" class="btn" (click)="merging.set(true)"><i class="fa-solid fa-code-merge" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.merge') }}</span></button> }
       @if (auth.can('patients.edit')) { <a class="btn" [routerLink]="['/patients', p.id, 'edit']"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i><span class="hide-sm">{{ t('common.edit') }}</span></a> }
       @if (auth.can('appointments.create')) { <a class="btn btn--primary" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a> }
     </div>
@@ -34,6 +35,19 @@
           <span>{{ t(p.archivedAt ? 'profile.restore.confirm' : 'profile.archive.confirm', { name: p.fullName }) }}</span>
           <button type="button" class="btn btn--primary" (click)="store.setArchived(p.id, !p.archivedAt); askArchive.set(false)">{{ t(p.archivedAt ? 'profile.restore' : 'profile.archive') }}</button>
           <button type="button" class="btn" (click)="askArchive.set(false)">{{ t('common.cancel') }}</button>
+        </div>
+      }
+      @if (merging()) {
+        <div class="archived-note" role="alertdialog" [attr.aria-label]="t('profile.merge')">
+          <label>{{ t('profile.merge.pick', { name: p.fullName }) }}
+            <select class="input" [value]="mergeFrom()" (change)="mergeFrom.set($any($event.target).value)">
+              <option value="">—</option>
+              @for (o of mergeChoices(); track o.id) { <option [value]="o.id">{{ o.fullName }} · {{ o.number ?? '' }} · {{ o.phone }}</option> }
+            </select>
+          </label>
+          <span>{{ t('profile.merge.warn') }}</span>
+          <button type="button" class="btn btn--primary" [disabled]="!mergeFrom()" (click)="merge()">{{ t('profile.merge.go') }}</button>
+          <button type="button" class="btn" (click)="merging.set(false)">{{ t('common.cancel') }}</button>
         </div>
       }
       <section class="cover-wrap">

@@ -101,6 +101,13 @@ export class PatientProfileComponent {
     };
   });
   protected readonly askArchive = signal(false);
+  protected readonly merging = signal(false);
+  protected readonly mergeFrom = signal('');
+  protected readonly mergeChoices = computed(() => this.store.patients().filter((x) => x.id !== this.id() && !x.archivedAt).sort((a, b) => a.fullName.localeCompare(b.fullName)).slice(0, 200));
+  protected async merge(): Promise<void> {
+    const other = this.mergeFrom();
+    if (other && await this.store.mergePatients(this.id(), other)) { this.merging.set(false); this.mergeFrom.set(''); }
+  }
   protected readonly sentMessages = computed(() => [...(this.patient()?.messages ?? [])].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8));
   protected readonly kindKey = { appointment: 'profile.remind.appt', balance: 'profile.remind.balance', recall: 'profile.remind.recall' } as const;
   protected readonly statusKey = { prepared: 'wa.status.prepared', sent: 'wa.status.sent', delivered: 'wa.status.delivered', read: 'wa.status.read', failed: 'wa.status.failed' } as const;

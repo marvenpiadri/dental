@@ -306,6 +306,20 @@ const tests = {
     await shows(page, /clinic is closed on this day \(Test holiday\)/, 'closure warning');
   },
 
+  async 'merging a duplicate moves its records and removes it'(page) {
+    const keep = await newPatient(page, 'Test Patient Keep', '+212 600 000 215');
+    const dup = await newPatient(page, 'Test Patient Dup', '+212 600 000 216');
+    await page.goto(`${BASE}/patients/${dup}/visits`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Save document' }).click();
+    await page.goto(`${BASE}/patients/${keep}`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Merge duplicate' }).click();
+    await page.locator('[role=alertdialog] select').selectOption(dup);
+    await page.getByRole('button', { name: 'Merge into this file' }).click();
+    await shows(page, /Medical certificate/, 'duplicate letter now in the kept timeline');
+    await page.goto(`${BASE}/patients/${dup}`, { waitUntil: 'networkidle' });
+    assert.ok(await page.locator('.fa-user-slash').waitFor({ timeout: 8000 }).then(() => true), 'duplicate file is gone');
+  },
+
 };
 
 const only = process.argv[2];

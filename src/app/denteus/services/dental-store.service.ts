@@ -1,3 +1,4 @@
+import { mergePatientRecords } from '../patients/merge-rules';
 import { LEGACY_CURRENCY, countryName } from '../regional/regional-rules';
 import { CONDITIONS, nextPatientNumber } from '../patients/patient-rules';
 import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
@@ -252,6 +253,17 @@ export class DentalStore {
     const patient: Patient = { ...tidy(input), id: newId(), number: nextPatientNumber(this.patients()), createdAt: new Date().toISOString() };
     this.patients.update((list) => [...list, patient]);
     return patient;
+  }
+
+  /** Folds one patient file into another: records, appointments and attached files move to `keepId`, then `dropId` is removed. Cannot be undone. */
+  async mergePatients(keepId: string, dropId: string): Promise<boolean> {
+    const keep = this.patientMap().get(keepId), drop = this.patientMap().get(dropId);
+    if (!keep || !drop || keepId === dropId) return false;
+    for (const d of await this.database.listDocuments(dropId)) await this.database.addDocument({ ...d, patientId: keepId });
+    const merged = mergePatientRecords(keep, drop, new Date());
+    this.appointments.update((list) => list.map((a) => (a.patientId === dropId ? { ...a, patientId: keepId } : a)));
+    this.patients.update((list) => list.filter((p) => p.id !== dropId).map((p) => (p.id === keepId ? merged : p)));
+    return true;
   }
 
   updatePatient(id: string, input: PatientInput): Patient | null {
