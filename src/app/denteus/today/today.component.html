@@ -71,6 +71,30 @@
         </section>
       }
 
+      @if (waitlist().length) {
+        <section class="card" aria-labelledby="waitlist-title">
+          <header class="card-head">
+            <h2 class="card-title" id="waitlist-title"><i class="fa-regular fa-hourglass-half" aria-hidden="true"></i>{{ t('today.waitlist') }}</h2>
+            <span class="chip" data-tone="neutral">{{ waitlist().length }}</span>
+          </header>
+          <ul class="list">
+            @for (p of waitlist(); track p.id) {
+              <li class="with-action">
+                <a class="row" [routerLink]="['/patients', p.id]">
+                  <span class="avatar" style="--size: 36px" aria-hidden="true">{{ initials(p.fullName) }}</span>
+                  <span class="who"><span class="name">{{ p.fullName }}</span><span class="sub muted">{{ p.phone }}</span></span>
+                  <span class="meta"><span class="time">{{ i18n.date(wDate(p.waiting!.since), { day: 'numeric', month: 'short' }) }}</span></span>
+                </a>
+                @if (auth.can('appointments.create')) {
+                  <a class="btn" routerLink="/calendar" [queryParams]="{ patient: p.id, book: 1 }"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('profile.book') }}</span></a>
+                  <button type="button" class="btn" [attr.aria-label]="t('profile.waitlist.remove')" (click)="store.setWaiting(p.id, false)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
       <div class="grid-2">
         <section class="card" aria-labelledby="waiting-title">
           <header class="card-head">

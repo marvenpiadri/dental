@@ -266,10 +266,19 @@ export class DentalStore {
     return true;
   }
 
+  /** Puts a patient on, or takes them off, the waiting list. */
+  setWaiting(patientId: string, waiting: boolean): void {
+    this.patients.update((list) => list.map((p) => {
+      if (p.id !== patientId) return p;
+      const { waiting: _drop, ...rest } = p;
+      return waiting ? { ...rest, waiting: { since: new Date().toISOString() } } : rest;
+    }));
+  }
+
   updatePatient(id: string, input: PatientInput): Patient | null {
     const current = this.patientMap().get(id);
     if (!current) return null;
-    const patient: Patient = { ...tidy(input), id, number: current.number, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, photo: current.photo }; // the form doesn't edit these, so keep them
+    const patient: Patient = { ...tidy(input), id, number: current.number, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, waiting: current.waiting, photo: current.photo }; // the form doesn't edit these, so keep them
     const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
     if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
     this.patients.update((list) => list.map((p) => (p.id === id ? patient : p)));

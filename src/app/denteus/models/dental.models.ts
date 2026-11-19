@@ -141,6 +141,8 @@ export interface Patient {
   visits?: VisitNote[];
   /** Dated versions of the quote given to the patient, oldest first, with the patient's answer. */
   proposals?: PlanProposal[];
+  /** On the clinic's waiting list for an appointment: set by the front desk, cleared by hand. Hidden on Today while a future appointment exists. */
+  waiting?: { since: string };
   /** Small JPEG data URL (see the profile's photo picker). Optional, added whenever the clinic likes. */
   photo?: string;
 }
@@ -325,7 +327,7 @@ export interface TreatmentItem {
 
 
 /** What the patient form edits. Everything but the name is optional. */
-export type PatientInput = Omit<Patient, 'id' | 'number' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances' | 'chartRecoveries'>;
+export type PatientInput = Omit<Patient, 'id' | 'number' | 'createdAt' | 'odontogram' | 'examinations' | 'plan' | 'payments' | 'invoices' | 'letters' | 'archivedAt' | 'messages' | 'whatsappConsent' | 'whatsappConsentAt' | 'visits' | 'proposals' | 'insurances' | 'chartRecoveries' | 'waiting'>;
 
 export interface Dentist {
   id: string;

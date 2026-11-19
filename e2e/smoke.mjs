@@ -320,6 +320,17 @@ const tests = {
     assert.ok(await page.locator('.fa-user-slash').waitFor({ timeout: 8000 }).then(() => true), 'duplicate file is gone');
   },
 
+  async 'waiting list: add from the file, shown on Today, removed'(page) {
+    const id = await newPatient(page, 'Test Patient Wait', '+212 600 000 217');
+    await page.goto(`${BASE}/patients/${id}`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Add to waiting list' }).click();
+    await page.goto(`${BASE}/today`, { waitUntil: 'networkidle' });
+    await shows(page, /Waiting list[\s\S]*Test Patient Wait/, 'on Today');
+    await page.getByRole('button', { name: 'Remove from waiting list' }).first().click();
+    await page.waitForTimeout(400);
+    assert.equal(await page.getByText('Test Patient Wait').count(), 0, 'removed from Today');
+  },
+
 };
 
 const only = process.argv[2];

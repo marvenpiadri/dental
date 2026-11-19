@@ -78,6 +78,15 @@ export class TodayComponent {
     this.problem.set(result.ok ? null : result.message);
   }
 
+  protected wDate = (iso: string): Date => new Date(iso);
+  /** Patients waiting for a slot who have nothing booked ahead, longest wait first. */
+  protected readonly waitlist = computed(() => {
+    const now = this.now();
+    if (!now) return [];
+    const booked = new Set(this.store.appointments().filter((a) => a.start > now && a.status !== 'cancelled' && a.status !== 'no-show').map((a) => a.patientId));
+    return this.store.patients().filter((p) => p.waiting && !p.archivedAt && !booked.has(p.id)).sort((a, b) => a.waiting!.since.localeCompare(b.waiting!.since)).slice(0, 20);
+  });
+
   /** The chair to the finished visit in one click; completing keeps the same rules as the calendar panel. */
   protected async finish(a: Appointment): Promise<void> {
     if (!this.store.confirmCompletion(a.id)) return;
