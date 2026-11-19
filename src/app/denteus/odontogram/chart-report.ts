@@ -25,7 +25,7 @@ export function findingRows(chart: Chart, lang: Lang, teeth: readonly number[] =
     const b = blank[String(n)] as unknown as Record<string, unknown> | undefined;
     const items: string[] = [];
     for (const f of Object.keys(a ?? {})) {
-      if (JSON.stringify(a?.[f]) === JSON.stringify(b?.[f])) continue;
+      if (f === 'perio' || JSON.stringify(a?.[f]) === JSON.stringify(b?.[f])) continue; // perio has its own section
       items.push(a![f] === true ? words(f) : `${words(f)}: ${show(a![f], lang)}`);
     }
     if (items.length) rows.push({ tooth: tooth(n), items });

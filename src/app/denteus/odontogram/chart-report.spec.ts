@@ -40,6 +40,10 @@ describe('perio rows in the report', () => {
     c = ok(editChart(c, 'status', [16], { kind: 'perio', site: 'MB', bop: true }));
     expect(perioRows(c)).toEqual([{ tooth: '16', items: ['PD 6 mm', 'BOP 1/2'] }]);
   });
+  it('keeps probing out of the generic findings list', () => {
+    const c = ok(editChart(newChart(), 'status', [16], { kind: 'perio', site: 'MB', pd: 6 }));
+    expect(findingRows(c, 'en')).toEqual([]);
+  });
   it('prints the probing table and classification in the report', () => {
     const c = ok(editChart(newChart(), 'status', [16], { kind: 'perio', site: 'MB', pd: 6 }));
     const base = { clinic: 'C', patient: 'P', date: '2026-11-17', lang: 'en', dir: 'ltr' as const, findings: [], planned: [], suggested: [], summary: [], labels: { title: 'T', patient: 'P', date: 'D', findings: 'F', planned: 'Pl', plannedNote: '', suggested: 'S', suggestedNote: '', summary: 'Sum', none: 'None', perio: 'Periodontal chart' } };
