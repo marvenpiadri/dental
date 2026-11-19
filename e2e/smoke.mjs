@@ -252,6 +252,8 @@ const tests = {
     assert.doesNotMatch(html, /Test certificate/, 'old text gone');
     assert.match(html, /dentist is responsible/i, 'responsibility line');
     await pop.close();
+    await page.goto(`${BASE}/patients/${id}`, { waitUntil: 'networkidle' });
+    await shows(page, /Medical certificate/, 'letter appears in the patient timeline');
   },
 
   async 'invoice payment term is saved in Settings and survives a reload'(page) {

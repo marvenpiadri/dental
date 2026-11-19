@@ -112,7 +112,7 @@
           <header class="card-head"><h2 class="card-title" id="feed-title"><i class="fa-solid fa-timeline" aria-hidden="true"></i>{{ t('profile.feed') }}</h2></header>
           @if (feed().length) {
             <ol class="feed">
-              @for (f of feed(); track f.key) {
+              @for (f of feedPage(); track f.key) {
                 <li>
                   <span class="feed-icon" [attr.data-tone]="f.tone"><i [class]="'fa-solid ' + f.icon" aria-hidden="true"></i></span>
                   <span class="feed-body"><strong>{{ f.title }}</strong>@if (f.sub) { <span class="muted">{{ f.sub }}</span> }</span>
@@ -121,6 +121,7 @@
                 </li>
               }
             </ol>
+            @if (feed().length > feedShown()) { <button type="button" class="btn" (click)="feedShown.set(feedShown() + 20)">{{ t('profile.feed.more') }}</button> }
           } @else { <p class="card-body muted">{{ t('profile.feed.empty') }}</p> }
         </section>
         <div class="rail-col">

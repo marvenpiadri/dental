@@ -117,8 +117,13 @@ export class PatientProfileComponent {
     for (const x of p.payments ?? []) out.push({ key: 'p' + x.id, at: new Date(x.at), icon: 'fa-wallet', tone: 'info', title: t('profile.feed.payment'), sub: x.method, amount: x.amount });
     for (const v of p.visits ?? []) out.push({ key: 'v' + v.id, at: new Date(v.at), icon: 'fa-notes-medical', tone: 'neutral', title: t('profile.visits'), sub: v.complaint || v.findings || v.care });
     for (const a of this.appointments()) out.push({ key: 'c' + a.id, at: a.start, icon: 'fa-calendar-check', tone: 'neutral', title: t(typeKey(a.type)), sub: t(STATUS_KEY[a.status]) });
-    return out.sort((x, y) => y.at.getTime() - x.at.getTime()).slice(0, 40);
+    for (const i of p.invoices ?? []) out.push({ key: 'i' + i.id, at: new Date(i.issuedAt), icon: 'fa-file-invoice', tone: 'info', title: t(i.kind === 'credit-note' ? 'profile.feed.credit' : 'profile.feed.invoice'), sub: i.number, amount: i.total });
+    for (const l of p.letters ?? []) out.push({ key: 'l' + l.id, at: new Date(l.at), icon: 'fa-file-lines', tone: 'neutral', title: t(l.kind === 'referral' ? 'letter.referral' : 'letter.certificate') });
+    for (const r of p.prescriptions ?? []) if (r.issuedAt) out.push({ key: 'r' + r.id, at: new Date(r.issuedAt), icon: 'fa-prescription', tone: 'neutral', title: t('profile.feed.rx'), sub: r.number });
+    return out.sort((x, y) => y.at.getTime() - x.at.getTime());
   });
+  protected readonly feedShown = signal(20);
+  protected readonly feedPage = computed(() => this.feed().slice(0, this.feedShown()));
   protected readonly money = computed(() => { const p = this.patient(); return balance(planInCurrency(p?.plan ?? [], this.store.currency()), inCurrency(p?.payments ?? [], this.store.currency())); });
   /** What the patient still owes, shown as a dot on the Billing tab. */
   protected readonly due = computed(() => {
