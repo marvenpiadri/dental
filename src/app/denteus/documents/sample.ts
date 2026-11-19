@@ -39,7 +39,7 @@ export function sampleDoc(kind: DocKind, t: T, clinic: string, lang: string, mon
       labels: { title: t('rx.title'), patient: t('receipt.patient'), date: t('receipt.date'), dentist: t('rx.dentist'), signature: t('rx.signature') } } as Parameters<typeof prescriptionDoc>[0]);
     case 'letter': return letterDoc({ ...common, dentist: t('doc.sample.dentist'), title: t('letter.referral'), details: [`${t('letter.to')}: Dr Benjelloun`], text: t('doc.sample.letter'),
       labels: { patient: t('receipt.patient'), date: t('receipt.date'), signature: t('rx.signature') } });
-    case 'report': return reportDoc({ ...common, dir: 'ltr', findings: [{ tooth: '16', items: [t('doc.sample.act2')] }, { tooth: '36', items: [t('doc.sample.act1')] }], planned: [], suggested: [], summary: [],
-      labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'), suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), summary: t('dc.report.summary'), none: t('dc.report.none') } });
+    case 'report': return reportDoc({ ...common, dir: 'ltr', findings: [{ tooth: '16', items: [t('doc.sample.act2')] }, { tooth: '36', items: [t('doc.sample.act1')] }], planned: [], suggested: [],
+      labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'), suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), none: t('dc.report.none') } });
   }
 }

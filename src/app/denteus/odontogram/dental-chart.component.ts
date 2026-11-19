@@ -9,7 +9,7 @@ import { compareExaminations, makeExamination, suggestedDiagnoses, type Examinat
 import { editChart, plannedTeeth, setEdentulous, type ChartMode } from './engine/plan';
 import { defaultState } from './engine/vendor/state/payload';
 import { label } from './labels';
-import { findingRows, perioRows, planRows, reportHtml } from './chart-report';
+import { findingRows, planRows, reportHtml } from './chart-report';
 import { classifyPerio, indexSummary, perioSummary } from './engine/perio';
 import { NUMBERING_SYSTEMS, formatTooth, primaryOf, type NumberingSystem } from './engine/numbering';
 import { patchCaseMeta, type CaseMeta } from './engine/perio';
@@ -347,27 +347,15 @@ export class DentalChartComponent {
       title: this.t('dc.export.title'), patient: blank ? '' : this.patientName(), date: blank ? '' : (this.viewing()?.date ?? new Date().toISOString().slice(0, 10)), lang: this.i18n.lang(), clinic: this.clinicName(), logo: this.docs.clinicLogo(),
     }));
   }
-  /** "Periodontitis · Stage III · Grade B · Generalized", or '' when nothing is probed. */
-  private perioLine(c: Chart): string {
-    const k = classifyPerio(c);
-    return k ? [k.diagnosis, `${this.t('dc.ps.stage')} ${k.stage}`, `${this.t('dc.ps.grade')} ${k.grade}`, k.extent].filter(Boolean).join(' · ') : '';
-  }
   protected printReport(): void {
     const t = this.t, c = this.shown(), lang = this.i18n.lang();
-    const ps = perioSummary(c), ix = indexSummary(c);
-    const summary = [
-      ps.chartedSites ? `${t('dc.ps.sites', { n: ps.chartedSites })}` : '', ps.chartedSites ? `BOP ${ps.bopPercent}%` : '',
-      ps.maxPd !== null ? t('dc.ps.maxPd', { n: ps.maxPd }) : '', ix.olearyPercent ? t('dc.ps.oleary', { n: ix.olearyPercent }) : '',
-      ix.meanPi !== null ? t('dc.ps.pi', { n: ix.meanPi }) : '', ix.meanGi !== null ? t('dc.ps.gi', { n: ix.meanGi }) : '',
-    ].filter(Boolean);
     const tpl = this.docs.templateFor('report');
     const html = reportHtml({
       clinic: this.clinicName(), patient: this.patientName(), date: this.viewing()?.date ?? new Date().toISOString().slice(0, 10), lang, dir: 'ltr',
       findings: findingRows(c, lang, undefined, (n) => this.num(n)), planned: this.viewing() ? [] : planRows(c, lang, (n) => this.num(n)),
-      perio: perioRows(c, (n) => this.num(n)), classification: this.perioLine(c),
-      suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`), summary,
+      suggested: this.diagnoses().map((d) => `${this.num(d.tooth)} · ${d.display}${d.icd10 ? ` (${d.icd10})` : ''}`),
       labels: { title: t('dc.report.title'), patient: t('dc.report.patient'), date: t('dc.report.date'), findings: t('dc.report.findings'), planned: t('dc.report.planned'), plannedNote: t('dc.report.plannedNote'),
-        suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), summary: t('dc.report.summary'), perio: t('dc.report.perio'), none: t('dc.report.none') },
+        suggested: t('dc.report.suggested'), suggestedNote: t('dc.report.suggestedNote'), none: t('dc.report.none') },
     }, tpl, this.docs.chartFor('report', tpl, this.raw(), 'status'));
     this.docs.print(html);
   }

@@ -25,7 +25,7 @@ export function findingRows(chart: Chart, lang: Lang, teeth: readonly number[] =
     const b = blank[String(n)] as unknown as Record<string, unknown> | undefined;
     const items: string[] = [];
     for (const f of Object.keys(a ?? {})) {
-      if (f === 'perio' || JSON.stringify(a?.[f]) === JSON.stringify(b?.[f])) continue; // perio has its own section
+      if (f === 'perio' || JSON.stringify(a?.[f]) === JSON.stringify(b?.[f])) continue; // probing is not printed
       items.push(a![f] === true ? words(f) : `${words(f)}: ${show(a![f], lang)}`);
     }
     if (items.length) rows.push({ tooth: tooth(n), items });
@@ -39,26 +39,10 @@ export function planRows(chart: Chart, lang: Lang, tooth: (n: number) => string 
   return findingRows({ ...chart, status: chart.plan }, lang, plannedTeeth(chart), tooth);
 }
 
-/** One line per probed tooth: deepest pocket, bleeding sites out of probed sites, worst furcation. Only teeth with probing data appear; nothing is derived beyond counting. */
-export function perioRows(chart: Chart, tooth: (n: number) => string = String): ReportRow[] {
-  const rows: ReportRow[] = [];
-  for (const n of ALL_TEETH) {
-    const t = chart.status.get(n);
-    const pd = (t?.perio.pd ?? new Map()) as Map<string, number>;
-    if (!t || !pd.size) continue;
-    const bop = [...pd.keys()].filter((site) => t.perio.bop.has(site)).length;
-    const furc = Math.max(0, ...(t.furcation as Map<string, number>).values());
-    rows.push({ tooth: tooth(n), items: [`PD ${Math.max(...pd.values())} mm`, `BOP ${bop}/${pd.size}`, ...(furc ? [`Furcation ${furc}`] : [])] });
-  }
-  return rows;
-}
-
 export interface ReportData {
   clinic: string; patient: string; date: string; lang: string; dir: 'ltr' | 'rtl';
-  findings: ReportRow[]; planned: ReportRow[]; suggested: string[]; summary: string[];
-  /** Periodontal probing, one row per probed tooth, with the classification line; both optional. */
-  perio?: ReportRow[]; classification?: string;
-  labels: { perio?: string; title: string; patient: string; date: string; findings: string; planned: string; plannedNote: string; suggested: string; suggestedNote: string; summary: string; none: string };
+  findings: ReportRow[]; planned: ReportRow[]; suggested: string[];
+  labels: { title: string; patient: string; date: string; findings: string; planned: string; plannedNote: string; suggested: string; suggestedNote: string; none: string };
 }
 
 export function reportDoc(r: ReportData): DocContent {
@@ -70,8 +54,6 @@ export function reportDoc(r: ReportData): DocContent {
     { type: 'heading', text: r.labels.planned, note: r.labels.plannedNote }, rows(r.planned),
     { type: 'heading', text: r.labels.suggested, note: r.labels.suggestedNote }, r.suggested.length ? { type: 'list', items: r.suggested } : { type: 'text', text: r.labels.none },
   ];
-  if (r.perio?.length) blocks.push({ type: 'heading', text: r.labels.perio ?? '' }, ...(r.classification ? [{ type: 'text' as const, text: r.classification }] : []), { type: 'table', head: [], rows: r.perio.map((x) => [x.tooth, x.items.join(' · ')]) });
-  if (r.summary.length) blocks.push({ type: 'heading', text: r.labels.summary }, { type: 'text', text: r.summary.join(' · ') });
   return {
     kind: 'report', lang: r.lang, dir: r.dir, clinic: r.clinic, sender: [], title: r.labels.title, subtitle: [],
     facts: [{ label: r.labels.patient, value: r.patient }, { label: r.labels.date, value: r.date }], blocks, notes: [], chartTitle: undefined,

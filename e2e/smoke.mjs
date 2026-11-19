@@ -92,6 +92,10 @@ const tests = {
     await page.fill('input[aria-label="Supplier"]', 'Test Supplier');
     await page.getByRole('button', { name: 'Add' }).click();
     await shows(page, /To reorder · Test Supplier[\s\S]*Test Needles × 7/, 'reorder suggestion by supplier');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.getByRole('button', { name: /Copy order/ }).click();
+    await shows(page, /Copied/, 'copy confirmation');
+    assert.match(await page.evaluate(() => navigator.clipboard.readText()), /Test Needles[\s\S]*7/, 'order text on the clipboard');
 
     await newPatient(page, 'Test Patient Three', '+212 600 000 203');
     await page.goto(`${BASE}/practice`, { waitUntil: 'networkidle' });
@@ -101,6 +105,11 @@ const tests = {
     await page.getByRole('button', { name: 'Add' }).click();
     await page.locator('.row', { hasText: 'Crown' }).locator('input[type=file]').setInputFiles({ name: 'test-scan.png', mimeType: 'image/png', buffer: PNG });
     await shows(page, /Files:\s*test-scan\.png/, 'lab file attached');
+    const [tab2] = await Promise.all([page.waitForEvent('popup'), page.getByRole('link', { name: 'test-scan.png' }).click()]);
+    await tab2.waitForLoadState();
+    assert.match(tab2.url(), /^blob:/, 'attachment opens from a blob URL');
+    assert.equal(await tab2.locator('img').count(), 1, 'the attached image displays');
+    await tab2.close();
     await page.locator('select.status').first().selectOption({ label: 'Remake at the lab' });
     const reason = page.locator('input[aria-label="Reason (required)"]');
     await reason.locator('..').locator('button.btn--primary').click();
@@ -159,6 +168,7 @@ const tests = {
   },
 
   async 'visit: book, arrive, start, record an act, note, complete from Today; charge and visit count show on the file'(page) {
+    await page.clock.install();
     const id = await newPatient(page, 'Test Patient Seven', '+212 600 000 207');
     await page.goto(`${BASE}/setup/schedule`, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: 'Add dentist' }).click();
@@ -189,8 +199,17 @@ const tests = {
     await shows(page, /Remaining\s*MAD\s*300/, 'charge on the file');
     await shows(page, /Completed visits\s*1/, 'completed visits');
     // Refund through a credit note: pay part of the invoice, cancel it, hand the money back.
+    await page.goto(`${BASE}/setup/services`, { waitUntil: 'networkidle' });
+    await page.getByLabel('Payment term (days)').fill('7');
+    await page.getByLabel('Payment term (days)').blur();
+    await page.waitForTimeout(500);
     await page.goto(`${BASE}/patients/${id}/billing`, { waitUntil: 'networkidle' });
     await page.getByRole('button', { name: /Issue invoice/ }).click();
+    await shows(page, /Due\s/i, 'due date on the invoice');
+    await page.clock.setSystemTime(new Date(Date.now() + 30 * 24 * 3600 * 1000)); // 30 days later the 7-day term has passed
+    await page.goto(`${BASE}/reports`, { waitUntil: 'networkidle' });
+    await shows(page, /Overdue invoices[\s\S]*Test Patient Seven/, 'overdue card lists the patient');
+    await page.goto(`${BASE}/patients/${id}/billing`, { waitUntil: 'networkidle' });
     await page.getByLabel('Amount (MAD)').fill('200');
     await page.getByRole('button', { name: 'Record payment' }).click();
     await shows(page, /Paid\s*MAD\s*200/, 'payment recorded');

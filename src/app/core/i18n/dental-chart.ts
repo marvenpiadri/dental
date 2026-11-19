@@ -652,8 +652,6 @@ const D = {
   'dc.report.plannedNote': ['Planned, not performed.', 'Prévu, non réalisé.'],
   'dc.report.suggested': ['Suggested diagnoses', 'Diagnostics suggérés'],
   'dc.report.suggestedNote': ['Derived from the findings. Not confirmed by the clinician.', 'Déduits des constats. Non confirmés par le praticien.'],
-  'dc.report.perio': ['Periodontal chart', 'Charte parodontale'],
-  'dc.report.summary': ['Periodontal summary', 'Résumé parodontal'],
   'dc.report.none': ['Nothing recorded.', 'Rien d’enregistré.'],
   'dc.report.patient': ['Patient', 'Patient'],
   'dc.report.date': ['Date', 'Date'],

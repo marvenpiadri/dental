@@ -8,7 +8,7 @@
   </div>
 </header>
 
-<div class="ds-body canvas">
+<div class="ds-body canvas" tabindex="0" role="region" [attr.aria-label]="t('nav.reports')">
   @if (store.loadFailed()) {
     <div class="card empty narrow">
       <span class="icon-tile"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>

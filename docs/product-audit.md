@@ -91,3 +91,5 @@ No statement in this document should be interpreted as a claim that a backend or
 
 
 **Decisions 2026-11-19:** quote path (B) stays pending, since no document defines it; recalls (C) stay as the existing Today list, no new recall system. Known flaky: the merge e2e failed once in a full run and passed on every other run.
+
+**2026-11-19 closing checks.** Periodontal data no longer prints on the A4 chart report (decision: not needed; the on-screen chart is unchanged). Accessibility: axe-core (WCAG 2.0/2.1 A and AA, which includes colour contrast) run over 11 screens at 100% and at 200% zoom (720x450 viewport): 0 violations after fixing the calendar scroll area (keyboard focus), the reports scroll area (focus and label) and the clinic-profile problem list (list role). Not done: a real screen-reader pass (axe checks names and roles, not how a reader sounds), other themes. Browser-checked and now in e2e: copy order to clipboard, lab attachment opens, due line and overdue card with a 30-day clock jump.

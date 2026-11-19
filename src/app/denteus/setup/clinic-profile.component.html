@@ -7,7 +7,7 @@
   </header>
   <p class="intro hint">{{ t('prof.public.hint') }}</p>
   @if (pr.state !== 'published' && problems().length) {
-    <ul class="row needs" role="status">
+    <ul class="row needs" aria-live="polite">
       @for (x of problems(); track x) { <li>{{ t(problemKey[x]) }}</li> }
     </ul>
   }
@@ -65,7 +65,7 @@
       <label class="field">{{ t('prof.search') }}<input class="input" type="search" autocomplete="off" role="combobox" [attr.aria-expanded]="suggestions().length > 0" (input)="search($any($event.target).value)" /></label>
       @if (suggestions().length) {
         <ul class="sug" role="listbox">
-          @for (s of suggestions(); track s.placeId) { <li><button type="button" role="option" class="btn" (click)="pick(s)">{{ s.text }}</button></li> }
+          @for (s of suggestions(); track s.placeId) { <li role="none"><button type="button" role="option" class="btn" (click)="pick(s)">{{ s.text }}</button></li> }
         </ul>
       }
     </div>
