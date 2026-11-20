@@ -97,15 +97,17 @@ No statement in this document should be interpreted as a claim that a backend or
 
 ## 3c. Connecting the frontend to the backend (decided 2026-11-20; replaces IndexedDB)
 
-**Decisions.** The backend stays Hono on Cloudflare Workers (Fastify needs Node and cannot run on Workers; Hono is already built, 102 logic tests). Frontend on Pages, backend on its own Worker; they must share a site (for example `app.example.ma` and `api.example.ma`) so the login cookie works, or the cookie must be SameSite=None. TiDB Cloud for data, R2 bucket `mokiko` for files through a Worker binding (the S3 keys are not needed). IndexedDB and offline use are dropped at the end (S8). Test accounts are used for now and switched to the real Cloudflare account later.
+**Decisions.** The backend stays Hono on Cloudflare Workers (Fastify needs Node and cannot run on Workers; Hono is already built, 102 logic tests). Frontend on Pages, backend on its own Worker; they must share a site (for example `app.example.ma` and `api.example.ma`) so the login cookie works, or the cookie must be SameSite=None. Neon PostgreSQL Cloud for data, R2 bucket `mokiko` for files through a Worker binding (the S3 keys are not needed). IndexedDB and offline use are dropped at the end (S8). Test accounts are used for now and switched to the real Cloudflare account later.
 
-**What exists in the backend:** auth, team, patients, appointments, medical history, chart, exams, treatment plan, documents/files, invoices, payments, credit notes, prescriptions (module only). **Missing in the backend** (the frontend has them): clinic profile and closures, dentists and chairs endpoints, services/prices, insurance, prescription templates, letters, expenses, equipment, stock and suppliers, lab orders and lab files, tooth files, waiting list, recalls, reports (server-side aggregates), refunds on credit notes, patient merge, settings.
+**Database changed 2026-11-20: Neon PostgreSQL (`pg` through Hyperdrive) replaces TiDB; see the backend's `docs/postgres-architecture.md`.** Backend status on PostgreSQL: auth, staff, patients, dentists, chairs and appointments are built and tested on a real PostgreSQL (backend P1-P2); everything else below is being re-ported (P3-P6). IDs are time-ordered UUIDv7. The frontend side of every stage is still to do.
+
+**What existed in the TiDB-era backend (now being re-ported):** auth, team, patients, appointments, medical history, chart, exams, treatment plan, documents/files, invoices, payments, credit notes, prescriptions (module only). **Missing in the backend** (the frontend has them): clinic profile and closures, dentists and chairs endpoints, services/prices, insurance, prescription templates, letters, expenses, equipment, stock and suppliers, lab orders and lab files, tooth files, waiting list, recalls, reports (server-side aggregates), refunds on credit notes, patient merge, settings.
 
 **Hard part.** The frontend stores load whole data sets in memory and keep one rich record per patient. The backend splits that over 22 tables and requires pagination and date ranges, so each screen's store must change to on-demand loading, not just swap its storage.
 
 | Stage | Scope | Done |
 |---|---|---|
-| S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | partly: client, `/config.json` address, email/password sign-in, session, guard and sign-out are built and tested against a MOCK API (unit + e2e). Not done: a real login against the deployed Worker and TiDB; static output for Pages (the build is still SSR); Setup > Team still edits the local PIN team until S3 |
+| S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | partly: client, `/config.json` address, email/password sign-in, session, guard and sign-out are built and tested against a MOCK API (unit + e2e). Not done: a real login against the deployed Worker and Neon; static output for Pages (the build is still SSR); Setup > Team still edits the local PIN team until S3 |
 | S2 | Patients: paginated list, create, edit, archive, merge | no |
 | S3 | Clinic profile, dentists, chairs, appointments and calendar (date-range queries), waiting list | no |
 | S4 | Medical history, odontogram chart, exams, treatment plan | no |
@@ -114,6 +116,6 @@ No statement in this document should be interpreted as a claim that a backend or
 | S7 | Practice (expenses, equipment, stock, suppliers, lab orders), services and prices, insurance, reports | no |
 | S8 | Remove IndexedDB and local seed; server seed script for demo data | no |
 
-Each stage: backend endpoints and tests first, then the frontend swap, then a browser check against a running backend. Nothing is marked done until it ran against a real TiDB.
+Each stage: backend endpoints and tests first, then the frontend swap, then a browser check against a running backend. Nothing is marked done until it ran against a real PostgreSQL.
 
 **Domains (decided 2026-11-20).** Live: `app.dontalist.com` (Pages) and `api.dontalist.com` (Worker), the same site, so the host-only Lax cookie works with `COOKIE_SAMESITE=Lax`, `CORS_ORIGINS=https://app.dontalist.com`. Testing before the domain is set up (`*.pages.dev` + `*.workers.dev` are different sites): `COOKIE_SAMESITE=None`, `CORS_ORIGINS=https://<project>.pages.dev`; Safari blocks such cookies, so test in Chrome. The API address is set per environment in `public/config.json` (`{"apiUrl":"https://api.dontalist.com"}`); empty means local mode.
