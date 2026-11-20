@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { I18n } from '../i18n/i18n.service';
 import { Key } from '../i18n/i18n.service';
 import { AuthService } from './auth.service';
+import { ApiSession } from '../api/api-session.service';
+import { apiMessage } from '../api/api.interceptor';
 import { Role, isActive } from './auth-rules';
 
 export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', admin: 'team.role.admin', dentist: 'team.role.dentist', assistant: 'team.role.assistant', reception: 'team.role.reception', accountant: 'team.role.accountant' };
@@ -10,6 +12,16 @@ export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', admin: 't
   selector: 'den-sign-in',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (server) {
+      <form class="box" (submit)="$event.preventDefault(); login(email.value, password.value)">
+        <img class="logo" src="logo.png" alt="" width="56" height="56" />
+        <h1>{{ t('auth.title') }}</h1>
+        <label class="field"><span class="label">{{ t('auth.email') }}</span><input class="input" #email type="email" autocomplete="username" maxlength="254" required /></label>
+        <label class="field"><span class="label">{{ t('auth.password') }}</span><input class="input" #password type="password" autocomplete="current-password" maxlength="200" required /></label>
+        @if (problem()) { <p class="error-text" role="alert">{{ problem() }}</p> }
+        <button class="btn btn--primary" type="submit" [disabled]="busy()">{{ t('auth.signin') }}</button>
+      </form>
+    } @else {
     <form class="box" (submit)="$event.preventDefault(); go(who.value, pin.value); pin.value = ''">
       <img class="logo" src="logo.png" alt="" width="56" height="56" />
       <h1>{{ t('auth.title') }}</h1>
@@ -25,7 +37,8 @@ export const ROLE_KEY: Record<Role, Key> = { owner: 'team.role.owner', admin: 't
       </label>
       @if (wrong()) { <p class="error-text" role="alert">{{ t('auth.wrong') }}</p> }
       <button class="btn btn--primary" type="submit">{{ t('auth.signin') }}</button>
-    </form>`,
+    </form>
+    }`,
   styles: `
     :host { display: grid; place-items: center; height: 100%; background: var(--app-canvas); padding: 16px; }
     .box { display: grid; gap: 14px; width: min(360px, 100%); padding: 28px; border: 1px solid var(--app-line); border-radius: var(--radius-card); background: var(--app-panel); }
@@ -37,6 +50,17 @@ export class SignInComponent {
   protected readonly t = inject(I18n).t;
   protected readonly roleKey = ROLE_KEY;
   protected readonly wrong = signal(false);
+  private readonly api = inject(ApiSession);
+  protected readonly server = this.api.enabled;
+  protected readonly problem = signal('');
+  protected readonly busy = signal(false);
+
+  protected async login(email: string, password: string): Promise<void> {
+    this.busy.set(true); this.problem.set('');
+    try { await this.api.login(email, password); }
+    catch (e) { this.problem.set(apiMessage(e, this.t('auth.wrongLogin'))); }
+    finally { this.busy.set(false); }
+  }
   protected readonly active = computed(() => this.auth.staff().filter(isActive));
 
   protected async go(id: string, pin: string): Promise<void> {

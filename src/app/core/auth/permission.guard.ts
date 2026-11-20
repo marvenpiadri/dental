@@ -8,6 +8,7 @@ export const permissionGuard: CanActivateFn = async (route) => {
   const auth = inject(AuthService);
   const router = inject(Router); // inject() only works before the first await
   await auth.init();
+  if (auth.serverMode && !auth.user()) return true; // signed out: the sign-in screen covers the app; redirecting here would loop
   const needed = route.data['permission'] as Permission | undefined;
   const anyOf = route.data['anyOf'] as Permission[] | undefined;
   if ((!needed || auth.can(needed)) && (!anyOf || auth.canAny(...anyOf))) return true;

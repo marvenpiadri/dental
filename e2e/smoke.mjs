@@ -42,6 +42,38 @@ const tab = (page, name) => page.getByRole('button', { name: new RegExp(`^${name
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNQSFiAFTEMLQkAAmxIAbLcbYIAAAAASUVORK5CYII=', 'base64');
 const tests = {
+  async 'with a backend address the app asks for email and password, signs in through the API and signs out'(page) {
+    const API = 'https://api.test';
+    let signedIn = false, csrf = null;
+    const cors = { 'access-control-allow-origin': BASE, 'access-control-allow-credentials': 'true', 'access-control-allow-headers': 'content-type,x-dontalist-csrf', 'access-control-allow-methods': 'GET,POST,OPTIONS' };
+    await page.route('**/config.json', (r) => r.fulfill({ json: { apiUrl: API } }));
+    await page.route(`${API}/**`, async (r) => {
+      const req = r.request(), path = new URL(req.url()).pathname;
+      if (req.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
+      if (path === '/v1/auth/me') return signedIn ? r.fulfill({ headers: cors, json: { id: 's1', clinicId: 'c1', name: 'Dr Test', role: 'owner', permissions: ['patients.view', 'appointments.view', 'team.view'] } }) : r.fulfill({ status: 401, headers: cors, json: { error: { code: 'unauthenticated', message: 'Sign in' } } });
+      if (path === '/v1/auth/login') {
+        csrf = req.headers()['x-dontalist-csrf'];
+        const body = req.postDataJSON();
+        if (body.password !== 'right-password-123') return r.fulfill({ status: 401, headers: cors, json: { error: { code: 'invalid_credentials', message: 'Wrong email or password.' } } });
+        signedIn = true; return r.fulfill({ headers: cors, json: { staff: { id: 's1' } } });
+      }
+      if (path === '/v1/auth/logout') { signedIn = false; return r.fulfill({ status: 204, headers: cors }); }
+      return r.fulfill({ status: 404, headers: cors, json: {} });
+    });
+    await page.goto(`${BASE}/patients`, { waitUntil: 'domcontentloaded' });
+    await page.getByLabel('Email').fill('dr@clinic.test');
+    await page.getByLabel('Password').fill('nope');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await shows(page, /Wrong email or password/, 'wrong password is explained');
+    await page.getByLabel('Password').fill('right-password-123');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByLabel('Email').waitFor({ state: 'detached' });
+    assert.equal(csrf, '1', 'the CSRF header is sent on login');
+    await shows(page, /No patients yet|0 patients/, 'the app opens after sign-in');
+    await page.getByRole('button', { name: /Sign out: Dr Test/ }).click();
+    await page.getByLabel('Email').waitFor();
+    assert.equal(signedIn, false, 'logout reached the API');
+  },
   async 'patient gets a file number and an exact duplicate is refused'(page) {
     await newPatient(page, 'Test Patient One', '+212 600 000 201');
     assert.match(await page.locator('body').innerText(), /P-0001/);

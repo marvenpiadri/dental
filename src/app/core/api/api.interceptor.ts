@@ -1,15 +1,14 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { API, ApiSession } from './api-session.service';
+import { ApiSession } from './api-session.service';
 
-/** For same-origin API calls only: send the cookie, add the CSRF header to writes, and drop the local session when the server says it is over. */
+/** Backend calls only: send the cookie, add the CSRF header the API requires on writes, and drop the local session when the server says it is over. */
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!req.url.startsWith(`${API}/`)) return next(req);
   const session = inject(ApiSession);
-  const csrf = session.csrf();
+  if (!session.isApi(req.url)) return next(req);
   const write = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
-  const out = req.clone({ withCredentials: true, setHeaders: write && csrf ? { 'X-CSRF-Token': csrf } : {} });
+  const out = req.clone({ withCredentials: true, setHeaders: write ? { 'x-dontalist-csrf': '1' } : {} });
   return next(out).pipe(catchError((e: unknown) => {
     // A failed login is also a 401: only an expired live session should sign the person out.
     if (e instanceof HttpErrorResponse && e.status === 401 && !req.url.endsWith('/auth/login') && session.signedIn()) session.expired();

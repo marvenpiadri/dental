@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
+import { ApiSession } from '../api/api-session.service';
 import { ClinicDatabase } from '../../denteus/services/clinic-database.service';
 import { Permission, Role, Staff, StaffEvent, Who, can, canManageRole, canRemove, checkPin, diffFromRole, isActive, keepsAnOwner, makeStaff, validPin } from './auth-rules';
 
@@ -13,6 +14,7 @@ const SESSION = 'den-session';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly db = inject(ClinicDatabase);
+  private readonly api = inject(ApiSession);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private loading?: Promise<void>;
 
@@ -20,17 +22,23 @@ export class AuthService {
   readonly ready = signal(false);
   private readonly currentId = signal<string | null>(null);
 
-  readonly locked = computed(() => this.staff().length > 0);
-  readonly user = computed(() => this.staff().find((s) => s.id === this.currentId() && isActive(s)) ?? null);
+  readonly locked = computed(() => this.api.enabled || this.staff().length > 0);
+  /** With a backend the person is whoever the server signed in; the PIN-based local team is only for local mode. */
+  readonly user = computed<Staff | null>(() => {
+    const me = this.api.who();
+    if (this.api.enabled) return me ? ({ id: me.id, name: me.name, role: me.role as Role, salt: '', pinHash: '' }) : null;
+    return this.staff().find((s) => s.id === this.currentId() && isActive(s)) ?? null;
+  });
   /** Who did what to the team: roles, permissions, suspensions. Never edited, only added to. */
   readonly events = signal<StaffEvent[]>([]);
   /** True while the sign-in screen must cover the app. */
   readonly gate = computed(() => this.ready() && this.locked() && !this.user());
+  readonly serverMode = this.api.enabled;
   /** Open clinics (no team) behave as owner. */
   readonly role = computed<Role>(() => this.user()?.role ?? 'owner');
-  private readonly me = computed<Who>(() => this.user() ?? { role: 'owner' });
+  private readonly me = computed<Who>(() => this.user() ?? { role: this.api.enabled ? 'accountant' : 'owner' });
 
-  can(permission: Permission): boolean { return can(this.me(), permission); }
+  can(permission: Permission): boolean { return this.api.enabled ? this.api.can(permission) : can(this.me(), permission); }
   canAny(...permissions: Permission[]): boolean { return permissions.some((p) => this.can(p)); }
   /** May the signed-in person manage someone with this role? */
   canManage(role: Role): boolean { return canManageRole(this.me(), role); }
@@ -38,6 +46,7 @@ export class AuthService {
   init(): Promise<void> {
     if (!this.browser) return Promise.resolve();
     this.loading ??= (async () => {
+      if (this.api.enabled) { await this.api.refresh(); this.ready.set(true); return; }
       this.staff.set((await this.db.loadSetting<Staff[]>('staff').catch(() => undefined)) ?? []);
       this.events.set((await this.db.loadSetting<StaffEvent[]>('staffLog').catch(() => undefined)) ?? []);
       try { this.currentId.set(sessionStorage.getItem(SESSION)); } catch { /* private mode: sign in each time */ }
@@ -112,6 +121,7 @@ export class AuthService {
   }
 
   signOut(): void {
+    if (this.api.enabled) { void this.api.logout(); return; }
     this.currentId.set(null);
     try { sessionStorage.removeItem(SESSION); } catch { /* ignore */ }
   }

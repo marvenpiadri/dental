@@ -105,7 +105,7 @@ No statement in this document should be interpreted as a claim that a backend or
 
 | Stage | Scope | Done |
 |---|---|---|
-| S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | no |
+| S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | partly: client, `/config.json` address, email/password sign-in, session, guard and sign-out are built and tested against a MOCK API (unit + e2e). Not done: a real login against the deployed Worker and TiDB; static output for Pages (the build is still SSR); Setup > Team still edits the local PIN team until S3 |
 | S2 | Patients: paginated list, create, edit, archive, merge | no |
 | S3 | Clinic profile, dentists, chairs, appointments and calendar (date-range queries), waiting list | no |
 | S4 | Medical history, odontogram chart, exams, treatment plan | no |
@@ -115,3 +115,5 @@ No statement in this document should be interpreted as a claim that a backend or
 | S8 | Remove IndexedDB and local seed; server seed script for demo data | no |
 
 Each stage: backend endpoints and tests first, then the frontend swap, then a browser check against a running backend. Nothing is marked done until it ran against a real TiDB.
+
+**Domains (decided 2026-11-20).** Live: `app.dontalist.com` (Pages) and `api.dontalist.com` (Worker), the same site, so the host-only Lax cookie works with `COOKIE_SAMESITE=Lax`, `CORS_ORIGINS=https://app.dontalist.com`. Testing before the domain is set up (`*.pages.dev` + `*.workers.dev` are different sites): `COOKIE_SAMESITE=None`, `CORS_ORIGINS=https://<project>.pages.dev`; Safari blocks such cookies, so test in Chrome. The API address is set per environment in `public/config.json` (`{"apiUrl":"https://api.dontalist.com"}`); empty means local mode.
