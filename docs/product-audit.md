@@ -93,3 +93,25 @@ No statement in this document should be interpreted as a claim that a backend or
 **Decisions 2026-11-19:** quote path (B) stays pending, since no document defines it; recalls (C) stay as the existing Today list, no new recall system. Known flaky: the merge e2e failed once in a full run and passed on every other run.
 
 **2026-11-19 closing checks.** Periodontal data no longer prints on the A4 chart report (decision: not needed; the on-screen chart is unchanged). Accessibility: axe-core (WCAG 2.0/2.1 A and AA, which includes colour contrast) run over 11 screens at 100% and at 200% zoom (720x450 viewport): 0 violations after fixing the calendar scroll area (keyboard focus), the reports scroll area (focus and label) and the clinic-profile problem list (list role). Not done: a real screen-reader pass (axe checks names and roles, not how a reader sounds), other themes. Browser-checked and now in e2e: copy order to clipboard, lab attachment opens, due line and overdue card with a 30-day clock jump.
+
+
+## 3c. Connecting the frontend to the backend (decided 2026-11-20; replaces IndexedDB)
+
+**Decisions.** The backend stays Hono on Cloudflare Workers (Fastify needs Node and cannot run on Workers; Hono is already built, 102 logic tests). Frontend on Pages, backend on its own Worker; they must share a site (for example `app.example.ma` and `api.example.ma`) so the login cookie works, or the cookie must be SameSite=None. TiDB Cloud for data, R2 bucket `mokiko` for files through a Worker binding (the S3 keys are not needed). IndexedDB and offline use are dropped at the end (S8). Test accounts are used for now and switched to the real Cloudflare account later.
+
+**What exists in the backend:** auth, team, patients, appointments, medical history, chart, exams, treatment plan, documents/files, invoices, payments, credit notes, prescriptions (module only). **Missing in the backend** (the frontend has them): clinic profile and closures, dentists and chairs endpoints, services/prices, insurance, prescription templates, letters, expenses, equipment, stock and suppliers, lab orders and lab files, tooth files, waiting list, recalls, reports (server-side aggregates), refunds on credit notes, patient merge, settings.
+
+**Hard part.** The frontend stores load whole data sets in memory and keep one rich record per patient. The backend splits that over 22 tables and requires pagination and date ranges, so each screen's store must change to on-demand loading, not just swap its storage.
+
+| Stage | Scope | Done |
+|---|---|---|
+| S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | no |
+| S2 | Patients: paginated list, create, edit, archive, merge | no |
+| S3 | Clinic profile, dentists, chairs, appointments and calendar (date-range queries), waiting list | no |
+| S4 | Medical history, odontogram chart, exams, treatment plan | no |
+| S5 | Invoices, payments, credit notes, refunds | no |
+| S6 | Documents, tooth files and lab files on R2, letters, prescriptions and templates | no |
+| S7 | Practice (expenses, equipment, stock, suppliers, lab orders), services and prices, insurance, reports | no |
+| S8 | Remove IndexedDB and local seed; server seed script for demo data | no |
+
+Each stage: backend endpoints and tests first, then the frontend swap, then a browser check against a running backend. Nothing is marked done until it ran against a real TiDB.
