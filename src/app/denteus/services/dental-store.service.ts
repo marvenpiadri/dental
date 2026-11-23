@@ -11,6 +11,8 @@ import { I18n } from '../../core/i18n/i18n.service';
 import { STATUS_LABEL } from '../utils/domain-keys';
 import { AuthService } from '../../core/auth/auth.service';
 import { ClinicDatabase } from './clinic-database.service';
+import { ApiSession } from '../../core/api/api-session.service';
+import { PatientApi, PatientQuery, PatientPage } from '../../core/api/patient-api.service';
 import { defaultCatalog } from '../patients/treatment-rules';
 import type { Examination } from '../odontogram/engine/exam';
 import {
@@ -122,6 +124,10 @@ export class DentalStore {
   private persistQueue: Promise<void> = Promise.resolve();
   private readonly database = inject(ClinicDatabase);
   private readonly auth = inject(AuthService);
+  private readonly api = inject(ApiSession);
+  private readonly patientApi = inject(PatientApi);
+  /** True when patients live on the server: the `patients` signal is then only a cache of the pages the screens asked for, never saved to this browser. */
+  readonly server = this.api.enabled;
   private readonly i18n = inject(I18n);
   private readonly t = this.i18n.t;
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -137,7 +143,7 @@ export class DentalStore {
       const appointments = this.appointments();
       if (!this.ready) return;
       this.persistQueue = this.persistQueue
-        .then(() => this.database.saveSchedulingSnapshot(patients, appointments))
+        .then(() => this.database.saveSchedulingSnapshot(this.server ? [] : patients, appointments))
         .then(() => this.persistenceError.set(null))
         .catch(() => this.persistenceError.set('Changes could not be saved to this browser. Check available storage and try again.'));
     });
@@ -173,7 +179,7 @@ export class DentalStore {
     this.waTemplates.set((await this.database.loadSetting<Partial<Record<Message['kind'], string>>>('waTemplates')) ?? {});
 
     const saved = await this.database.loadSchedulingSnapshot();
-    this.patients.set(saved.patients);
+    this.patients.set(this.server ? [] : saved.patients);
     this.appointments.set(saved.appointments);
     this.ready = true;
     this.loaded.set(true);
@@ -248,15 +254,45 @@ export class DentalStore {
 
   /* ------------------------------- patients ------------------------------- */
 
-  /** Callers validate first (patient-rules.ts); this only tidies the text and stamps the record. */
-  addPatient(input: PatientInput): Patient {
-    const patient: Patient = { ...tidy(input), id: newId(), number: nextPatientNumber(this.patients()), createdAt: new Date().toISOString() };
+  /** Adds or refreshes patients in the cache, keeping what the server does not send (sections that load elsewhere). */
+  private cache(items: Patient[]): void {
+    const incoming = new Map(items.map((p) => [p.id, p]));
+    this.patients.update((list) => [...list.map((p) => (incoming.has(p.id) ? { ...p, ...incoming.get(p.id)! } : p)), ...items.filter((p) => !list.some((x) => x.id === p.id))]);
+  }
+
+  /** Server mode: one page of patients (search, archived and alert filters and the sort are done by the database). */
+  async loadPatients(query: PatientQuery): Promise<PatientPage> {
+    const page = await this.patientApi.list(query);
+    this.cache(page.items);
+    return page;
+  }
+
+  /** Server mode: makes sure one patient's core record is in the cache (a profile opened from a link). Returns false when it does not exist. */
+  async ensurePatient(id: string): Promise<boolean> {
+    if (!this.server || this.patientMap().has(id)) return true;
+    try { this.cache([await this.patientApi.get(id)]); return true; } catch { return false; }
+  }
+
+  /** Callers validate first (patient-rules.ts); this only tidies the text and stamps the record. In server mode the server assigns the id and file number. */
+  async addPatient(input: PatientInput): Promise<Patient> {
+    const clean = tidy(input);
+    const patient: Patient = this.server
+      ? { ...clean, ...(await this.patientApi.create(clean)), createdAt: new Date().toISOString() }
+      : { ...clean, id: newId(), number: nextPatientNumber(this.patients()), createdAt: new Date().toISOString() };
     this.patients.update((list) => [...list, patient]);
     return patient;
   }
 
-  /** Folds one patient file into another: records, appointments and attached files move to `keepId`, then `dropId` is removed. Cannot be undone. */
+  /** Folds one patient file into another: records, appointments and attached files move to `keepId`, then `dropId` is removed. Cannot be undone. In server mode the server decides what may move and throws when it refuses. */
   async mergePatients(keepId: string, dropId: string): Promise<boolean> {
+    if (this.server) {
+      if (keepId === dropId) return false;
+      await this.patientApi.merge(dropId, keepId);
+      this.appointments.update((list) => list.map((a) => (a.patientId === dropId ? { ...a, patientId: keepId } : a)));
+      this.patients.update((list) => list.filter((p) => p.id !== dropId));
+      this.cache([await this.patientApi.get(keepId)]);
+      return true;
+    }
     const keep = this.patientMap().get(keepId), drop = this.patientMap().get(dropId);
     if (!keep || !drop || keepId === dropId) return false;
     for (const d of await this.database.listDocuments(dropId)) await this.database.addDocument({ ...d, patientId: keepId });
@@ -275,9 +311,10 @@ export class DentalStore {
     }));
   }
 
-  updatePatient(id: string, input: PatientInput): Patient | null {
+  async updatePatient(id: string, input: PatientInput): Promise<Patient | null> {
     const current = this.patientMap().get(id);
     if (!current) return null;
+    if (this.server) await this.patientApi.update(id, tidy(input));
     const patient: Patient = { ...tidy(input), id, number: current.number, createdAt: current.createdAt, odontogram: current.odontogram, examinations: current.examinations, chartRecoveries: current.chartRecoveries, plan: current.plan, payments: current.payments, invoices: current.invoices, letters: current.letters, prescriptions: current.prescriptions, patientAllergies: current.patientAllergies, insurances: current.insurances, patientMedications: current.patientMedications, archivedAt: current.archivedAt, messages: current.messages, whatsappConsent: current.whatsappConsent, whatsappConsentAt: current.whatsappConsentAt, visits: current.visits, proposals: current.proposals, waiting: current.waiting, photo: current.photo }; // the form doesn't edit these, so keep them
     const matched = current.medical?.legacyMatched; // the patient form does not edit this, so keep it
     if (matched?.length) patient.medical = { ...patient.medical, legacyMatched: matched };
@@ -393,8 +430,9 @@ export class DentalStore {
   }
 
   /** Archiving hides a patient without deleting anything; restoring brings them back. */
-  setArchived(patientId: string, on: boolean): void {
+  async setArchived(patientId: string, on: boolean): Promise<void> {
     if (!this.auth.can('patients.manage')) return; // the buttons are hidden too; this keeps every caller honest
+    if (this.server) await this.patientApi.archive(patientId, on);
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, archivedAt: on ? new Date().toISOString() : undefined } : p)));
   }
 

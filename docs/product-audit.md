@@ -108,7 +108,7 @@ No statement in this document should be interpreted as a claim that a backend or
 | Stage | Scope | Done |
 |---|---|---|
 | S1 | API client, environment URLs, CORS and cookies, login screen and session, route guard | partly: client, `/config.json` address, email/password sign-in, session, guard and sign-out are built and tested against a MOCK API (unit + e2e). Not done: a real login against the deployed Worker and Neon; static output for Pages (the build is still SSR); Setup > Team still edits the local PIN team until S3 |
-| S2 | Patients: paginated list, create, edit, archive, merge | no |
+| S2 | Patients: paginated list, create, edit, archive, merge | partly: with an API address set, the list (search, alert and archived filters, keyset paging), create, edit, archive/restore, merge and duplicate lookup all go to the server (unit tests against a mock API). Not done: the "today" filter, sort by newest and next/last visit columns (need appointments, S3); the medical block of the patient form is not sent until S4; other screens still read the cached patients until their own stage |
 | S3 | Clinic profile, dentists, chairs, appointments and calendar (date-range queries), waiting list | no |
 | S4 | Medical history, odontogram chart, exams, treatment plan | no |
 | S5 | Invoices, payments, credit notes, refunds | no |

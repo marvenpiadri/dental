@@ -159,8 +159,8 @@ export class AppointmentEditorComponent implements OnInit {
     this.duration.set(minutes);
   }
 
-  protected onCreatePatient(input: { fullName: string; phone: string }): void {
-    this.patientId.set(this.store.addPatient(input).id);
+  protected async onCreatePatient(input: { fullName: string; phone: string }): Promise<void> {
+    try { this.patientId.set((await this.store.addPatient(input)).id); } catch { /* the picker stays open so the person can retry */ }
   }
 
   protected submit(): void {

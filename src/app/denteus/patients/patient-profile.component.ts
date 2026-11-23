@@ -5,7 +5,9 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
-import { Appointment } from '../models/dental.models';
+import { Appointment, Patient } from '../models/dental.models';
+import { apiMessage } from '../../core/api/api.interceptor';
+import { PatientApi } from '../../core/api/patient-api.service';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
 import { ageOn, hasAlert, initials, mapUrlOk, parseIsoDate } from './patient-rules';
@@ -105,10 +107,26 @@ export class PatientProfileComponent {
   protected readonly askArchive = signal(false);
   protected readonly merging = signal(false);
   protected readonly mergeFrom = signal('');
-  protected readonly mergeChoices = computed(() => this.store.patients().filter((x) => x.id !== this.id() && !x.archivedAt).sort((a, b) => a.fullName.localeCompare(b.fullName)).slice(0, 200));
+  private readonly patientApi = inject(PatientApi);
+  /** A profile opened from a link may not be in the cache yet (server mode). */
+  private readonly fetchIfMissing = effect(() => { void this.store.ensurePatient(this.id()); });
+  /** Shown when the server refuses or cannot be reached (archive, restore, merge). */
+  protected readonly actionError = signal('');
+  /** Server mode: the files that look like this one, from the server (at most 10); local mode lists the cached patients. */
+  private readonly duplicates = signal<Patient[]>([]);
+  protected async startMerge(): Promise<void> {
+    this.merging.set(true);
+    if (this.store.server) this.duplicates.set(await this.patientApi.duplicates(this.id()).catch(() => []));
+  }
+  protected async archive(on: boolean): Promise<void> {
+    this.askArchive.set(false); this.actionError.set('');
+    try { await this.store.setArchived(this.id(), on); } catch (e) { this.actionError.set(apiMessage(e)); }
+  }
+  protected readonly mergeChoices = computed(() => this.store.server ? this.duplicates() : this.store.patients().filter((x) => x.id !== this.id() && !x.archivedAt).sort((a, b) => a.fullName.localeCompare(b.fullName)).slice(0, 200));
   protected async merge(): Promise<void> {
     const other = this.mergeFrom();
-    if (other && await this.store.mergePatients(this.id(), other)) { this.merging.set(false); this.mergeFrom.set(''); }
+    this.actionError.set('');
+    try { if (other && await this.store.mergePatients(this.id(), other)) { this.merging.set(false); this.mergeFrom.set(''); } } catch (e) { this.actionError.set(apiMessage(e)); }
   }
   protected readonly sentMessages = computed(() => [...(this.patient()?.messages ?? [])].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8));
   protected readonly kindKey = { appointment: 'profile.remind.appt', balance: 'profile.remind.balance', recall: 'profile.remind.recall' } as const;

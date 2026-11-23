@@ -116,7 +116,7 @@ export class PatientFormComponent {
     this.saving.set(true);
     try {
       const input = this.toInput();
-      const saved = this.id() ? this.store.updatePatient(this.id()!, input) : this.store.addPatient(input);
+      const saved = await (this.id() ? this.store.updatePatient(this.id()!, input) : this.store.addPatient(input));
       await this.store.flushPersistence();
       if (saved) await this.router.navigate(['/patients', saved.id]);
     } catch {

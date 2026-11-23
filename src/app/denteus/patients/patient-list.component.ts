@@ -1,5 +1,6 @@
 import { AuthService } from '../../core/auth/auth.service';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { apiMessage } from '../../core/api/api.interceptor';
 import { RouterLink } from '@angular/router';
 import { isSameDay } from '../../calendar/utils/date.utils';
 import { I18n } from '../../core/i18n/i18n.service';
@@ -40,7 +41,30 @@ export class PatientListComponent {
   protected readonly sort = signal<Sort>('name');
   private readonly limit = signal(PAGE);
   protected readonly hasAlert = hasAlert;
-  protected readonly filters: readonly Filter[] = ['all', 'today', 'alert', 'archived'];
+  /** Server mode: the database searches, filters and pages; "today" needs the appointments, which move to the server in stage S3. */
+  protected readonly server = this.store.server;
+  protected readonly filters: readonly Filter[] = this.server ? ['all', 'alert', 'archived'] : ['all', 'today', 'alert', 'archived'];
+  private readonly found = signal<Patient[]>([]);
+  protected readonly cursor = signal<string | null>(null);
+  protected readonly failed = signal('');
+  private ticket = 0;
+
+  private readonly fetchFirst = effect((onCleanup) => {
+    if (!this.server) return;
+    const q = this.query(), f = this.filter();
+    const timer = setTimeout(() => untracked(() => void this.fetch(q, f, null)), 250); // wait for a pause in typing
+    onCleanup(() => clearTimeout(timer));
+  });
+
+  private async fetch(q: string, f: Filter, cursor: string | null): Promise<void> {
+    const mine = ++this.ticket; // an older, slower answer must not replace a newer one
+    try {
+      const page = await this.store.loadPatients({ q, archived: f === 'archived', alert: f === 'alert', cursor });
+      if (mine !== this.ticket) return;
+      this.found.update((list) => (cursor ? [...list, ...page.items] : page.items));
+      this.cursor.set(page.nextCursor); this.failed.set('');
+    } catch (e) { if (mine === this.ticket) this.failed.set(apiMessage(e)); }
+  }
 
   // Only read after the store has loaded, which only happens in the browser.
   private readonly now = new Date();
@@ -56,10 +80,11 @@ export class PatientListComponent {
       if (isActive(a) && a.status !== 'completed' && a.end >= now && (!m.next || a.start < m.next.start)) m.next = a;
       if ((a.status === 'arrived' || a.status === 'in-progress') && isSameDay(a.start, now)) m.live = a.status;
     }
-    return this.store.patients().map((patient) => ({ patient, ...(meta.get(patient.id) ?? { next: null, last: null, live: null }) }));
+    return (this.server ? this.found() : this.store.patients()).map((patient) => ({ patient, ...(meta.get(patient.id) ?? { next: null, last: null, live: null }) }));
   });
 
   private readonly matching = computed(() => {
+    if (this.server) return this.rows();
     const query = this.query();
     const filter = this.filter();
     const rows = this.rows().filter((row) => {
@@ -92,6 +117,7 @@ export class PatientListComponent {
   }
 
   protected showMore(): void {
+    if (this.server) { if (this.cursor()) void this.fetch(this.query(), this.filter(), this.cursor()); return; }
     this.limit.update((n) => n + PAGE);
   }
 

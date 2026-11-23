@@ -1,7 +1,7 @@
 <header class="ds-head">
   <div class="ds-head-main">
     <h1 class="ds-title">{{ t('nav.patients') }}</h1>
-    @if (store.loaded()) { <span class="chip" data-tone="neutral">{{ i18n.tn('patients.count', store.patients().length) }}</span> }
+    @if (store.loaded() && !server) { <span class="chip" data-tone="neutral">{{ i18n.tn('patients.count', store.patients().length) }}</span> }
   </div>
   <div class="ds-actions">
     @if (auth.can('patients.create')) { <a class="btn btn--primary" routerLink="/patients/new"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span class="hide-sm">{{ t('patients.new') }}</span></a> }
@@ -43,6 +43,7 @@
             }
           </div>
 
+          @if (!server) {
           <label class="sort">
             <span class="muted">{{ t('patients.sort.label') }}</span>
             <select class="input" [value]="sort()" (change)="sort.set($any($event.target).value)">
@@ -50,8 +51,10 @@
               <option value="recent">{{ t('patients.sort.recent') }}</option>
             </select>
           </label>
+          }
         </div>
 
+        @if (failed()) { <p class="muted" role="alert">{{ failed() }}</p> }
         @if (visible().length) {
           <div class="head" aria-hidden="true">
             <span>{{ t('patients.col.patient') }}</span>
@@ -84,7 +87,9 @@
               </li>
             }
           </ul>
-          @if (total() > visible().length) {
+          @if (server && cursor()) {
+            <div class="more"><button class="btn" type="button" (click)="showMore()">{{ t('patients.showMore') }}</button></div>
+          } @else if (!server && total() > visible().length) {
             <div class="more">
               <span class="muted">{{ t('patients.showing', { shown: visible().length, total: total() }) }}</span>
               <button class="btn" type="button" (click)="showMore()">{{ t('patients.showMore') }}</button>
