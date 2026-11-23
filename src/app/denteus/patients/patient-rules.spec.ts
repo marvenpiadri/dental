@@ -1,5 +1,5 @@
 import { Patient } from '../models/dental.models';
-import { addProposal, hasAlert, nextPatientNumber, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient, similarPatients } from './patient-rules';
+import { addProposal, mapUrlOk, hasAlert, nextPatientNumber, ageOn, digitsOf, initials, matchesQuery, normalize, parseIsoDate, validatePatient, similarPatients } from './patient-rules';
 
 const TODAY = new Date(2026, 9, 22); // 22 Oct 2026
 const patient = (over: Partial<Patient> = {}): Patient => ({ id: 'p1', fullName: 'Hélène Benali', phone: '+212 600-000-001', ...over });
@@ -108,5 +108,16 @@ describe('similarPatients', () => {
   });
   it('says nothing for a short or empty phone', () => {
     expect(similarPatients({ phone: '12' }, others)).toEqual([]);
+  });
+});
+
+describe('mapUrlOk', () => {
+  it('accepts empty and the plain coordinate link only', () => {
+    for (const ok of ['', 'https://maps.google.com/?ll=33.5731,-7.5898', 'https://maps.google.com/?ll=-33,151.2']) expect(mapUrlOk(ok)).toBe(true);
+    for (const bad of ['http://maps.google.com/?ll=1,2', 'https://evil.test/?ll=1,2', 'https://maps.google.com/?ll=91,0', 'https://maps.google.com/?ll=0,181', 'https://maps.google.com/?ll=1,2&q=x', 'https://maps.google.com.evil.test/?ll=1,2', 'javascript:alert(1)', 'https://maps.google.com/?ll=a,b']) expect(mapUrlOk(bad), bad).toBe(false);
+  });
+  it('is reported as a problem on the patient form', () => {
+    expect(validatePatient({ fullName: 'Amal Idrissi', phone: '', mapUrl: 'nope' }, [], new Date('2026-11-23')).mapUrl).toBe('map-invalid');
+    expect(validatePatient({ fullName: 'Amal Idrissi', phone: '', mapUrl: 'https://maps.google.com/?ll=33.5,-7.6' }, [], new Date('2026-11-23')).mapUrl).toBeUndefined();
   });
 });

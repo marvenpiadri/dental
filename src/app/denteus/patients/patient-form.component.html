@@ -92,6 +92,12 @@
             <span class="label">{{ t('form.address') }}</span>
             <input class="input" name="address" autocomplete="street-address" maxlength="200" [value]="values().address" (input)="set('address', $any($event.target).value)" />
           </label>
+          <label class="field wide">
+            <span class="label">{{ t('form.mapUrl') }}</span>
+            <input class="input" name="mapUrl" type="text" inputmode="url" autocomplete="off" maxlength="100" placeholder="https://maps.google.com/?ll=33.5731,-7.5898" [value]="values().mapUrl" (input)="set('mapUrl', $any($event.target).value)"
+              [attr.aria-invalid]="errorKey('mapUrl') ? 'true' : null" [attr.aria-describedby]="errorKey('mapUrl') ? 'err-mapUrl' : null" />
+            @if (errorKey('mapUrl'); as key) { <p class="error-text" id="err-mapUrl">{{ t(key) }}</p> }
+          </label>
           <label class="field">
             <span class="label">{{ t('form.emergencyName') }}</span>
             <input class="input" name="emergencyName" maxlength="120" [value]="values().emergencyName" (input)="set('emergencyName', $any($event.target).value)" />

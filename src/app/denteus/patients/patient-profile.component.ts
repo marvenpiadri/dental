@@ -8,7 +8,7 @@ import { I18n, Key } from '../../core/i18n/i18n.service';
 import { Appointment } from '../models/dental.models';
 import { DentalStore } from '../services/dental-store.service';
 import { STATUS_KEY, STATUS_TONE, isActive, localIsoDay, relativeDay, typeKey } from '../utils/appointment-labels';
-import { ageOn, hasAlert, initials, parseIsoDate } from './patient-rules';
+import { ageOn, hasAlert, initials, mapUrlOk, parseIsoDate } from './patient-rules';
 import { balance, procedureName } from './treatment-rules';
 import { messageLink, whatsappNumber } from './reminder-rules';
 import { DentalChartComponent } from '../odontogram/dental-chart.component';
@@ -48,6 +48,7 @@ export class PatientProfileComponent {
   protected readonly store = inject(DentalStore);
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
+  protected readonly mapUrlOk = mapUrlOk;
   protected readonly hasAlert = hasAlert;
   protected readonly activeAllergies = activeAllergies;
   protected readonly activeMedications = activeMedications;

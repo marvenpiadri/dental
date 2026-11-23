@@ -2,7 +2,7 @@ import type { Patient } from '../models/dental.models';
 
 type Listed = 'plan' | 'payments' | 'invoices' | 'visits' | 'letters' | 'prescriptions' | 'insurances' | 'proposals' | 'messages' | 'patientAllergies' | 'patientMedications';
 const LISTS: readonly Listed[] = ['plan', 'payments', 'invoices', 'visits', 'letters', 'prescriptions', 'insurances', 'proposals', 'messages', 'patientAllergies', 'patientMedications'];
-const FILL = ['email', 'birthDate', 'sex', 'country', 'city', 'address', 'emergencyName', 'emergencyPhone', 'language', 'referral', 'photo', 'whatsappConsent', 'whatsappConsentAt'] as const;
+const FILL = ['email', 'birthDate', 'sex', 'country', 'city', 'address', 'mapUrl', 'emergencyName', 'emergencyPhone', 'language', 'referral', 'photo', 'whatsappConsent', 'whatsappConsentAt'] as const;
 
 /**
  * Folds the record `drop` into `keep` (the file that survives): every list is joined, identity fields `keep` lacks are filled from `drop`,

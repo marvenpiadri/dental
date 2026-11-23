@@ -184,6 +184,7 @@
               <div><dt>{{ t('form.email') }}</dt><dd>{{ p.email || t('common.notProvided') }}</dd></div>
               <div><dt>{{ t('form.city') }}</dt><dd>{{ p.city || t('common.notProvided') }}</dd></div>
               @if (p.address) { <div><dt>{{ t('form.address') }}</dt><dd>{{ p.address }}</dd></div> }
+              @if (p.mapUrl && mapUrlOk(p.mapUrl)) { <div><dt>{{ t('form.mapUrl') }}</dt><dd><a [href]="p.mapUrl" target="_blank" rel="noopener noreferrer">{{ t('form.mapOpen') }}</a></dd></div> }
               @if (p.emergencyName || p.emergencyPhone) { <div><dt>{{ t('form.emergency') }}</dt><dd>{{ p.emergencyName }}@if (p.emergencyName && p.emergencyPhone) { · }{{ p.emergencyPhone }}</dd></div> }
               @if (p.language) { <div><dt>{{ t('form.language') }}</dt><dd>{{ p.language === 'fr' ? 'Français' : 'English' }}</dd></div> }
               @if (p.referral) { <div><dt>{{ t('form.referral') }}</dt><dd>{{ p.referral }}</dd></div> }

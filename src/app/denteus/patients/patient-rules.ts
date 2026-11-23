@@ -24,7 +24,14 @@ export function nextPatientNumber(existing: readonly Pick<Patient, 'number'>[]):
   return `P-${String(top + 1).padStart(4, '0')}`;
 }
 
-export type PatientProblem = 'name-required' | 'phone-invalid' | 'email-invalid' | 'birth-invalid' | 'duplicate';
+/** Empty is fine. Otherwise only the plain coordinate link `https://maps.google.com/?ll=lat,lng` with real coordinates (same rule as the server). */
+export function mapUrlOk(url: string): boolean {
+  if (!url) return true;
+  const m = /^https:\/\/maps\.google\.com\/\?ll=(-?\d{1,3}(?:\.\d{1,10})?),(-?\d{1,3}(?:\.\d{1,10})?)$/.exec(url);
+  return !!m && Math.abs(Number(m[1])) <= 90 && Math.abs(Number(m[2])) <= 180;
+}
+
+export type PatientProblem = 'name-required' | 'phone-invalid' | 'email-invalid' | 'birth-invalid' | 'map-invalid' | 'duplicate';
 
 /** Returns the problems by field. An empty object means the input can be saved. */
 export function validatePatient(
@@ -32,8 +39,8 @@ export function validatePatient(
   existing: readonly Patient[],
   today: Date,
   selfId?: string,
-): Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate', PatientProblem>> {
-  const problems: Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate', PatientProblem>> = {};
+): Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate' | 'mapUrl', PatientProblem>> {
+  const problems: Partial<Record<'fullName' | 'phone' | 'emergencyPhone' | 'email' | 'birthDate' | 'mapUrl', PatientProblem>> = {};
   const name = input.fullName.trim();
   const phone = input.phone.trim();
 
@@ -43,6 +50,8 @@ export function validatePatient(
   if (!phoneOk(input.emergencyPhone?.trim() ?? '')) problems.emergencyPhone = 'phone-invalid';
 
   if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.email.trim())) problems.email = 'email-invalid';
+
+  if (!mapUrlOk(input.mapUrl?.trim() ?? '')) problems.mapUrl = 'map-invalid';
 
   if (input.birthDate) {
     const born = parseIsoDate(input.birthDate);

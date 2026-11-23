@@ -95,6 +95,8 @@ export interface Patient {
   number?: string;
   /** Free-text postal address. */
   address?: string;
+  /** Google Maps location link, exactly `https://maps.google.com/?ll=<latitude>,<longitude>`. */
+  mapUrl?: string;
   emergencyName?: string;
   emergencyPhone?: string;
   /** Language to write to the patient in (messages, printed documents the clinic hands over). */
