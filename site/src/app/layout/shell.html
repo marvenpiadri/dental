@@ -1,0 +1,62 @@
+<a class="skip" href="#main">{{ t().skip }}</a>
+<header class="bar" [class.bar--dark]="overDark()" [class.bar--open]="menuOpen()">
+  <a class="brand" [routerLink]="link('')" aria-label="Dontalist"><img src="logo.png" alt="" width="34" height="34"><span>Dontalist</span></a>
+  <nav id="primary" class="nav" aria-label="Primary">
+    @for (n of nav; track n[0]) {
+      <a [routerLink]="link(n[1])" [fragment]="n[0] === 'ecosystem' ? 'ecosystem' : undefined" routerLinkActive="is-current" [routerLinkActiveOptions]="{ exact: n[1] === '' }">{{ t().nav[n[0]] }}</a>
+    }
+  </nav>
+  <div class="bar-end">
+    <a class="open-app" [href]="appUrl" [attr.title]="t().openHint">{{ t().open }}</a>
+    <a class="btn btn--solid" [routerLink]="link('partnership')" fragment="inquiry">{{ t().become }}</a>
+    <div class="settings">
+      <button type="button" class="icon-btn" [attr.aria-expanded]="settingsOpen()" aria-haspopup="true" [attr.aria-label]="t().settings" (click)="settingsOpen.set(!settingsOpen())">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.600 2.400 4 5.600 4 9s-1.400 6.600-4 9c-2.600-2.400-4-5.600-4-9s1.400-6.600 4-9z"/></svg>
+      </button>
+      @if (settingsOpen()) {
+        <div class="panel" role="group" [attr.aria-label]="t().settings">
+          <p class="panel-h">{{ t().language }}</p>
+          <div class="seg">
+            @for (l of langs; track l) {
+              <a [routerLink]="other(l)" [attr.lang]="l" [attr.hreflang]="l" [class.is-on]="site.lang() === l" [attr.aria-current]="site.lang() === l ? 'true' : null">{{ langName(l) }}</a>
+            }
+          </div>
+          <p class="panel-h">{{ t().appearance }}</p>
+          <div class="seg">
+            @for (th of themes; track th.id) {
+              <button type="button" [class.is-on]="themeService.theme() === th.id" [attr.aria-pressed]="themeService.theme() === th.id" (click)="themeService.set(th.id)">{{ t()[th.key] }}</button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+    <button type="button" class="icon-btn menu-btn" [attr.aria-expanded]="menuOpen()" aria-controls="primary" [attr.aria-label]="t().menu" (click)="menuOpen.set(!menuOpen())">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
+    </button>
+  </div>
+</header>
+<main id="main"><router-outlet /></main>
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <a class="brand" [routerLink]="link('')"><img src="logo.png" alt="" width="34" height="34"><span>Dontalist</span></a>
+      <p>{{ t().footer.tagline }}</p>
+    </div>
+    <nav [attr.aria-label]="t().footer.explore">
+      <p class="foot-h">{{ t().footer.explore }}</p>
+      @for (n of nav; track n[0]) { <a [routerLink]="link(n[1])">{{ t().nav[n[0]] }}</a> }
+    </nav>
+    <div>
+      <p class="foot-h">{{ t().footer.product }}</p>
+      <p class="foot-p">{{ t().footer.productLine }}</p>
+      <a [href]="appUrl">{{ t().open }}</a>
+    </div>
+    <div>
+      <p class="foot-h">{{ t().footer.contact }}</p>
+      <p class="foot-p">{{ t().footer.contactLine }}</p>
+      <a [routerLink]="link('partnership')" fragment="inquiry">{{ t().nav.partnership }}</a>
+      <a [routerLink]="link('franchise')" fragment="inquiry">{{ t().nav.franchise }}</a>
+    </div>
+  </div>
+  <div class="wrap foot-end"><span>© {{ year }} {{ t().footer.rights }}</span><a [routerLink]="link('about')" fragment="attributions">{{ t().footer.attributions }}</a></div>
+</footer>

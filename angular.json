@@ -108,6 +108,68 @@
           "builder": "@angular/build:unit-test"
         }
       }
+    },
+    "site": {
+      "projectType": "application",
+      "root": "site",
+      "sourceRoot": "site/src",
+      "prefix": "ds",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "site/src/main.ts",
+            "server": "site/src/main.server.ts",
+            "tsConfig": "site/tsconfig.app.json",
+            "outputPath": "dist/site",
+            "outputMode": "static",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "site/public"
+              }
+            ],
+            "styles": [
+              "site/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "400kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
+              ]
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "site:build:production"
+            },
+            "development": {
+              "buildTarget": "site:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
     }
   }
 }
