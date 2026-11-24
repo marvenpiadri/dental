@@ -210,6 +210,7 @@ describe('DentalStore clinic and appointments in server mode (unit, mock HTTP)',
     const ex = ctl.match((r) => r.url === `${P}/exams`);
     expect(ex.map((r) => r.request.params.get('order')).sort()).toEqual(['asc', 'desc']);
     for (const r of ex) r.flush({ items: r.request.params.get('order') === 'asc' ? (opts.exams ?? []).slice(0, 1) : (opts.exams ?? []), nextCursor: null });
+    ctl.expectOne((r) => r.url === `${P}/invoices`).flush({ items: [], nextCursor: null }); ctl.expectOne((r) => r.url === `${P}/payments`).flush({ items: [], nextCursor: null });
     await loading;
   };
 
@@ -289,5 +290,56 @@ describe('DentalStore clinic and appointments in server mode (unit, mock HTTP)',
     ctl.expectOne(`${ROOT}/plan/i1`).flush({ error: { code: 'item_done', message: 'A completed treatment cannot be changed' } }, { status: 409, statusText: 'Conflict' }); await tick();
     ctl.expectOne((r) => r.url === `${P}/plan`).flush({ items: [{ id: 'i1', procedure: 'filling', price: '350.00', status: 'done', currency: 'MAD' }], nextCursor: null });
     await gone; expect(store.patientMap().get('p1')?.plan?.[0].status).toBe('done'); expect(store.persistenceError()).toBe('A completed treatment cannot be changed');
+  });
+
+  /* ---- S5: billing ---- */
+  const invDto = (o: Record<string, unknown> = {}) => ({ id: 'v1', patientId: 'p1', kind: 'invoice', number: 'FA-2026-0001', issuedAt: '2026-11-20T10:00:00.000Z', dueOn: null, total: '400.00', currency: 'MAD', cancelsId: null, cancelledAt: null, cancelReason: null, lines: [{ itemId: 'i1', label: 'Filling', where: '16', price: '400.00' }], ...o });
+  const flushBilling = async (invoices: unknown[], payments: unknown[]) => {
+    await tick();
+    const inv = ctl.expectOne((r) => r.url === `${P}/invoices`); expect(inv.request.params.get('withLines')).toBe('true'); expect(inv.request.params.get('limit')).toBe('50'); inv.flush({ items: invoices, nextCursor: null });
+    ctl.expectOne((r) => r.url === `${P}/payments`).flush({ items: payments, nextCursor: null });
+  };
+
+  it('reads invoices (with lines) and payments when billing is allowed, mapping money strings to numbers', async () => {
+    vi.spyOn(TestBed.inject(AuthService), 'can').mockReturnValue(true);
+    store.patients.set([{ id: 'p1', fullName: 'Ann', phone: '1' }]);
+    const load = store.loadBilling('p1'); await flushBilling([invDto()], [{ id: 'y1', patientId: 'p1', invoiceId: 'v1', amount: '150.00', method: 'cash', at: '2026-11-21T09:00:00.000Z', reference: null, note: null, payerType: null, payerId: null, currency: 'MAD', voidedAt: null, voidReason: null }]); await load;
+    const p = store.patientMap().get('p1')!;
+    expect(p.invoices).toEqual([{ id: 'v1', number: 'FA-2026-0001', kind: 'invoice', issuedAt: '2026-11-20T10:00:00.000Z', total: 400, currency: 'MAD', lines: [{ itemId: 'i1', label: 'Filling', price: 400, where: '16' }] }]);
+    expect(p.payments).toEqual([{ id: 'y1', amount: 150, method: 'cash', at: '2026-11-21T09:00:00.000Z', currency: 'MAD', invoiceId: 'v1' }]);
+  });
+
+  it('issues an invoice, records and voids a payment, cancels and refunds through the API, then re-reads', async () => {
+    vi.spyOn(TestBed.inject(AuthService), 'can').mockReturnValue(true);
+    store.patients.set([{ id: 'p1', fullName: 'Ann', phone: '1', invoices: [invDto() as never] }]);
+    const lines = [{ itemId: 'i1', label: 'Filling', where: '16', price: 400 }];
+    const issue = store.changeInvoices('p1', (l) => [...l, { id: 'local', number: 'FA-X', kind: 'invoice', issuedAt: 'x', lines, total: 400, dueOn: '2026-12-20' }]); await tick();
+    const post = ctl.expectOne(`${P}/invoices`); expect(post.request.method).toBe('POST'); expect(post.request.body).toEqual({ lines: [{ itemId: 'i1', label: 'Filling', where: '16', price: '400.00' }], dueOn: '2026-12-20' });
+    post.flush({ id: 's', number: 'FA-2026-0002' }, { status: 201, statusText: 'Created' }); await flushBilling([invDto()], []); await issue;
+
+    const pay = store.changePayments('p1', (l) => [...l, { id: 'tmp', amount: 150, method: 'cash', at: '2026-11-21T09:00:00.000Z', invoiceId: 'v1' }]); await tick();
+    const pr = ctl.expectOne(`${P}/payments`); expect(pr.request.body).toMatchObject({ amount: '150.00', method: 'cash', invoiceId: 'v1' }); pr.flush({ id: 'y1' }, { status: 201, statusText: 'Created' });
+    await flushBilling([invDto()], [{ id: 'y1', invoiceId: 'v1', amount: '150.00', method: 'cash', at: '2026-11-21T09:00:00.000Z', currency: 'MAD' }]); await pay;
+
+    const voided = store.changePayments('p1', (l) => l.map((x) => ({ ...x, voidedAt: '2026-11-22T00:00:00.000Z', voidReason: 'typo' }))); await tick();
+    const vr = ctl.expectOne(`${ROOT}/payments/y1/void`); expect(vr.request.body).toEqual({ reason: 'typo' }); vr.flush(null, { status: 204, statusText: 'No Content' });
+    await flushBilling([invDto()], []); await voided;
+
+    const cancel = store.changeInvoices('p1', (l) => [...l.map((i) => ({ ...i, cancelledAt: 'x', cancelReason: 'error' })), { id: 'n', number: 'AV-X', kind: 'credit-note', issuedAt: 'x', lines: [], total: -400, cancelsId: 'v1' }]); await tick();
+    const cr = ctl.expectOne(`${ROOT}/invoices/v1/cancel`); expect(cr.request.body).toEqual({ reason: 'error' }); cr.flush({ id: 'n1', number: 'AV-2026-0001' }, { status: 201, statusText: 'Created' });
+    await flushBilling([invDto({ id: 'n1', kind: 'credit-note', number: 'AV-2026-0001', total: '-400.00', cancelsId: 'v1', refunds: [] }), invDto({ cancelledAt: 'x', cancelReason: 'error' })], []); await cancel;
+
+    const refund = store.changeInvoices('p1', (l) => l.map((i) => (i.id === 'n1' ? { ...i, refunds: [{ id: 'r', amount: 100, method: 'cash', at: '2026-11-23T00:00:00.000Z' }] } : i))); await tick();
+    const rr = ctl.expectOne(`${ROOT}/invoices/n1/refunds`); expect(rr.request.body).toMatchObject({ amount: '100.00', method: 'cash' }); rr.flush({ id: 'r1' }, { status: 201, statusText: 'Created' });
+    await flushBilling([invDto({ id: 'n1', kind: 'credit-note', total: '-400.00', cancelsId: 'v1', refunds: [{ id: 'r1', amount: '100.00', method: 'cash', at: '2026-11-23T00:00:00.000Z', reference: null }] })], []); await refund;
+    expect(store.patientMap().get('p1')?.invoices?.[0].refunds?.[0].amount).toBe(100);
+  });
+
+  it('shows the server refusal and re-reads when a payment is rejected', async () => {
+    vi.spyOn(TestBed.inject(AuthService), 'can').mockReturnValue(true);
+    store.patients.set([{ id: 'p1', fullName: 'Ann', phone: '1' }]);
+    const pay = store.changePayments('p1', (l) => [...l, { id: 'tmp', amount: 150, method: 'cash', at: '2026-11-21T09:00:00.000Z' }]); await tick();
+    ctl.expectOne(`${P}/payments`).flush({ error: { code: 'forbidden', message: 'Not allowed' } }, { status: 403, statusText: 'Forbidden' });
+    await flushBilling([], []); await pay; expect(store.persistenceError()).toBe('Not allowed'); expect(store.patientMap().get('p1')?.payments).toEqual([]);
   });
 });

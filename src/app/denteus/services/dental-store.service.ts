@@ -16,6 +16,7 @@ import { PatientApi, PatientQuery, PatientPage } from '../../core/api/patient-ap
 import { ClinicApi } from '../../core/api/clinic-api.service';
 import { AppointmentApi, isSlotTaken } from '../../core/api/appointment-api.service';
 import { apiMessage } from '../../core/api/api.interceptor';
+import { BillingApi } from '../../core/api/billing-api.service';
 import { ClinicalApi, ChartRevs, applyRevs, diffChart } from '../../core/api/clinical-api.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { defaultCatalog } from '../patients/treatment-rules';
@@ -134,6 +135,7 @@ export class DentalStore {
   private readonly clinicApi = inject(ClinicApi);
   private readonly appointmentApi = inject(AppointmentApi);
   private readonly clinicalApi = inject(ClinicalApi);
+  private readonly billingApi = inject(BillingApi);
   /** Server mode, per patient: the chart as last stored (what a save is compared with), its revisions, the medical record's version, and a queue so one patient's saves never overlap. */
   private readonly serverChart = new Map<string, Record<string, unknown>>();
   private readonly chartRevs = new Map<string, ChartRevs>();
@@ -335,7 +337,7 @@ export class DentalStore {
   }
 
   /** Server mode: the clinical sections of one patient file, read when the file is opened: medical history, the chart, the plan (up to 500 items), and the examinations (the newest 10 and the first one, the baseline). A section that fails to load is skipped; the others still show. */
-  async loadPatientFile(id: string): Promise<void> {
+  async loadPatientFile(id: string, billing = true): Promise<void> {
     const currency = this.currency();
     const plan = async () => { let all: TreatmentItem[] = [], cursor: string | null = null; for (let i = 0; i < 5; i++) { const r = await this.clinicalApi.plan(id, currency, cursor); all = all.concat(r.items); cursor = r.nextCursor; if (!cursor) break; } this.patch(id, { plan: all }); };
     const chart = async () => { const c = await this.clinicalApi.chart(id); if (c) { this.serverChart.set(id, c.chart); this.chartRevs.set(id, c.revs); this.patch(id, { odontogram: c.chart }); } else { this.serverChart.delete(id); this.chartRevs.delete(id); } };
@@ -344,7 +346,7 @@ export class DentalStore {
       const byId = new Map([...first.items, ...newest.items].map((e) => [e.id, e]));
       this.patch(id, { examinations: [...byId.values()].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)) });
     };
-    await Promise.allSettled([this.loadMedical(id), chart(), plan(), exams()]);
+    await Promise.allSettled([this.loadMedical(id), chart(), plan(), exams(), ...(billing ? [this.loadBilling(id)] : [])]);
   }
 
   /** Callers validate first (patient-rules.ts); this only tidies the text and stamps the record. In server mode the server assigns the id and file number. */
@@ -546,7 +548,7 @@ export class DentalStore {
         const added: TreatmentItem[] = [];
         for (const i of w.items) added.push({ ...i, id: await this.clinicalApi.addPlanItem(id, i) });
         this.patch(id, { plan: [...(this.patientMap().get(id)?.plan ?? []), ...added] });
-      } catch (e) { await this.loadPatientFile(id); throw e; }
+      } catch (e) { await this.loadPatientFile(id, false); throw e; }
     });
   }
 
@@ -625,15 +627,50 @@ export class DentalStore {
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, visits: change(p.visits ?? []) } : p)));
   }
 
+  /** Server mode: the newest invoices (with lines and refunds) and payments of one patient, for those allowed to see billing. */
+  async loadBilling(id: string): Promise<void> {
+    if (!this.auth.can('billing.view')) return;
+    this.patch(id, await this.billingApi.load(id));
+  }
+
+  /** Server mode: sends what `change` added or voided to the API, then re-reads the billing section so numbers, totals and ids are the server's. */
+  private async syncBilling(id: string, work: () => Promise<void>): Promise<void> {
+    try { await this.enqueue(id, work); } catch (e) { this.persistenceError.set(apiMessage(e)); }
+    await this.loadBilling(id).catch((e) => this.persistenceError.set(apiMessage(e)));
+  }
+
   /** Same shape as `changePlan`, for the patient's payments. */
-  changePayments(patientId: string, change: (payments: Payment[]) => Payment[]): void {
+  changePayments(patientId: string, change: (payments: Payment[]) => Payment[]): void | Promise<void> {
     if (!this.auth.can('billing.create')) return; // the buttons are hidden too; this keeps every caller honest
+    const prev = this.patients().find((p) => p.id === patientId)?.payments ?? [];
+    if (this.server) {
+      const next = change(prev), had = new Map(prev.map((p) => [p.id, p]));
+      return this.syncBilling(patientId, async () => {
+        for (const p of next) {
+          const old = had.get(p.id);
+          if (!old) await this.billingApi.pay(patientId, p);
+          else if (p.voidedAt && !old.voidedAt) await this.billingApi.void(p.id, p.voidReason ?? '');
+        }
+      });
+    }
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, payments: change(p.payments ?? []) } : p)));
   }
 
-  /** Same shape as `changePlan`, for the patient's invoices. Callers only ever append (issue) or add a credit note (cancel). */
-  changeInvoices(patientId: string, change: (invoices: Invoice[]) => Invoice[]): void {
+  /** Same shape as `changePlan`, for the patient's invoices. Callers only ever append (issue), add a credit note (cancel) or add a refund to one. */
+  changeInvoices(patientId: string, change: (invoices: Invoice[]) => Invoice[]): void | Promise<void> {
     if (!this.auth.can('billing.create')) return; // the buttons are hidden too; this keeps every caller honest
+    const prev = this.patients().find((p) => p.id === patientId)?.invoices ?? [];
+    if (this.server) {
+      const next = change(prev), had = new Map(prev.map((i) => [i.id, i]));
+      return this.syncBilling(patientId, async () => {
+        for (const i of next) {
+          const old = had.get(i.id);
+          if (!old && i.kind === 'invoice') await this.billingApi.issue(patientId, i);
+          else if (!old && i.cancelsId) await this.billingApi.cancel(i.cancelsId, next.find((x) => x.id === i.cancelsId)?.cancelReason ?? '');
+          else if (old) for (const r of i.refunds ?? []) if (!old.refunds?.some((x) => x.id === r.id)) await this.billingApi.refund(i.id, r);
+        }
+      });
+    }
     this.patients.update((list) => list.map((p) => (p.id === patientId ? { ...p, invoices: change(p.invoices ?? []) } : p)));
   }
 
