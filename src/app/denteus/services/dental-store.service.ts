@@ -3,7 +3,7 @@ import { LEGACY_CURRENCY, countryName } from '../regional/regional-rules';
 import { CONDITIONS, nextPatientNumber } from '../patients/patient-rules';
 import { ClinicPrefs, DEFAULT_PREFS, normalizePrefs } from '../setup/prefs-rules';
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable, PLATFORM_ID, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, effect, inject, signal, untracked } from '@angular/core';
 import { addMinutes, formatTime, newId } from '../../calendar/utils/date.utils';
 import { ClinicData } from './backup';
 import { parseHours } from '../rules/opening-hours';
@@ -13,6 +13,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ClinicDatabase } from './clinic-database.service';
 import { ApiSession } from '../../core/api/api-session.service';
 import { PatientApi, PatientQuery, PatientPage } from '../../core/api/patient-api.service';
+import { ClinicApi } from '../../core/api/clinic-api.service';
+import { AppointmentApi, isSlotTaken } from '../../core/api/appointment-api.service';
+import { apiMessage } from '../../core/api/api.interceptor';
+import { HttpErrorResponse } from '@angular/common/http';
 import { defaultCatalog } from '../patients/treatment-rules';
 import type { Examination } from '../odontogram/engine/exam';
 import {
@@ -126,6 +130,8 @@ export class DentalStore {
   private readonly auth = inject(AuthService);
   private readonly api = inject(ApiSession);
   private readonly patientApi = inject(PatientApi);
+  private readonly clinicApi = inject(ClinicApi);
+  private readonly appointmentApi = inject(AppointmentApi);
   /** True when patients live on the server: the `patients` signal is then only a cache of the pages the screens asked for, never saved to this browser. */
   readonly server = this.api.enabled;
   private readonly i18n = inject(I18n);
@@ -138,12 +144,18 @@ export class DentalStore {
 
   constructor() {
     effect(() => this.i18n.currency.set(this.currency()));
+    // Server mode: the clinic loads when someone signs in, and everything is dropped when they sign out (another person may sign in next).
+    effect(() => {
+      if (!this.server) return;
+      if (this.api.signedIn()) untracked(() => void this.init().catch(() => undefined));
+      else untracked(() => this.reset());
+    });
     effect(() => {
       const patients = this.patients();
       const appointments = this.appointments();
-      if (!this.ready) return;
+      if (!this.ready || this.server) return; // server mode keeps nothing in this browser
       this.persistQueue = this.persistQueue
-        .then(() => this.database.saveSchedulingSnapshot(this.server ? [] : patients, appointments))
+        .then(() => this.database.saveSchedulingSnapshot(patients, appointments))
         .then(() => this.persistenceError.set(null))
         .catch(() => this.persistenceError.set('Changes could not be saved to this browser. Check available storage and try again.'));
     });
@@ -156,6 +168,7 @@ export class DentalStore {
    */
   init(): Promise<void> {
     if (!this.isBrowser) return Promise.resolve();
+    if (this.server && !this.api.signedIn()) return Promise.resolve(); // nothing to read before sign-in; the sign-in effect calls this again
     return (this.initialization ??= this.load().catch((error) => {
       this.initialization = null; // let the next page retry
       this.loadFailed.set(true);
@@ -163,7 +176,15 @@ export class DentalStore {
     }));
   }
 
+  /** Server mode: forget the signed-out person's clinic. */
+  private reset(): void {
+    this.initialization = null; this.ready = false;
+    this.locations.set([]); this.dentists.set([]); this.chairs.set([]); this.patients.set([]); this.appointments.set([]);
+    this.loaded.set(false); this.loadFailed.set(false);
+  }
+
   private async load(): Promise<void> {
+    if (this.server) return this.loadFromServer();
     const [locations, resources] = await Promise.all([
       this.database.loadLocations(),
       this.database.loadResources(),
@@ -179,8 +200,21 @@ export class DentalStore {
     this.waTemplates.set((await this.database.loadSetting<Partial<Record<Message['kind'], string>>>('waTemplates')) ?? {});
 
     const saved = await this.database.loadSchedulingSnapshot();
-    this.patients.set(this.server ? [] : saved.patients);
+    this.patients.set(saved.patients);
     this.appointments.set(saved.appointments);
+    this.ready = true;
+    this.loaded.set(true);
+  }
+
+  /** Clinic, dentists and chairs come from the server; patients and appointments are loaded in pages and date ranges by the screens that show them. Prices, wording and page settings move in stage S7 and stay in this browser until then. */
+  private async loadFromServer(): Promise<void> {
+    const { location, dentists, chairs } = await this.clinicApi.load(this.api.who()!.clinicId);
+    this.locations.set([location]); this.dentists.set(dentists); this.chairs.set(chairs);
+    this.catalog.set((await this.database.loadSetting<CatalogEntry[]>('catalog')) ?? defaultCatalog());
+    this.hiddenPages.set((await this.database.loadSetting<string[]>('hiddenPages')) ?? []);
+    this.view3d.set((await this.database.loadSetting<boolean>('view3d')) ?? true);
+    this.prefs.set(normalizePrefs(await this.database.loadSetting<unknown>('prefs')));
+    this.waTemplates.set((await this.database.loadSetting<Partial<Record<Message['kind'], string>>>('waTemplates')) ?? {});
     this.ready = true;
     this.loaded.set(true);
   }
@@ -219,13 +253,17 @@ export class DentalStore {
 
   /** The clinic setup flow calls this when a site is created or changed. */
   async saveLocations(locations: ClinicLocation[]): Promise<void> {
-    await this.database.saveLocations(locations);
+    if (this.server) await this.clinicApi.saveLocation(locations[0], this.locations()[0], this.auth.can('profile.edit')); // one account = one clinic
+    else await this.database.saveLocations(locations);
     this.locations.set(locations);
   }
 
   /** The clinic setup flow calls this when dentists or chairs are created or changed. */
   async saveResources(dentists: Dentist[], chairs: Chair[]): Promise<void> {
-    await this.database.saveResources(dentists, chairs);
+    if (this.server) {
+      dentists = await this.clinicApi.syncDentists(this.dentists(), dentists); // the server assigns the ids of new ones
+      chairs = await this.clinicApi.syncChairs(this.chairs(), chairs);
+    } else await this.database.saveResources(dentists, chairs);
     this.dentists.set(dentists);
     this.chairs.set(chairs);
   }
@@ -303,7 +341,14 @@ export class DentalStore {
   }
 
   /** Puts a patient on, or takes them off, the waiting list. */
-  setWaiting(patientId: string, waiting: boolean): void {
+  setWaiting(patientId: string, waiting: boolean): void | Promise<void> {
+    if (this.server) {
+      return (waiting ? this.patientApi.setWaiting(patientId) : this.patientApi.clearWaiting(patientId)).then(() => this.applyWaiting(patientId, waiting));
+    }
+    this.applyWaiting(patientId, waiting);
+  }
+
+  private applyWaiting(patientId: string, waiting: boolean): void {
     this.patients.update((list) => list.map((p) => {
       if (p.id !== patientId) return p;
       const { waiting: _drop, ...rest } = p;
@@ -469,6 +514,40 @@ export class DentalStore {
 
   /* ----------------------------- appointments ----------------------------- */
 
+  /** Server mode: loads the appointments that start in [from, to) and replaces what was cached for that window (so a cancelled or moved one disappears). */
+  async loadAppointments(from: Date, to: Date): Promise<void> {
+    const fresh = await this.appointmentApi.range(from, to);
+    const ids = new Set(fresh.map((a) => a.id));
+    this.appointments.update((list) => [...list.filter((a) => !ids.has(a.id) && !(a.start >= from && a.start < to)), ...fresh]);
+  }
+
+  /** Server mode: one more page of a patient's appointments (newest first). Returns the cursor for the next page, or null. */
+  async loadPatientAppointments(patientId: string, cursor: string | null = null): Promise<string | null> {
+    const page = await this.appointmentApi.ofPatient(patientId, cursor);
+    const ids = new Set(page.items.map((a) => a.id));
+    this.appointments.update((list) => [...list.filter((a) => !ids.has(a.id)), ...page.items]);
+    return page.nextCursor;
+  }
+
+  /** Server mode: the waiting list, as the server has it. Patients that left it lose their mark in the cache. */
+  async loadWaiting(): Promise<void> {
+    const rows = await this.patientApi.waiting();
+    const on = new Map(rows.map((p) => [p.id, p.waiting!.since]));
+    this.cache(rows.map(({ waiting: _w, ...p }) => p));
+    this.patients.update((list) => list.map((p) => {
+      const { waiting: _drop, ...rest } = p;
+      return on.has(p.id) ? { ...rest, waiting: { since: on.get(p.id)! } } : rest;
+    }));
+  }
+
+  /** What a refused server call means for the screen: a taken slot or a concurrent edit is a conflict; the server's own wording is shown. */
+  private refused(e: unknown): ApiResult<never> {
+    const status = e instanceof HttpErrorResponse ? e.status : 0;
+    const code = isSlotTaken(e) || status === 409 ? 'conflict' : status === 403 ? 'forbidden' : status === 404 ? 'not-found' : 'invalid';
+    const message = apiMessage(e, this.t('er.denied'));
+    return fail(code, message);
+  }
+
   async createAppointment(draft: AppointmentDraft): Promise<ApiResult<Appointment>> {
     if (!this.auth.can('appointments.create')) return fail('forbidden', this.t('er.denied'));
     if (!draft.patientId) return fail('invalid', this.t('er.select'));
@@ -478,8 +557,13 @@ export class DentalStore {
 
     const now = new Date();
     const status: AppointmentStatus = draft.status === 'confirmed' ? 'confirmed' : 'scheduled';
+    let id = newId();
+    if (this.server) {
+      try { id = await this.appointmentApi.create({ patientId: draft.patientId, dentistId: draft.dentistId, chairId: draft.chairId, type: draft.type, status, start: candidate.start, end: candidate.end, reason: draft.reason.trim() || undefined, note: draft.note.trim() || undefined }); } catch (e) { return this.refused(e); }
+    }
     const appointment: Appointment = {
-      id: newId(),
+      id,
+      ...(this.server ? { version: 1 } : {}),
       patientId: draft.patientId,
       dentistId: draft.dentistId,
       chairId: draft.chairId,
@@ -490,8 +574,8 @@ export class DentalStore {
       reason: draft.reason.trim() || undefined,
       note: draft.note.trim() || undefined,
       createdAt: now,
-      createdBy: this.actor(),
-      history: [{ from: null, to: status, at: now, by: this.actor() }],
+      createdBy: this.api.who()?.name ?? this.actor(),
+      history: [{ from: null, to: status, at: now, by: this.api.who()?.name ?? this.actor() }],
       scheduleHistory: [],
     };
     this.appointments.update((list) => [...list, appointment]);
@@ -506,7 +590,11 @@ export class DentalStore {
 
     // once the visit is under way or over, only the free-text fields may change
     if (!isMovable(current.status)) {
-      const next: Appointment = { ...current, reason: draft.reason.trim() || undefined, note: draft.note.trim() || undefined };
+      let version = current.version;
+      if (this.server) {
+        try { version = await this.appointmentApi.edit(id, current.version ?? 0, { reason: draft.reason.trim(), note: draft.note.trim() }); } catch (e) { return this.refused(e); }
+      }
+      const next: Appointment = { ...current, reason: draft.reason.trim() || undefined, note: draft.note.trim() || undefined, ...(version === undefined ? {} : { version }) };
       this.replace(next);
       return { ok: true, value: next };
     }
@@ -516,8 +604,17 @@ export class DentalStore {
     const problem = this.check(candidate);
     if (problem) return problem;
 
+    let version = current.version;
+    if (this.server) {
+      try {
+        const reason = draft.reason.trim(), note = draft.note.trim();
+        if (draft.patientId !== current.patientId || draft.type !== current.type || reason !== (current.reason ?? '') || note !== (current.note ?? '')) version = await this.appointmentApi.edit(id, version ?? 0, { patientId: draft.patientId, type: draft.type, reason, note });
+        if (candidate.start.getTime() !== current.start.getTime() || candidate.end.getTime() !== current.end.getTime() || draft.dentistId !== current.dentistId || draft.chairId !== current.chairId) version = await this.appointmentApi.reschedule(id, version ?? 0, { start: candidate.start, end: candidate.end, dentistId: draft.dentistId, chairId: draft.chairId });
+      } catch (e) { return this.refused(e); }
+    }
     let next: Appointment = {
       ...current,
+      ...(version === undefined ? {} : { version }),
       patientId: draft.patientId,
       type: draft.type,
       reason: draft.reason.trim() || undefined,
@@ -557,7 +654,11 @@ export class DentalStore {
     const problem = this.check(candidate);
     if (problem) return problem;
 
-    const next = this.withSchedule(current, change.start, change.end, dentistId, chairId);
+    let version = current.version;
+    if (this.server) {
+      try { version = await this.appointmentApi.reschedule(id, version ?? 0, { start: change.start, end: change.end, dentistId, chairId }); } catch (e) { return this.refused(e); }
+    }
+    const next = { ...this.withSchedule(current, change.start, change.end, dentistId, chairId), ...(version === undefined ? {} : { version }) };
     this.replace(next);
     return { ok: true, value: next };
   }
@@ -584,9 +685,14 @@ export class DentalStore {
       const problem = this.check({ id, patientId: current.patientId, dentistId: current.dentistId, chairId: current.chairId, start: current.start, end: current.end });
       if (problem) return problem;
     }
+    let version = current.version;
+    if (this.server) {
+      try { version = await this.appointmentApi.setStatus(id, to, version); } catch (e) { return this.refused(e); }
+    }
     const now = new Date();
     const next: Appointment = {
       ...current,
+      ...(version === undefined ? {} : { version }),
       status: to,
       history: [...current.history, { from: current.status, to, at: now, by: this.actor() }],
     };
@@ -634,7 +740,7 @@ export class DentalStore {
     if (timing) return fail('invalid', this.t(timing.key, { n: timing.n ?? 0 }));
     if (!this.dentistMap().has(candidate.dentistId)) return fail('invalid', this.t('er.dentist'));
     if (!this.chairMap().has(candidate.chairId)) return fail('invalid', this.t('er.chair'));
-    if (!this.patientMap().has(candidate.patientId)) return fail('invalid', this.t('er.select'));
+    if (!this.server && !this.patientMap().has(candidate.patientId)) return fail('invalid', this.t('er.select')); // server mode: the cache is partial, the server checks
 
     const details = this.describeConflicts(candidate);
     if (details.length) return fail('conflict', details.join(' '), details);

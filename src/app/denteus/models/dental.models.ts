@@ -459,6 +459,8 @@ export interface Appointment {
   encounterId?: string;
   /** ISO time the WhatsApp reminder was opened for this visit. */
   remindedAt?: string;
+  /** Server revision, sent back on a move or status change so two people editing the same visit cannot overwrite each other. */
+  version?: number;
   createdAt: Date;
   createdBy: string;
   history: StatusChange[];

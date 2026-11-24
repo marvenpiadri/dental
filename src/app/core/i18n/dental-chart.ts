@@ -605,6 +605,7 @@ const D = {
   'pk.add': ['Add patient', 'Ajouter le patient'],
   'er.select': ['Select a patient.', 'Sélectionnez un patient.'],
   'er.gone': ['This appointment no longer exists.', 'Ce rendez-vous n’existe plus.'],
+  'er.loadFailed': ['The appointments could not be loaded. Check your connection and try again.', 'Les rendez-vous n’ont pas pu être chargés. Vérifiez votre connexion et réessayez.'],
   'er.nomove': ['{s} appointments can’t be rescheduled.', 'Un rendez-vous « {s} » ne peut pas être déplacé.'],
   'er.notrans': ['A {a} appointment can’t become {b}.', 'Un rendez-vous « {a} » ne peut pas passer à « {b} ».'],
   'er.arrivedToday': ['A patient can only be marked as arrived on the day of the appointment.', 'Un patient ne peut être marqué arrivé que le jour du rendez-vous.'],

@@ -52,6 +52,13 @@ export class PatientApi {
   async archive(id: string, on: boolean): Promise<void> {
     await firstValueFrom(this.http.post(this.api.url(`/patients/${encodeURIComponent(id)}/${on ? 'archive' : 'unarchive'}`), {}));
   }
+  /** The waiting list (oldest first), at most 100 on screen. */
+  async waiting(): Promise<Patient[]> {
+    const r = await firstValueFrom(this.http.get<{ items: { patientId: string; number: string; fullName: string; phone?: string; since: string }[] }>(this.api.url('/waiting'), { params: new HttpParams().set('limit', '100') }));
+    return r.items.map((x) => ({ id: x.patientId, number: x.number, fullName: x.fullName, phone: x.phone ?? '', waiting: { since: x.since } }));
+  }
+  async setWaiting(id: string): Promise<void> { await firstValueFrom(this.http.put(this.api.url(`/patients/${encodeURIComponent(id)}/waiting`), {})); }
+  async clearWaiting(id: string): Promise<void> { await firstValueFrom(this.http.delete(this.api.url(`/patients/${encodeURIComponent(id)}/waiting`))); }
   /** Files that look like the same person (same phone, or a very similar name). At most 10, from the server. */
   async duplicates(id: string): Promise<Patient[]> {
     const r = await firstValueFrom(this.http.get<{ items: Record<string, unknown>[] }>(this.api.url(`/patients/${encodeURIComponent(id)}/duplicates`)));

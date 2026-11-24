@@ -2,7 +2,7 @@ import { Documents } from '../documents/documents.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { refundedTotal } from '../patients/invoice-rules';
-import { ChangeDetectionStrategy, Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { isSameDay } from '../../calendar/utils/date.utils';
 import { I18n } from '../../core/i18n/i18n.service';
@@ -49,6 +49,13 @@ export class TodayComponent {
 
   constructor() {
     const destroyRef = inject(DestroyRef); // must be taken here: inject() doesn't work inside the callback below
+    // Server mode: today and the reminder window (tomorrow by default) plus the waiting list, not the whole schedule.
+    effect(() => {
+      const now = this.now();
+      if (!this.store.server || !this.store.loaded() || !now) return;
+      const from = new Date(now.getFullYear(), now.getMonth(), now.getDate()), days = 2 + this.store.prefs().reminderDays;
+      untracked(() => { void this.store.loadAppointments(from, new Date(from.getFullYear(), from.getMonth(), from.getDate() + days)).catch(() => undefined); void this.store.loadWaiting().catch(() => undefined); });
+    });
     afterNextRender(() => {
       this.now.set(new Date());
       void this.database.loadSetting<string>('lastBackup').then((v) => this.lastBackup.set(v ?? null));

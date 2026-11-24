@@ -10,6 +10,7 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { CalendarSidebarComponent } from '../calendar/components/calendar-sidebar/calendar-sidebar.component';
 import { CalendarToolbarComponent } from '../calendar/components/calendar-toolbar/calendar-toolbar.component';
@@ -23,6 +24,7 @@ import { isSameDay } from '../calendar/utils/date.utils';
 import { I18n } from '../core/i18n/i18n.service';
 import { ThemeService } from '../core/theme.service';
 import { parseIsoDate } from './patients/patient-rules';
+import { visibleRange } from './rules/calendar-range';
 import { defaultStartMin } from './rules/opening-hours';
 import { chairTint } from './utils/chair-tint';
 import { AppointmentEditorComponent, EditorProblem } from './components/appointment-editor/appointment-editor.component';
@@ -128,6 +130,14 @@ export class DentalCalendarComponent implements OnInit {
         .filter((a) => showCancelled || a.status !== 'cancelled')
         .map((a) => toCalendarEvent(a, ctx)));
     });
+
+    // Server mode: ask only for the dates on screen (and the waiting list once), again whenever the view or the day changes.
+    effect(() => {
+      if (!this.dental.server || !this.dental.loaded()) return;
+      const { from, to } = visibleRange(this.cal.view(), this.cal.focusDate(), this.cal.weekStartsOn());
+      untracked(() => void this.dental.loadAppointments(from, to).catch(() => this.cal.notify(this.t('er.loadFailed'))));
+    });
+    effect(() => { if (this.dental.server && this.dental.loaded()) untracked(() => void this.dental.loadWaiting().catch(() => undefined)); });
 
     effect(() => {
       if (this.groupBy() === 'chair') {

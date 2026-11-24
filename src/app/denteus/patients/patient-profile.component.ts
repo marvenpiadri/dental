@@ -1,7 +1,7 @@
 import { Documents } from '../documents/documents.service';
 import { inCurrency, planInCurrency } from '../regional/regional-rules';
 import { refundedTotal } from './invoice-rules';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n, Key } from '../../core/i18n/i18n.service';
@@ -109,7 +109,15 @@ export class PatientProfileComponent {
   protected readonly mergeFrom = signal('');
   private readonly patientApi = inject(PatientApi);
   /** A profile opened from a link may not be in the cache yet (server mode). */
-  private readonly fetchIfMissing = effect(() => { void this.store.ensurePatient(this.id()); });
+  private readonly checked = signal(false);
+  private readonly fetchIfMissing = effect(() => {
+    const id = this.id();
+    if (!this.store.server || !this.store.loaded()) return;
+    untracked(() => {
+      void this.store.ensurePatient(id).then(() => this.checked.set(true));
+      void this.store.loadPatientAppointments(id).catch(() => undefined); // the newest 50 visits; the rest stay on the server
+    });
+  });
   /** Shown when the server refuses or cannot be reached (archive, restore, merge). */
   protected readonly actionError = signal('');
   /** Server mode: the files that look like this one, from the server (at most 10); local mode lists the cached patients. */
@@ -162,7 +170,7 @@ export class PatientProfileComponent {
   private readonly now = new Date();
 
   protected readonly patient = computed(() => this.store.patientMap().get(this.id()) ?? null);
-  protected readonly missing = computed(() => this.store.loaded() && !this.patient());
+  protected readonly missing = computed(() => this.store.loaded() && !this.patient() && (!this.store.server || this.checked()));
 
   protected readonly appointments = computed(() => this.store.appointments().filter((a) => a.patientId === this.id()));
 
