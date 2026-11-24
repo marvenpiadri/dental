@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { I18n } from '../../core/i18n/i18n.service';
 import { PatientDocument } from '../models/dental.models';
 import { ClinicDatabase } from '../services/clinic-database.service';
+import { ApiSession } from '../../core/api/api-session.service';
+import { FilesApi } from '../../core/api/files-api.service';
 import { CHILD_LOWER, CHILD_UPPER, LOWER, UPPER } from './tooth-numbers';
 import { ACCEPTED, fileProblem, formatSize } from './document-rules';
 
@@ -19,6 +21,9 @@ export class DocumentsComponent {
   readonly patientId = input.required<string>();
 
   private readonly db = inject(ClinicDatabase);
+  private readonly session = inject(ApiSession);
+  private readonly files = inject(FilesApi);
+  private get server(): boolean { return this.session.enabled; }
   protected readonly i18n = inject(I18n);
   protected readonly t = this.i18n.t;
   protected readonly accept = ACCEPTED;
@@ -34,6 +39,7 @@ export class DocumentsComponent {
   protected async tag(item: Shown, tooth: string): Promise<void> {
     const doc: PatientDocument = { ...item.doc, tooth: tooth || undefined };
     try {
+      if (this.server) await this.files.setTooth(doc.id, tooth || null); else
       await this.db.addDocument(doc); // same id: replaces the stored record
       this.shown.update((list) => list.map((x) => (x === item ? { ...x, doc } : x)));
       if (this.filter() && !this.taggedTeeth().includes(this.filter())) this.filter.set('');
@@ -84,15 +90,15 @@ export class DocumentsComponent {
   }
 
   private release(): void {
-    for (const item of this.shown()) URL.revokeObjectURL(item.url);
+    if (!this.server) for (const item of this.shown()) URL.revokeObjectURL(item.url);
   }
 
   private async load(patientId: string): Promise<void> {
     this.loading.set(true);
     try {
-      const docs = await this.db.listDocuments(patientId);
+      const docs = this.server ? await this.files.list(patientId) : await this.db.listDocuments(patientId);
       this.release();
-      this.shown.set(docs.map((doc) => ({ doc, url: URL.createObjectURL(doc.blob), image: doc.type.startsWith('image/') })));
+      this.shown.set(docs.map((doc) => ({ doc, url: this.server ? this.files.contentUrl(doc.id) : URL.createObjectURL(doc.blob), image: doc.type.startsWith('image/') })));
     } catch {
       this.problem.set('storage');
     }
@@ -108,6 +114,7 @@ export class DocumentsComponent {
       const bad = fileProblem(file);
       if (bad) { this.problem.set(bad); continue; }
       try {
+        if (this.server) await this.files.upload(this.patientId(), file); else
         await this.db.addDocument({ id: crypto.randomUUID(), patientId: this.patientId(), name: file.name, type: file.type, size: file.size, addedAt: new Date().toISOString(), blob: file });
         stored++;
       } catch {
@@ -119,8 +126,10 @@ export class DocumentsComponent {
 
   protected async remove(item: Shown): Promise<void> {
     try {
-      await this.db.deleteDocument(item.doc.id);
-      URL.revokeObjectURL(item.url);
+      if (this.server) await this.files.remove(item.doc.id, 'Removed from the patient file'); else {
+        await this.db.deleteDocument(item.doc.id);
+        URL.revokeObjectURL(item.url);
+      }
       this.shown.update((list) => list.filter((x) => x !== item));
     } catch {
       this.problem.set('storage');
