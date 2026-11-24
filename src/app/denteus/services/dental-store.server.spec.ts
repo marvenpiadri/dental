@@ -196,4 +196,98 @@ describe('DentalStore clinic and appointments in server mode (unit, mock HTTP)',
     const off = store.setWaiting('p2', false); ctl.expectOne(`${ROOT}/patients/p2/waiting`).flush(null); await off;
     expect(store.patientMap().get('p2')?.waiting).toBeUndefined();
   });
+
+  /* ---- S4: clinical sections of one patient file ---- */
+  const P = `${ROOT}/patients/p1`;
+  const chartDto = { version: '2.22', globals: { a: true }, teeth: { '11': { status: 'ok' } } };
+  const revsDto = { teeth: { '11': 2 }, plan: {}, globals: 1, case: 0 };
+  const openFile = async (opts: { chart?: boolean; exams?: unknown[] } = {}) => {
+    store.patients.set([{ id: 'p1', fullName: 'Ann', phone: '1' }]);
+    const loading = store.loadPatientFile('p1'); await tick();
+    ctl.expectOne(`${P}/medical`).flush({ conditions: ['asthma'], allergies: 'penicillin', medications: '', legacyMatched: ['x'], version: 5 });
+    ctl.expectOne(`${P}/chart`).flush(opts.chart === false ? { chart: null } : { chart: chartDto, revs: revsDto });
+    ctl.expectOne((r) => r.url === `${P}/plan`).flush({ items: [{ id: 'i1', procedure: 'filling', price: '300.00', status: 'planned', tooth: '11', currency: 'MAD' }], nextCursor: null });
+    const ex = ctl.match((r) => r.url === `${P}/exams`);
+    expect(ex.map((r) => r.request.params.get('order')).sort()).toEqual(['asc', 'desc']);
+    for (const r of ex) r.flush({ items: r.request.params.get('order') === 'asc' ? (opts.exams ?? []).slice(0, 1) : (opts.exams ?? []), nextCursor: null });
+    await loading;
+  };
+
+  it('opens a file by reading its own sections only: medical, chart, plan (one page), newest and first exam', async () => {
+    await openFile({ exams: [{ id: 'e1', at: '2026-11-01T12:00:00Z', note: 'n', chart: chartDto, voidedAt: null }] });
+    const p = store.patientMap().get('p1')!;
+    expect(p.medical).toEqual({ conditions: ['asthma'], allergies: 'penicillin', legacyMatched: ['x'] });
+    expect(p.odontogram).toEqual(chartDto); expect(p.plan).toEqual([{ id: 'i1', procedure: 'filling', price: 300, status: 'planned', tooth: '11' }]);
+    expect(p.examinations).toEqual([{ id: 'e1', patientId: 'p1', date: '2026-11-01', note: 'n', chart: chartDto }]);
+  });
+
+  it('saves a patient edit with the medical version it read, keeping the matched text the form does not show', async () => {
+    await openFile();
+    const done = store.updatePatient('p1', { fullName: 'Ann', phone: '1', medical: { conditions: ['asthma', 'diabetes'], allergies: 'penicillin' } }); await tick();
+    ctl.expectOne(`${ROOT}/patients/p1`).flush(null); await tick();
+    const m = ctl.expectOne(`${P}/medical`); expect(m.request.method).toBe('PUT');
+    expect(m.request.body).toEqual({ expectedVersion: 5, conditions: ['asthma', 'diabetes'], allergies: 'penicillin', medications: '', legacyMatched: ['x'] });
+    m.flush({ version: 6 }); await done;
+    expect(store.patientMap().get('p1')?.medical?.conditions).toEqual(['asthma', 'diabetes']);
+  });
+
+  it('does not touch the medical record when only other fields changed', async () => {
+    await openFile();
+    const done = store.updatePatient('p1', { fullName: 'Ann B', phone: '1', medical: { conditions: ['asthma'], allergies: 'penicillin' } }); await tick();
+    ctl.expectOne(`${ROOT}/patients/p1`).flush(null); await done; // no PUT /medical: ctl.verify() would fail otherwise
+  });
+
+  const work = (done = true) => ({ patientId: 'p1', items: [{ id: 'tmp', procedure: 'filling', price: 400, status: done ? 'done' as const : 'planned' as const, tooth: '16', date: '2026-11-20' }], before: chartDto as Record<string, unknown>, after: { ...chartDto, teeth: { '11': { status: 'ok' }, '16': { status: 'filling' } } } as Record<string, unknown>, date: '2026-11-20', name: 'Filling', baselineNote: 'Baseline' });
+
+  it('records work in order: baseline exam (chart as it was), the changed tooth only, the exam, then the plan item with its own day', async () => {
+    await openFile();
+    const rec = store.recordProcedure(work()); await tick();
+    ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/exams`).flush({ id: 'base' }, { status: 201, statusText: 'Created' }); await tick();
+    const patch = ctl.expectOne((r) => r.method === 'PATCH' && r.url === `${P}/chart`);
+    expect(patch.request.body.changes).toEqual([{ scope: 'teeth', tooth: '16', expectedRev: 0, replace: { status: 'filling' } }]); // one tooth, not the chart
+    patch.flush({ revs: [{ scope: 'teeth', tooth: '16', rev: 1 }] }); await tick();
+    const exam = ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/exams`); expect(exam.request.body.note).toBe('Filling'); exam.flush({ id: 'e2' }, { status: 201, statusText: 'Created' }); await tick();
+    const plan = ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/plan`); expect(plan.request.body).toMatchObject({ status: 'done', date: '2026-11-20', tooth: '16', price: '400.00' }); plan.flush({ id: 'srv-i' }, { status: 201, statusText: 'Created' });
+    await rec;
+    const p = store.patientMap().get('p1')!;
+    expect(p.plan?.map((i) => i.id)).toEqual(['i1', 'srv-i']); expect(p.examinations?.map((e) => e.id)).toEqual(['base', 'e2']);
+    expect((p.odontogram as { teeth: Record<string, unknown> }).teeth['16']).toEqual({ status: 'filling' });
+  });
+
+  it('creates the stored chart from the "before" picture when the patient has none yet, so the baseline is right', async () => {
+    await openFile({ chart: false });
+    const rec = store.recordProcedure(work()); await tick();
+    const init = ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/chart`); expect(init.request.body.chart).toEqual(chartDto); init.flush({ chart: chartDto, revs: revsDto }, { status: 201, statusText: 'Created' }); await tick();
+    ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/exams`).flush({ id: 'base' }, { status: 201, statusText: 'Created' }); await tick();
+    ctl.expectOne((r) => r.method === 'PATCH' && r.url === `${P}/chart`).flush({ revs: [{ scope: 'teeth', tooth: '16', rev: 1 }] }); await tick();
+    ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/exams`).flush({ id: 'e2' }, { status: 201, statusText: 'Created' }); await tick();
+    ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/plan`).flush({ id: 'srv-i' }, { status: 201, statusText: 'Created' }); await rec;
+  });
+
+  it('when a colleague changed the same tooth first, the save is refused, the chart is re-read and the error reaches the panel', async () => {
+    await openFile({ exams: [{ id: 'e0', at: '2026-11-01T12:00:00Z', chart: chartDto }] });
+    const rec = expect(store.recordProcedure(work())).rejects.toBeTruthy(); await tick();
+    ctl.expectOne((r) => r.method === 'PATCH' && r.url === `${P}/chart`).flush({ error: { code: 'stale', message: 'Tooth 16 was changed by someone else' } }, { status: 409, statusText: 'Conflict' }); await tick();
+    ctl.expectOne((r) => r.method === 'GET' && r.url === `${P}/chart`).flush({ chart: { ...chartDto, teeth: { '11': { status: 'ok' }, '16': { status: 'crown' } } }, revs: { ...revsDto, teeth: { '11': 2, '16': 7 } } }); await tick();
+    // the failure path re-reads every section of the file
+    ctl.expectOne(`${P}/medical`).flush({ conditions: [], allergies: '', medications: '', legacyMatched: [], version: 5 });
+    ctl.expectOne((r) => r.url === `${P}/plan`).flush({ items: [], nextCursor: null });
+    for (const r of ctl.match((r) => r.url === `${P}/exams`)) r.flush({ items: [], nextCursor: null });
+    ctl.expectOne((r) => r.method === 'GET' && r.url === `${P}/chart`).flush({ chart: chartDto, revs: revsDto });
+    await rec;
+    expect(store.patientMap().get('p1')?.plan).toEqual([]); // nothing was added to the plan
+  });
+
+  it('plan: new items are created (server id), edits and "done" are sent, removals deleted; a refusal re-reads the plan', async () => {
+    await openFile();
+    const sync = store.changePlan('p1', (plan) => [{ ...plan[0], price: 350 }, { id: 'tmp', procedure: 'scaling', price: 150, status: 'planned' }]);
+    await tick();
+    const edit = ctl.expectOne(`${ROOT}/plan/i1`); expect(edit.request.method).toBe('PATCH'); expect(edit.request.body.price).toBe('350.00'); edit.flush(null); await tick();
+    const add = ctl.expectOne((r) => r.method === 'POST' && r.url === `${P}/plan`); expect(add.request.body.price).toBe('150.00'); add.flush({ id: 'srv-2' }, { status: 201, statusText: 'Created' });
+    await sync; expect(store.patientMap().get('p1')?.plan?.map((i) => i.id)).toEqual(['i1', 'srv-2']);
+    const gone = store.changePlan('p1', () => []); await tick();
+    ctl.expectOne(`${ROOT}/plan/i1`).flush({ error: { code: 'item_done', message: 'A completed treatment cannot be changed' } }, { status: 409, statusText: 'Conflict' }); await tick();
+    ctl.expectOne((r) => r.url === `${P}/plan`).flush({ items: [{ id: 'i1', procedure: 'filling', price: '350.00', status: 'done', currency: 'MAD' }], nextCursor: null });
+    await gone; expect(store.patientMap().get('p1')?.plan?.[0].status).toBe('done'); expect(store.persistenceError()).toBe('A completed treatment cannot be changed');
+  });
 });

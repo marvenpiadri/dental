@@ -24,7 +24,8 @@
     <p class="sum" [class.bad]="invalid()">{{ invalid() ? t('procedure.invalid') : summary() }}</p>
     @if (drawable() && perTooth()) { <label class="draw"><input type="checkbox" [checked]="draw()" (change)="draw.set($any($event.target).checked)" /> {{ t('procedure.draw') }}</label> }
     @if (!catalog().length) { <p class="sum bad">{{ t('plan.catalog.empty') }}</p> }
+    @if (saveError()) { <p class="sum bad" role="alert">{{ saveError() }}</p> }
     <button type="button" class="b" (click)="closed.emit()">{{ t('procedure.cancel') }}</button>
-    <button type="button" class="b go" [disabled]="!catalog().length" (click)="save()">{{ t('procedure.save') }}</button>
+    <button type="button" class="b go" [disabled]="!catalog().length || saving()" (click)="save()">{{ t('procedure.save') }}</button>
   </div>
 </section>

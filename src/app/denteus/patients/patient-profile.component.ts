@@ -116,6 +116,7 @@ export class PatientProfileComponent {
     untracked(() => {
       void this.store.ensurePatient(id).then(() => this.checked.set(true));
       void this.store.loadPatientAppointments(id).catch(() => undefined); // the newest 50 visits; the rest stay on the server
+      void this.store.loadPatientFile(id); // medical history, chart, plan and examinations of this patient only
     });
   });
   /** Shown when the server refuses or cannot be reached (archive, restore, merge). */

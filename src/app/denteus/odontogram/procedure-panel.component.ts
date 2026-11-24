@@ -4,7 +4,7 @@ import { DentalStore } from '../services/dental-store.service';
 import { PROCEDURE_CHART } from '../patients/procedure-chart';
 import { SCOPES, SCOPE_KEY, buildProcedures, teethOfScope, type ProcedureScope } from '../patients/procedure-record';
 import { parsePrice, procedureName } from '../patients/treatment-rules';
-import { makeExamination } from './engine/exam';
+import { apiMessage } from '../../core/api/api.interceptor';
 import { writeChart, type Chart } from './engine/chart';
 import { editChart } from './engine/plan';
 
@@ -61,7 +61,11 @@ export class ProcedurePanelComponent {
   protected setScope(s: ProcedureScope): void { this.scope.set(s); this.highlight.emit(teethOfScope(s, this.quadrant())); }
   protected setQuadrant(q: number): void { this.quadrant.set(q as 1 | 2 | 3 | 4); this.highlight.emit(teethOfScope('quadrant', q)); }
 
-  protected save(): void {
+  /** Shown when the server refuses the save (a colleague changed the same tooth, no permission, offline). */
+  protected readonly saveError = signal('');
+  protected readonly saving = signal(false);
+
+  protected async save(): Promise<void> {
     const entry = this.catalog().find((e) => e.id === this.procedure());
     const price = parsePrice(this.price());
     const teeth = this.scope() === 'teeth' ? this.teeth() : [];
@@ -69,7 +73,6 @@ export class ProcedurePanelComponent {
     const name = this.nameOf(entry.id, entry.name);
     const items = buildProcedures({ procedure: entry.id, name, price, done: this.done(), date: this.date(), scope: this.scope(), quadrant: this.quadrant(), teeth }, () => crypto.randomUUID());
     const id = this.patientId();
-    this.store.changePlan(id, (plan) => [...plan, ...items]);
     const before = this.chart();
     let chart = before;
     const edit = this.drawable();
@@ -77,10 +80,12 @@ export class ProcedurePanelComponent {
       const out = editChart(chart, this.done() ? 'status' : 'plan', teeth, edit, { confirmed: true });
       if (out.kind !== 'confirm' && out.changed.length) chart = out.chart;
     }
-    this.store.setOdontogram(id, writeChart(chart));
-    // The chart as it was before any recorded work is the baseline the Initial view shows; it can only be taken now.
-    if (!this.store.patients().find((p) => p.id === id)?.examinations?.length) this.store.addExamination(id, makeExamination(id, before, { id: crypto.randomUUID(), date: this.date(), note: this.t('dc.exam.baseline') }));
-    this.store.addExamination(id, makeExamination(id, chart, { id: crypto.randomUUID(), date: this.date(), note: name }));
+    this.saveError.set(''); this.saving.set(true);
+    try {
+      // The chart as it was before any recorded work is the baseline the Initial view shows; the store takes it the first time.
+      await this.store.recordProcedure({ patientId: id, items, before: structuredClone(writeChart(before)) as unknown as Record<string, unknown>, after: structuredClone(writeChart(chart)) as unknown as Record<string, unknown>, date: this.date(), name, baselineNote: this.t('dc.exam.baseline') });
+    } catch (e) { this.saveError.set(apiMessage(e, this.t('er.denied'))); this.saving.set(false); return; }
+    this.saving.set(false);
     this.closed.emit();
   }
 }

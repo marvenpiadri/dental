@@ -1,3 +1,4 @@
+import { apiMessage } from '../../core/api/api.interceptor';
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { I18n, Key } from '../../core/i18n/i18n.service';
@@ -34,6 +35,7 @@ export class PatientFormComponent {
   protected readonly submitted = signal(false);
   protected readonly conditionList = CONDITIONS;
   protected readonly conditions = signal<string[]>([]);
+  private readonly medicalReady = signal(false);
   protected readonly allergies = signal('');
   protected readonly medications = signal('');
   protected toggleCondition(id: string, on: boolean): void { this.conditions.update((l) => (on ? [...l, id] : l.filter((x) => x !== id))); }
@@ -60,9 +62,15 @@ export class PatientFormComponent {
       untracked(() => this.values.update((v) => (v.country || v.city ? v : { ...v, country: clinic.countryCode ?? '', city: clinic.city ?? '' })));
     });
     // Fill the form once the record has loaded; never again, so the user's typing isn't overwritten.
+    // Server mode: the medical history comes from its own call, so wait for it; saving a form filled before it arrived would erase it.
+    effect(() => {
+      const id = this.id();
+      if (!id || !this.store.server || !this.store.loaded()) return;
+      untracked(() => void this.store.ensurePatient(id).then(() => this.store.loadMedical(id)).then(() => this.medicalReady.set(true)).catch((e) => this.store.persistenceError.set(apiMessage(e))));
+    });
     effect(() => {
       const patient = this.existing();
-      if (!patient || this.loadedFor === patient.id) return;
+      if (!patient || this.loadedFor === patient.id || (this.store.server && !this.medicalReady())) return;
       untracked(() => {
         this.loadedFor = patient.id;
         this.values.set({
