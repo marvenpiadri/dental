@@ -11,6 +11,11 @@ interface Part { id: string; group: 'tooth' | 'bone' | 'pulp'; fdi: number | nul
 let data: Promise<{ parts: Part[]; buf: ArrayBuffer }> | null = null;
 const load = () => (data ??= Promise.all([fetch('models/jaw.json').then((r) => r.json()), fetch('models/jaw.bin').then((r) => r.arrayBuffer())]).then(([m, buf]) => ({ parts: m.parts as Part[], buf })).catch((e) => { data = null; throw e; }));
 
+/** Implant restorations: one crown per tooth plus shared implant, abutment and screw, placed by a per-tooth node (see tools/implants). */
+let implants: Promise<T.Object3D> | null = null;
+const loadImplants = () => (implants ??= Promise.all([import('three/examples/jsm/loaders/GLTFLoader.js'), import('three/examples/jsm/libs/meshopt_decoder.module.js')])
+  .then(([l, m]) => { const g = new l.GLTFLoader(); g.setMeshoptDecoder(m.MeshoptDecoder); return g.loadAsync('models/implants.glb'); }).then((g) => g.scene).catch((e) => { implants = null; throw e; }));
+
 export interface Options {
   canvas: HTMLCanvasElement; layer: HTMLElement; names: Record<ToothState, string>; tooth: string; reduced: boolean;
 }
@@ -31,7 +36,7 @@ export class JawScene {
   private spin!: T.Group; private raycaster!: T.Raycaster;
   private teeth = new Map<number, { mesh: T.Mesh; u: Record<string, T.IUniform>; center: T.Vector3; ghost: T.Mesh; pulp?: T.Mesh }>();
   private ghostU: { uA: T.IUniform; uTime: T.IUniform }[] = [];
-  private boneU: T.IUniform[] = []; private implant?: T.Mesh;
+  private boneU: T.IUniform[] = []; private implants: { group: T.Object3D; fdi: number }[] = [];
   private jawU = { up: { value: 1 }, low: { value: 1 } };
   private cur = { az: 0.55, el: 0.32, d: 235, up: 1, low: 1, scan: 1, show: 0, solid: 0, dim: 0, labels: 0 };
   private tgt = { ...this.cur };
@@ -41,12 +46,13 @@ export class JawScene {
   private cleanup: (() => void)[] = [];
 
   static async create(o: Options): Promise<JawScene> {
-    const [three, env, d] = await Promise.all([import('three'), import('three/examples/jsm/environments/RoomEnvironment.js'), load()]);
-    const s = new JawScene(three, o); s.build(env.RoomEnvironment, d); return s;
+    const wantsImplants = Object.values(DEMO_CHART).includes('implant');
+    const [three, env, d, imp] = await Promise.all([import('three'), import('three/examples/jsm/environments/RoomEnvironment.js'), load(), wantsImplants ? loadImplants().catch(() => null) : null]);
+    const s = new JawScene(three, o); s.build(env.RoomEnvironment, d, imp); return s;
   }
   private constructor(three: typeof T, private o: Options) { this.three = three; this.center = new three.Vector3(); }
 
-  private build(RoomEnvironment: new () => T.Scene, d: { parts: Part[]; buf: ArrayBuffer }): void {
+  private build(RoomEnvironment: new () => T.Scene, d: { parts: Part[]; buf: ArrayBuffer }, imp: T.Object3D | null): void {
     const T3 = this.three, o = this.o;
     this.renderer = new T3.WebGLRenderer({ canvas: o.canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); this.renderer.toneMapping = T3.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 0.82; this.renderer.setClearColor(0x000000, 0);
@@ -100,13 +106,12 @@ export class JawScene {
             float dd = (uTip - vObj.z) * uDir; float neck = uCrownH; bool crown = dd < neck;
             float reveal = uSolid * uJ; if (dith() > reveal) discard;
             if (uState > 5.5) { if (dith() < uShow) discard; }
-            if (uState > 3.5 && uState < 4.5 && !crown && dith() < uShow) discard;
+            if (uState > 3.5 && uState < 4.5 && dith() < uShow) discard; // the natural tooth gives way to its implant restoration
             float s = uShow;
             vec3 P = vec3(uC.xy + uBuc, uTip - uDir * uCrownH * .55); float pd = length(vObj - P) + (vn(vObj*1.6) - .5) * 1.8;
             if (uState > .5 && uState < 1.5) { float m = (1. - smoothstep(3.4, 5.0, pd)) * step(dd, uCrownH * 1.05); float sp = smoothstep(.35, .65, vn(vObj*1.3)); diffuseColor.rgb = mix(diffuseColor.rgb, mix(vec3(.30,.17,.08), vec3(.10,.05,.03), sp), m * s); }
             if (uState > 1.5 && uState < 2.5) { float m = (1. - smoothstep(3.0, 3.8, pd)) * step(dd, uCrownH); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.62,.66,.70), m * s); }
             if (uState > 2.5 && uState < 3.5 && crown) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.89,.69,.29), s);
-            if (uState > 3.5 && uState < 4.5 && crown) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.97,.97,.95), s);
             if (uState > 4.5 && uState < 5.5 && s > .5 && (vObj.x - uC.x) * uOut > 0.) discard;
             diffuseColor.rgb *= mix(1., .28, uDim * (1. - uPlan));`)
           .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nif (uState > 2.5 && uState < 3.5 && crown) roughnessFactor = mix(roughnessFactor, .22, s);')
@@ -115,7 +120,7 @@ export class JawScene {
       const mesh = new T3.Mesh(g, mat); mesh.userData['fdi'] = fdi; inner.add(mesh);
       const gh = ghost(g, 0xc9f6ff, upper ? 'up' : 'low', 1); inner.add(gh);
       this.teeth.set(fdi, { mesh, u, center, ghost: gh });
-      if (st === 'implant') this.buildImplant(inner, center, tip, dir, extent);
+      if (st === 'implant' && imp) this.attachImplant(inner, imp, fdi, u);
     }
     for (const [k, v] of this.teeth) if (k < 0) { const t = this.teeth.get(-k); if (t) t.pulp = v.mesh; }
     box.getCenter(this.center); inner.position.copy(this.center).negate();
@@ -125,15 +130,27 @@ export class JawScene {
     this.pointer(); this.makeTags(); this.resize(); this.setStep(0, true);
   }
 
-  /** A threaded titanium screw and its abutment, placed where the lost root would be. */
-  private buildImplant(parent: T.Group, c: T.Vector3, tip: number, dir: number, extent: number): void {
-    const T3 = this.three, pts: T.Vector2[] = [], len = 13, r = 2.15;
-    for (let i = 0; i <= 64; i++) { const y = (i / 64) * len; pts.push(new T3.Vector2(r + (i % 4 < 2 ? 0.28 : -0.12) * (y < len - 1.5 ? 1 : 0.2) - y * 0.012, -y)); }
-    pts.push(new T3.Vector2(0, -len)); pts.unshift(new T3.Vector2(0, 0), new T3.Vector2(r + 0.35, 0), new T3.Vector2(1.5, 0.6), new T3.Vector2(1.5, 2.6));
-    const g = new T3.LatheGeometry(pts, 40); g.rotateX(Math.PI / 2); // lathe axis Y -> Z
-    const m = new T3.Mesh(g, new T3.MeshStandardMaterial({ color: 0xcfd6dc, metalness: 1, roughness: 0.28, side: T3.DoubleSide }));
-    const neckZ = tip - dir * extent * 0.4; m.position.set(c.x, c.y, neckZ); m.scale.set(1, 1, dir > 0 ? 1 : -1); (m.material as T.MeshStandardMaterial).transparent = false; m.visible = false; m.userData['neckZ'] = neckZ;
-    parent.add(m); this.implant = m;
+  /** The restoration for one tooth: crown, abutment, screw and implant from the shared GLB, dithered in as the natural tooth dithers out. */
+  private attachImplant(parent: T.Group, src: T.Object3D, fdi: number, u: Record<string, T.IUniform>): void {
+    const T3 = this.three, node = src.getObjectByName(`tooth-${fdi}`); if (!node) return;
+    const group = node.clone(true);
+    const look: Record<string, T.Material> = {
+      crown: new T3.MeshPhysicalMaterial({ color: 0xf1ede4, roughness: 0.3, clearcoat: 0.5, clearcoatRoughness: 0.25, sheen: 0.3, sheenColor: new T3.Color(0xfff1d6) }),
+      abutment: new T3.MeshStandardMaterial({ color: 0xa3a9b1, metalness: 1, roughness: 0.3 }),
+      implant: new T3.MeshStandardMaterial({ color: 0xcfd6dc, metalness: 1, roughness: 0.28 }),
+      screw: new T3.MeshStandardMaterial({ color: 0x232327, metalness: 0.9, roughness: 0.4 }),
+    };
+    group.traverse((o) => {
+      const m = o as T.Mesh; if (!m.isMesh) return;
+      const mat = look[o.name.split('-')[0]]?.clone() ?? m.material as T.Material;
+      mat.onBeforeCompile = (s) => {
+        for (const k of ['uShow', 'uSolid', 'uJ', 'uDim', 'uPlan']) s.uniforms[k] = u[k];
+        s.fragmentShader = s.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uShow,uSolid,uJ,uDim,uPlan;\nfloat dith(){ return fract(52.9829189*fract(dot(gl_FragCoord.xy, vec2(.06711056,.00583715)))); }')
+          .replace('#include <color_fragment>', '#include <color_fragment>\nif (dith() > uSolid * uJ) discard; if (dith() > uShow) discard;\ndiffuseColor.rgb *= mix(1., .28, uDim * (1. - uPlan));');
+      };
+      m.material = mat;
+    });
+    group.visible = false; parent.add(group); this.implants.push({ group, fdi });
   }
 
   private makeTags(): void {
@@ -193,7 +210,7 @@ export class JawScene {
       (t.ghost.material as T.ShaderMaterial).uniforms['uA'].value = (1 - c.solid) * 0.9 + (fdi === this.hover ? 0.5 : 0);
       t.mesh.visible = c.solid > 0.01;
     }
-    if (this.implant) { const s = this.cur.show; this.implant.visible = s > 0.02; this.implant.scale.z = (this.implant.scale.z < 0 ? -1 : 1) * Math.max(s, 0.001); }
+    for (const i of this.implants) { i.group.visible = c.show > 0.02 && c.solid > 0.01; const t = this.teeth.get(i.fdi); if (t) t.ghost.visible = c.show < 0.5; }
     this.spin.rotation.y = c.az + this.userAz; this.camera.position.set(0, Math.sin(c.el) * c.d, Math.cos(c.el) * c.d); this.camera.lookAt(0, 0, 0);
     this.renderer.render(this.scene, this.camera); this.placeTags();
     if (moving || this.dragging || Math.abs(this.vel) > 1e-4 || this.cur.show !== this.tgt.show) this.raf = requestAnimationFrame(this.frame); else this.running = false;

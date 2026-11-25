@@ -1,10 +1,10 @@
-@import '@fontsource-variable/newsreader/opsz.css';
-@import '@fontsource-variable/schibsted-grotesk/wght.css';
+@import '@fontsource-variable/geist/wght.css';
+@import '@fontsource-variable/geist-mono/wght.css';
 
 /* Tokens. Black and white, neutral greys, and the cyan from the Dontalist mark used only as light (the 3D scene, focus, status). */
 :root {
   --bg: #fff; --bg2: #f4f4f5; --ink: #0a0a0a; --mute: #55555c; --rule: #d9d9de; --accent: #00e5ff; --focus: #0a0a0a;
-  --serif: 'Newsreader Variable', 'Iowan Old Style', Georgia, serif; --sans: 'Schibsted Grotesk Variable', system-ui, sans-serif;
+  --display: 'Geist Variable', system-ui, sans-serif; --sans: 'Geist Variable', system-ui, sans-serif; --mono: 'Geist Mono Variable', ui-monospace, monospace;
   --gutter: clamp(24px, 4.5vw, 72px); --max: 1280px; --bar: 72px;
   color-scheme: light dark;
 }
@@ -17,7 +17,7 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 h1, h2, h3, p { margin: 0; }
-h1, h2, h3 { font-family: var(--serif); font-weight: 300; letter-spacing: -.02em; line-height: 1.04; font-variation-settings: 'opsz' 72; text-wrap: balance; }
+h1, h2, h3 { font-family: var(--display); font-weight: 330; letter-spacing: -.045em; line-height: 1.02; text-wrap: balance; }
 a { color: inherit; }
 img, svg, canvas { display: block; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
@@ -70,7 +70,7 @@ main { min-height: 60vh; }
 /* Footer */
 .foot { background: var(--bg2); border-top: 1px solid var(--rule); padding-block: 72px 28px; font-size: 15px; }
 .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr 1.2fr; gap: 40px; }
-.foot-brand p { margin-top: 18px; max-width: 30ch; color: var(--mute); font-family: var(--serif); font-size: 20px; line-height: 1.3; }
+.foot-brand p { margin-top: 18px; max-width: 30ch; color: var(--mute); font-family: var(--display); font-size: 20px; line-height: 1.3; }
 .foot a:not(.brand) { display: block; padding: 3px 0; text-decoration: none; }
 .foot a:not(.brand):hover { text-decoration: underline; }
 .foot-h { font-weight: 600; margin-bottom: 12px; }
@@ -95,10 +95,10 @@ main { min-height: 60vh; }
 .problem { padding-block: clamp(96px, 16vh, 180px); display: grid; grid-template-columns: 5fr 4fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
 .problem h2 { font-size: clamp(2.2rem, 4.4vw, 4.4rem); }
 .problem .lead { margin-top: 28px; color: var(--mute); font-size: 1.15rem; max-width: 36ch; }
-.wall { list-style: none; margin: 0; padding: 0; font-family: var(--serif); font-weight: 300; font-size: clamp(1.9rem, 3.5vw, 3.4rem); line-height: 1.12; letter-spacing: -.02em; }
+.wall { list-style: none; margin: 0; padding: 0; font-family: var(--display); font-weight: 300; font-size: clamp(1.9rem, 3.5vw, 3.4rem); line-height: 1.12; letter-spacing: -.035em; }
 .wall li { padding-block: .1em; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
 .wall li:nth-child(n+6) { color: var(--mute); }
-.problem-close { grid-column: 1 / -1; font-family: var(--serif); font-size: clamp(1.4rem, 2.2vw, 2rem); max-width: 34ch; margin-top: 16px; }
+.problem-close { grid-column: 1 / -1; font-family: var(--display); font-size: clamp(1.4rem, 2.2vw, 2rem); max-width: 34ch; margin-top: 16px; }
 
 /* Home: the jaw story */
 .story { position: relative; }
@@ -138,7 +138,7 @@ main { min-height: 60vh; }
 /* Home: identity */
 .become { padding-block: clamp(96px, 16vh, 180px); background: var(--bg2); }
 .become h2 { font-size: clamp(2.6rem, 6vw, 6rem); max-width: 14ch; }
-.become .lead { margin-top: 32px; font-family: var(--serif); font-size: clamp(1.4rem, 2.2vw, 2rem); max-width: 30ch; line-height: 1.25; }
+.become .lead { margin-top: 32px; font-family: var(--display); font-size: clamp(1.4rem, 2.2vw, 2rem); max-width: 30ch; line-height: 1.25; }
 .become .keep { margin-top: 20px; color: var(--mute); }
 .changes { margin-top: 72px; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(24px, 4vw, 64px); }
 .changes > div { border-top: 1px solid var(--ink); padding-top: 20px; }
@@ -190,6 +190,6 @@ main { min-height: 60vh; }
 
 /* The 3D jaw: labels follow the teeth */
 .jlayer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.jtag { position: absolute; left: 0; top: 0; display: grid; place-items: center; min-width: 24px; height: 24px; margin: -12px 0 0 -12px; padding: 0 6px; border-radius: 12px; background: #050506cc; border: 1px solid #ffffff44; color: #f4f4f5; font: 600 12px/1 var(--sans); will-change: transform; }
+.jtag { position: absolute; left: 0; top: 0; display: grid; place-items: center; min-width: 24px; height: 24px; margin: -12px 0 0 -12px; padding: 0 6px; border-radius: 12px; background: #050506cc; border: 1px solid #ffffff44; color: #f4f4f5; font: 500 11.5px/1 var(--mono); will-change: transform; }
 .jtag--chart { border-color: var(--dot, #ffffff44); box-shadow: 0 0 0 2px #05050699; }
 .jfail { position: absolute; inset: auto 0 0; padding: 24px; color: #9a9aa3; font-size: 14px; }
