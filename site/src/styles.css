@@ -37,7 +37,7 @@ img, svg, canvas { display: block; }
 
 /* Bar */
 .bar { position: fixed; inset: 0 0 auto 0; z-index: 50; height: var(--bar); display: flex; align-items: center; gap: 28px; padding-inline: var(--gutter); background: var(--bg); border-bottom: 1px solid var(--rule); transition: background-color .2s, border-color .2s; }
-.bar--dark { --bg: transparent; --ink: #f4f4f5; --rule: transparent; --focus: #00e5ff; color: var(--ink); }
+.bar--dark { --bg: transparent; background: #050506cc; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); --ink: #f4f4f5; --rule: transparent; --focus: #00e5ff; color: var(--ink); }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font: 600 19px/1 var(--sans); letter-spacing: -.01em; }
 .brand img { border-radius: 8px; }
 .nav { display: flex; gap: clamp(14px, 2vw, 30px); margin-left: auto; font-size: 15px; }
@@ -109,7 +109,7 @@ main { min-height: 60vh; }
 .reel-legend { position: absolute; z-index: 2; right: calc(var(--gutter) + 13%); bottom: clamp(64px, 11vh, 110px); list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: #d0d0d6; opacity: 0; transition: opacity .4s; pointer-events: none; }
 .reel-legend.is-on { opacity: 1; }
 .reel-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
-.reel-demo { position: absolute; z-index: 2; right: calc(var(--gutter) + 13%); top: calc(var(--bar) + 48px); font-size: 13px; color: #9a9aa3; }
+.reel-demo { position: absolute; z-index: 2; right: calc(var(--gutter) + 13%); bottom: 76px; font-size: 13px; color: #9a9aa3; }
 .tip { position: absolute; z-index: 3; pointer-events: none; transform: translate(14px, 14px); padding: 6px 10px; background: #050506; border: 1px solid #ffffff33; color: #f4f4f5; font-size: 13px; white-space: nowrap; }
 
 /* "What comes next" bridge at the foot of every chapter */
@@ -123,6 +123,17 @@ main { min-height: 60vh; }
 .implant-head p { margin-top: 22px; max-width: 46ch; color: #c8c8cf; font-size: 1.15rem; }
 .implant-stage { height: min(78vh, 760px); min-height: 520px; margin-top: 12px; --gutter: clamp(24px, 4.5vw, 72px); }
 .implant-note { padding-block: 8px 96px; font-size: 13px; color: #8d8d96; }
+
+/* Home: scheduling demo and app screens */
+.schedule { padding-top: clamp(96px, 16vh, 180px); }
+.schedule .flow-head h2, .screens .flow-head h2 { font-size: clamp(2.2rem, 4.4vw, 4.4rem); } .schedule .flow-head p, .screens .flow-head p { color: var(--mute); font-size: 1.15rem; }
+.sch-demo { margin-top: 56px; } .sch-note { margin-top: 18px; padding-bottom: 80px; font-size: 13px; color: var(--mute); }
+.screens { padding-top: clamp(96px, 16vh, 180px); background: var(--bg2); }
+.scr { display: grid; grid-template-columns: 4fr 8fr; gap: clamp(32px, 5vw, 80px); align-items: center; margin-top: clamp(56px, 9vh, 110px); }
+.scr--flip { grid-template-columns: 8fr 4fr; } .scr--flip .scr-copy { order: 2; }
+.scr-copy h3 { font-size: clamp(1.8rem, 2.8vw, 2.8rem); } .scr-copy p { margin-top: 16px; color: var(--mute); max-width: 38ch; }
+.first { padding-top: clamp(110px, 20vh, 220px); } .first h2 { font-size: clamp(2.6rem, 6vw, 6rem); max-width: 14ch; } .first p { margin-top: 24px; font-size: 1.2rem; color: #d0d0d6; } .first .btn { margin-block: 36px 110px; border-color: #f4f4f5; color: #f4f4f5; } .first .btn:hover { background: var(--accent); border-color: var(--accent); color: #050506; }
+.first .next { border-top-color: #ffffff22; }
 
 /* Home: chart to invoice */
 .flow { padding-top: clamp(96px, 16vh, 180px); background: var(--bg2); }
@@ -193,6 +204,7 @@ main { min-height: 60vh; }
   .bar .btn--solid { display: none; }
   .eco-head, .flow-head, .clinic-list { grid-template-columns: 1fr; }
   .flow-steps { grid-template-columns: 1fr 1fr; }
+  .scr, .scr--flip { grid-template-columns: 1fr; } .scr--flip .scr-copy { order: 0; }
   .eco-list li { grid-template-columns: 1fr; gap: 10px; }
   .tag { justify-self: start; }
   .path-list { grid-template-columns: 1fr; }
@@ -203,6 +215,21 @@ main { min-height: 60vh; }
 
 /* The 3D jaw: labels follow the teeth */
 .jlayer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.jtag[hidden] { display: none; }
 .jtag { position: absolute; left: 0; top: 0; display: grid; place-items: center; min-width: 24px; height: 24px; margin: -12px 0 0 -12px; padding: 0 6px; border-radius: 12px; background: #050506cc; border: 1px solid #ffffff44; color: #f4f4f5; font: 500 11.5px/1 var(--mono); will-change: transform; }
 .jtag--chart { border-color: var(--dot, #ffffff44); box-shadow: 0 0 0 2px #05050699; }
 .jfail { position: absolute; inset: auto 0 0; padding: 24px; color: #9a9aa3; font-size: 14px; }
+
+/* Tablet: the reel stacks (title, jaw, card) so text never sits on the jaw */
+@media (max-width: 1100px) {
+  .reel { height: auto; min-height: 0; display: flex; flex-direction: column; padding-top: calc(var(--bar) + 40px); }
+  .reel .stage-jaw { position: relative; inset: auto; order: 2; height: min(50svh, 520px); }
+  .reel-head { position: static; order: 1; width: auto; padding: 0 var(--gutter); }
+  .reel-head p { max-width: 62ch; }
+  .reel-copy { position: static; order: 3; width: auto; max-width: 62ch; padding: 24px var(--gutter) 0; min-height: 170px; }
+  .reel-legend { position: static; order: 4; padding: 12px var(--gutter) 0; grid-auto-flow: column; justify-content: start; gap: 18px; }
+  .reel-demo { position: static; order: 5; padding: 12px var(--gutter) 24px; }
+  .reel .next, .implant .next { position: static; order: 6; }
+  .implant-stage { height: min(70svh, 640px); }
+  .cap { width: min(300px, 40vw); }
+}

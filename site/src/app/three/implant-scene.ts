@@ -74,7 +74,7 @@ export class ImplantScene {
     const ro = new ResizeObserver(() => this.resize()); ro.observe(canvas.parentElement ?? canvas); this.cleanup.push(() => ro.disconnect());
     const io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; this.kick(); }); io.observe(canvas); this.cleanup.push(() => io.disconnect());
     const host = canvas.parentElement ?? canvas;
-    const down = (e: PointerEvent) => { this.dragging = true; this.lastX = e.clientX; this.vel = 0; host.setPointerCapture?.(e.pointerId); this.kick(); };
+    const down = (e: PointerEvent) => { if ((e.target as HTMLElement).closest('button, input, label')) return; this.dragging = true; this.lastX = e.clientX; this.vel = 0; host.setPointerCapture?.(e.pointerId); this.kick(); };
     const move = (e: PointerEvent) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this.az += dx * 0.008; this.vel = dx * 0.008; this.kick(); };
     const up2 = () => { this.dragging = false; };
     host.addEventListener('pointerdown', down); host.addEventListener('pointermove', move); window.addEventListener('pointerup', up2);

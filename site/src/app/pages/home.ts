@@ -5,13 +5,15 @@ import { SiteService } from '../core/site-service';
 import { APP_URL, AVAILABLE } from '../core/site';
 import { Jaw } from '../layout/jaw';
 import { Implant } from '../layout/implant';
+import { ScheduleDemo } from '../layout/schedule-demo';
+import { Screen } from '../layout/screen';
 import { STATE_DOT, ToothState } from '../three/jaw-scene';
 import { home } from '../copy/home';
 import { Seo } from '../core/seo';
 
 const REEL_MS = 8000;
 
-@Component({ selector: 'ds-home', imports: [RouterLink, Jaw, Implant], changeDetection: ChangeDetectionStrategy.OnPush, templateUrl: './home.html' })
+@Component({ selector: 'ds-home', imports: [RouterLink, Jaw, Implant, ScheduleDemo, Screen], changeDetection: ChangeDetectionStrategy.OnPush, templateUrl: './home.html' })
 export class Home {
   protected readonly site = inject(SiteService);
   protected readonly c = this.site.pick(home);

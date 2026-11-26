@@ -41,7 +41,36 @@
   </div>
   <ds-implant class="implant-stage" [parts]="c().implant.parts" [label]="c().implant.label" [together]="c().implant.together" [apart]="c().implant.apart" [hint]="c().implant.hint" [allLabel]="c().implant.all" />
   <p class="implant-note wrap">{{ c().implant.note }}</p>
-  <a class="next" href="#flow">{{ c().implant.next }}</a>
+  <a class="next" href="#schedule">{{ c().implant.next }}</a>
+</section>
+
+<section class="schedule" id="schedule" aria-labelledby="sch-h">
+  <div class="wrap">
+    <div class="flow-head">
+      <h2 id="sch-h">{{ c().schedule.h2 }}</h2>
+      <p>{{ c().schedule.lead }}</p>
+    </div>
+    <ds-schedule-demo class="sch-demo" [c]="c().schedule" />
+    <p class="sch-note">{{ c().schedule.note }}</p>
+  </div>
+  <a class="next" href="#screens">{{ c().schedule.next }}</a>
+</section>
+
+<section class="screens" id="screens" aria-labelledby="scr-h">
+  <div class="wrap">
+    <div class="flow-head">
+      <h2 id="scr-h">{{ c().screens.h2 }}</h2>
+      <p>{{ c().screens.lead }}</p>
+    </div>
+    @for (it of c().screens.items; track it.id; let i = $index) {
+      <article class="scr" [class.scr--flip]="i % 2 === 1">
+        <div class="scr-copy"><h3>{{ it.h }}</h3><p>{{ it.p }}</p></div>
+        <ds-screen class="scr-img" [src]="it.src" [alt]="it.alt" />
+      </article>
+    }
+    <p class="sch-note">{{ c().screens.note }}</p>
+  </div>
+  <a class="next" href="#flow">{{ c().screens.next }}</a>
 </section>
 
 <section class="flow" id="flow" aria-labelledby="flow-h">
@@ -65,7 +94,16 @@
       @for (it of c().clinic.items; track it.h) { <li><h3>{{ it.h }}</h3><p>{{ it.p }}</p></li> }
     </ul>
   </div>
-  <a class="next" href="#ecosystem">{{ c().clinic.next }}</a>
+  <a class="next" href="#first">{{ c().clinic.next }}</a>
+</section>
+
+<section class="first dark-zone" id="first" aria-labelledby="first-h">
+  <div class="wrap">
+    <h2 id="first-h">{{ c().first.h2 }}</h2>
+    <p>{{ c().first.p }}</p>
+    <a class="btn" [href]="c().first.href" target="_blank" rel="noopener">{{ c().first.cta }}</a>
+  </div>
+  <a class="next" href="#ecosystem">{{ c().first.next }}</a>
 </section>
 
 <section class="eco" id="ecosystem" aria-labelledby="eco">
