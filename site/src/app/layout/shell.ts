@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, afterNextRender, ElementRef, HostListener, PLATFORM_ID, effect, inject, signal, computed } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { APP_URL, Lang, isLang } from '../core/site';
@@ -8,11 +8,11 @@ import { SiteService } from '../core/site-service';
 import { ThemeService, Theme } from '../core/theme';
 import { shell } from '../copy/shell';
 
-const NAV = [['ecosystem', ''], ['software', 'software'], ['services', 'services'], ['partnership', 'partnership'], ['franchise', 'franchise'], ['about', 'about']] as const;
+const NAV = [['ecosystem', ''], ['software', ''], ['services', 'services'], ['partnership', 'partnership'], ['franchise', 'franchise'], ['about', 'about']] as const;
 
 @Component({
   selector: 'ds-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
 })

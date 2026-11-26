@@ -190,7 +190,7 @@ export class JawScene {
   private resize(): void {
     const el = this.o.canvas.parentElement ?? this.o.canvas, w = el.clientWidth || 1, h = el.clientHeight || 1;
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h;
-    this.camera.setViewOffset(w, h, -w * 0.16, 0, w, h); this.camera.updateProjectionMatrix(); this.kick();
+    this.camera.setViewOffset(w, h, -w * 0.2, 0, w, h); this.camera.updateProjectionMatrix(); this.kick();
   }
   private kick(): void { if (!this.running) { this.running = true; this.last = performance.now(); this.raf = requestAnimationFrame(this.frame); } }
   private frame = (now: number): void => {

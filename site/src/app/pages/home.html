@@ -1,49 +1,71 @@
 <section class="stage dark-zone" aria-labelledby="h1">
-  <ds-jaw class="stage-jaw" [hero]="true" [names]="c().story.legend" [tooth]="c().story.tooth" [label]="c().story.demo" />
+  <ds-jaw class="stage-jaw" [hero]="true" [names]="c().reel.legend" [tooth]="c().reel.tooth" [label]="c().reel.demo" />
   <div class="wrap stage-copy">
     <h1 id="h1">{{ c().hero.h1 }}</h1>
     <p class="lead">{{ c().hero.lead }}</p>
     <div class="stage-cta">
       <a class="btn btn--solid" [routerLink]="link('partnership')" fragment="inquiry">{{ c().hero.primary }}</a>
-      <a class="btn" [routerLink]="link('')" fragment="ecosystem">{{ c().hero.secondary }}</a>
+      <a class="btn" [routerLink]="link('')" fragment="engine">{{ c().hero.secondary }}</a>
     </div>
   </div>
   <p class="stage-hint">{{ c().hero.hint }}</p>
 </section>
+<a class="next dark-zone" href="#engine">{{ c().hero.next }}</a>
 
-<section class="wrap problem" aria-labelledby="problem">
-  <div>
-    <h2 id="problem">{{ c().problem.h2 }}</h2>
-    <p class="lead">{{ c().problem.lead }}</p>
-  </div>
-  <ol class="wall">
-    @for (w of c().problem.words; track w) { <li>{{ w }}</li> }
+<section class="reel dark-zone" id="engine" #reel aria-labelledby="reel-h" tabindex="-1" (keydown)="key($event)" (pointerenter)="hold(true)" (pointerleave)="hold(false)" (focusin)="hold(true)" (focusout)="hold(false)">
+  <ds-jaw class="stage-jaw" [step]="step()" [names]="c().reel.legend" [tooth]="c().reel.tooth" [label]="c().reel.demo" />
+  <ol class="segs" aria-hidden="true">
+    @for (s of c().reel.steps; track s.id; let i = $index) { <li><i [style.width.%]="i < step() ? 100 : i === step() ? progress() * 100 : 0"></i></li> }
   </ol>
-  <p class="problem-close">{{ c().problem.close }}</p>
+  <div class="reel-head">
+    <h2 id="reel-h">{{ c().reel.h2 }}</h2>
+    <p>{{ c().reel.lead }}</p>
+  </div>
+  <button type="button" class="tap tap--prev" [attr.aria-label]="c().reel.prev" (click)="go(step() - 1)"></button>
+  <button type="button" class="tap tap--next" [attr.aria-label]="c().reel.following" (click)="go(step() + 1)"></button>
+  <div class="reel-copy" aria-live="polite" (pointerdown)="swipeStart($event)" (pointerup)="swipeEnd($event)">
+    <h3>{{ c().reel.steps[step()].h }}</h3>
+    <p>{{ c().reel.steps[step()].p }}</p>
+  </div>
+  <ul class="reel-legend" [class.is-on]="step() >= 2">
+    @for (s of states; track s) { <li><i [style.background]="dots[s]"></i>{{ c().reel.legend[s] }}</li> }
+  </ul>
+  <p class="reel-demo">{{ c().reel.demo }}</p>
+  <a class="next" href="#implant">{{ c().reel.next }}</a>
 </section>
 
-<section class="story dark-zone" aria-labelledby="story">
-  <div class="story-pin">
-    <ds-jaw class="stage-jaw" [step]="step()" [names]="c().story.legend" [tooth]="c().story.tooth" [label]="c().story.demo" />
-    <div class="story-head">
-      <h2 id="story">{{ c().story.h2 }}</h2>
-      <p>{{ c().story.lead }}</p>
+<section class="implant dark-zone" id="implant" aria-labelledby="imp-h">
+  <div class="implant-head wrap">
+    <h2 id="imp-h">{{ c().implant.h2 }}</h2>
+    <p>{{ c().implant.lead }}</p>
+  </div>
+  <ds-implant class="implant-stage" [parts]="c().implant.parts" [label]="c().implant.label" [together]="c().implant.together" [apart]="c().implant.apart" [hint]="c().implant.hint" [allLabel]="c().implant.all" />
+  <p class="implant-note wrap">{{ c().implant.note }}</p>
+  <a class="next" href="#flow">{{ c().implant.next }}</a>
+</section>
+
+<section class="flow" id="flow" aria-labelledby="flow-h">
+  <div class="wrap">
+    <div class="flow-head">
+      <h2 id="flow-h">{{ c().flow.h2 }}</h2>
+      <p>{{ c().flow.lead }}</p>
     </div>
-    <div class="story-copy" aria-live="polite">
-      <h3>{{ c().story.steps[step()].h }}</h3>
-      <p>{{ c().story.steps[step()].p }}</p>
-    </div>
-    <div class="story-rail" role="group" aria-label="Steps">
-      @for (s of c().story.steps; track s.id; let i = $index) { <button type="button" [attr.aria-label]="s.h" [attr.aria-current]="step() === i" (click)="go(i)"></button> }
-    </div>
-    <ul class="story-legend" [class.is-on]="step() >= 2">
-      @for (s of states; track s) { <li><i [style.background]="dots[s]"></i>{{ c().story.legend[s] }}</li> }
+    <ol class="flow-steps">
+      @for (s of c().flow.steps; track s.h; let i = $index) { <li><span class="flow-n">{{ i + 1 }}</span><h3>{{ s.h }}</h3><p>{{ s.p }}</p></li> }
+    </ol>
+    <p class="flow-close">{{ c().flow.close }}</p>
+  </div>
+  <a class="next" href="#clinic">{{ c().flow.next }}</a>
+</section>
+
+<section class="clinic" id="clinic" aria-labelledby="clinic-h">
+  <div class="wrap">
+    <h2 id="clinic-h">{{ c().clinic.h2 }}</h2>
+    <ul class="clinic-list">
+      @for (it of c().clinic.items; track it.h) { <li><h3>{{ it.h }}</h3><p>{{ it.p }}</p></li> }
     </ul>
-    <p class="story-demo">{{ c().story.demo }}</p>
   </div>
-  <div class="story-steps" aria-hidden="true">
-    @for (s of c().story.steps; track s.id) { <div #trigger></div> }
-  </div>
+  <a class="next" href="#ecosystem">{{ c().clinic.next }}</a>
 </section>
 
 <section class="eco" id="ecosystem" aria-labelledby="eco">
@@ -63,26 +85,18 @@
     </ul>
     <p class="eco-note">{{ c().ecosystem.note }}</p>
   </div>
+  <a class="next" href="#paths">{{ c().ecosystem.next }}</a>
 </section>
 
-<section class="become" aria-labelledby="become">
+<section class="paths" id="paths" aria-labelledby="paths-h">
   <div class="wrap">
-    <h2 id="become">{{ c().become.h2 }}</h2>
-    <p class="lead">{{ c().become.lead }}</p>
-    <p class="keep">{{ c().become.keep }}</p>
-    <div class="changes">
-      @for (x of c().become.changes; track x.h) { <div><h3>{{ x.h }}</h3><p>{{ x.p }}</p></div> }
-    </div>
-  </div>
-</section>
-
-<section class="paths" aria-labelledby="paths">
-  <div class="wrap">
-    <h2 id="paths">{{ c().paths.h2 }}</h2>
+    <h2 id="paths-h">{{ c().paths.h2 }}</h2>
     <p class="lead">{{ c().paths.lead }}</p>
     <div class="path-list">
       @for (p of c().paths.items; track p.id) {
-        <div><h3>{{ p.h }}</h3><p>{{ p.p }}</p><a class="link" [routerLink]="link(p.to)">{{ p.cta }}</a></div>
+        <div><h3>{{ p.h }}</h3><p>{{ p.p }}</p>
+          @if (hash(p.to)) { <a class="link" [routerLink]="link('')" [fragment]="p.to.slice(1)">{{ p.cta }}</a> } @else { <a class="link" [routerLink]="link(p.to)">{{ p.cta }}</a> }
+        </div>
       }
     </div>
   </div>
@@ -106,7 +120,7 @@
   <h2 id="final">{{ c().final.h2 }}</h2>
   <div class="final-cta">
     <a class="btn btn--solid" [routerLink]="link('partnership')" fragment="inquiry">{{ c().final.primary }}</a>
-    <a class="btn" [routerLink]="link('')" fragment="ecosystem">{{ c().final.secondary }}</a>
+    <a class="btn" [routerLink]="link('')" fragment="engine">{{ c().final.secondary }}</a>
     <a class="link" [href]="appUrl">{{ c().final.open }}</a>
   </div>
 </section>

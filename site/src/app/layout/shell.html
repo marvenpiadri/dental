@@ -3,7 +3,7 @@
   <a class="brand" [routerLink]="link('')" aria-label="Dontalist"><img src="logo.png" alt="" width="34" height="34"><span>Dontalist</span></a>
   <nav id="primary" class="nav" aria-label="Primary">
     @for (n of nav; track n[0]) {
-      <a [routerLink]="link(n[1])" [fragment]="n[0] === 'ecosystem' ? 'ecosystem' : undefined" routerLinkActive="is-current" [routerLinkActiveOptions]="{ exact: n[1] === '' }">{{ t().nav[n[0]] }}</a>
+      <a [routerLink]="link(n[1])" [fragment]="n[0] === 'ecosystem' ? 'ecosystem' : n[0] === 'software' ? 'engine' : undefined" [class.is-current]="n[1] !== '' && rest()[0] === n[1]">{{ t().nav[n[0]] }}</a>
     }
   </nav>
   <div class="bar-end">
