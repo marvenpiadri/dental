@@ -8,15 +8,15 @@ const BUCCAL = ['MB', 'B', 'DB'] as const;
 const LINGUAL = ['ML', 'L', 'DL'] as const;
 type Mode = 'pd' | 'gm' | 'bop';
 
-export interface SheetRow { tooth: number; sites: { site: string; pd: number | null; gm: number | null; bop: boolean }[] }
+export interface SheetRow { tooth: number; implant?: true; sites: { site: string; pd: number | null; gm: number | null; bop: boolean }[] }
 
-/** One row per present tooth with its six sites; teeth that are missing, implants or blank wisdom teeth are left out. */
+/** One row per present tooth or implant with its six sites (peri-implant probing for implants); missing teeth and blank wisdom teeth are left out. */
 export function sheetRows(chart: Chart): SheetRow[] {
   return ALL_TEETH.flatMap((tooth) => {
     const t = chart.status.get(tooth);
     const sel = String(t?.toothSelection);
-    if (!t || (sel !== 'tooth-base' && sel !== 'milktooth') || (!chart.globals.wisdomVisible && tooth % 10 === 8 && isBlankTooth(chart, tooth))) return [];
-    return [{ tooth, sites: [...BUCCAL, ...LINGUAL].map((site) => ({ site, pd: t.perio.pd.get(site) ?? null, gm: t.perio.gm.get(site) ?? null, bop: t.perio.bop.has(site) })) }];
+    if (!t || (sel !== 'tooth-base' && sel !== 'milktooth' && sel !== 'implant') || (!chart.globals.wisdomVisible && tooth % 10 === 8 && isBlankTooth(chart, tooth))) return [];
+    return [{ tooth, ...(sel === 'implant' ? { implant: true as const } : {}), sites: [...BUCCAL, ...LINGUAL].map((site) => ({ site, pd: t.perio.pd.get(site) ?? null, gm: t.perio.gm.get(site) ?? null, bop: t.perio.bop.has(site) })) }];
   });
 }
 
@@ -37,7 +37,7 @@ export function sheetRows(chart: Chart): SheetRow[] {
       <tbody>
         @for (r of rows(); track r.tooth) {
           <tr>
-            <th scope="row">{{ r.tooth }}</th>
+            <th scope="row">{{ r.tooth }}@if (r.implant) { <span class="imp">{{ t('dc.perio.implantTag') }}</span> }</th>
             @for (s of r.sites; track s.site) {
               <td [class.sel]="selected()?.tooth === r.tooth && selected()?.site === s.site" [attr.data-k]="r.tooth + '-' + s.site" (focusin)="pick.emit({ tooth: r.tooth, site: $any(s.site) })" (click)="pick.emit({ tooth: r.tooth, site: $any(s.site) })">
                 @switch (mode()) {
@@ -54,6 +54,7 @@ export function sheetRows(chart: Chart): SheetRow[] {
   `,
   styles: `
     :host { display: grid; gap: 10px; }
+    .imp { display: block; font-size: 11px; font-weight: 600; color: var(--app-muted); }
     .head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .seg { display: inline-flex; border: 1px solid var(--app-line); border-radius: 999px; padding: 3px; background: var(--app-subtle); }
     .seg button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 999px; font-weight: 600; font-size: 13px; color: var(--app-muted); }

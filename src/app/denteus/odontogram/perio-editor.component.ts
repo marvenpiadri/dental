@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { I18n, type Key } from '../../core/i18n/i18n.service';
 import type { ToothRecord } from './engine/chart';
@@ -9,8 +10,26 @@ import { label } from './labels';
 @Component({
   selector: 'den-perio-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet],
   template: `
+    <ng-template #probe><div class="scroll"><table>
+        <caption class="sr-only">{{ t('dc.perio.title', { n: no() }) }}</caption>
+        <thead><tr><th scope="col">{{ t('dc.perio.site') }}</th><th scope="col">PD</th><th scope="col">GM</th><th scope="col">CAL</th><th scope="col">BOP</th><th scope="col">{{ t('dc.perio.sup') }}</th></tr></thead>
+        <tbody>
+          @for (site of sites; track site) {
+            <tr>
+              <th scope="row">{{ site }}</th>
+              <td><input class="input num" type="number" inputmode="numeric" min="0" max="15" step="1" [disabled]="disabled()" [attr.aria-label]="'PD ' + site" [value]="pd(site) ?? ''" (change)="setPd(site, $event)" /></td>
+              <td><input class="input num" type="number" inputmode="numeric" min="-10" max="20" step="1" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="'GM ' + site" [value]="gm(site) ?? ''" (change)="setGm(site, $event)" /></td>
+              <td class="cal">{{ cal(site) ?? '–' }}</td>
+              <td><input type="checkbox" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="'BOP ' + site" [checked]="inSet('bop', site)" (change)="edit.emit({ kind: 'perio', site, bop: checked($event) })" /></td>
+              <td><input type="checkbox" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="t('dc.perio.sup') + ' ' + site" [checked]="inSet('sup', site)" (change)="edit.emit({ kind: 'perio', site, sup: checked($event) })" /></td>
+            </tr>
+          }
+        </tbody>
+      </table></div></ng-template>
     @if (implant()) {
+      <ng-container *ngTemplateOutlet="probe" />
       <div class="scroll"><table>
         <caption class="sr-only">{{ t('dc.idx.title') }}</caption>
         <thead><tr><th scope="col">{{ t('dc.idx.title') }}</th><th scope="col">{{ t('dc.idx.mpi') }}</th><th scope="col">{{ t('dc.idx.mbi') }}</th></tr></thead>
@@ -27,22 +46,7 @@ import { label } from './labels';
         </tbody>
       </table></div>
     } @else if (!allowed()) { <p class="hint">{{ t('dc.perio.na') }}</p> } @else {
-      <div class="scroll"><table>
-        <caption class="sr-only">{{ t('dc.perio.title', { n: no() }) }}</caption>
-        <thead><tr><th scope="col">{{ t('dc.perio.site') }}</th><th scope="col">PD</th><th scope="col">GM</th><th scope="col">CAL</th><th scope="col">BOP</th><th scope="col">{{ t('dc.perio.sup') }}</th></tr></thead>
-        <tbody>
-          @for (site of sites; track site) {
-            <tr>
-              <th scope="row">{{ site }}</th>
-              <td><input class="input num" type="number" inputmode="numeric" min="0" max="15" step="1" [disabled]="disabled()" [attr.aria-label]="'PD ' + site" [value]="pd(site) ?? ''" (change)="setPd(site, $event)" /></td>
-              <td><input class="input num" type="number" inputmode="numeric" min="-10" max="20" step="1" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="'GM ' + site" [value]="gm(site) ?? ''" (change)="setGm(site, $event)" /></td>
-              <td class="cal">{{ cal(site) ?? '–' }}</td>
-              <td><input type="checkbox" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="'BOP ' + site" [checked]="inSet('bop', site)" (change)="edit.emit({ kind: 'perio', site, bop: checked($event) })" /></td>
-              <td><input type="checkbox" [disabled]="disabled() || pd(site) === null" [attr.aria-label]="t('dc.perio.sup') + ' ' + site" [checked]="inSet('sup', site)" (change)="edit.emit({ kind: 'perio', site, sup: checked($event) })" /></td>
-            </tr>
-          }
-        </tbody>
-      </table></div>
+      <ng-container *ngTemplateOutlet="probe" />
       <div class="scroll"><table>
         <caption class="sr-only">{{ t('dc.idx.title') }}</caption>
         <thead><tr><th scope="col">{{ t('dc.idx.title') }}</th><th scope="col">{{ t('dc.idx.plaque') }}</th><th scope="col">{{ t('dc.idx.pi') }}</th><th scope="col">{{ t('dc.idx.gi') }}</th></tr></thead>

@@ -17,6 +17,25 @@ export const loadLib = (): Promise<LibData> => (lib ??= Promise.all([fetch('/mod
   .then(([m, buf]) => ({ buf, parts: new Map((m.parts as LibPart[]).map((p) => [p.id, p])) }))
   .catch((e) => { lib = null; throw e; }));
 
+/** The fitted implant set (tools/implants/to_library.py): a crown per tooth, and the implant, abutment and screw shared by all teeth with a 4x4 per tooth.
+ *  Parts come one at a time by byte range (a crown is about 270 kB, the file 9 MB), so a chart with no implants never fetches it. */
+export interface ImpPart { id: string; fdi: number; vertexCount: number; indexCount: number; pos: number; nrm: number; idx: number; fit?: number[] }
+const IMP_BIN = '/models/teeth/implants.bin';
+let impMeta: Promise<Map<string, ImpPart>> | null = null;
+const impParts = (): Promise<Map<string, ImpPart>> => (impMeta ??= fetch('/models/teeth/implants.json').then((r) => { if (!r.ok) throw new Error('implants.json'); return r.json(); })
+  .then((m) => new Map((m.parts as ImpPart[]).map((p) => [p.id, p] as [string, ImpPart]))).catch((e) => { impMeta = null; throw e; }));
+const impBytes = new Map<string, Promise<ArrayBuffer>>();
+const impPart = (p: ImpPart): Promise<ArrayBuffer> => {
+  let b = impBytes.get(p.id);
+  if (!b) {
+    const end = p.idx + p.indexCount * 2;
+    b = fetch(IMP_BIN, { headers: { Range: `bytes=${p.pos}-${end - 1}` } }).then(async (r) => { if (!r.ok) throw new Error(p.id); const buf = await r.arrayBuffer(); return r.status === 206 ? buf : buf.slice(p.pos, end); })
+      .catch((e) => { impBytes.delete(p.id); throw e; });
+    impBytes.set(p.id, b);
+  }
+  return b;
+};
+
 const VERT = `attribute vec4 zoneA; attribute vec4 zoneB; varying vec3 vP; varying vec3 vN; varying vec4 vA; varying vec4 vB;
 void main(){ vP = position; vN = normalize(normalMatrix * normal); vA = zoneA; vB = zoneB; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`;
 // The weights come baked into the mesh: caries fades across a surface boundary, fillings and restorations keep a crisp edge.
@@ -212,11 +231,45 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   const contactDots = [1, -1].map(() => new T.Mesh(new T.SphereGeometry(0.45, 10, 8), new T.MeshStandardMaterial({ color: 0xd62839, roughness: 0.5 })));
   for (const m of [mob, wound, pin, gum, ...contactDots]) m.visible = false;
   const lesion = new T.Mesh(new T.SphereGeometry(1, 20, 14), new T.MeshStandardMaterial({ color: 0x5a1e2a, transparent: true, opacity: 0.55, roughness: 0.6 }));
+  // Scanned implant: fixture, abutment and screw (one 4x4 per tooth) and the crown fitted to this tooth. Fetched when an implant is first shown; the drawn one stands in until then or if it fails.
+  const impGeo = new Map<string, import('three').BufferGeometry>();
+  const impMat = (color: number, metalness: number, roughness: number) => new T.MeshStandardMaterial({ color, metalness, roughness });
+  const impMesh = { fixture: new T.Mesh(undefined, impMat(0xa3acb5, 1, 0.34)), abutment: new T.Mesh(undefined, impMat(0xc8b07a, 1, 0.28)), screw: new T.Mesh(undefined, impMat(0x59616c, 1, 0.3)) };
+  const impCrown = new T.Mesh(undefined, impMat(0xf1ede4, 0, 0.35));
+  const impFit = new T.Group(); impFit.matrixAutoUpdate = false; impFit.add(...Object.values(impMesh));
+  const impSet = new T.Group(); impSet.visible = false; impSet.add(impFit, impCrown);
+  let impFdi = 0, impWanted = 0; const impCap = { pos: new T.Vector3(), quat: new T.Quaternion(), r: 1 }; const impFailed = new Set<number>();
+  const impGeometry = async (p: ImpPart) => {
+    const hit = impGeo.get(p.id); if (hit) return hit;
+    const b = await impPart(p), g = new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(new Float32Array(b, 0, p.vertexCount * 3), 3));
+    g.setAttribute('normal', new T.BufferAttribute(new Float32Array(b, p.nrm - p.pos, p.vertexCount * 3), 3));
+    g.setIndex(new T.BufferAttribute(new Uint16Array(b, p.idx - p.pos, p.indexCount), 1));
+    impGeo.set(p.id, g); return g;
+  };
+  const loadImplant = (no: number) => {
+    if (impFdi === no || impWanted === no) return;
+    impWanted = no;
+    void impParts().then(async (m) => {
+      const c = m.get(`imp-crown-${no}`), ps = ['imp-implant', 'imp-abutment', 'imp-screw'].map((k) => m.get(k));
+      if (!c?.fit || ps.some((q) => !q)) throw new Error(`implant ${no}`);
+      const [gc, gf, ga, gs] = await Promise.all([c, ...ps].map((q) => impGeometry(q!)));
+      if (impWanted !== no) return; // another tooth was asked for meanwhile
+      impCrown.geometry = gc; impMesh.fixture.geometry = gf; impMesh.abutment.geometry = ga; impMesh.screw.geometry = gs;
+      impFit.matrix.fromArray(c.fit); impFit.matrixWorldNeedsUpdate = true;
+      // Where the healing cap sits: on the fixture's top face, along the fixture's own (tilted) axis, as wide as its collar.
+      gf.computeBoundingBox(); const zb = gf.boundingBox!, ends = [zb.min.z, zb.max.z].map((z) => new T.Vector3(0, 0, z).applyMatrix4(impFit.matrix)), up = ends[1].y > ends[0].y ? 1 : 0;
+      impCap.pos.copy(ends[up]); impCap.quat.setFromUnitVectors(new T.Vector3(0, 1, 0), ends[up].clone().sub(ends[1 - up]).normalize());
+      impCap.r = (zb.max.x - zb.min.x) / 2 * new T.Vector3().setFromMatrixColumn(impFit.matrix, 0).length();
+      impFdi = no;
+      if (shownFdi === no && last) apply(last[0], last[1], last[2]);
+    }).catch(() => { impFailed.add(no); impWanted = 0; });
+  };
   const group = new T.Group(); // the invisible container: pose and visibility live here, the meshes inside only swap
   const empty = new T.BufferGeometry();
   // Exploded view: the natural crown cut into its five surfaces, each its own mesh (same material, so colours and highlight carry over).
   const pieces = ZONES.map((z) => { const m = new T.Mesh(empty, crown.material); m.userData['zone'] = z; m.visible = false; return m; });
-  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, mob, wound, pin, gum, ...contactDots, lesion);
+  group.add(...pieces, crown, prep, shell, trunk, ...rootMeshes, pulp, fixture, abutment, healing, cover, bracket, band, braces, ring, hexSocket, impSet, mob, wound, pin, gum, ...contactDots, lesion);
   scene.add(group, new T.AmbientLight(0xffffff, 0.8), new T.DirectionalLight(0xffffff, 1.5));
 
   let roots: { slot: number; key: string; tip: number[]; id: string; broken: string }[] = [];
@@ -228,6 +281,8 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     last = [t, no, showPulp];
     const sel = String((t as { toothSelection?: string }).toothSelection ?? '');
     const gone = sel === 'none' || sel.includes('no-tooth'), implant = sel === 'implant', underGum = sel === 'tooth-under-gum'; // 'none' is a gap: no tooth recorded there
+    const scanned = implant && impFdi === no; // the scanned implant is loaded for this tooth
+    if (implant && !scanned && !impFailed.has(no)) loadImplant(no);
     if (no !== shownFdi) {
       const c = data.parts.get(`crown-${no}`);
       const rts = [...data.parts.values()].filter((q) => q.kind === 'root' && q.fdi === no);
@@ -304,7 +359,7 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     const naturalCrown = !implant && !radix && !stump && !(fullCover);
     crown.visible = (naturalCrown && !gone) || ghost || gap;
     prep.visible = !implant && stump && !gone;
-    shell.visible = hasRest && (!gone || pontic) && (!implant ? true : fullCover);
+    shell.visible = hasRest && (!gone || pontic) && (!implant ? true : fullCover && !scanned);
     const rootsOn = !implant && (!gone || ghost || gap);
     trunk.visible = rootsOn && trunk.geometry !== empty;
     rootMeshes.forEach((m, i) => {
@@ -330,17 +385,24 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
     layout();
     // Implant hardware, all positioned at the neck.
     const prosthesis = str('prosthesis');
-    fixture.visible = implant;
-    if (implant) {
+    fixture.visible = implant && !scanned;
+    if (implant && !scanned) {
       const len = Math.min(Math.max(-ymin * 0.8, 9), 13), r0 = no % 10 >= 6 ? 2.4 : no % 10 >= 4 ? 2.05 : 1.8, key = `${len.toFixed(1)}-${r0}`;
       if (fixture.userData['key'] !== key) { fixture.geometry.dispose(); fixture.geometry = fixtureGeometry(len, r0); fixture.userData['key'] = key; }
     }
-    hexSocket.visible = implant && !(fullCover || prosthesis !== 'none');
+    hexSocket.visible = implant && !scanned && !(fullCover || prosthesis !== 'none');
     hexSocket.position.y = -mid + 0.05;
-    abutment.visible = implant && (fullCover || prosthesis !== 'none' && prosthesis !== 'healing-abutment');
+    const withAbutment = fullCover || (prosthesis !== 'none' && prosthesis !== 'healing-abutment');
+    abutment.visible = implant && !scanned && withAbutment;
+    impSet.visible = scanned && (!top || fullCover); impFit.visible = !top; impMesh.abutment.visible = withAbutment; impMesh.screw.visible = withAbutment; impCrown.visible = fullCover;
     healing.visible = implant && (prosthesis === 'healing-abutment' || (!fullCover && prosthesis === 'none'));
     cover.visible = false;
     for (const mesh of [fixture, abutment, healing, cover]) mesh.position.y = -mid;
+    healing.quaternion.identity(); healing.scale.setScalar(1);
+    if (scanned) { // the drawn cap was made for the drawn fixture: seat it on the scanned one
+      healing.geometry.computeBoundingBox(); const hb = healing.geometry.boundingBox!, k = impCap.r / Math.max((hb.max.x - hb.min.x) / 2, 0.1);
+      healing.quaternion.copy(impCap.quat); healing.scale.setScalar(k); healing.position.copy(impCap.pos).y -= mid;
+    }
     // Apical lesion at the root tip.
     const lesionKind = str('periapicalType') !== 'none' || /abscess|periodontitis/.test(str('apicalDx'));
     lesion.visible = lesionKind && !gone && !implant;
@@ -457,5 +519,5 @@ export function makeToothScene(T: Three, data: LibData, renderer: import('three'
   };
   /** The tooth's frame, for anything drawn around it: lib units (mm), CEJ at 0, +y to the bite, +z to the lip, `mesial` = ±1 along x. */
   const info = () => ({ mid: (ymin + ymax) / 2, ymin, ymax, bounds, mesial });
-  return { info, setTop, frameTop, setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of cache.values()) g.dispose(); } };
+  return { info, setTop, frameTop, setExplode, renderer, scene, camera, group, tooth: crown, mesial: () => mesial, anchors, rootList, areaAt, setHighlight, render, apply, dispose: () => { for (const g of [...cache.values(), ...impGeo.values()]) g.dispose(); } };
 }

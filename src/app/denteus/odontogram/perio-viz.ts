@@ -28,7 +28,7 @@ export interface ToothViz {
 /** Everything the 3D view draws for one tooth, read from the chart and nothing else. CAL = PD + recession. */
 export function toothViz(chart: Chart, tooth: number): ToothViz | null {
   const t = chart.status.get(tooth);
-  if (!t || !sheetRows(chart).some((r) => r.tooth === tooth)) return null;
+  if (!t || !sheetRows(chart).some((r) => r.tooth === tooth && !r.implant)) return null; // the 3D view draws natural teeth
   const sites = PERIO_SITE_IDS.map((site): SiteViz => {
     const pd = t.perio.pd.get(site) ?? null, gm = t.perio.gm.get(site) ?? null;
     return { site, pd, gm, cal: pd === null ? null : pd + (gm ?? 0), bop: t.perio.bop.has(site), sup: t.perio.sup.has(site) };
