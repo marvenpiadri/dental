@@ -5,7 +5,8 @@ Status of the open items from the refinement brief. Nothing here is a business o
 | Item | Finding | Status |
 |---|---|---|
 | Naming a first clinic | Removed from the home page on 27 Nov 2026 at the owner's request: the site no longer names or links any clinic. | Resolved. Revisit only if the owner wants a named reference later, with that clinic's consent. |
-| Inquiry form destination | `INQUIRY_ENDPOINT` in `site/src/app/core/site.ts` is empty. The forms say they cannot send yet instead of pretending. No API route exists for it. | **Open**: decide where inquiries go (API route + inbox, or email). |
+| Inquiry form destination | The partnership form opens WhatsApp click-to-chat to `212695083880` (`WHATSAPP` in `site/src/app/core/site.ts`) with the message prefilled. Nothing is stored on a server. | **Done** (owner decision). Revisit if inquiries should land in an inbox/API instead. |
+| Clinics directory | `/clinics` lists entries from `site/src/app/core/clinics.ts`, currently empty (empty state shown). Each card opens its `url`. | **Open**: add real subscribed clinics, only with their consent. Dr Sabrine Tament (Dentisto) not added: not confirmed as a Dontalist subscriber. |
 | Clinic photography | None in the repo (`site/public` holds icons, logo, models and app screenshots only). | **Open**: real clinic photos, with consent, if the owner wants them. |
 | Implant, abutment, screw (3 STLs) | You state they are free-to-use models whose author published them for free use; there is no licence file. The site credits them as such (About page, Attributions). | Deferred by the owner (27 Nov 2026): no author names needed for now. |
 | Tooth anatomy | ToothFairy3 case F_026, CC BY-SA 4.0. Credit and licence link are on the About page (Attributions), which the footer links to. | Deferred by the owner (27 Nov 2026): dataset author names later. |

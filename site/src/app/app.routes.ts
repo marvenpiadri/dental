@@ -11,6 +11,7 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     children: [
       { path: '', pathMatch: 'full', loadComponent: () => import('./pages/home').then((m) => m.Home) },
+      { path: 'clinics', loadComponent: () => import('./pages/clinics').then((m) => m.Clinics) },
       { path: 'partnership', loadComponent: () => import('./pages/partnership').then((m) => m.Partnership) },
       { path: 'about', loadComponent: () => import('./pages/about').then((m) => m.About) },
     ],

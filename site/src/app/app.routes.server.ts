@@ -5,6 +5,6 @@ const page = (path: string): ServerRoute => ({ path, renderMode: RenderMode.Prer
 
 export const serverRoutes: ServerRoute[] = [
   { path: '', renderMode: RenderMode.Prerender },
-  page(':lang'), page(':lang/partnership'), page(':lang/about'),
+  page(':lang'), page(':lang/clinics'), page(':lang/partnership'), page(':lang/about'),
   { path: '**', renderMode: RenderMode.Client },
 ];

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { INQUIRY_ENDPOINT } from '../core/site';
+import { WHATSAPP } from '../core/site';
 import { SiteService, pair } from '../core/site-service';
 
 /** Only what has been discussed and confirmed: the three royalty levels, the co-branding name, the optional/independent rules. Inclusions per level are agreed in conversation. */
@@ -29,13 +29,12 @@ const copy = pair(
       ],
     },
     form: {
-      h2: 'Tell us what you have in mind.', lead: 'We reply personally. Contract terms are discussed once we have spoken.',
+      h2: 'Tell us what you have in mind.', lead: 'Your message opens in WhatsApp, and we reply there. Contract terms are discussed once we have spoken.',
       name: 'Your name', clinic: 'Clinic or practice name', city: 'City', contact: 'Email or phone', interest: 'What interests you',
       options: [['', 'Choose one'], ['cobranding', 'Co-branding'], ['franchise-1', 'Franchise, level 1'], ['franchise-2', 'Franchise, level 2'], ['franchise-3', 'Franchise, level 3'], ['affiliates', 'Affiliates'], ['unsure', 'Not sure yet']],
-      message: 'Anything we should know', send: 'Send', sending: 'Sending…',
-      sent: 'Thank you. We have your message and will reply to you directly.',
-      off: 'This form cannot send yet. Please come back soon.',
-      error: 'The message was not sent. Check your connection and try again.',
+      message: 'Anything we should know', send: 'Continue on WhatsApp',
+      sent: 'WhatsApp is opening with your message ready. Press send there and we will reply to you directly.',
+      intro: 'Hello Dontalist, I would like to talk about a partnership.', fields: ['Name', 'Clinic', 'City', 'Contact', 'Interest', 'Message'],
     },
   },
   {
@@ -63,13 +62,12 @@ const copy = pair(
       ],
     },
     form: {
-      h2: 'Dites-nous ce que vous avez en tête.', lead: 'Nous répondons personnellement. Les conditions du contrat se discutent une fois que nous avons échangé.',
+      h2: 'Dites-nous ce que vous avez en tête.', lead: 'Votre message s’ouvre dans WhatsApp et nous y répondons. Les conditions du contrat se discutent une fois que nous avons échangé.',
       name: 'Votre nom', clinic: 'Nom du cabinet', city: 'Ville', contact: 'E-mail ou téléphone', interest: 'Ce qui vous intéresse',
       options: [['', 'Choisir'], ['cobranding', 'Co-branding'], ['franchise-1', 'Franchise, niveau 1'], ['franchise-2', 'Franchise, niveau 2'], ['franchise-3', 'Franchise, niveau 3'], ['affiliates', 'Affiliation'], ['unsure', 'Je ne sais pas encore']],
-      message: 'Ce que nous devrions savoir', send: 'Envoyer', sending: 'Envoi…',
-      sent: 'Merci. Nous avons bien reçu votre message et vous répondrons directement.',
-      off: 'Ce formulaire ne peut pas encore envoyer de message. Revenez bientôt.',
-      error: 'Le message n’a pas été envoyé. Vérifiez votre connexion et réessayez.',
+      message: 'Ce que nous devrions savoir', send: 'Continuer sur WhatsApp',
+      sent: 'WhatsApp s’ouvre avec votre message prêt. Appuyez sur envoyer et nous vous répondrons directement.',
+      intro: 'Bonjour Dontalist, je souhaite parler d’un partenariat.', fields: ['Nom', 'Cabinet', 'Ville', 'Contact', 'Intérêt', 'Message'],
     },
   },
 );
@@ -110,8 +108,8 @@ const copy = pair(
           <select name="interest">@for (o of c().form.options; track o[0]) { <option [value]="o[0]">{{ o[1] }}</option> }</select></label>
         <label class="wide"><span>{{ c().form.message }}</span><textarea name="message" rows="4" maxlength="2000"></textarea></label>
         <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div class="wide act"><button class="btn btn--solid" type="submit" [disabled]="state() === 'sending'">{{ state() === 'sending' ? c().form.sending : c().form.send }}</button>
-          <p class="status" role="status">@switch (state()) { @case ('sent') { {{ c().form.sent }} } @case ('off') { {{ c().form.off }} } @case ('error') { {{ c().form.error }} } }</p></div>
+        <div class="wide act"><button class="btn btn--solid" type="submit" >{{ c().form.send }}</button>
+          <p class="status" role="status">@if (sent()) { {{ c().form.sent }} }</p></div>
       </form>
     </section>`,
   styles: `
@@ -138,19 +136,19 @@ const copy = pair(
 export class Partnership {
   protected readonly c = inject(SiteService).pick(copy);
   private readonly site = inject(SiteService);
-  protected readonly state = signal<'idle' | 'sending' | 'sent' | 'off' | 'error'>('idle');
+  protected readonly sent = signal(false);
 
-  protected async send(e: Event): Promise<void> {
+  /** No server: the form builds the message and hands it to WhatsApp, which the visitor sends themselves. */
+  protected send(e: Event): void {
     e.preventDefault();
     const f = e.target as HTMLFormElement;
     if (!f.reportValidity()) return;
-    const data = Object.fromEntries(new FormData(f)) as Record<string, string>;
-    if (data['website']) { this.state.set('sent'); return; } // the hidden field only a bot fills in
-    if (!INQUIRY_ENDPOINT) { this.state.set('off'); return; } // never pretend to send
-    this.state.set('sending');
-    try {
-      const r = await fetch(INQUIRY_ENDPOINT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, lang: this.site.lang(), source: 'partnership' }) });
-      this.state.set(r.ok ? 'sent' : 'error'); if (r.ok) f.reset();
-    } catch { this.state.set('error'); }
+    const d = Object.fromEntries(new FormData(f)) as Record<string, string>;
+    if (d['website']) return; // the hidden field only a bot fills in
+    const f_ = this.c().form, opt = d['interest'] ? (f_.options.find((o) => o[0] === d['interest'])?.[1] ?? '') : '';
+    const lines = [f_.intro, ...[d['name'], d['clinic'], d['city'], d['contact'], opt, d['message']].map((v, i) => (v?.trim() ? `${f_.fields[i]}: ${v.trim()}` : ''))].filter(Boolean);
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(lines.join('\n'))}`;
+    if (!window.open(url, '_blank', 'noopener')) location.href = url; // a blocked pop-up falls back to the same tab
+    this.sent.set(true);
   }
 }
