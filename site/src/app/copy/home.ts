@@ -103,7 +103,7 @@ export const home = pair(
       items: [
         { id: 'independent', h: 'Independent clinic', p: 'Keep your clinic exactly as it is. Use the software and the services that help.', cta: 'See the engine', to: '#engine' },
         { id: 'partner', h: 'Dontalist partner', p: 'Build a closer relationship with the ecosystem and explore shared support and opportunities.', cta: 'Explore partnership', to: 'partnership' },
-        { id: 'franchise', h: 'Dontalist franchise', p: 'Explore a deeper business relationship built on a framework, a brand and agreed support.', cta: 'Explore the franchise', to: 'franchise' },
+        { id: 'franchise', h: 'Dontalist franchise', p: 'Explore a deeper business relationship built on a framework, a brand and agreed support.', cta: 'Explore the franchise', to: 'partnership#franchise' },
       ],
     },
     franchise: {
@@ -216,7 +216,7 @@ export const home = pair(
       items: [
         { id: 'independent', h: 'Cabinet indépendant', p: 'Gardez votre cabinet tel qu’il est. Utilisez le logiciel et les services qui vous servent.', cta: 'Voir le moteur', to: '#engine' },
         { id: 'partner', h: 'Partenaire Dontalist', p: 'Construisez une relation plus étroite avec l’écosystème et explorez accompagnement et opportunités partagés.', cta: 'Explorer le partenariat', to: 'partnership' },
-        { id: 'franchise', h: 'Franchise Dontalist', p: 'Explorez une relation d’affaires plus profonde, fondée sur un cadre, une marque et un accompagnement convenu.', cta: 'Explorer la franchise', to: 'franchise' },
+        { id: 'franchise', h: 'Franchise Dontalist', p: 'Explorez une relation d’affaires plus profonde, fondée sur un cadre, une marque et un accompagnement convenu.', cta: 'Explorer la franchise', to: 'partnership#franchise' },
       ],
     },
     franchise: {

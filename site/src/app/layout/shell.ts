@@ -8,7 +8,7 @@ import { SiteService } from '../core/site-service';
 import { ThemeService, Theme } from '../core/theme';
 import { shell } from '../copy/shell';
 
-const NAV = [['ecosystem', ''], ['software', ''], ['services', 'services'], ['partnership', 'partnership'], ['franchise', 'franchise'], ['about', 'about']] as const;
+const NAV = [['home', ''], ['partnership', 'partnership'], ['about', 'about']] as const;
 
 @Component({
   selector: 'ds-shell',

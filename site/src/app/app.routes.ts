@@ -11,10 +11,7 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     children: [
       { path: '', pathMatch: 'full', loadComponent: () => import('./pages/home').then((m) => m.Home) },
-      { path: 'software', redirectTo: '' },
-      { path: 'services', loadComponent: () => import('./pages/services').then((m) => m.Services) },
       { path: 'partnership', loadComponent: () => import('./pages/partnership').then((m) => m.Partnership) },
-      { path: 'franchise', loadComponent: () => import('./pages/franchise').then((m) => m.Franchise) },
       { path: 'about', loadComponent: () => import('./pages/about').then((m) => m.About) },
     ],
   },

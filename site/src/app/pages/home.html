@@ -124,7 +124,7 @@
     <div class="path-list">
       @for (p of c().paths.items; track p.id) {
         <div><h3>{{ p.h }}</h3><p>{{ p.p }}</p>
-          @if (hash(p.to)) { <a class="link" [routerLink]="link('')" [fragment]="p.to.slice(1)">{{ p.cta }}</a> } @else { <a class="link" [routerLink]="link(p.to)">{{ p.cta }}</a> }
+          @if (hash(p.to)) { <a class="link" [routerLink]="link('')" [fragment]="p.to.slice(1)">{{ p.cta }}</a> } @else { <a class="link" [routerLink]="link(p.to.split('#')[0])" [fragment]="p.to.split('#')[1]">{{ p.cta }}</a> }
         </div>
       }
     </div>
@@ -141,7 +141,7 @@
     <h2 id="fr">{{ c().franchise.h2 }}</h2>
     <p>{{ c().franchise.p }}</p>
     <p class="note">{{ c().franchise.note }}</p>
-    <a class="btn" [routerLink]="link('franchise')">{{ c().franchise.cta }}</a>
+    <a class="btn" [routerLink]="link('partnership')" fragment="franchise">{{ c().franchise.cta }}</a>
   </div>
 </section>
 
