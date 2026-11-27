@@ -94,16 +94,7 @@
       @for (it of c().clinic.items; track it.h) { <li><h3>{{ it.h }}</h3><p>{{ it.p }}</p></li> }
     </ul>
   </div>
-  <a class="next" href="#first">{{ c().clinic.next }}</a>
-</section>
-
-<section class="first dark-zone" id="first" aria-labelledby="first-h">
-  <div class="wrap">
-    <h2 id="first-h">{{ c().first.h2 }}</h2>
-    <p>{{ c().first.p }}</p>
-    <a class="btn" [href]="c().first.href" target="_blank" rel="noopener">{{ c().first.cta }}</a>
-  </div>
-  <a class="next" href="#ecosystem">{{ c().first.next }}</a>
+  <a class="next" href="#ecosystem">{{ c().clinic.next }}</a>
 </section>
 
 <section class="eco" id="ecosystem" aria-labelledby="eco">

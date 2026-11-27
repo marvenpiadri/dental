@@ -133,8 +133,6 @@ main { min-height: 60vh; }
 .scr { display: grid; grid-template-columns: 4fr 8fr; gap: clamp(32px, 5vw, 80px); align-items: center; margin-top: clamp(56px, 9vh, 110px); }
 .scr--flip { grid-template-columns: 8fr 4fr; } .scr--flip .scr-copy { order: 2; }
 .scr-copy h3 { font-size: clamp(1.8rem, 2.8vw, 2.8rem); } .scr-copy p { margin-top: 16px; color: var(--mute); max-width: 38ch; }
-.first { padding-top: clamp(110px, 20vh, 220px); } .first h2 { font-size: clamp(2.6rem, 6vw, 6rem); max-width: 14ch; } .first p { margin-top: 24px; font-size: 1.2rem; color: #d0d0d6; } .first .btn { margin-block: 36px 110px; border-color: #f4f4f5; color: #f4f4f5; } .first .btn:hover { background: var(--accent); border-color: var(--accent); color: #050506; }
-.first .next { border-top-color: #ffffff22; }
 
 /* Home: chart to invoice */
 .flow { padding-top: clamp(96px, 16vh, 180px); background: var(--bg2); }

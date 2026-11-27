@@ -60,12 +60,6 @@ export const home = pair(
       ],
       next: 'Next: how a finding becomes a bill',
     },
-    first: {
-      h2: 'Centre Dentaire Dali was first.',
-      p: 'It is the first clinic to run on Dontalist.',
-      cta: 'Visit Centre Dentaire Dali', href: 'https://centredentairedali.com',
-      next: 'Next: the software is where Dontalist starts',
-    },
     flow: {
       h2: 'The chart doesn’t stop at the tooth.',
       lead: 'Each step reads from the one before it.',
@@ -86,7 +80,7 @@ export const home = pair(
         { h: 'Walled off by clinic', p: 'The database itself refuses links between records of different clinics. One account is one clinic location.' },
         { h: 'English, French, desktop and tablet', p: 'The app works in English and in French, built for the computer at reception and the tablet at the chair.' },
       ],
-      next: 'Next: where it started',
+      next: 'Next: the software is where Dontalist starts',
     },
     ecosystem: {
       h2: 'Software is where it starts.',
@@ -179,12 +173,6 @@ export const home = pair(
       ],
       next: 'Ensuite : comment une observation devient une facture',
     },
-    first: {
-      h2: 'Le Centre Dentaire Dali a ouvert la voie.',
-      p: 'C’est le premier cabinet à fonctionner sur Dontalist.',
-      cta: 'Visiter le Centre Dentaire Dali', href: 'https://centredentairedali.com',
-      next: 'Ensuite : le logiciel est le point de départ de Dontalist',
-    },
     flow: {
       h2: 'Le schéma ne s’arrête pas à la dent.',
       lead: 'Chaque étape s’appuie sur la précédente.',
@@ -205,7 +193,7 @@ export const home = pair(
         { h: 'Cloisonné par cabinet', p: 'La base de données refuse elle-même tout lien entre les dossiers de cabinets différents. Un compte correspond à un cabinet, à un lieu.' },
         { h: 'Français, anglais, ordinateur et tablette', p: 'L’application fonctionne en français et en anglais, pensée pour l’ordinateur de l’accueil et la tablette au fauteuil.' },
       ],
-      next: 'Ensuite : là où tout a commencé',
+      next: 'Ensuite : le logiciel est le point de départ de Dontalist',
     },
     ecosystem: {
       h2: 'Le logiciel, c’est le point de départ.',

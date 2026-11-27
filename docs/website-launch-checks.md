@@ -4,9 +4,9 @@ Status of the open items from the refinement brief. Nothing here is a business o
 
 | Item | Finding | Status |
 |---|---|---|
-| Centre Dentaire Dali as "first Dontalist clinic" | Confirmed by the owner in conversation (26 Nov 2026): it is the first clinic and the owner built its website. The site says "the first clinic to run on Dontalist" and links to centredentairedali.com. | Resolved. **Owner**: confirm the clinic itself is happy to be named publicly. |
+| Naming a first clinic | Removed from the home page on 27 Nov 2026 at the owner's request: the site no longer names or links any clinic. | Resolved. Revisit only if the owner wants a named reference later, with that clinic's consent. |
 | Inquiry form destination | `INQUIRY_ENDPOINT` in `site/src/app/core/site.ts` is empty. The forms say they cannot send yet instead of pretending. No API route exists for it. | **Open**: decide where inquiries go (API route + inbox, or email). |
-| Clinic photography | None in the repo (`site/public` holds icons, logo, models and app screenshots only). | **Open**: needs real photos of Centre Dentaire Dali, with consent. |
+| Clinic photography | None in the repo (`site/public` holds icons, logo, models and app screenshots only). | **Open**: real clinic photos, with consent, if the owner wants them. |
 | Implant, abutment, screw (3 STLs) | You state they are free-to-use models whose author published them for free use; there is no licence file. The site credits them as such (About page, Attributions). | **Owner**: record the author's name and source URL so the credit can name them. |
 | Tooth anatomy | ToothFairy3 case F_026, CC BY-SA 4.0. Credit and licence link now on the About page (Attributions), which the footer links to. | Credit added. **Owner**: add the dataset authors' names/URL. ShareAlike applies to adaptations of the models. |
 | Franchise and partnership advertising in Morocco | Not researched and not legal advice. The site contains no royalty figures, discounts, guarantees or income claims (checked: pages/franchise, partnership, services, about). | **Open**: needs a Moroccan lawyer before any terms are advertised. |
