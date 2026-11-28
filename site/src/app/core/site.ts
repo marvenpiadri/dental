@@ -1,6 +1,8 @@
 /** The few facts the whole site shares. Change them here. */
 export const APP_URL = 'https://app.dontalist.com';
 export const SITE_URL = 'https://dontalist.com';
+/** The backend. The clinics directory reads its public list from here. */
+export const API_URL = 'https://api.dontalist.com';
 /** The WhatsApp number partnership inquiries go to (international format, digits only). */
 export const WHATSAPP = '212695083880';
 export const LANGS = ['en', 'fr'] as const;

@@ -6,6 +6,7 @@ import { publicClinic } from './denteus/public/public-route';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: () => import('./landing/landing.component').then((m) => m.LandingComponent) },
   { path: 'partnerships', loadComponent: () => import('./partnerships/partnerships.component').then((m) => m.PartnershipsComponent) },
+  { path: 'admin', data: { titleKey: 'admin.title' }, loadComponent: () => import('./admin/admin.component').then((m) => m.AdminComponent) },
   {
     path: 'today',
     canActivate: [permissionGuard],

@@ -1,0 +1,177 @@
+<main class="admin">
+  <header class="top">
+    <h1>{{ t('admin.title') }}</h1>
+    @if (unlocked()) { <button class="btn" type="button" (click)="lock()">{{ t('admin.lock') }}</button> }
+  </header>
+
+  @if (!enabled) {
+    <p class="error-text" role="alert">{{ t('admin.noApi') }}</p>
+  } @else if (!unlocked()) {
+    <form class="gate" (submit)="$event.preventDefault(); unlock()">
+      <label class="field"><span class="label">{{ t('admin.token') }}</span>
+        <input class="input" type="password" autocomplete="off" spellcheck="false" maxlength="200" required [value]="token()" (input)="setToken($any($event.target).value)" aria-describedby="tok-hint" />
+        <small id="tok-hint" class="hint">{{ t('admin.tokenHint') }}</small>
+      </label>
+      @if (problem()) { <p class="error-text" role="alert">{{ problem() }}</p> }
+      <button class="btn btn--primary" type="submit" [disabled]="busy() || !token()">{{ t('admin.unlock') }}</button>
+    </form>
+  } @else if (view() === 'list') {
+    <section aria-labelledby="clinics-h">
+      <div class="bar">
+        <h2 id="clinics-h">{{ t('admin.clinics') }}</h2>
+        <form class="search" role="search" (submit)="$event.preventDefault(); search(q.value)">
+          <label class="field"><span class="label">{{ t('admin.search') }}</span><input #q class="input" type="search" maxlength="80" [value]="query()" /></label>
+          <button class="btn" type="submit" [disabled]="busy()">{{ t('admin.searchBtn') }}</button>
+        </form>
+        <button class="btn btn--primary" type="button" (click)="openNew()">{{ t('admin.new') }}</button>
+      </div>
+      @if (problem()) { <p class="error-text" role="alert">{{ problem() }}</p> }
+      @if (!rows().length) {
+        <p class="muted">{{ query() ? t('admin.noMatch') : t('admin.empty') }}</p>
+      } @else {
+        <div class="scroll">
+          <table>
+            <thead><tr><th scope="col">{{ t('admin.col.name') }}</th><th scope="col">{{ t('admin.col.city') }}</th><th scope="col">{{ t('admin.col.profile') }}</th><th scope="col">{{ t('admin.col.owner') }}</th><th scope="col">{{ t('admin.col.sub') }}</th><th></th></tr></thead>
+            <tbody>
+              @for (r of rows(); track r.id) {
+                <tr>
+                  <th scope="row">{{ r.name }}</th>
+                  <td>{{ r.city }}</td>
+                  <td>{{ stateText(r.state) }}</td>
+                  <td>{{ r.ownerEmail }}</td>
+                  <td><span class="chip" [class]="'chip sub-' + r.subscription">{{ subText(r) }}</span></td>
+                  <td><button class="btn" type="button" (click)="openEdit(r.id)" [disabled]="busy()">{{ t('admin.edit') }}<span class="sr"> {{ r.name }}</span></button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <nav class="pager" [attr.aria-label]="t('admin.clinics')">
+          <p>{{ t('admin.showing', { from: offset() + 1, to: last(), n: total() }) }}</p>
+          <div><button class="btn" type="button" [disabled]="busy() || offset() === 0" (click)="go(offset() - 25)">{{ t('admin.prev') }}</button><button class="btn" type="button" [disabled]="busy() || last() >= total()" (click)="go(offset() + 25)">{{ t('admin.next') }}</button></div>
+        </nav>
+      }
+    </section>
+  } @else if (view() === 'created') {
+    @if (created(); as c) {
+      <section class="done" aria-live="polite">
+        <h2>{{ t('admin.created') }}</h2>
+        <p>{{ t('admin.tempHint', { email: c.email }) }}</p>
+        <p class="secret"><span class="label">{{ t('admin.tempPw') }}</span><code>{{ c.password }}</code>
+          <button class="btn" type="button" (click)="copy(c.password)">{{ copied() ? t('admin.copied') : t('admin.copy') }}</button></p>
+        <button class="btn btn--primary" type="button" (click)="back()">{{ t('admin.done') }}</button>
+      </section>
+    }
+  } @else {
+    <ng-template #txt let-name="name" let-label="label" let-type="type" let-auto="auto" let-mode="mode">
+      <label class="field" [formGroup]="form">
+        <span class="label">{{ t(label) }}</span>
+        <input class="input" [id]="name" [type]="type ?? 'text'" [formControlName]="name" [attr.autocomplete]="auto ?? 'off'" [attr.inputmode]="mode ?? null" [attr.aria-invalid]="err(name) ? 'true' : null" [attr.aria-describedby]="err(name) ? name + '-e' : null" />
+        @if (err(name); as e) { <small class="error-text" [id]="name + '-e'">{{ t(e) }}</small> }
+      </label>
+    </ng-template>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="bar">
+        <h2>{{ editing() ? editing()!.name : t('admin.new') }}</h2>
+        <button class="btn" type="button" (click)="back()">{{ t('admin.cancel') }}</button>
+      </div>
+      @if (problem()) { <p class="error-text" role="alert">{{ problem() }}</p> }
+      @if (note()) { <p class="ok" role="status">{{ note() }}</p> }
+
+      <fieldset>
+        <legend>{{ t('admin.s.account') }}</legend>
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'clinicName', label: 'admin.f.clinicName' }" />
+        @if (!editing()) {
+          <div formGroupName="owner" class="grid2">
+            <label class="field"><span class="label">{{ t('admin.f.ownerName') }}</span>
+              <input class="input" id="owner-name" formControlName="name" autocomplete="off" [attr.aria-invalid]="err('owner.name') ? 'true' : null" />
+              @if (err('owner.name'); as e) { <small class="error-text">{{ t(e) }}</small> }</label>
+            <label class="field"><span class="label">{{ t('admin.f.ownerEmail') }}</span>
+              <input class="input" id="owner-email" type="email" formControlName="email" autocomplete="off" [attr.aria-invalid]="err('owner.email') ? 'true' : null" />
+              @if (err('owner.email'); as e) { <small class="error-text">{{ t(e) }}</small> }</label>
+          </div>
+          <label class="field narrow"><span class="label">{{ t('admin.f.timezone') }}</span>
+            <select class="input" id="timezone" formControlName="timezone">@for (z of zones; track z) { <option [value]="z">{{ z }}</option> }</select></label>
+        } @else {
+          <p class="muted">{{ editing()!.ownerEmail }}</p>
+        }
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ t('admin.s.profile') }}</legend>
+        <p class="muted">{{ t('admin.profileNote') }}</p>
+        <label class="field narrow"><span class="label">{{ t('admin.f.state') }}</span>
+          <select class="input" id="state" formControlName="state">@for (s of states; track s) { <option [value]="s">{{ stateText(s) }}</option> }</select></label>
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'displayName', label: 'admin.f.displayName' }" />
+        <label class="field"><span class="label">{{ t('admin.f.intro') }}</span>
+          <input class="input" id="intro" formControlName="intro" maxlength="300" autocomplete="off" />
+          @if (err('intro'); as e) { <small class="error-text">{{ t(e) }}</small> }</label>
+        <label class="field"><span class="label">{{ t('admin.f.description') }}</span>
+          <textarea class="input" id="description" formControlName="description" rows="5" maxlength="4000"></textarea></label>
+        <div class="grid2">
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'country', label: 'admin.f.country' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'countryCode', label: 'admin.f.countryCode' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'city', label: 'admin.f.city' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'region', label: 'admin.f.region' }" />
+        </div>
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'slug', label: 'admin.f.slug' }" />
+        <p class="muted">{{ t('admin.slugHint', { path: pathHint() }) }}</p>
+        <fieldset class="langs"><legend class="label">{{ t('admin.f.languages') }}</legend>
+          @for (l of langs; track l[0]) { <label class="check"><input type="checkbox" [checked]="form.controls.languages.value.includes(l[0])" (change)="toggleLang(l[0], $any($event.target).checked)" /> {{ l[1] }}</label> }
+        </fieldset>
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'specialties', label: 'admin.f.specialties' }" />
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'services', label: 'admin.f.services' }" />
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ t('admin.s.contact') }}</legend>
+        <ng-container *ngTemplateOutlet="txt; context: { name: 'address', label: 'admin.f.address', auto: 'street-address' }" />
+        <div class="grid2">
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'phone', label: 'admin.f.phone', type: 'tel', mode: 'tel' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'whatsapp', label: 'admin.f.whatsapp', type: 'tel', mode: 'tel' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'website', label: 'admin.f.website', type: 'url' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'instagram', label: 'admin.f.instagram' }" />
+          <ng-container *ngTemplateOutlet="txt; context: { name: 'facebook', label: 'admin.f.facebook' }" />
+        </div>
+      </fieldset>
+
+      @if (!editing()) {
+        <fieldset formGroupName="subscription">
+          <legend>{{ t('admin.s.subscription') }}</legend>
+          <div class="grid2">
+            <label class="field"><span class="label">{{ t('admin.f.startsOn') }}</span>
+              <input class="input" id="sub-start" type="date" formControlName="startsOn" [attr.aria-invalid]="err('subscription.startsOn') ? 'true' : null" />
+              @if (err('subscription.startsOn'); as e) { <small class="error-text">{{ t(e) }}</small> }</label>
+            <label class="field"><span class="label">{{ t('admin.f.endsOn') }}</span>
+              <input class="input" id="sub-end" type="date" formControlName="endsOn" [attr.aria-invalid]="err('subscription.endsOn') || rangeErr(form.controls.subscription) ? 'true' : null" />
+              @if (err('subscription.endsOn'); as e) { <small class="error-text">{{ t(e) }}</small> }
+              @if (rangeErr(form.controls.subscription)) { <small class="error-text">{{ t('admin.err.range') }}</small> }</label>
+          </div>
+          <label class="field"><span class="label">{{ t('admin.f.note') }}</span><input class="input" id="sub-note" formControlName="note" maxlength="500" autocomplete="off" /></label>
+        </fieldset>
+      }
+
+      <div class="actions"><button class="btn btn--primary" type="submit" [disabled]="busy()">{{ editing() ? t('admin.save') : t('admin.create') }}</button></div>
+    </form>
+
+    @if (editing(); as d) {
+      <section class="periods" aria-labelledby="periods-h">
+        <h3 id="periods-h">{{ t('admin.periods') }}</h3>
+        @if (!d.subscriptions.length) { <p class="muted">{{ t('admin.noPeriods') }}</p> } @else {
+          <ul>@for (p of d.subscriptions; track p.id) {
+            <li><span>{{ p.startsOn }} → {{ p.endsOn }}@if (p.note) { <em> · {{ p.note }}</em> }</span>
+              <button class="btn" type="button" (click)="removePeriod(p.id)" [disabled]="busy()">{{ t('admin.remove') }}</button></li>
+          }</ul>
+        }
+        <form class="grid3" [formGroup]="period" (ngSubmit)="addPeriod()" novalidate>
+          <label class="field"><span class="label">{{ t('admin.f.startsOn') }}</span><input class="input" type="date" formControlName="startsOn" /></label>
+          <label class="field"><span class="label">{{ t('admin.f.endsOn') }}</span><input class="input" type="date" formControlName="endsOn" [attr.aria-invalid]="period.hasError('range') ? 'true' : null" />
+            @if (period.hasError('range')) { <small class="error-text">{{ t('admin.err.range') }}</small> }</label>
+          <label class="field"><span class="label">{{ t('admin.f.note') }}</span><input class="input" formControlName="note" maxlength="500" autocomplete="off" /></label>
+          <div class="actions"><button class="btn" type="submit" [disabled]="busy()">{{ t('admin.addPeriod') }}</button></div>
+        </form>
+      </section>
+    }
+  }
+</main>
