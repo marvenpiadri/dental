@@ -110,9 +110,14 @@
         <label class="field"><span class="label">{{ t('admin.f.description') }}</span>
           <textarea class="input" id="description" formControlName="description" rows="5" maxlength="4000"></textarea></label>
         <div class="grid2">
-          <ng-container *ngTemplateOutlet="txt; context: { name: 'country', label: 'admin.f.country' }" />
-          <ng-container *ngTemplateOutlet="txt; context: { name: 'countryCode', label: 'admin.f.countryCode' }" />
-          <ng-container *ngTemplateOutlet="txt; context: { name: 'city', label: 'admin.f.city' }" />
+          <div [class.pick-err]="err('countryCode')">
+            <den-place-picker kind="country" [label]="t('admin.f.country')" [value]="form.controls.countryCode.value" (changed)="place('countryCode', $event)" />
+            @if (err('countryCode'); as e) { <small class="error-text">{{ t(e) }}</small> }
+          </div>
+          <div [class.pick-err]="err('city')">
+            <den-place-picker kind="city" [label]="t('admin.f.city')" [country]="form.controls.countryCode.value" [value]="form.controls.city.value" (changed)="place('city', $event)" />
+            @if (err('city'); as e) { <small class="error-text">{{ t(e) }}</small> }
+          </div>
           <ng-container *ngTemplateOutlet="txt; context: { name: 'region', label: 'admin.f.region' }" />
         </div>
         <ng-container *ngTemplateOutlet="txt; context: { name: 'slug', label: 'admin.f.slug' }" />

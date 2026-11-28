@@ -8,6 +8,9 @@ import { I18n, Key } from '../core/i18n/i18n.service';
 import { ApiSession } from '../core/api/api-session.service';
 import { apiMessage } from '../core/api/api.interceptor';
 import { clinicPath, slugify } from '../denteus/rules/clinic-profile-rules';
+import { PlacePickerComponent } from '../denteus/regional/place-picker.component';
+import { countryName } from '../denteus/regional/regional-rules';
+import { countryCodeFor } from '../denteus/rules/places-rules';
 
 type Sub = 'active' | 'upcoming' | 'expired' | 'none';
 interface Row { id: string; name: string; city: string | null; slug: string | null; state: string; ownerEmail: string | null; startsOn: string | null; endsOn: string | null; subscription: Sub }
@@ -26,7 +29,7 @@ const range = (g: AbstractControl): ValidationErrors | null => { const s = g.get
 @Component({
   selector: 'den-admin',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, PlacePickerComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css',
 })
@@ -66,7 +69,6 @@ export class AdminComponent {
     displayName: ['', [Validators.required, Validators.maxLength(120)]],
     intro: ['', Validators.maxLength(300)],
     description: ['', Validators.maxLength(4000)],
-    country: ['Maroc', [Validators.required, Validators.maxLength(64)]],
     countryCode: ['MA', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
     region: ['', Validators.maxLength(100)],
     city: ['', [Validators.required, Validators.maxLength(100)]],
@@ -126,7 +128,7 @@ export class AdminComponent {
     try {
       const d = await this.call<Detail>('GET', '/clinics/' + id), p = d.profile ?? {}, s = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : ''), arr = (k: string) => (Array.isArray(p[k]) ? (p[k] as string[]) : []);
       this.form.reset(); this.form.controls.owner.disable(); this.form.controls.subscription.disable(); this.submitted.set(false);
-      this.form.patchValue({ clinicName: d.name, timezone: d.timezone, state: (STATES as readonly string[]).includes(s('state')) ? (s('state') as (typeof STATES)[number]) : 'draft', displayName: s('displayName'), intro: s('intro'), description: s('description'), country: s('country') || (d.profile ? '' : 'Maroc'), countryCode: s('countryCode') || (d.profile ? '' : 'MA'), region: s('region'), city: s('city'),
+      this.form.patchValue({ clinicName: d.name, timezone: d.timezone, state: (STATES as readonly string[]).includes(s('state')) ? (s('state') as (typeof STATES)[number]) : 'draft', displayName: s('displayName'), intro: s('intro'), description: s('description'), countryCode: s('countryCode').toUpperCase() || countryCodeFor(s('country')) || (d.profile ? '' : 'MA'), region: s('region'), city: s('city'),
         slug: s('slug'), address: d.address ?? '', phone: d.phone ?? '', whatsapp: s('whatsapp'), website: s('website'), instagram: s('instagram'), facebook: s('facebook'), languages: arr('languages'), specialties: arr('specialties').join(', '), services: arr('services').join(', ') });
       this.form.controls.slug.markAsDirty(); this.editing.set(d); this.period.reset(); this.view.set('form');
     } catch (e) { this.fail(e); } finally { this.busy.set(false); }
@@ -134,12 +136,17 @@ export class AdminComponent {
   protected back(): void { this.view.set('list'); this.created.set(null); this.problem.set(''); void this.go(this.offset()); }
 
   protected toggleLang(code: string, on: boolean): void { const c = this.form.controls.languages, v = c.value.filter((x) => x !== code); c.setValue(on ? [...v, code] : v); c.markAsDirty(); }
-  protected pathHint(): string { const v = this.form.getRawValue(); return clinicPath(v.country, v.city, v.slug); }
+  protected pathHint(): string { const v = this.form.getRawValue(); return clinicPath(v.countryCode ? countryName(v.countryCode, 'en') : '', v.city, v.slug); }
+  /** A place picked from the list. Changing the country clears the city, which belongs to the old one. */
+  protected place(name: 'countryCode' | 'city', value: string): void {
+    const c = this.form.controls[name]; c.setValue(value); c.markAsDirty(); c.markAsTouched();
+    if (name === 'countryCode') { this.form.controls.city.setValue(''); }
+  }
 
   /** Fields the form owns. An empty value removes the key; everything else the clinic set itself (map position, old addresses) is kept on edit. */
   private profile(prev: Prof): Prof {
     const v = this.form.getRawValue(), out: Prof = { ...prev }, set = (k: string, x: unknown) => { if (x === '' || x === undefined || (Array.isArray(x) && !x.length)) delete out[k]; else out[k] = x; };
-    for (const [k, x] of Object.entries({ state: v.state, displayName: v.displayName.trim(), intro: v.intro.trim(), description: v.description.trim(), country: v.country.trim(), countryCode: v.countryCode.trim().toUpperCase(), region: v.region.trim(), city: v.city.trim(), slug: v.slug,
+    for (const [k, x] of Object.entries({ state: v.state, displayName: v.displayName.trim(), intro: v.intro.trim(), description: v.description.trim(), country: v.countryCode ? countryName(v.countryCode, 'en') : '', countryCode: v.countryCode.trim().toUpperCase(), region: v.region.trim(), city: v.city.trim(), slug: v.slug,
       whatsapp: v.whatsapp.trim(), website: v.website.trim(), instagram: v.instagram.trim(), facebook: v.facebook.trim(), languages: v.languages, specialties: list(v.specialties), services: list(v.services) })) set(k, x);
     const old = typeof prev['slug'] === 'string' ? (prev['slug'] as string) : '';
     if (old && old !== v.slug && prev['state'] === 'published') out['previousSlugs'] = [...new Set([...(Array.isArray(prev['previousSlugs']) ? (prev['previousSlugs'] as string[]) : []).filter((x) => x !== v.slug), old])].slice(-20);
@@ -147,13 +154,13 @@ export class AdminComponent {
   }
   protected err(name: string): Key | '' {
     const c = this.form.get(name); if (!c || !c.invalid || !(c.touched || this.submitted())) return '';
-    return c.hasError('required') ? 'admin.err.required' : c.hasError('email') ? 'admin.err.email' : c.hasError('maxlength') ? 'admin.err.max' : name.endsWith('slug') ? 'admin.err.slug' : name.endsWith('countryCode') ? 'admin.err.code' : name.endsWith('website') ? 'admin.err.url' : 'admin.err.required';
+    return c.hasError('required') ? 'admin.err.required' : c.hasError('email') ? 'admin.err.email' : c.hasError('maxlength') ? 'admin.err.max' : name.endsWith('slug') ? 'admin.err.slug' : name.endsWith('website') ? 'admin.err.url' : 'admin.err.required';
   }
   protected rangeErr(g: AbstractControl): boolean { return g.hasError('range') && (g.touched || this.submitted()); }
 
   protected async save(): Promise<void> {
     this.submitted.set(true); this.problem.set(''); this.note.set('');
-    if (this.form.invalid) { this.form.markAllAsTouched(); this.problem.set(this.t('admin.fixErrors')); queueMicrotask(() => this.host.nativeElement.querySelector<HTMLElement>('form .ng-invalid[id]')?.focus()); return; }
+    if (this.form.invalid) { this.form.markAllAsTouched(); this.problem.set(this.t('admin.fixErrors')); requestAnimationFrame(() => this.host.nativeElement.querySelector<HTMLElement>('form .ng-invalid[id], form .pick-err input')?.focus()); return; }
     const v = this.form.getRawValue(), d = this.editing();
     this.busy.set(true);
     try {
